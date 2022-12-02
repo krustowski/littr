@@ -43,11 +43,11 @@ ENV APP_FLAGS ${APP_FLAGS}
 ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
 
 COPY web/ /opt/web/
-COPY --from=litter-build /go/src/litter/litter /opt/litter
-COPY --from=litter-build /go/src/litter/web/app.wasm /opt/web/app.wasm
+COPY --from=litter-build /go/src/litter-go/litter-go /opt/litter-go
+COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
 WORKDIR /opt
 EXPOSE ${DOCKER_INTERNAL_PORT}
-CMD ./litter
+CMD ./litter-go
 
 

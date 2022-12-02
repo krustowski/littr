@@ -73,14 +73,14 @@ build:
 	@docker compose build --no-cache
 
 .PHONY: run
-run:	build
+run:	
 	@echo -e "\n${YELLOW} Starting project (docker-compose up)... ${RESET}\n"
 	@docker compose up --force-recreate --detach --remove-orphans
 
 .PHONY: logs
 logs:
 	@echo -e "\n${YELLOW} Fetching container's logs (CTRL-C to exit)... ${RESET}\n"
-	@docker logs ${DOCKER_DEV_CONTAINER} -f
+	@docker logs ${DOCKER_CONTAINER_NAME} -f
 
 .PHONY: stop
 stop:  
