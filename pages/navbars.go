@@ -2,7 +2,9 @@ package pages
 
 import "github.com/maxence-charriere/go-app/v9/pkg/app"
 
-const navbarColor = "#206040"
+// calm pale green
+//const navbarColor = "#206040"
+const navbarColor = "#cc6600"
 
 type header struct {
 	app.Compo
@@ -14,14 +16,14 @@ type footer struct {
 
 // top navbar
 func (h *header) Render() app.UI {
-	return app.Nav().ID("nav").Class("top fixed-top").Style("background-color", navbarColor).Body(
-		app.A().Href("/stats").Text("stats").Body(
+	return app.Nav().ID("nav").Class("top fixed-top center-align").Style("background-color", navbarColor).Body(
+		app.A().Href("/settings").Text("settings").Body(
 			app.I().Body(
-				app.Text("query_stats")),
+				app.Text("build")),
 			app.Span().Body(
-				app.Text("stats")),
+				app.Text("settings")),
 		),
-		app.H5().Text("littr"),
+		app.H4().Text("littr").Class("large-padding max"),
 		app.A().Href("/login").Text("login").Body(
 			app.I().Body(
 				app.Text("login")),
@@ -33,20 +35,26 @@ func (h *header) Render() app.UI {
 
 // bottom navbar
 func (f *footer) Render() app.UI {
-	return app.Nav().ID("nav").Class("bottom fixed-bottom").Style("background-color", navbarColor).Body(
-		app.A().Href("/settings").Text("settings").Body(
+	return app.Nav().ID("nav").Class("bottom fixed-bottom center-align").Style("background-color", navbarColor).Body(
+		app.A().Href("/stats").Text("stats").Body(
 			app.I().Body(
-				app.Text("build")),
+				app.Text("query_stats")),
 			app.Span().Body(
-				app.Text("settings")),
+				app.Text("stats")),
 		),
-		app.A().Href("/users").Text("users").Body(
+		app.A().Href("/users").Text("users").Class("max").Body(
 			app.I().Body(
 				app.Text("group")),
 			app.Span().Body(
 				app.Text("users")),
 		),
-		app.A().Href("/polls").Text("polls").Body(
+		app.A().Href("/post").Text("post").Body(
+			app.I().Body(
+				app.Text("add")),
+			app.Span().Body(
+				app.Text("post")),
+		),
+		app.A().Href("/polls").Text("polls").Class("max").Body(
 			app.I().Body(
 				app.Text("equalizer")),
 			app.Span().Body(

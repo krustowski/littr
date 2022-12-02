@@ -4,6 +4,7 @@ import "github.com/maxence-charriere/go-app/v9/pkg/app"
 
 type LoginPage struct {
 	app.Compo
+	userLogged bool
 }
 
 type loginContent struct {

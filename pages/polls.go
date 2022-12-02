@@ -6,12 +6,22 @@ type PollsPage struct {
 	app.Compo
 }
 
+type pollsContent struct {
+	app.Compo
+}
+
 func (p *PollsPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		//&pollsList{},
-		app.Div().Class("large-space"),
+		&pollsContent{},
 		&footer{},
+	)
+}
+
+func (c *pollsContent) Render() app.UI {
+	return app.Main().Class("responsive").Body(
+		app.H5().Text("littr polls"),
+		app.P().Text("to be implemented soon"),
 	)
 }

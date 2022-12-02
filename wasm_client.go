@@ -10,10 +10,12 @@ import (
 )
 
 func initWASM() {
+	app.Route("/", &pages.LoginPage{})
 	app.Route("/flow", &pages.FlowPage{})
 	app.Route("/login", &pages.LoginPage{})
-	//app.Route("/logout", &pages.LogoutPage{})
+	app.Route("/logout", &pages.LoginPage{})
 	app.Route("/polls", &pages.PollsPage{})
+	app.Route("/post", &pages.PostPage{})
 	app.Route("/settings", &pages.SettingsPage{})
 	app.Route("/stats", &pages.StatsPage{})
 	app.Route("/users", &pages.UsersPage{})

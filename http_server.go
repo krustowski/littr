@@ -13,10 +13,12 @@ import (
 )
 
 func initWASM() {
+	app.Route("/", &pages.LoginPage{})
 	app.Route("/flow", &pages.FlowPage{})
 	app.Route("/login", &pages.LoginPage{})
-	//app.Route("/logout", &pages.LogoutPage{})
+	app.Route("/logout", &pages.LoginPage{})
 	app.Route("/polls", &pages.PollsPage{})
+	app.Route("/post", &pages.PostPage{})
 	app.Route("/settings", &pages.SettingsPage{})
 	app.Route("/stats", &pages.StatsPage{})
 	app.Route("/users", &pages.UsersPage{})
@@ -29,7 +31,7 @@ func initServer() {
 		Name:        "litter-go",
 		Description: "litter-go PWA",
 		Icon: app.Icon{
-			Default:    "/web/logo_284.png",
+			Default:    "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
 		Styles: []string{
