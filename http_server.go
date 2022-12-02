@@ -11,12 +11,13 @@ import (
 )
 
 func initWASM() {
-	app.Route("/flow", &flowPage{})
-	app.Route("/login", &loginPage{})
-	app.Route("/polls", &pollsPage{})
-	app.Route("/settings", &settingsPage{})
-	app.Route("/stats", &statsPage{})
-	app.Route("/users", &usersPage{})
+	app.Route("/flow", &pages.Flow{})
+	app.Route("/login", &pages.Login{})
+	app.Route("/logout", &pages.Logout{})
+	app.Route("/polls", &pages.Polls{})
+	app.Route("/settings", &pages.Settings{})
+	app.Route("/stats", &pages.Stats{})
+	app.Route("/users", &pages.Users{})
 
 	app.RunWhenOnBrowser()
 }
