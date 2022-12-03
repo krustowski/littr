@@ -27,7 +27,10 @@ func (p *LoginPage) Render() app.UI {
 func (c *loginContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr login"),
-		app.P().Text("do not be mid, join us to be lit"),
+		app.P().Body(
+			app.A().Href("/register").Text("don't be mid, join us and be lit! (sign up here)"),
+		),
+		app.Div().Class("space"),
 
 		app.Div().Class("field label border").Body(
 			app.Input().Type("text"),

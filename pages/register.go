@@ -18,7 +18,7 @@ func (p *RegisterPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&loginContent{},
+		&registerContent{},
 		&footer{},
 	)
 }
@@ -27,6 +27,7 @@ func (c *registerContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr registration"),
 		app.P().Text("do not be mid, join us to be lit"),
+		app.Div().Class("space"),
 
 		app.Div().Class("field label border").Body(
 			app.Input().Type("text"),

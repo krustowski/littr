@@ -21,6 +21,7 @@ func initWASM() {
 	app.Route("/logout", &pages.LoginPage{})
 	app.Route("/polls", &pages.PollsPage{})
 	app.Route("/post", &pages.PostPage{})
+	app.Route("/register", &pages.RegisterPage{})
 	app.Route("/settings", &pages.SettingsPage{})
 	app.Route("/stats", &pages.StatsPage{})
 	app.Route("/users", &pages.UsersPage{})

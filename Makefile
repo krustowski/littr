@@ -90,6 +90,6 @@ stop:
 .PHONY: push
 push:
 	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
-	@git tag -fa '${APP_VERSION}' -m '${APP_VERSION}'
+	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
 	@git push --follow-tags
 	
