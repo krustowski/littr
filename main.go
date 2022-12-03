@@ -2,7 +2,7 @@ package main
 
 func main() {
 	// Backend
-	//backendServe()
+	initBackend()
 
 	// Frontend
 	// https://github.com/maxence-charriere/go-app/issues/627

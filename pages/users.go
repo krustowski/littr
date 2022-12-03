@@ -40,7 +40,7 @@ func (c *usersContent) Render() app.UI {
 		app.Table().Class("border left-align").Body(
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Text("nick,about"),
+					app.Th().Text("nick, about"),
 					app.Th().Text("flow"),
 				),
 			),

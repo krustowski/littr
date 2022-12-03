@@ -16,7 +16,6 @@ func (p *StatsPage) Render() app.UI {
 		app.Body().Class("dark"),
 		&header{},
 		&statsContent{},
-		app.Div().Class("large-space"),
 		&footer{},
 	)
 }

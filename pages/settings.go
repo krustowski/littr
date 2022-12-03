@@ -15,7 +15,6 @@ func (p *SettingsPage) Render() app.UI {
 		app.Body().Class("dark"),
 		&header{},
 		&settingsContent{},
-		app.Div().Class("large-space"),
 		&footer{},
 	)
 }

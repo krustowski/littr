@@ -4,6 +4,7 @@ import "github.com/maxence-charriere/go-app/v9/pkg/app"
 
 // calm pale green
 //const navbarColor = "#206040"
+// light orange
 const navbarColor = "#cc6600"
 
 type header struct {
@@ -23,7 +24,7 @@ func (h *header) Render() app.UI {
 			app.Span().Body(
 				app.Text("settings")),
 		),
-		app.H4().Text("littr").Class("large-padding max"),
+		app.H4().Text("littr").Class("large-padding"),
 		app.A().Href("/login").Text("login").Class("max").Body(
 			app.I().Body(
 				app.Text("login")),

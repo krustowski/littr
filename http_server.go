@@ -12,6 +12,8 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+func initBackend() {}
+
 func initWASM() {
 	app.Route("/", &pages.LoginPage{})
 	app.Route("/flow", &pages.FlowPage{})
