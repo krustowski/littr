@@ -10,7 +10,7 @@ type pollsContent struct {
 	app.Compo
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *PollsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("polls / littr")
 }
 

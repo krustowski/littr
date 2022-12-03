@@ -10,7 +10,7 @@ type registerContent struct {
 	app.Compo
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *RegisterPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("register / littr")
 }
 

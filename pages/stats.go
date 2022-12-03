@@ -11,7 +11,7 @@ type statsContent struct {
 	stats []string
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *StatsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("stats / littr")
 }
 

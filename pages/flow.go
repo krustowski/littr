@@ -30,7 +30,7 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *FlowPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("flow / littr")
 }
 

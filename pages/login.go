@@ -11,7 +11,7 @@ type loginContent struct {
 	app.Compo
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *LoginPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("login / littr")
 }
 

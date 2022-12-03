@@ -10,7 +10,7 @@ type postContent struct {
 	app.Compo
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *PostPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("post / littr")
 }
 

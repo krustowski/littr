@@ -17,7 +17,7 @@ type User struct {
 	Flow     []string
 }
 
-func (p *SettingsPage) OnNav(ctx app.Context) {
+func (p *UsersPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("users / littr")
 }
 
