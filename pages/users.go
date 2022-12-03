@@ -17,6 +17,10 @@ type User struct {
 	Flow     []string
 }
 
+func (p *SettingsPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("users / littr")
+}
+
 func (p *UsersPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),

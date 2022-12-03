@@ -2,20 +2,19 @@ package pages
 
 import "github.com/maxence-charriere/go-app/v9/pkg/app"
 
-type LoginPage struct {
+type RegisterPage struct {
 	app.Compo
-	userLogged bool
 }
 
-type loginContent struct {
+type registerContent struct {
 	app.Compo
 }
 
 func (p *SettingsPage) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("login / littr")
+	ctx.Page().SetTitle("register / littr")
 }
 
-func (p *LoginPage) Render() app.UI {
+func (p *RegisterPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
@@ -24,9 +23,9 @@ func (p *LoginPage) Render() app.UI {
 	)
 }
 
-func (c *loginContent) Render() app.UI {
+func (c *registerContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr login"),
+		app.H5().Text("littr registration"),
 		app.P().Text("do not be mid, join us to be lit"),
 
 		app.Div().Class("field label border").Body(
@@ -37,6 +36,10 @@ func (c *loginContent) Render() app.UI {
 			app.Input().Type("password"),
 			app.Label().Text("passphrase"),
 		),
-		app.Button().Class("responsive primary").Text("login"),
+		app.Div().Class("field label border").Body(
+			app.Input().Type("text").Name("email"),
+			app.Label().Text("e-mail"),
+		),
+		app.Button().Class("responsive primary").Text("register"),
 	)
 }

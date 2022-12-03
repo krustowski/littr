@@ -20,7 +20,7 @@ func (p *SettingsPage) Render() app.UI {
 }
 
 func (p *SettingsPage) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("settings / litter")
+	ctx.Page().SetTitle("settings / littr")
 }
 
 func (c *settingsContent) Render() app.UI {

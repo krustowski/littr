@@ -30,6 +30,10 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
+func (p *SettingsPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("flow / littr")
+}
+
 func (c *flowContent) Render() app.UI {
 	c.posts = []Post{
 		{Author: "system", Content: "welcome onboard bruh, lit ngl", Timestamp: 1669997122},

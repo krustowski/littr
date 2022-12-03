@@ -10,6 +10,10 @@ type postContent struct {
 	app.Compo
 }
 
+func (p *SettingsPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("post / littr")
+}
+
 func (p *PostPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),

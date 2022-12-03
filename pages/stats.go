@@ -11,6 +11,10 @@ type statsContent struct {
 	stats []string
 }
 
+func (p *SettingsPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("stats / littr")
+}
+
 func (p *StatsPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
