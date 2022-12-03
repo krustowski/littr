@@ -19,6 +19,10 @@ func (p *SettingsPage) Render() app.UI {
 	)
 }
 
+func (p *SettingsPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("settings / litter")
+}
+
 func (c *settingsContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings"),
