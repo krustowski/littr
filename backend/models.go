@@ -1,4 +1,4 @@
-package main
+package backend
 
 type User struct {
 	// Unique user ID.
@@ -23,7 +23,7 @@ type User struct {
 	Flow []string `json:"flow"`
 
 	// UI custom color.
-	Color string `json:"color" default:"#ffffff"`
+	Color string `json:"color" default:"#000000"`
 
 	// UNIX timestamp of the last login.
 	LastTime int `json:"last_login"`

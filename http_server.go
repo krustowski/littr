@@ -50,7 +50,8 @@ func initServer() {
 		},
 	})
 
-	http.HandleFunc("/api", backend.ApiHandleFunc)
+	http.HandleFunc("/api/flow", backend.FlowHandler)
+	http.HandleFunc("/api/users", backend.UsersHandler)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
