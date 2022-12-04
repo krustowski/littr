@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"litter-go/backend"
 	"litter-go/pages"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -49,7 +50,10 @@ func initServer() {
 		},
 	})
 
+	http.HandleFunc("/api", backend.ApiHandleFunc)
+
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
+
 }
