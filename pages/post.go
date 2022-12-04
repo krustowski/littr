@@ -16,7 +16,7 @@ func (p *PostPage) OnNav(ctx app.Context) {
 
 func (p *PostPage) Render() app.UI {
 	return app.Div().Body(
-		//app.Body().Class("dark"),
+		app.Body().Class("dark"),
 		&header{},
 		&postContent{},
 		&footer{},

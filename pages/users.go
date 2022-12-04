@@ -23,7 +23,7 @@ func (p *UsersPage) OnNav(ctx app.Context) {
 
 func (p *UsersPage) Render() app.UI {
 	return app.Div().Body(
-		//app.Body().Class("dark"),
+		app.Body().Class("dark"),
 		&header{},
 		&usersContent{},
 		&footer{},

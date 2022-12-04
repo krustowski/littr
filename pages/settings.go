@@ -26,7 +26,7 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 func (c *settingsContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings"),
-		app.P().Text("change your passphrase, the about string or just fuck off-"),
+		app.P().Text("change your passphrase, the about string or just fuck off ;)"),
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(

@@ -2,17 +2,25 @@ package pages
 
 import "github.com/maxence-charriere/go-app/v9/pkg/app"
 
-// calm pale green
-//const navbarColor = "#206040"
-// light orange
-const navbarColor = "#cc6600"
-
 type header struct {
 	app.Compo
+	updateAvailable bool
 }
 
 type footer struct {
 	app.Compo
+}
+
+const headerString = "littr"
+
+func (h *header) OnAppUpdate(ctx app.Context) {
+	// Reports that an app update is available.
+	h.updateAvailable = ctx.AppUpdateAvailable()
+}
+
+func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
+	// Reloads the page to display the modifications.
+	ctx.Reload()
 }
 
 // top navbar
@@ -26,7 +34,19 @@ func (h *header) Render() app.UI {
 				app.Span().Body(
 					app.Text("settings")),
 			),
-			app.H4().Text("littr").Class("large-padding"),
+
+			app.H4().Text(headerString).Class("large-padding"),
+
+			// show update button on update
+			app.If(h.updateAvailable,
+				app.A().Text("update").OnClick(h.onUpdateClick).Body(
+					app.I().Class("large").Body(
+						app.Text("update")),
+					app.Span().Body(
+						app.Text("update")),
+				),
+			),
+
 			app.A().Href("/login").Text("login").Class("max").Body(
 				app.I().Class("large").Body(
 					app.Text("login")),
