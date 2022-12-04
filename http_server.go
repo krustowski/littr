@@ -33,10 +33,13 @@ func initServer() {
 	http.Handle("/", &app.Handler{
 		Name:        "litter-go",
 		Description: "litter-go PWA",
+		Author:      "krusty",
 		Icon: app.Icon{
 			Default:    "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
+		BackgroundColor: "#000000",
+		ThemeColor:      "#000000",
 		Styles: []string{
 			"https://cdn.jsdelivr.net/npm/beercss@2.3.0/dist/cdn/beer.min.css",
 		},

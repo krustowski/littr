@@ -52,8 +52,7 @@ func (c *flowContent) Render() app.UI {
 		app.Table().Class("border left-align").Body(
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Class("align-left").Text("author, content"),
-					app.Th().Class("align-right").Text("timestamp"),
+					app.Th().Class("align-left").Text("author, content, timestamp"),
 				),
 			),
 			app.TBody().Body(
@@ -62,11 +61,10 @@ func (c *flowContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
-							app.B().Text(post.Author).Style("color", "orange"),
+							app.B().Text(post.Author).Class("deep-orange-text"),
 							app.Div().Class("space"),
 							app.Text(post.Content),
-						),
-						app.Td().Class("align-right").Body(
+							app.Div().Class("space"),
 							app.Text(post.Timestamp),
 						),
 					)

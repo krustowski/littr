@@ -16,7 +16,7 @@ func (p *PostPage) OnNav(ctx app.Context) {
 
 func (p *PostPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
+		//app.Body().Class("dark"),
 		&header{},
 		&postContent{},
 		&footer{},
@@ -28,10 +28,10 @@ func (c *postContent) Render() app.UI {
 		app.H5().Text("new flow post"),
 		app.P().Text("pleasure to be lit"),
 
-		app.Div().Class("field textarea label border extra").Body(
+		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea(),
 			app.Label().Text("contents"),
 		),
-		app.Button().Class("responsive primary").Text("post"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("post"),
 	)
 }

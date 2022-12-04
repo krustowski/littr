@@ -17,7 +17,7 @@ func (p *LoginPage) OnNav(ctx app.Context) {
 
 func (p *LoginPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
+		//app.Body().Class("dark"),
 		&header{},
 		&loginContent{},
 		&footer{},
@@ -32,14 +32,14 @@ func (c *loginContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text"),
 			app.Label().Text("nickname"),
 		),
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password"),
 			app.Label().Text("passphrase"),
 		),
-		app.Button().Class("responsive primary").Text("login"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("login"),
 	)
 }

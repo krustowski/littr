@@ -29,18 +29,18 @@ func (c *registerContent) Render() app.UI {
 		app.P().Text("do not be mid, join us to be lit"),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
 			app.Input().Type("text"),
 			app.Label().Text("nickname"),
 		),
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
 			app.Input().Type("password"),
 			app.Label().Text("passphrase"),
 		),
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
 			app.Input().Type("text").Name("email"),
 			app.Label().Text("e-mail"),
 		),
-		app.Button().Class("responsive primary").Text("register"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("register"),
 	)
 }

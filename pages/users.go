@@ -23,7 +23,7 @@ func (p *UsersPage) OnNav(ctx app.Context) {
 
 func (p *UsersPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
+		//app.Body().Class("dark"),
 		&header{},
 		&usersContent{},
 		&footer{},
@@ -54,12 +54,12 @@ func (c *usersContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Body(
-							app.B().Text(user.Nickname).Style("color", "orange"),
+							app.B().Text(user.Nickname).Class("deep-orange-text"),
 							app.Div().Class("space"),
 							app.Text(user.About),
 						),
 						app.Td().Body(
-							app.Button().Class().Body(
+							app.Button().Class("responsive deep-orange7 white-text bold").Body(
 								app.Text("flow"),
 							),
 						),

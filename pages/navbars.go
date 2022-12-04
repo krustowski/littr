@@ -17,55 +17,59 @@ type footer struct {
 
 // top navbar
 func (h *header) Render() app.UI {
-	return app.Nav().ID("nav").Class("top fixed-top center-align").Style("background-color", navbarColor).Body(
-		app.A().Href("/settings").Text("settings").Class("max").Body(
-			app.I().Body(
-				app.Text("build")),
-			app.Span().Body(
-				app.Text("settings")),
-		),
-		app.H4().Text("littr").Class("large-padding"),
-		app.A().Href("/login").Text("login").Class("max").Body(
-			app.I().Body(
-				app.Text("login")),
-			app.Span().Body(
-				app.Text("login")),
-		),
-	)
+	return app.Nav().ID("nav").Class("top fixed-top center-align deep-orange5").
+		//Style("background-color", navbarColor).
+		Body(
+			app.A().Href("/settings").Text("settings").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("build")),
+				app.Span().Body(
+					app.Text("settings")),
+			),
+			app.H4().Text("littr").Class("large-padding"),
+			app.A().Href("/login").Text("login").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("login")),
+				app.Span().Body(
+					app.Text("login")),
+			),
+		)
 }
 
 // bottom navbar
 func (f *footer) Render() app.UI {
-	return app.Nav().ID("nav").Class("bottom fixed-bottom center-align").Style("background-color", navbarColor).Body(
-		app.A().Href("/stats").Text("stats").Class("max").Body(
-			app.I().Body(
-				app.Text("query_stats")),
-			app.Span().Body(
-				app.Text("stats")),
-		),
-		app.A().Href("/users").Text("users").Class("max").Body(
-			app.I().Body(
-				app.Text("group")),
-			app.Span().Body(
-				app.Text("users")),
-		),
-		app.A().Href("/post").Text("post").Class("max").Body(
-			app.I().Body(
-				app.Text("add")),
-			app.Span().Body(
-				app.Text("post")),
-		),
-		app.A().Href("/polls").Text("polls").Class("max").Body(
-			app.I().Body(
-				app.Text("equalizer")),
-			app.Span().Body(
-				app.Text("polls")),
-		),
-		app.A().Href("/flow").Text("flow").Class("max").Body(
-			app.I().Body(
-				app.Text("trending_up")),
-			app.Span().Body(
-				app.Text("flow")),
-		),
-	)
+	return app.Nav().ID("nav").Class("bottom fixed-bottom center-align deep-orange5").
+		//Style("background-color", navbarColor).
+		Body(
+			app.A().Href("/stats").Text("stats").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("query_stats")),
+				app.Span().Body(
+					app.Text("stats")),
+			),
+			app.A().Href("/users").Text("users").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("group")),
+				app.Span().Class("large").Body(
+					app.Text("users")),
+			),
+			app.A().Href("/post").Text("post").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("add")),
+				app.Span().Body(
+					app.Text("post")),
+			),
+			app.A().Href("/polls").Text("polls").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("equalizer")),
+				app.Span().Body(
+					app.Text("polls")),
+			),
+			app.A().Href("/flow").Text("flow").Class("max").Body(
+				app.I().Class("large").Body(
+					app.Text("trending_up")),
+				app.Span().Body(
+					app.Text("flow")),
+			),
+		)
 }

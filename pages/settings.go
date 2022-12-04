@@ -29,22 +29,22 @@ func (c *settingsContent) Render() app.UI {
 		app.P().Text("change your passphrase, the about string or just fuck off-"),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password"),
 			app.Label().Text("passphrase"),
 		),
-		app.Div().Class("field label border").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password"),
 			app.Label().Text("passphrase again"),
 		),
-		app.Button().Class("responsive primary").Text("change passphrase"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase"),
 		app.Div().Class("large-divider"),
 
-		app.Div().Class("field textarea label border extra").Body(
+		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Text("idk"),
 			app.Label().Text("about"),
 		),
-		app.Button().Class("responsive primary").Text("change about"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about"),
 
 		app.Div().Class("large-space"),
 		app.Div().Class("large-space"),
