@@ -5,6 +5,7 @@ import "github.com/maxence-charriere/go-app/v9/pkg/app"
 type header struct {
 	app.Compo
 	updateAvailable bool
+	userLogged      bool
 }
 
 type footer struct {
@@ -47,11 +48,20 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			app.A().Href("/login").Text("login").Class("max").Body(
-				app.I().Class("large").Body(
-					app.Text("login")),
-				app.Span().Body(
-					app.Text("login")),
+			app.If(h.userLogged,
+				app.A().Href("/logout").Text("logout").Class("max").Body(
+					app.I().Class("large").Body(
+						app.Text("logout")),
+					app.Span().Body(
+						app.Text("logout")),
+				),
+			).Else(
+				app.A().Href("/login").Text("login").Class("max").Body(
+					app.I().Class("large").Body(
+						app.Text("login")),
+					app.Span().Body(
+						app.Text("login")),
+				),
 			),
 		)
 }

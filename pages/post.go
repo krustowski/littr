@@ -2,7 +2,6 @@ package pages
 
 import (
 	"litter-go/backend"
-	"log"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -14,6 +13,9 @@ type PostPage struct {
 type postContent struct {
 	app.Compo
 	newPost string
+
+	toastShow bool
+	toastText string
 }
 
 func (p *PostPage) OnNav(ctx app.Context) {
@@ -30,18 +32,40 @@ func (p *PostPage) Render() app.UI {
 }
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
-	if c.newPost != "" {
-		log.Println(c.newPost)
+	ctx.Async(func() {
+		c.toastShow = true
+		if c.newPost == "" {
+			c.toastText = "post textarea must be filled"
+			return
+		}
+
 		// add new post to backend struct
 		backend.AddPost(c.newPost)
+		c.toastShow = false
 		ctx.Navigate("/flow")
-	}
+	})
+}
+
+func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastShow = false
 }
 
 func (c *postContent) Render() app.UI {
+	toastActiveClass := ""
+	if c.toastShow {
+		toastActiveClass = " active"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("new flow post"),
 		app.P().Text("pleasure to be lit"),
+
+		app.A().OnClick(c.dismissToast).Body(
+			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
+				app.I().Text("error"),
+				app.Span().Text(c.toastText),
+			),
+		),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Name("newPost").OnChange(c.ValueTo(&c.newPost)),
