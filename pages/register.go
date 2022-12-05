@@ -2,6 +2,7 @@ package pages
 
 import (
 	"litter-go/backend"
+	"log"
 	"net/mail"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -37,23 +38,27 @@ func (p *RegisterPage) Render() app.UI {
 
 func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		if c.nickname != "" && c.passphrase != "" && c.email != "" {
-			// validate e-mail struct
-			// https://stackoverflow.com/a/66624104
-			if _, err := mail.ParseAddress(c.email); err != nil {
-				c.toastText = "wrong e-mail format entered"
-				c.toastShow = true
-				return
-			}
-
-			if ok := backend.AddUser(c.nickname, c.passphrase, c.email); ok {
-				c.toastShow = false
-				ctx.Navigate("/login")
-				return
-			}
-			c.toastShow = true
-			c.toastText = "backend error!"
+		c.toastShow = true
+		if c.nickname == "" || c.passphrase == "" || c.email == "" {
+			c.toastText = "all fields need to be filled"
+			return
 		}
+
+		// validate e-mail struct
+		// https://stackoverflow.com/a/66624104
+		if _, err := mail.ParseAddress(c.email); err != nil {
+			log.Println(err)
+			c.toastText = "wrong e-mail format entered"
+			return
+		}
+
+		if ok := backend.AddUser(c.nickname, c.passphrase, c.email); !ok {
+			c.toastText = "generic backend error"
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/login")
 	})
 }
 

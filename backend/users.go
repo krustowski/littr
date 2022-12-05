@@ -30,9 +30,17 @@ func AddUser(name, hashedPassphrase, email string) bool {
 
 	users = append(users, user)
 
-	return true
+	return false
 }
 
 func EditUserPassword(hashedPassphrase string) bool {
-	return true
+	return false
+}
+
+func EditUserAbout(aboutText string) bool {
+	return false
+}
+
+func AuthUser(name, hashedPassword string) bool {
+	return false
 }

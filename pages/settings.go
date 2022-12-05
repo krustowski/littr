@@ -2,7 +2,6 @@ package pages
 
 import (
 	"litter-go/backend"
-	"log"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -18,7 +17,7 @@ type settingsContent struct {
 	passphraseAgain string
 	aboutText       string
 
-	showToast bool
+	toastShow bool
 	toastText string
 }
 
@@ -35,29 +34,54 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
 }
 
-func (c *settingsContent) onClick(ctx app.Context, e app.Event) {
+func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		if c.passphrase != "" && c.passphraseAgain != "" {
-			if c.passphrase == c.passphraseAgain {
-				if ok := backend.EditUserPassword(c.passphrase); ok {
-					log.Println(c.passphrase)
-					c.showToast = false
-					ctx.Navigate("/flow")
-				}
-			} else {
-				c.showToast = true
-			}
+		c.toastShow = true
+		if c.passphrase == "" || c.passphraseAgain == "" {
+			c.toastText = "both passphrases need to be filled"
+			return
 		}
+
+		if c.passphrase != c.passphraseAgain {
+			c.toastText = "passphrases do not match"
+			return
+		}
+
+		if ok := backend.EditUserPassword(c.passphrase); !ok {
+			c.toastText = "generic backend error"
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/settings")
+	})
+}
+
+func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
+	ctx.Async(func() {
+		c.toastShow = true
+		if c.aboutText == "" {
+			c.toastText = "about textarea need to be filled"
+			return
+		}
+
+		if ok := backend.EditUserAbout(c.aboutText); !ok {
+			c.toastText = "generic backend error"
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/settings")
 	})
 }
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
-	c.showToast = false
+	c.toastShow = false
 }
 
 func (c *settingsContent) Render() app.UI {
 	toastActiveClass := ""
-	if c.showToast {
+	if c.toastShow {
 		toastActiveClass = " active"
 	}
 
@@ -69,22 +93,9 @@ func (c *settingsContent) Render() app.UI {
 		app.A().OnClick(c.dismissToast).Body(
 			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
 				app.I().Text("error"),
-				app.Span().Text("passphrases do not match!"),
+				app.Span().Text(c.toastText),
 			),
 		),
-
-		/*
-			app.Div().Class("modal"+toastActiveClass).Body(
-				app.H5().Text("Default modal"),
-				app.Div().Body(
-					app.Text("Some text here"),
-				),
-				app.Nav().Class("right-align").Body(
-					app.Button().Class("border").Text("Cancel"),
-					app.Button().Text("Confirm"),
-				),
-			),
-		*/
 
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)),
@@ -94,13 +105,14 @@ func (c *settingsContent) Render() app.UI {
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)),
 			app.Label().Text("passphrase again"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClick),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass),
+
 		app.Div().Class("large-divider"),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Text("idk").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about"),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),
 	)
 }
