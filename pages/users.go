@@ -14,6 +14,9 @@ type UsersPage struct {
 type usersContent struct {
 	app.Compo
 	users []backend.User
+
+	toastShow bool
+	toastText string
 }
 
 func (p *UsersPage) OnNav(ctx app.Context) {
@@ -45,17 +48,42 @@ func (c *usersContent) OnNav(ctx app.Context) {
 }
 
 func (c *usersContent) onClick(ctx app.Context, e app.Event) {
-	ctx.Async(func() {})
+	ctx.Async(func() {
+		flowName := ctx.JSSrc().Get("name").String()
+		log.Println("toggle flow user: " + flowName)
 
-	elem := ctx.JSSrc().Get("name").String()
-	log.Println("elem: " + elem)
+		c.toastShow = true
+		if ok := backend.UserFlowToggle(flowName); !ok {
+			c.toastText = "generic backend error"
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/flow")
+	})
+}
+
+func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastShow = false
 }
 
 func (c *usersContent) Render() app.UI {
+	toastActiveClass := ""
+	if c.toastShow {
+		toastActiveClass = " active"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr user list"),
 		app.P().Text("simplified user table, available to add to the flow!"),
 		app.Div().Class("space"),
+
+		app.A().OnClick(c.dismissToast).Body(
+			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
+				app.I().Text("error"),
+				app.Span().Text(c.toastText),
+			),
+		),
 
 		app.Table().Class("border left-align").Body(
 			app.THead().Body(
@@ -75,7 +103,8 @@ func (c *usersContent) Render() app.UI {
 							app.Text(user.About),
 						),
 						app.Td().Body(
-							app.Button().Class("responsive deep-orange7 white-text bold").Name(user.Nickname).OnClick(c.onClick).Body(
+							app.Button().Class("responsive deep-orange7 white-text bold").
+								Name(user.Nickname).OnClick(c.onClick).Body(
 								app.Text("flow"),
 							),
 						),

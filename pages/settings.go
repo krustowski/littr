@@ -61,7 +61,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		c.toastShow = true
 		if c.aboutText == "" {
-			c.toastText = "about textarea need to be filled"
+			c.toastText = "about textarea needs to be filled"
 			return
 		}
 

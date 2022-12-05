@@ -44,3 +44,7 @@ func EditUserAbout(aboutText string) bool {
 func AuthUser(name, hashedPassword string) bool {
 	return false
 }
+
+func UserFlowToggle(flowUserName string) bool {
+	return false
+}
