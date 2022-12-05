@@ -34,14 +34,17 @@ func (p *FlowPage) Render() app.UI {
 
 func (c *flowContent) OnNav(ctx app.Context) {
 	var posts []backend.Post
-	if pp := backend.GetPosts(); pp != nil {
-		posts = *pp
-	}
 
-	// Storing HTTP response in component field:
-	ctx.Dispatch(func(ctx app.Context) {
-		c.posts = posts
-		log.Println("dispatch ends")
+	ctx.Async(func() {
+		if pp := backend.GetPosts(); pp != nil {
+			posts = *pp
+		}
+
+		// Storing HTTP response in component field:
+		ctx.Dispatch(func(ctx app.Context) {
+			c.posts = posts
+			log.Println("dispatch ends")
+		})
 	})
 }
 

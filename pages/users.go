@@ -1,6 +1,11 @@
 package pages
 
-import "github.com/maxence-charriere/go-app/v9/pkg/app"
+import (
+	"litter-go/backend"
+	"log"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
+)
 
 type UsersPage struct {
 	app.Compo
@@ -8,13 +13,7 @@ type UsersPage struct {
 
 type usersContent struct {
 	app.Compo
-	users []User
-}
-
-type User struct {
-	Nickname string
-	About    string
-	Flow     []string
+	users []backend.User
 }
 
 func (p *UsersPage) OnNav(ctx app.Context) {
@@ -30,12 +29,22 @@ func (p *UsersPage) Render() app.UI {
 	)
 }
 
-func (c *usersContent) Render() app.UI {
-	c.users = []User{
-		{Nickname: "krusty", About: "idk lemme just die ffs frfr"},
-		{Nickname: "lmao", About: "wtf is this site lmao"},
-	}
+func (c *usersContent) OnNav(ctx app.Context) {
+	ctx.Async(func() {
+		var users []backend.User
+		if uu := backend.GetUsers(); uu != nil {
+			users = *uu
 
+			// Storing HTTP response in component field:
+			ctx.Dispatch(func(ctx app.Context) {
+				c.users = users
+				log.Println("dispatch ends")
+			})
+		}
+	})
+}
+
+func (c *usersContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr user list"),
 		app.P().Text("simplified user table, available to add to the flow!"),
