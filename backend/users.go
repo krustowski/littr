@@ -1,8 +1,6 @@
 package backend
 
 import (
-	"log"
-	"net/mail"
 	"sort"
 	"time"
 )
@@ -22,13 +20,6 @@ func GetUsers() *[]User {
 }
 
 func AddUser(name, hashedPassphrase, email string) bool {
-	// validate e-mail struct
-	// https://stackoverflow.com/a/66624104
-	if _, err := mail.ParseAddress(email); err != nil {
-		log.Println(err)
-		return false
-	}
-
 	var user User = User{
 		Nickname:      name,
 		Passphrase:    hashedPassphrase,

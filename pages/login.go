@@ -19,8 +19,8 @@ func (p *LoginPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&loginContent{},
 		&footer{},
+		&loginContent{},
 	)
 }
 

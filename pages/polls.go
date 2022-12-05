@@ -18,8 +18,8 @@ func (p *PollsPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&pollsContent{},
 		&footer{},
+		&pollsContent{},
 	)
 }
 

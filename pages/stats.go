@@ -19,8 +19,8 @@ func (p *StatsPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&statsContent{},
 		&footer{},
+		&statsContent{},
 	)
 }
 

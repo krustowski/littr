@@ -67,7 +67,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red white-text top"+toastActiveClass).Body(
+			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
 				app.I().Text("error"),
 				app.Span().Text("passphrases do not match!"),
 			),
@@ -102,8 +102,5 @@ func (c *settingsContent) Render() app.UI {
 			app.Label().Text("about"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about"),
-
-		app.Div().Class("large-space"),
-		app.Div().Class("large-space"),
 	)
 }

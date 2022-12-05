@@ -24,8 +24,8 @@ func (p *UsersPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&usersContent{},
 		&footer{},
+		&usersContent{},
 	)
 }
 
