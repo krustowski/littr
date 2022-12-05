@@ -7,11 +7,6 @@ import (
 	"net/http"
 )
 
-var (
-	flow  []Post = []Post{}
-	users []User = []User{}
-)
-
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "DELETE":

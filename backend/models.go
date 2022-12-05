@@ -1,5 +1,7 @@
 package backend
 
+import "time"
+
 type User struct {
 	// Unique user ID.
 	ID int `json:"id" binding:"required" validation:"required"`
@@ -26,10 +28,10 @@ type User struct {
 	Color string `json:"color" default:"#000000"`
 
 	// UNIX timestamp of the last login.
-	LastTime int `json:"last_login"`
+	LastLoginTime time.Time `json:"last_login"`
 
 	// UNIX timestamp of the last UI interaction -- useful for 'show online'.
-	ActiveTime int
+	LastActiveTime time.Time `json:"last_active"`
 }
 
 type Post struct {
