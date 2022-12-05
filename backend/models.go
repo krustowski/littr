@@ -48,7 +48,7 @@ type Post struct {
 	Content string `json:"content"`
 
 	// UNIX timestamp of the post publication.
-	Timestamp int `json:"timestamp"`
+	Timestamp time.Time `json:"timestamp"`
 
 	// Poll content.
 	Poll Poll `json:"poll"`

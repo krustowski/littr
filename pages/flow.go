@@ -69,7 +69,7 @@ func (c *flowContent) Render() app.UI {
 							app.Div().Class("space"),
 							app.Text(post.Content),
 							app.Div().Class("space"),
-							app.Text(post.Timestamp),
+							app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05")),
 						),
 					)
 				}),

@@ -15,7 +15,7 @@ var users []User = []User{
 func GetUsers() *[]User {
 	// order posts by timestamp DESC
 	sort.SliceStable(posts, func(i, j int) bool {
-		return posts[i].Timestamp > posts[j].Timestamp
+		return posts[i].Timestamp.After(posts[j].Timestamp)
 	})
 
 	return &users
