@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"litter-go/backend"
 	"log"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -31,6 +32,8 @@ func (p *PostPage) Render() app.UI {
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	if c.newPost != "" {
 		log.Println(c.newPost)
+		// add new post to backend struct
+		backend.AddPost(c.newPost)
 		ctx.Navigate("/flow")
 	}
 }

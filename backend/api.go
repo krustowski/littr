@@ -19,9 +19,11 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "GET":
 		// get flow
+		//GetPosts()
 		break
 	case "POST":
 		// post a new post
+		//AddPost()
 		break
 	case "PUT":
 		// edit/update a post
