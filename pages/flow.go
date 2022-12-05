@@ -25,10 +25,8 @@ func (p *FlowPage) Render() app.UI {
 	return app.Div().Body(
 		app.Body().Class("dark"),
 		&header{},
-		&flowContent{},
-		app.Div().Class("large-space"),
-		app.Div().Class("large-space"),
 		&footer{},
+		&flowContent{},
 	)
 }
 

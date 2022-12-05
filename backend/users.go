@@ -41,3 +41,7 @@ func AddUser(name, hashedPassphrase, email string) bool {
 
 	return true
 }
+
+func EditUserPassword(hashedPassphrase string) bool {
+	return true
+}

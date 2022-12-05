@@ -44,6 +44,13 @@ func (c *usersContent) OnNav(ctx app.Context) {
 	})
 }
 
+func (c *usersContent) onClick(ctx app.Context, e app.Event) {
+	ctx.Async(func() {})
+
+	elem := ctx.JSSrc().Get("name").String()
+	log.Println("elem: " + elem)
+}
+
 func (c *usersContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr user list"),
@@ -68,7 +75,7 @@ func (c *usersContent) Render() app.UI {
 							app.Text(user.About),
 						),
 						app.Td().Body(
-							app.Button().Class("responsive deep-orange7 white-text bold").Body(
+							app.Button().Class("responsive deep-orange7 white-text bold").Name(user.Nickname).OnClick(c.onClick).Body(
 								app.Text("flow"),
 							),
 						),
