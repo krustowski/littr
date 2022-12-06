@@ -110,7 +110,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("large-divider"),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
-			app.Textarea().Text("idk").OnChange(c.ValueTo(&c.aboutText)),
+			app.Textarea().Text("change me").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),

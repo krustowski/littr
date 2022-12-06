@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"log"
 	"sort"
 	"time"
 )
@@ -17,6 +18,10 @@ func GetPosts() *[]Post {
 	sort.SliceStable(posts, func(i, j int) bool {
 		return posts[i].Timestamp.After(posts[j].Timestamp)
 	})
+
+	if ok := DBConnect(); !ok {
+		log.Println("postgres database error")
+	}
 
 	return &posts
 }

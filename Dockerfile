@@ -38,15 +38,18 @@ FROM alpine:3.16 AS litter-release
 
 ARG APP_FLAGS
 ARG DOCKER_INTERNAL_PORT
+ARG DOCKER_USER
 
 ENV APP_FLAGS ${APP_FLAGS}
 ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
+ENV DOCKER_USER ${DOCKER_USER}
 
 COPY web/ /opt/web/
 COPY --from=litter-build /go/src/litter-go/litter-go /opt/litter-go
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
 WORKDIR /opt
+#USER ${DOCKER_USER}
 EXPOSE ${DOCKER_INTERNAL_PORT}
 CMD ./litter-go
 

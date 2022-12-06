@@ -93,3 +93,19 @@ push:
 	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
 	@git push --follow-tags
 	
+.PHONY: sh
+sh:
+	@echo -e "\n${YELLOW} Attaching container's (${DOCKER_CONTAINER_NAME}) ... ${RESET}\n"
+	@docker exec -it ${DOCKER_CONTAINER_NAME} sh
+
+.PHONY: dblogin
+dblogin:
+	@echo -e "\n${YELLOW} Loging in to mariadb instance as root... ${RESET}\n"
+	@docker exec -it litter-db mysql -u root -p${MYSQL_ROOT_PASSWORD} -h localhost
+
+.PHONY: dbflush
+dbflush:
+	@echo -e "\n${YELLOW} Flushing '${DB_DATABASE}' database... ${RESET}\n"
+	@docker exec -it litter-db mysql -u ${DB_USER} -p${DB_PASSWORD} -sNe 'drop database ${DB_DATABASE};'
+	@docker exec -it litter-db mysql -u ${DB_USER} -p${DB_PASSWORD} -sNe 'create database ${DB_DATABASE};'
+
