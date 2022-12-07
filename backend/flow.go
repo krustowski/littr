@@ -1,29 +1,38 @@
 package backend
 
 import (
+	"encoding/json"
+	"log"
+	"os"
 	"sort"
 	"time"
 )
 
-var (
-	tm1, _ = time.Parse("2006-Jan-02", "1669997122")
-	//posts  []Post = []Post{
-	//	{Nickname: "system", Content: "welcome onboard bruh, lit ngl", Timestamp: tm1},
-	//}
-)
+type Posts struct {
+	Posts []Post `json:"posts"`
+}
 
 func GetPosts() *[]Post {
-	var posts []Post
+	var posts Posts
 
-	d := NewData().Read("posts")
-	posts = d.posts
+	dat, err := os.ReadFile("/opt/data/posts.json")
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
+	err = json.Unmarshal(dat, &posts)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
 
 	// order posts by timestamp DESC
-	sort.SliceStable(posts, func(i, j int) bool {
-		return posts[i].Timestamp.After(posts[j].Timestamp)
+	sort.SliceStable(posts.Posts, func(i, j int) bool {
+		return posts.Posts[i].Timestamp.After(posts.Posts[j].Timestamp)
 	})
 
-	return &posts
+	return &posts.Posts
 }
 
 func AddPost(content string) bool {

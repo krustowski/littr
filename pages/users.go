@@ -67,7 +67,6 @@ func (c *usersContent) OnNav(ctx app.Context) {
 		var usersPre backend.Users
 
 		if uu := usersAPI(); uu != nil {
-
 			err := json.Unmarshal(*uu, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -159,7 +158,9 @@ func (c *usersContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("small-space"),
-		app.A().Class("loader center large deep-orange"+loaderActiveClass),
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.A().Class("loader center large deep-orange"+loaderActiveClass),
+		),
 	)
 }

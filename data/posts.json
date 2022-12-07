@@ -1,7 +1,7 @@
 {
   "posts": [
   	{
-	  "id": 1, 
+	  "id": 0,
 	  "nickname": "system", 
 	  "content": "this is just a testing flow post to see how or if it really does anything"
 	}

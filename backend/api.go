@@ -13,6 +13,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		Message string `json:"message"`
 		Code    int    `json:"code"`
+		Posts   []Post `json:"posts"`
 	}{}
 	w.Header().Add("Content-Type", "application/json")
 
@@ -21,7 +22,16 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		// remove a post
 		break
 	case "GET":
-		// get flow
+		// get flow, ergo post list
+		var posts *[]Post = GetPosts()
+		if posts == nil {
+			log.Println("error getting post flow list")
+			return
+		}
+
+		response.Message = "ok, dumping posts"
+		response.Code = http.StatusOK
+		response.Posts = *posts
 		break
 	case "POST":
 		// post a new post
@@ -65,8 +75,6 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		response.Message = "ok, dumping users"
 		response.Code = http.StatusOK
 		response.Users = *users
-
-		//io.WriteString(w, fmt.Sprintf("%s", dat))
 		break
 
 	case "POST":

@@ -1,7 +1,10 @@
 package pages
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 
 	"litter-go/backend"
 
@@ -33,17 +36,49 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
-func (c *flowContent) OnNav(ctx app.Context) {
-	var posts []backend.Post
+func flowAPI() *[]byte {
+	// push requests use PUT method
+	req, err := http.NewRequest("GET", "/api/flow", nil)
+	if err != nil {
+		log.Print(err)
+	}
 
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+
+	res, err := client.Do(req)
+	defer res.Body.Close()
+	if err != nil {
+		log.Print(err)
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Print(err)
+	}
+
+	return &data
+}
+
+func (c *flowContent) OnNav(ctx app.Context) {
 	ctx.Async(func() {
-		if pp := backend.GetPosts(); pp != nil {
-			posts = *pp
+		var postsRaw backend.Posts
+
+		if uu := flowAPI(); uu != nil {
+			err := json.Unmarshal(*uu, &postsRaw)
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
+		} else {
+			log.Println("cannot fetch post flow list")
+			return
 		}
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts = posts
+			c.posts = postsRaw.Posts
 
 			c.loaderShow = false
 			log.Println("dispatch ends")
@@ -85,7 +120,9 @@ func (c *flowContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("small-space"),
-		app.A().Class("loader center large deep-orange"+loaderActiveClass),
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.A().Class("loader center large deep-orange"+loaderActiveClass),
+		),
 	)
 }
