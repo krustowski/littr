@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"litter-go/backend"
 	"log"
 	"net/mail"
 
@@ -52,10 +51,10 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if ok := backend.AddUser(c.nickname, c.passphrase, c.email); !ok {
-			c.toastText = "generic backend error"
-			return
-		}
+		//if ok := backend.AddUser(c.nickname, c.passphrase, c.email); !ok {
+		//	c.toastText = "generic backend error"
+		//	return
+		//}
 
 		c.toastShow = false
 		ctx.Navigate("/login")

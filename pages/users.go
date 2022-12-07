@@ -64,21 +64,27 @@ func usersAPI() *[]byte {
 
 func (c *usersContent) OnNav(ctx app.Context) {
 	ctx.Async(func() {
+		var usersPre backend.Users
+
 		if uu := usersAPI(); uu != nil {
 
-			// Storing HTTP response in component field:
-			ctx.Dispatch(func(ctx app.Context) {
-
-				err := json.Unmarshal(*uu, &c.users)
-				if err != nil {
-					log.Println(err.Error())
-					return
-				}
-
-				c.loaderShow = false
-				log.Println("dispatch ends")
-			})
+			err := json.Unmarshal(*uu, &usersPre)
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
+		} else {
+			log.Println("cannot fetch user list")
+			return
 		}
+
+		// Storing HTTP response in component field:
+		ctx.Dispatch(func(ctx app.Context) {
+			c.users = usersPre.Users
+
+			c.loaderShow = false
+			log.Println("dispatch ends")
+		})
 	})
 }
 

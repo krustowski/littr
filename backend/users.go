@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-type users struct {
+type Users struct {
 	Users []User `json:"users"`
 }
 
 func GetUsers() *[]User {
-	var users users
+	var users Users
 
 	dat, err := os.ReadFile("/opt/data/users.json")
 	if err != nil {
@@ -35,23 +35,22 @@ func GetUsers() *[]User {
 	return &users.Users
 }
 
-func AddUser(name, hashedPassphrase, email string) bool {
+func AddUser(user User) bool {
 	var users *[]User = GetUsers()
 	if users == nil {
 		return false
 	}
 
-	var user User = User{
-		Nickname:      name,
-		Passphrase:    hashedPassphrase,
-		Email:         email,
-		About:         "new user dropped",
-		LastLoginTime: time.Now(),
-	}
+	user.About = "new user dropped"
+	user.LastLoginTime = time.Now()
 
 	*users = append(*users, user)
 
-	jsonData, err := json.Marshal(*users)
+	usersToWrite := &Users{
+		Users: *users,
+	}
+
+	jsonData, err := json.Marshal(usersToWrite)
 	if err != nil {
 		log.Println(err.Error())
 		return false

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -13,6 +14,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 		Code    int    `json:"code"`
 	}{}
+	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
 	case "DELETE":
@@ -32,10 +34,11 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		response.Message = "disallowed method"
 		response.Code = http.StatusBadRequest
 
-		jsonData, _ := json.Marshal(response)
-		io.WriteString(w, fmt.Sprintf("%s", jsonData))
 		break
 	}
+
+	jsonData, _ := json.Marshal(response)
+	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 }
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +47,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		Code    int    `json:"code"`
 		Users   []User `json:"users"`
 	}{}
+	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
 	case "DELETE":
@@ -55,6 +59,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		var users *[]User = GetUsers()
 		if users == nil {
 			log.Println("error getting user list")
+			return
 		}
 
 		response.Message = "ok, dumping users"
@@ -66,6 +71,23 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 		// post new user
+		var user User
+
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		err := json.Unmarshal(reqBody, &user)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		if ok := AddUser(user); !ok {
+			log.Println("error adding new user")
+			return
+		}
+
+		response.Message = "ok, adding user"
+		response.Code = http.StatusCreated
+		response.Users = append(response.Users, user)
 		break
 
 	case "PUT":
@@ -78,7 +100,6 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	w.Header().Add("Content-Type", "application/json")
 	jsonData, _ := json.Marshal(response)
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 
