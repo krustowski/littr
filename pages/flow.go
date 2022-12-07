@@ -62,6 +62,8 @@ func flowAPI() *[]byte {
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
+	c.loaderShow = true
+
 	ctx.Async(func() {
 		var postsRaw backend.Posts
 

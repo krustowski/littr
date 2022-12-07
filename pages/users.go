@@ -63,6 +63,8 @@ func usersAPI() *[]byte {
 }
 
 func (c *usersContent) OnNav(ctx app.Context) {
+	c.loaderShow = true
+
 	ctx.Async(func() {
 		var usersPre backend.Users
 
