@@ -97,11 +97,11 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)),
 			app.Label().Text("passphrase"),
 		),
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)),
 			app.Label().Text("passphrase again"),
 		),
@@ -109,7 +109,7 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Div().Class("large-divider"),
 
-		app.Div().Class("field textarea label border extra deep-orange-text").Body(
+		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
 			app.Textarea().Text("change me").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about"),
 		),

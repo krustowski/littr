@@ -84,15 +84,15 @@ func (c *registerContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true),
 			app.Label().Text("nickname"),
 		),
-		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true),
 			app.Label().Text("passphrase"),
 		),
-		app.Div().Class("field label border deep-orange-border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true),
 			app.Label().Text("e-mail"),
 		),

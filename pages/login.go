@@ -76,11 +76,11 @@ func (c *loginContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").Required(true).OnChange(c.ValueTo(&c.nickname)),
 			app.Label().Text("nickname"),
 		),
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").Required(true).OnChange(c.ValueTo(&c.passphrase)),
 			app.Label().Text("passphrase"),
 		),
