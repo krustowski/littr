@@ -14,6 +14,9 @@ type FlowPage struct {
 
 type flowContent struct {
 	app.Compo
+
+	loaderShow bool
+
 	posts []backend.Post
 }
 
@@ -41,12 +44,18 @@ func (c *flowContent) OnNav(ctx app.Context) {
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = posts
+
+			c.loaderShow = false
 			log.Println("dispatch ends")
 		})
 	})
 }
 
 func (c *flowContent) Render() app.UI {
+	loaderActiveClass := ""
+	if c.loaderShow {
+		loaderActiveClass = " active"
+	}
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow"),
@@ -75,5 +84,8 @@ func (c *flowContent) Render() app.UI {
 				}),
 			),
 		),
+
+		app.Div().Class("small-space"),
+		app.A().Class("loader center large deep-orange"+loaderActiveClass),
 	)
 }

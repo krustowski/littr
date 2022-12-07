@@ -1,8 +1,11 @@
 package pages
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"litter-go/backend"
 	"log"
+	"net/http"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -13,7 +16,9 @@ type UsersPage struct {
 
 type usersContent struct {
 	app.Compo
-	users []backend.User
+	users []backend.User `json:"users"`
+
+	loaderShow bool
 
 	toastShow bool
 	toastText string
@@ -32,15 +37,45 @@ func (p *UsersPage) Render() app.UI {
 	)
 }
 
+func usersAPI() *[]byte {
+	// push requests use PUT method
+	req, err := http.NewRequest("GET", "/api/users", nil)
+	if err != nil {
+		log.Print(err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+
+	res, err := client.Do(req)
+	defer res.Body.Close()
+	if err != nil {
+		log.Print(err)
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Print(err)
+	}
+
+	return &data
+}
+
 func (c *usersContent) OnNav(ctx app.Context) {
 	ctx.Async(func() {
-		var users []backend.User
-		if uu := backend.GetUsers(); uu != nil {
-			users = *uu
+		if uu := usersAPI(); uu != nil {
 
 			// Storing HTTP response in component field:
 			ctx.Dispatch(func(ctx app.Context) {
-				c.users = users
+
+				err := json.Unmarshal(*uu, &c.users)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+
+				c.loaderShow = false
 				log.Println("dispatch ends")
 			})
 		}
@@ -71,6 +106,11 @@ func (c *usersContent) Render() app.UI {
 	toastActiveClass := ""
 	if c.toastShow {
 		toastActiveClass = " active"
+	}
+
+	loaderActiveClass := ""
+	if c.loaderShow {
+		loaderActiveClass = " active"
 	}
 
 	return app.Main().Class("responsive").Body(
@@ -112,5 +152,8 @@ func (c *usersContent) Render() app.UI {
 				}),
 			),
 		),
+
+		app.Div().Class("small-space"),
+		app.A().Class("loader center large deep-orange"+loaderActiveClass),
 	)
 }

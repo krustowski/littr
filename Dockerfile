@@ -13,8 +13,9 @@ FROM golang:${GOLANG_VERSION}-alpine AS litter-build
 ARG APP_NAME
 
 ENV APP_NAME ${APP_NAME}
+ENV CGO_ENABLED 1
 
-RUN apk add git
+RUN apk add git gcc
 
 WORKDIR /go/src/${APP_NAME}
 COPY . .
@@ -45,6 +46,7 @@ ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
 ENV DOCKER_USER ${DOCKER_USER}
 
 COPY web/ /opt/web/
+COPY data/ /opt/data/
 COPY --from=litter-build /go/src/litter-go/litter-go /opt/litter-go
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 

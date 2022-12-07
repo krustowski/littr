@@ -30,6 +30,7 @@ services:
       - 1.0.0.2
     mem_reservation: 128m
     environment:
+      DATABASE_URL: ${DATABASE_URL}
       DB_HOST: litter-db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -47,7 +48,7 @@ services:
 
   litter-db:
     image: postgres:15.1-alpine
-    container_name: litter-db
+    container_name: db
     #volumes:
     #  - litter-mariadb:/var/lib/mysql
     restart: unless-stopped
