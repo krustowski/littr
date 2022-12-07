@@ -1,7 +1,11 @@
 package pages
 
 import (
+	"bytes"
+	"encoding/json"
+	"litter-go/backend"
 	"log"
+	"net/http"
 	"net/mail"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -35,6 +39,36 @@ func (p *RegisterPage) Render() app.UI {
 	)
 }
 
+func registerAPI(user backend.User) bool {
+	jsonData, err := json.Marshal(user)
+	if err != nil {
+		log.Println("cannot marshal user to register API")
+		log.Println(err.Error())
+		return false
+	}
+
+	bodyReader := bytes.NewReader([]byte(jsonData))
+
+	req, err := http.NewRequest("POST", "/api/users", bodyReader)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	req.Header.Set("Content-Type", "application/byte")
+
+	client := http.Client{}
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	log.Println("new user pushed to API")
+	defer res.Body.Close()
+
+	return true
+}
+
 func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		c.toastShow = true
@@ -51,10 +85,17 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		//if ok := backend.AddUser(c.nickname, c.passphrase, c.email); !ok {
-		//	c.toastText = "generic backend error"
-		//	return
-		//}
+		var user backend.User = backend.User{
+			Nickname: c.nickname,
+			// hash this!
+			Passphrase: c.passphrase,
+			Email:      c.email,
+		}
+
+		if ok := registerAPI(user); !ok {
+			c.toastText = "cannot send API request"
+			return
+		}
 
 		c.toastShow = false
 		ctx.Navigate("/login")
