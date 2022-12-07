@@ -36,14 +36,30 @@ func GetPosts() *[]Post {
 }
 
 func AddPost(content string) bool {
+	var posts *[]Post = GetPosts()
 	var post Post = Post{
 		Nickname:  "random",
 		Content:   content,
 		Timestamp: time.Now(),
 	}
 
-	d := NewData()
-	d.Read("posts").SetData("posts", post).Write("posts")
+	*posts = append(*posts, post)
+
+	postsToWrite := &Posts{
+		Posts: *posts,
+	}
+
+	jsonData, err := json.Marshal(postsToWrite)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	err = os.WriteFile("/opt/data/posts.json", jsonData, 0644)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
 
 	return true
 }

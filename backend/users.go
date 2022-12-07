@@ -41,6 +41,14 @@ func AddUser(user User) bool {
 		return false
 	}
 
+	// search for the nickname duplicate
+	for _, u := range *users {
+		if u.Nickname == user.Nickname {
+			log.Println("user already exists!")
+			return false
+		}
+	}
+
 	user.About = "new user dropped"
 	user.LastLoginTime = time.Now()
 

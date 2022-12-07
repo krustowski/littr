@@ -35,7 +35,23 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "POST":
 		// post a new post
-		//AddPost()
+		var post Post
+
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		err := json.Unmarshal(reqBody, &post)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		if ok := AddPost(post.Content); !ok {
+			log.Println("error adding new post")
+			return
+		}
+
+		response.Message = "ok, adding post"
+		response.Code = http.StatusCreated
+		response.Posts = append(response.Posts, post)
 		break
 	case "PUT":
 		// edit/update a post

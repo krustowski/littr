@@ -1,7 +1,11 @@
 package pages
 
 import (
+	"bytes"
+	"encoding/json"
 	"litter-go/backend"
+	"log"
+	"net/http"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -16,6 +20,36 @@ type postContent struct {
 
 	toastShow bool
 	toastText string
+}
+
+func postAPI(post backend.Post) bool {
+	jsonData, err := json.Marshal(post)
+	if err != nil {
+		log.Println("cannot marshal post to register API")
+		log.Println(err.Error())
+		return false
+	}
+
+	bodyReader := bytes.NewReader([]byte(jsonData))
+
+	req, err := http.NewRequest("POST", "/api/flow", bodyReader)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	req.Header.Set("Content-Type", "application/byte")
+
+	client := http.Client{}
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	log.Println("new post pushed to API")
+	defer res.Body.Close()
+
+	return true
 }
 
 func (p *PostPage) OnNav(ctx app.Context) {
@@ -40,7 +74,13 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		// add new post to backend struct
-		backend.AddPost(c.newPost)
+		if ok := postAPI(backend.Post{
+			Content: c.newPost,
+		}); !ok {
+			log.Println("cannot post new post to API!")
+			return
+		}
+
 		c.toastShow = false
 		ctx.Navigate("/flow")
 	})
