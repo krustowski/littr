@@ -3,12 +3,10 @@ version: '3.9'
 networks:
   traefik_savla:
     name: ${DOCKER_NETWORK_NAME}
-  litter_net:
-    name: "litter_net"
 
 volumes:
-  litter-mariadb:
-    name: litter-mariadb
+  litter-json-storage:
+    name: litter-json-storage
 
 services:
   litter-server:
@@ -38,35 +36,12 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
+    volumes: 
+      - "litter-json-storage:/opt/data"
     networks:
       - ${DOCKER_NETWORK_NAME}
-      - litter_net
     labels:
       - "traefik.http.routers.${APP_NAME}.rule=Host(${APP_URLS_TRAEFIK})"
       - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${DOCKER_INTERNAL_PORT}"
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
 
-  litter-db:
-    image: postgres:15.1-alpine
-    container_name: db
-    #volumes:
-    #  - litter-mariadb:/var/lib/mysql
-    restart: unless-stopped
-    cpus: 0.25
-    mem_reservation: 256m
-    shm_size: 256MB
-    networks:
-      - litter_net
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
-
-  adminer:
-    image: adminer
-    container_name: litter-adminer
-    restart: always
-    networks:
-      - litter_net
-    ports:
-      - 8011:8080

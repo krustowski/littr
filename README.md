@@ -2,7 +2,7 @@
 litter again, now in go
 
 ## roadmap to v0.3
-+ connect SQL database (write DB connector in backend)
++ ~~use local JSON storage~~
 + implement `backend.AuthUser`
 + ...
 
