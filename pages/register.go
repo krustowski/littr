@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"crypto/sha512"
 	"litter-go/backend"
 	"log"
 	"net/mail"
@@ -57,10 +58,11 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
+		passHash := sha512.Sum512([]byte(c.passphrase))
+
 		var user backend.User = backend.User{
-			Nickname: c.nickname,
-			// hash this!
-			Passphrase: c.passphrase,
+			Nickname:   c.nickname,
+			Passphrase: string(passHash[:]),
 			Email:      c.email,
 		}
 

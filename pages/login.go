@@ -1,6 +1,9 @@
 package pages
 
 import (
+	"crypto/sha512"
+	"encoding/json"
+
 	"litter-go/backend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -26,8 +29,10 @@ func (p *LoginPage) OnMount(ctx app.Context) {
 		// destroy auth manually without API
 		ctx.LocalStorage().Set("userLogged", false)
 		ctx.LocalStorage().Set("userName", "")
+
+		p.userLogged = false
+
 		ctx.Navigate("/login")
-		ctx.Reload()
 	}
 }
 
@@ -52,11 +57,27 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if _, ok := litterAPI("POST", "/api/auth", &backend.User{
+		response := struct {
+			Message     string `json:"message"`
+			AuthGranted bool   `json:"auth_granted"`
+		}{}
+
+		passHash := sha512.Sum512([]byte(c.passphrase))
+
+		respRaw, _ := litterAPI("POST", "/api/auth", &backend.User{
 			Nickname:   c.nickname,
-			Passphrase: c.passphrase,
-		}); !ok {
-			c.toastText = "wrong passphrase entered or login not found"
+			Passphrase: string(passHash[:]),
+		})
+
+		if respRaw == nil {
+			c.toastText = "generic backend error"
+			return
+		}
+
+		_ = json.Unmarshal(*respRaw, &response)
+		if !response.AuthGranted {
+			//c.toastText = response.Message
+			c.toastText = "access denied"
 			return
 		}
 

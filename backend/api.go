@@ -11,9 +11,9 @@ import (
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	response := struct {
-		Message string `json:"message"`
-		Code    int    `json:"code"`
-		Posts   []Post `json:"posts"`
+		Message     string `json:"message"`
+		Code        int    `json:"code"`
+		AuthGranted bool   `json:"auth_granted" default:false`
 	}{}
 	w.Header().Add("Content-Type", "application/json")
 
@@ -25,19 +25,22 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		err := json.Unmarshal(reqBody, &user)
 		if err != nil {
 			log.Println(err.Error())
+			response.Message = err.Error()
 			return
 		}
 
 		if ok := authUser(user); !ok {
-			log.Println("user not found or wrong passphrase entered")
+			response.Message = "user not found or wrong passphrase entered"
+			response.Code = http.StatusNotFound
+			response.AuthGranted = false
 			return
 		}
 
+		response.AuthGranted = true
 		break
 	default:
 		response.Message = "disallowed method"
 		response.Code = http.StatusBadRequest
-
 		break
 	}
 
