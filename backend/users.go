@@ -12,7 +12,7 @@ type Users struct {
 	Users []User `json:"users"`
 }
 
-func GetUsers() *[]User {
+func getUsers() *[]User {
 	var users Users
 
 	dat, err := os.ReadFile("/opt/data/users.json")
@@ -35,8 +35,8 @@ func GetUsers() *[]User {
 	return &users.Users
 }
 
-func AddUser(user User) bool {
-	var users *[]User = GetUsers()
+func addUser(user User) bool {
+	var users *[]User = getUsers()
 	if users == nil {
 		return false
 	}
@@ -73,18 +73,14 @@ func AddUser(user User) bool {
 	return true
 }
 
-func EditUserPassword(hashedPassphrase string) bool {
+func editUserPassword(hashedPassphrase string) bool {
 	return false
 }
 
-func EditUserAbout(aboutText string) bool {
+func editUserAbout(aboutText string) bool {
 	return false
 }
 
-func AuthUser(name, hashedPassword string) bool {
-	return false
-}
-
-func UserFlowToggle(flowUserName string) bool {
+func userFlowToggle(flowUserName string) bool {
 	return false
 }

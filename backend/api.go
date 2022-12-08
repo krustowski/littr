@@ -9,6 +9,42 @@ import (
 	"net/http"
 )
 
+func AuthHandler(w http.ResponseWriter, r *http.Request) {
+	response := struct {
+		Message string `json:"message"`
+		Code    int    `json:"code"`
+		Posts   []Post `json:"posts"`
+	}{}
+	w.Header().Add("Content-Type", "application/json")
+
+	switch r.Method {
+	case "POST":
+		var user User
+
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		err := json.Unmarshal(reqBody, &user)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		if ok := authUser(user); !ok {
+			log.Println("user not found or wrong passphrase entered")
+			return
+		}
+
+		break
+	default:
+		response.Message = "disallowed method"
+		response.Code = http.StatusBadRequest
+
+		break
+	}
+
+	jsonData, _ := json.Marshal(response)
+	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+}
+
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		Message string `json:"message"`
@@ -23,7 +59,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "GET":
 		// get flow, ergo post list
-		var posts *[]Post = GetPosts()
+		var posts *[]Post = getPosts()
 		if posts == nil {
 			log.Println("error getting post flow list")
 			return
@@ -44,7 +80,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if ok := AddPost(post.Content); !ok {
+		if ok := addPost(post); !ok {
 			log.Println("error adding new post")
 			return
 		}
@@ -82,7 +118,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		// get user list
-		var users *[]User = GetUsers()
+		var users *[]User = getUsers()
 		if users == nil {
 			log.Println("error getting user list")
 			return
@@ -104,7 +140,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if ok := AddUser(user); !ok {
+		if ok := addUser(user); !ok {
 			log.Println("error adding new user")
 			return
 		}
@@ -126,29 +162,4 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	jsonData, _ := json.Marshal(response)
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
-
-	// process list requests
-	if hasList := r.URL.Query().Has("list"); hasList {
-		list := r.URL.Query().Get("list")
-
-		switch list {
-		case "flow":
-			io.WriteString(w, fmt.Sprintf("flow -- %s\n", list))
-			break
-		case "users":
-
-			io.WriteString(w, fmt.Sprintf("users -- %s\n", list))
-			break
-		}
-
-		/*body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			fmt.Printf("could not read body: %s\n", err)
-		}*/
-	}
-
-	newPost := r.PostFormValue("newPost")
-	if newPost != "" {
-		io.WriteString(w, fmt.Sprintf("POST -- newPost"))
-	}
 }

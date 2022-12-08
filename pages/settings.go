@@ -1,8 +1,6 @@
 package pages
 
 import (
-	"litter-go/backend"
-
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -47,10 +45,10 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if ok := backend.EditUserPassword(c.passphrase); !ok {
-			c.toastText = "generic backend error"
-			return
-		}
+		//if ok := backend.EditUserPassword(c.passphrase); !ok {
+		//	c.toastText = "generic backend error"
+		//	return
+		//}
 
 		c.toastShow = false
 		ctx.Navigate("/settings")
@@ -65,10 +63,10 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if ok := backend.EditUserAbout(c.aboutText); !ok {
-			c.toastText = "generic backend error"
-			return
-		}
+		//if ok := backend.EditUserAbout(c.aboutText); !ok {
+		//	c.toastText = "generic backend error"
+		//	return
+		//}
 
 		c.toastShow = false
 		ctx.Navigate("/settings")

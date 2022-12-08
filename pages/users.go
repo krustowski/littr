@@ -68,10 +68,11 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 		log.Println("toggle flow user: " + flowName)
 
 		c.toastShow = true
-		if ok := backend.UserFlowToggle(flowName); !ok {
-			c.toastText = "generic backend error"
-			return
-		}
+		return
+		//if ok := backend.UserFlowToggle(flowName); !ok {
+		//	c.toastText = "generic backend error"
+		//	return
+		//}
 
 		c.toastShow = false
 		ctx.Navigate("/flow")

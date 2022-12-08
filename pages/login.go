@@ -21,6 +21,16 @@ type loginContent struct {
 	toastText string
 }
 
+func (p *LoginPage) OnMount(ctx app.Context) {
+	if ctx.Page().URL().Path == "/logout" {
+		// destroy auth manually without API
+		ctx.LocalStorage().Set("userLogged", false)
+		ctx.LocalStorage().Set("userName", "")
+		ctx.Navigate("/login")
+		ctx.Reload()
+	}
+}
+
 func (p *LoginPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("login / littr")
 }
@@ -42,12 +52,17 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if ok := backend.AuthUser(c.nickname, c.passphrase); !ok {
-			c.toastText = "generic backend error"
+		if _, ok := litterAPI("POST", "/api/auth", &backend.User{
+			Nickname:   c.nickname,
+			Passphrase: c.passphrase,
+		}); !ok {
+			c.toastText = "wrong passphrase entered or login not found"
 			return
 		}
 
 		c.toastShow = false
+		ctx.LocalStorage().Set("userLogged", true)
+		ctx.LocalStorage().Set("userName", c.nickname)
 		ctx.Navigate("/flow")
 	})
 }

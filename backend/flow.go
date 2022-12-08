@@ -12,7 +12,7 @@ type Posts struct {
 	Posts []Post `json:"posts"`
 }
 
-func GetPosts() *[]Post {
+func getPosts() *[]Post {
 	var posts Posts
 
 	dat, err := os.ReadFile("/opt/data/posts.json")
@@ -35,15 +35,16 @@ func GetPosts() *[]Post {
 	return &posts.Posts
 }
 
-func AddPost(content string) bool {
-	var posts *[]Post = GetPosts()
-	var post Post = Post{
-		Nickname:  "random",
-		Content:   content,
+func addPost(post Post) bool {
+	var posts *[]Post = getPosts()
+
+	var newPost Post = Post{
+		Nickname:  post.Nickname,
+		Content:   post.Content,
 		Timestamp: time.Now(),
 	}
 
-	*posts = append(*posts, post)
+	*posts = append(*posts, newPost)
 
 	postsToWrite := &Posts{
 		Posts: *posts,

@@ -33,6 +33,8 @@ func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
 func (h *header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
 
+	ctx.LocalStorage().Get("userLogged", &h.userLogged)
+
 	if !h.userLogged && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
 		ctx.Navigate("/login")
 	}

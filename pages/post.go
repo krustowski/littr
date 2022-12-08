@@ -40,9 +40,13 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
+		var author string
+		ctx.LocalStorage().Get("userName", &author)
+
 		// add new post to backend struct
 		if _, ok := litterAPI("POST", "/api/flow", backend.Post{
-			Content: c.newPost,
+			Nickname: author,
+			Content:  c.newPost,
 		}); !ok {
 			log.Println("cannot post new post to API!")
 			return
