@@ -2,10 +2,8 @@ package pages
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"litter-go/backend"
 	"log"
-	"net/http"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -37,39 +35,14 @@ func (p *UsersPage) Render() app.UI {
 	)
 }
 
-func usersAPI() *[]byte {
-	// push requests use PUT method
-	req, err := http.NewRequest("GET", "/api/users", nil)
-	if err != nil {
-		log.Print(err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	client := http.Client{}
-
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		log.Print(err)
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Print(err)
-	}
-
-	return &data
-}
-
 func (c *usersContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 
 	ctx.Async(func() {
 		var usersPre backend.Users
 
-		if uu := usersAPI(); uu != nil {
-			err := json.Unmarshal(*uu, &usersPre)
+		if data, _ := litterAPI("GET", "/api/users", nil); data != nil {
+			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
 				return

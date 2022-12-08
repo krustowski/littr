@@ -2,9 +2,7 @@ package pages
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
-	"net/http"
 
 	"litter-go/backend"
 
@@ -36,39 +34,14 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
-func flowAPI() *[]byte {
-	// push requests use PUT method
-	req, err := http.NewRequest("GET", "/api/flow", nil)
-	if err != nil {
-		log.Print(err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	client := http.Client{}
-
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		log.Print(err)
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Print(err)
-	}
-
-	return &data
-}
-
 func (c *flowContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 
 	ctx.Async(func() {
 		var postsRaw backend.Posts
 
-		if uu := flowAPI(); uu != nil {
-			err := json.Unmarshal(*uu, &postsRaw)
+		if data, _ := litterAPI("GET", "/api/flow", nil); data != nil {
+			err := json.Unmarshal(*data, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
 				return

@@ -32,6 +32,10 @@ func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
 
 func (h *header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
+
+	if !h.userLogged && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
+		ctx.Navigate("/login")
+	}
 }
 
 func (h *header) OnAppInstallChange(ctx app.Context) {
@@ -54,22 +58,29 @@ func (h *header) Render() app.UI {
 					app.Text("settings")),
 			),
 
+			app.If(h.appInstallable,
+				app.A().Text("install").OnClick(h.onInstallButtonClicked).Body(
+					app.I().Class("large").Body(
+						app.Text("download"),
+					),
+					app.Span().Body(
+						app.Text("install"),
+					),
+				),
+			),
+
 			app.H4().Text(headerString).Class("large-padding"),
 
 			// show update button on update
 			app.If(h.updateAvailable,
 				app.A().Text("update").OnClick(h.onUpdateClick).Body(
 					app.I().Class("large").Body(
-						app.Text("update")),
+						app.Text("update"),
+					),
 					app.Span().Body(
-						app.Text("update")),
+						app.Text("update"),
+					),
 				),
-			),
-
-			app.If(h.appInstallable,
-				app.Button().
-					Text("Install App").
-					OnClick(h.onInstallButtonClicked),
 			),
 
 			app.If(h.userLogged,

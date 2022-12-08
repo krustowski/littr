@@ -1,11 +1,8 @@
 package pages
 
 import (
-	"bytes"
-	"encoding/json"
 	"litter-go/backend"
 	"log"
-	"net/http"
 	"net/mail"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -39,41 +36,16 @@ func (p *RegisterPage) Render() app.UI {
 	)
 }
 
-func registerAPI(user backend.User) bool {
-	jsonData, err := json.Marshal(user)
-	if err != nil {
-		log.Println("cannot marshal user to register API")
-		log.Println(err.Error())
-		return false
-	}
-
-	bodyReader := bytes.NewReader([]byte(jsonData))
-
-	req, err := http.NewRequest("POST", "/api/users", bodyReader)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	req.Header.Set("Content-Type", "application/byte")
-
-	client := http.Client{}
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Println(err.Error())
-		return false
-	}
-
-	log.Println("new user pushed to API")
-	defer res.Body.Close()
-
-	return true
-}
-
 func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		c.toastShow = true
 		if c.nickname == "" || c.passphrase == "" || c.email == "" {
 			c.toastText = "all fields need to be filled"
+			return
+		}
+
+		if len(c.nickname) > 20 {
+			c.toastText = "nickname has to be 20 chars long at max"
 			return
 		}
 
@@ -92,7 +64,7 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			Email:      c.email,
 		}
 
-		if ok := registerAPI(user); !ok {
+		if _, ok := litterAPI("POST", "/api/users", user); !ok {
 			c.toastText = "cannot send API request"
 			return
 		}
