@@ -1,11 +1,17 @@
 package pages
 
-import "github.com/maxence-charriere/go-app/v9/pkg/app"
+import (
+	"litter-go/backend"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
+)
 
 type header struct {
 	app.Compo
 	updateAvailable bool
+	appInstallable  bool
 	userLogged      bool
+	userStruct      backend.User
 }
 
 type footer struct {
@@ -22,6 +28,18 @@ func (h *header) OnAppUpdate(ctx app.Context) {
 func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
 	// Reloads the page to display the modifications.
 	ctx.Reload()
+}
+
+func (h *header) OnMount(ctx app.Context) {
+	h.appInstallable = ctx.IsAppInstallable()
+}
+
+func (h *header) OnAppInstallChange(ctx app.Context) {
+	h.appInstallable = ctx.IsAppInstallable()
+}
+
+func (h *header) onInstallButtonClicked(ctx app.Context, e app.Event) {
+	ctx.ShowAppInstallPrompt()
 }
 
 // top navbar
@@ -46,6 +64,12 @@ func (h *header) Render() app.UI {
 					app.Span().Body(
 						app.Text("update")),
 				),
+			),
+
+			app.If(h.appInstallable,
+				app.Button().
+					Text("Install App").
+					OnClick(h.onInstallButtonClicked),
 			),
 
 			app.If(h.userLogged,
