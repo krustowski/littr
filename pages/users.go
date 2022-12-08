@@ -16,6 +16,9 @@ type usersContent struct {
 	app.Compo
 	users []backend.User `json:"users"`
 
+	loggedUser  string
+	flowRecords []string
+
 	loaderShow bool
 
 	toastShow bool
@@ -37,6 +40,9 @@ func (p *UsersPage) Render() app.UI {
 
 func (c *usersContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
+
+	ctx.LocalStorage().Get("userName", &c.loggedUser)
+	ctx.LocalStorage().Get("flowRecords", &c.flowRecords)
 
 	ctx.Async(func() {
 		var usersPre backend.Users
@@ -117,16 +123,46 @@ func (c *usersContent) Render() app.UI {
 				app.Range(c.users).Slice(func(i int) app.UI {
 					user := c.users[i]
 
+					var inFlow bool = false
+					for _, rec := range c.flowRecords {
+						log.Println(rec)
+						if user.Nickname == rec {
+							inFlow = true
+							break
+						}
+					}
+
+					log.Println(c.flowRecords)
+
 					return app.Tr().Body(
 						app.Td().Body(
 							app.B().Text(user.Nickname).Class("deep-orange-text"),
 							app.Div().Class("space"),
 							app.Text(user.About),
 						),
-						app.Td().Body(
-							app.Button().Class("responsive deep-orange7 white-text bold").
-								Name(user.Nickname).OnClick(c.onClick).Body(
-								app.Text("flow"),
+						// make button inactive for logged user
+						app.If(user.Nickname == c.loggedUser,
+							app.Td().Body(
+								app.Button().Class("responsive grey white-text bold").
+									Name(user.Nickname).Body(
+									app.Text("that's you"),
+								),
+							),
+						//
+						).ElseIf(inFlow,
+							app.Td().Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").
+									Name(user.Nickname).OnClick(c.onClick).Body(
+									app.Text("flow off"),
+								),
+							),
+						//
+						).Else(
+							app.Td().Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").
+									Name(user.Nickname).OnClick(c.onClick).Body(
+									app.Text("flow on"),
+								),
 							),
 						),
 					)

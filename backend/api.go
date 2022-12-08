@@ -11,9 +11,10 @@ import (
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	response := struct {
-		Message     string `json:"message"`
-		Code        int    `json:"code"`
-		AuthGranted bool   `json:"auth_granted" default:false`
+		Message     string   `json:"message"`
+		Code        int      `json:"code"`
+		AuthGranted bool     `json:"auth_granted" default:false`
+		FlowRecords []string `json:"flow_records"`
 	}{}
 	w.Header().Add("Content-Type", "application/json")
 
@@ -29,10 +30,13 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if ok := authUser(user); !ok {
+		if u, ok := authUser(user); !ok {
 			response.Message = "user not found or wrong passphrase entered"
 			response.Code = http.StatusNotFound
 			response.AuthGranted = false
+			response.FlowRecords = u.Flow
+
+			log.Println(response.FlowRecords)
 			return
 		}
 

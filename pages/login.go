@@ -29,6 +29,7 @@ func (p *LoginPage) OnMount(ctx app.Context) {
 		// destroy auth manually without API
 		ctx.LocalStorage().Set("userLogged", false)
 		ctx.LocalStorage().Set("userName", "")
+		ctx.LocalStorage().Set("flowRecords", nil)
 
 		p.userLogged = false
 
@@ -58,8 +59,9 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		response := struct {
-			Message     string `json:"message"`
-			AuthGranted bool   `json:"auth_granted"`
+			Message     string   `json:"message"`
+			AuthGranted bool     `json:"auth_granted"`
+			FlowRecords []string `json:"flow_records"`
 		}{}
 
 		passHash := sha512.Sum512([]byte(c.passphrase))
@@ -84,6 +86,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		c.toastShow = false
 		ctx.LocalStorage().Set("userLogged", true)
 		ctx.LocalStorage().Set("userName", c.nickname)
+		ctx.LocalStorage().Set("flowRecords", response.FlowRecords)
 		ctx.Navigate("/flow")
 	})
 }

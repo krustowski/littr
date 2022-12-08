@@ -2,14 +2,14 @@ package backend
 
 type Auth struct{}
 
-func authUser(user User) bool {
+func authUser(user User) (*User, bool) {
 	var users *[]User = getUsers()
 
 	for _, u := range *users {
 		if u.Nickname == user.Nickname && u.Passphrase == user.Passphrase {
-			return true
+			return &u, true
 		}
 	}
 
-	return false
+	return nil, false
 }
