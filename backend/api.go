@@ -30,17 +30,16 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if u, ok := authUser(user); !ok {
+		u, ok := authUser(user)
+		if !ok {
 			response.Message = "user not found or wrong passphrase entered"
 			response.Code = http.StatusNotFound
 			response.AuthGranted = false
-			response.FlowRecords = u.Flow
-
-			log.Println(response.FlowRecords)
 			return
 		}
 
 		response.AuthGranted = true
+		response.FlowRecords = u.Flow
 		break
 	default:
 		response.Message = "disallowed method"
@@ -112,9 +111,10 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	response := struct {
-		Message string `json:"message"`
-		Code    int    `json:"code"`
-		Users   []User `json:"users"`
+		Message     string   `json:"message"`
+		Code        int      `json:"code"`
+		Users       []User   `json:"users"`
+		FlowRecords []string `json:"flow_records"`
 	}{}
 	w.Header().Add("Content-Type", "application/json")
 
@@ -159,6 +159,24 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "PUT":
 		// edit/update an user
+		var user User
+
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		err := json.Unmarshal(reqBody, &user)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		u, ok := userFlowToggle(user)
+		if !ok {
+			log.Println("error updating user's flow")
+			return
+		}
+
+		//response.Message = "ok, adding user"
+		response.Code = http.StatusOK
+		response.FlowRecords = u.Flow
 		break
 
 	default:

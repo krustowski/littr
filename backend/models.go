@@ -24,6 +24,9 @@ type User struct {
 	// List of other accounts to show in the flow.
 	Flow []string `json:"flow"`
 
+	// Field used for flow user add/removal.
+	FlowToggle string `json:"flow_toggle"`
+
 	// UI custom color.
 	Color string `json:"color" default:"#000000"`
 

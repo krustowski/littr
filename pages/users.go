@@ -73,12 +73,30 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 		flowName := ctx.JSSrc().Get("name").String()
 		log.Println("toggle flow user: " + flowName)
 
-		c.toastShow = true
-		return
-		//if ok := backend.UserFlowToggle(flowName); !ok {
-		//	c.toastText = "generic backend error"
-		//	return
-		//}
+		// do not save new flow user to local var until it is saved on backend
+		//flowRecords := append(c.flowRecords, flowName)
+
+		updateData := &backend.User{
+			Nickname:   c.loggedUser,
+			FlowToggle: flowName,
+		}
+
+		respRaw, ok := litterAPI("PUT", "/api/users", updateData)
+		if !ok {
+			c.toastShow = true
+			c.toastText = "generic backend error"
+			return
+		}
+
+		response := struct {
+			Message     string   `json:"message"`
+			FlowRecords []string `json:"flow_records"`
+		}{}
+		_ = json.Unmarshal(*respRaw, &response)
+
+		// reload flow records for such user in WASM client
+		c.flowRecords = response.FlowRecords
+		ctx.LocalStorage().Set("flowRecords", c.flowRecords)
 
 		c.toastShow = false
 		ctx.Navigate("/flow")

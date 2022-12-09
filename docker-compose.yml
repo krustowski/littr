@@ -28,12 +28,7 @@ services:
       - 1.0.0.2
     mem_reservation: 128m
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      DB_HOST: litter-db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_PORT: ${DB_PORT}
+      APP_PEPPER: ${APP_PEPPER}
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     volumes: 

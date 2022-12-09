@@ -3,6 +3,7 @@ package pages
 import (
 	"crypto/sha512"
 	"encoding/json"
+	"os"
 
 	"litter-go/backend"
 
@@ -64,7 +65,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			FlowRecords []string `json:"flow_records"`
 		}{}
 
-		passHash := sha512.Sum512([]byte(c.passphrase))
+		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
 
 		respRaw, _ := litterAPI("POST", "/api/auth", &backend.User{
 			Nickname:   c.nickname,
@@ -116,13 +117,13 @@ func (c *loginContent) Render() app.UI {
 		),
 
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(-1).OnChange(c.ValueTo(&c.nickname)),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)),
 			app.Label().Text("nickname"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(-1).OnChange(c.ValueTo(&c.passphrase)),
+			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)),
 			app.Label().Text("passphrase"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("login").OnClick(c.onClick),
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
 	)
 }
