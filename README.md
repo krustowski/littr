@@ -70,12 +70,16 @@ make flush
 
 ## development
 
+### roadmap to v0.4/v0.5
++ implement polls (create poll, voting)
++ implement stats
+
 ### roadmap to v0.3
 + ~~use local JSON storage~~
 + ~~implement `backend.authUser`~~
 + ~~functional user login/logout~~
 + ~~functional settings page~~
-+ functional add/remove flow user
++ ~~functional add/remove flow user~~
 
 ### roadmap to v0.2
 + ~~Go backend (BE) --- server-side~~

@@ -142,9 +142,19 @@ func editUserAbout(user User) (*User, bool) {
 	return foundUser, true
 }
 
-// https://stackoverflow.com/a/37335777
-func remove(slice []string, s int) []string {
-	return append(slice[:s], slice[s+1:]...)
+func remove(items []string, idx int) []string {
+	// delete an element from the array
+	// https://www.educative.io/answers/how-to-delete-an-element-from-an-array-in-golang
+	newLength := 0
+	for index := range items {
+		if idx != index {
+			items[newLength] = items[index]
+			newLength++
+		}
+	}
+	items = items[:newLength]
+
+	return items
 }
 
 func userFlowToggle(user User) (*User, bool) {
@@ -179,8 +189,7 @@ func userFlowToggle(user User) (*User, bool) {
 	}
 
 	// copy modified (user) flow array to the production (foundUser) struct
-	foundUser.Flow = user.Flow
-	users[i] = *foundUser
+	users[i].Flow = user.Flow
 
 	if ok := writeUsers(&users); !ok {
 		return nil, false

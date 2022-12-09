@@ -176,14 +176,23 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			response.FlowRecords = u.Flow
+
+			response.Message = "ok, flow record list changed for user " + reqUser.Nickname
+			response.Code = http.StatusOK
+			break
 		}
 
+		//
 		if reqUser.About != "" {
 			_, ok := editUserAbout(reqUser)
 			if !ok {
 				log.Println("error updating user's about text")
 				return
 			}
+
+			response.Message = "ok, about text changed for user " + reqUser.Nickname
+			response.Code = http.StatusOK
+			break
 		}
 
 		if reqUser.Passphrase != "" {
@@ -192,10 +201,11 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("error updating user's passphrase")
 				return
 			}
-		}
 
-		//response.Message = "ok, adding user"
-		response.Code = http.StatusOK
+			response.Message = "ok, passphrase changed for user " + reqUser.Nickname
+			response.Code = http.StatusOK
+			break
+		}
 		break
 
 	default:
