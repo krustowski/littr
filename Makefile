@@ -6,6 +6,7 @@
 # VARS
 #
 
+include .env.example
 -include .env
 
 PROJECT_NAME?=litter-go
@@ -90,6 +91,7 @@ stop:
 .PHONY: push
 push:
 	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
+	@cp .env .env.example
 	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
 	@git push --follow-tags
 	
