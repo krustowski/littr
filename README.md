@@ -1,5 +1,7 @@
 # litter-go
-litter again, now in Go as PWA --- microblogging service without notifications and pesky messaging, just a raw mind _flow_
+litter again, now in Go as PWA
+
+microblogging service without notifications and pesky messaging, just a raw mind _flow_
 
 ## repo vademecum
 

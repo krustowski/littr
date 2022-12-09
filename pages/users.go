@@ -143,8 +143,8 @@ func (c *usersContent) Render() app.UI {
 						// make button inactive for logged user
 						app.If(user.Nickname == c.loggedUser,
 							app.Td().Body(
-								app.Button().Class("responsive grey white-text bold").
-									Name(user.Nickname).Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").
+									Disabled(true).Body(
 									app.Text("that's you"),
 								),
 							),
