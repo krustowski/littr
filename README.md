@@ -35,10 +35,38 @@ microblogging service without notifications and pesky messaging, just a raw mind
 
 ## REST API service
 + the service is reachable via (`/api`) endpoint --- API auth-wall to be implemented
-+ there are three main endpoints:
-  + `/api/auth`
-  + `/api/flow`
-  + `/api/users`
++ there are three main endpoints: 
+
+```http
+POST /api/auth
+
+POST /api/flow
+GET  /api/flow
+
+POST /api/users
+GET  /api/users
+PUT  /api/users
+```
+
+## how to run
+
+```bash
+# create environmental file copy and modify it
+cp .env.example .env
+vi .env
+
+# build docker image (docker engine is needed)
+make build
+
+# run docker-compose stack, start up the stack
+make run
+
+# Makefile helper print
+make info
+
+# flush app data --- copy empty files from 'data/' to the container
+make flush
+```
 
 ## development
 
