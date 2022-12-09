@@ -74,7 +74,7 @@ make flush
 + ~~use local JSON storage~~
 + ~~implement `backend.authUser`~~
 + ~~functional user login/logout~~
-+ functional settings page
++ ~~functional settings page~~
 + functional add/remove flow user
 
 ### roadmap to v0.2

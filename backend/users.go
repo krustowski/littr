@@ -8,14 +8,47 @@ import (
 	"time"
 )
 
+const (
+	usersFile = "/opt/data/users.json"
+)
+
 type Users struct {
 	Users []User `json:"users"`
+}
+
+func findUser(users []User, user User) (int, *User) {
+	for idx, u := range users {
+		if u.Nickname == user.Nickname {
+			return idx, &u
+		}
+	}
+	return -1, nil
+}
+
+func writeUsers(users *[]User) bool {
+	usersToWrite := &Users{
+		Users: *users,
+	}
+
+	jsonData, err := json.Marshal(usersToWrite)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	err = os.WriteFile(usersFile, jsonData, 0644)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	return true
 }
 
 func getUsers() *[]User {
 	var users Users
 
-	dat, err := os.ReadFile("/opt/data/users.json")
+	dat, err := os.ReadFile(usersFile)
 	if err != nil {
 		log.Println(err.Error())
 		return nil
@@ -42,11 +75,9 @@ func addUser(user User) bool {
 	}
 
 	// search for the nickname duplicate
-	for _, u := range *users {
-		if u.Nickname == user.Nickname {
-			log.Println("user already exists!")
-			return false
-		}
+	if _, foundUser := findUser(*users, user); foundUser != nil {
+		log.Println("user already exists!")
+		return false
 	}
 
 	user.About = "new user dropped"
@@ -54,31 +85,61 @@ func addUser(user User) bool {
 
 	*users = append(*users, user)
 
-	usersToWrite := &Users{
-		Users: *users,
-	}
-
-	jsonData, err := json.Marshal(usersToWrite)
-	if err != nil {
-		log.Println(err.Error())
-		return false
-	}
-
-	err = os.WriteFile("/opt/data/users.json", jsonData, 0644)
-	if err != nil {
-		log.Println(err.Error())
+	if ok := writeUsers(users); !ok {
 		return false
 	}
 
 	return true
 }
 
-func editUserPassword(hashedPassphrase string) bool {
-	return false
+func editUserPassphrase(user User) (*User, bool) {
+	usersP := getUsers()
+	if usersP == nil {
+		return nil, false
+	}
+	users := *usersP
+
+	idx, foundUser := findUser(users, user)
+	if foundUser == nil {
+		return nil, false
+	}
+
+	// rewrite user's passphrase
+	foundUser.Passphrase = user.Passphrase
+
+	users[idx] = *foundUser
+
+	if ok := writeUsers(&users); !ok {
+		log.Println("cannot write users")
+		return nil, false
+	}
+
+	return foundUser, true
 }
 
-func editUserAbout(aboutText string) bool {
-	return false
+func editUserAbout(user User) (*User, bool) {
+	usersP := getUsers()
+	if usersP == nil {
+		return nil, false
+	}
+	users := *usersP
+
+	idx, foundUser := findUser(users, user)
+	if foundUser == nil {
+		return nil, false
+	}
+
+	// rewrite user's about text
+	foundUser.About = user.About
+
+	users[idx] = *foundUser
+
+	if ok := writeUsers(&users); !ok {
+		log.Println("cannot write users")
+		return nil, false
+	}
+
+	return foundUser, true
 }
 
 // https://stackoverflow.com/a/37335777
@@ -93,25 +154,16 @@ func userFlowToggle(user User) (*User, bool) {
 	}
 	users := *usersP
 
-	var i int
-	var u User
-	for idx, u := range users {
-		// found user
-		if u.Nickname == user.Nickname {
-			i = idx
-			break
-		}
-
-		i = -1
-	}
-
-	if i < 0 {
+	// check for existing user
+	i, foundUser := findUser(users, user)
+	if foundUser == nil {
 		return nil, false
 	}
 
+	// find flow record
 	var j int
 	var recordFound bool = false
-	for idx, rec := range u.Flow {
+	for idx, rec := range foundUser.Flow {
 		if rec == user.FlowToggle {
 			recordFound = true
 			j = idx
@@ -126,22 +178,11 @@ func userFlowToggle(user User) (*User, bool) {
 		user.Flow = append(user.Flow, user.FlowToggle)
 	}
 
-	u.Flow = user.Flow
-	users[i] = u
+	// copy modified (user) flow array to the production (foundUser) struct
+	foundUser.Flow = user.Flow
+	users[i] = *foundUser
 
-	usersToWrite := &Users{
-		Users: users,
-	}
-
-	jsonData, err := json.Marshal(usersToWrite)
-	if err != nil {
-		log.Println(err.Error())
-		return nil, false
-	}
-
-	err = os.WriteFile("/opt/data/users.json", jsonData, 0644)
-	if err != nil {
-		log.Println(err.Error())
+	if ok := writeUsers(&users); !ok {
 		return nil, false
 	}
 

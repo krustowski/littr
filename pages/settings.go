@@ -1,6 +1,10 @@
 package pages
 
 import (
+	"crypto/sha512"
+	"litter-go/backend"
+	"os"
+
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -10,6 +14,8 @@ type SettingsPage struct {
 
 type settingsContent struct {
 	app.Compo
+
+	loggedUser string
 
 	passphrase      string
 	passphraseAgain string
@@ -32,6 +38,10 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
 }
 
+func (c *settingsContent) OnNav(ctx app.Context) {
+	ctx.LocalStorage().Get("userName", &c.loggedUser)
+}
+
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		c.toastShow = true
@@ -45,31 +55,46 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		//if ok := backend.EditUserPassword(c.passphrase); !ok {
-		//	c.toastText = "generic backend error"
-		//	return
-		//}
+		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
+
+		if _, ok := litterAPI("PUT", "/api/users", backend.User{
+			Nickname:   c.loggedUser,
+			Passphrase: string(passHash[:]),
+		}); !ok {
+			c.toastText = "generic backend error"
+			return
+		}
 
 		c.toastShow = false
-		ctx.Navigate("/settings")
+		ctx.Navigate("/users")
 	})
 }
 
 func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		c.toastShow = true
 		if c.aboutText == "" {
+			c.toastShow = true
 			c.toastText = "about textarea needs to be filled"
 			return
 		}
 
-		//if ok := backend.EditUserAbout(c.aboutText); !ok {
-		//	c.toastText = "generic backend error"
-		//	return
-		//}
+		if len(c.aboutText) > 100 {
+			c.toastShow = true
+			c.toastText = "about text has to be shorter than 100 chars"
+			return
+		}
+
+		if _, ok := litterAPI("PUT", "/api/users", backend.User{
+			Nickname: c.loggedUser,
+			About:    c.aboutText,
+		}); !ok {
+			c.toastShow = true
+			c.toastText = "generic backend error"
+			return
+		}
 
 		c.toastShow = false
-		ctx.Navigate("/settings")
+		ctx.Navigate("/users")
 	})
 }
 

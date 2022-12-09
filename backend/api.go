@@ -159,24 +159,43 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "PUT":
 		// edit/update an user
-		var user User
+		var reqUser User
 
 		reqBody, _ := ioutil.ReadAll(r.Body)
-		err := json.Unmarshal(reqBody, &user)
+		err := json.Unmarshal(reqBody, &reqUser)
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
 
-		u, ok := userFlowToggle(user)
-		if !ok {
-			log.Println("error updating user's flow")
-			return
+		// userFlowToggle(User)
+		if reqUser.FlowToggle != "" {
+			u, ok := userFlowToggle(reqUser)
+			if !ok {
+				log.Println("error updating user's flow")
+				return
+			}
+			response.FlowRecords = u.Flow
+		}
+
+		if reqUser.About != "" {
+			_, ok := editUserAbout(reqUser)
+			if !ok {
+				log.Println("error updating user's about text")
+				return
+			}
+		}
+
+		if reqUser.Passphrase != "" {
+			_, ok := editUserPassphrase(reqUser)
+			if !ok {
+				log.Println("error updating user's passphrase")
+				return
+			}
 		}
 
 		//response.Message = "ok, adding user"
 		response.Code = http.StatusOK
-		response.FlowRecords = u.Flow
 		break
 
 	default:
