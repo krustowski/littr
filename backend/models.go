@@ -71,12 +71,13 @@ type Log struct {
 type Global struct{}
 
 type Poll struct {
-	ID       int        `json:"id"`
-	Question string     `json:"question"`
-	Option1  PollOption `json:"option1"`
-	Option2  PollOption `json:"option2"`
-	Option3  PollOption `json:"option3"`
-	Voted    []string   `json:"voted_list"`
+	ID          int        `json:"id"`
+	Question    string     `json:"question"`
+	OptionOne   PollOption `json:"option_one"`
+	OptionTwo   PollOption `json:"option_two"`
+	OptionThree PollOption `json:"option_three"`
+	Voted       []string   `json:"voted_list"`
+	Timestamp   time.Time  `json:"timestamp"`
 }
 
 type PollOption struct {
