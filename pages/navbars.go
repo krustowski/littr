@@ -16,7 +16,8 @@ type header struct {
 	userLogged bool
 	userStruct backend.User
 
-	modalShow bool
+	modalInfoShow   bool
+	modalLogoutShow bool
 }
 
 type footer struct {
@@ -54,17 +55,35 @@ func (h *header) onInstallButtonClicked(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickHeadline(ctx app.Context, e app.Event) {
-	h.modalShow = true
+	h.modalInfoShow = true
 }
+
+func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
+	h.modalLogoutShow = true
+}
+
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
-	h.modalShow = false
+	h.modalInfoShow = false
+	h.modalLogoutShow = false
+}
+
+func (h *header) onClickLogout(ctx app.Context, e app.Event) {
+	ctx.LocalStorage().Set("userLogged", false)
+	h.userLogged = false
+
+	ctx.Navigate("/logout")
 }
 
 // top navbar
 func (h *header) Render() app.UI {
-	modalActiveClass := ""
-	if h.modalShow {
-		modalActiveClass = " active"
+	modalInfoActiveClass := ""
+	if h.modalInfoShow {
+		modalInfoActiveClass = " active"
+	}
+
+	modalLogoutActiveClass := ""
+	if h.modalLogoutShow {
+		modalLogoutActiveClass = " active"
 	}
 
 	return app.Nav().ID("nav").Class("top fixed-top center-align deep-orange5").
@@ -90,8 +109,8 @@ func (h *header) Render() app.UI {
 
 			app.H4().Text(headerString).Class("large-padding").OnClick(h.onClickHeadline),
 
-			// app modal
-			app.Div().Class("modal deep-orange white-text"+modalActiveClass).Body(
+			// app info modal
+			app.Div().Class("modal grey9 white-text"+modalInfoActiveClass).Body(
 				app.H5().Text("litter-go (littr) PWA"),
 				app.P().Text("version v"+string(os.Getenv("APP_VERSION"))),
 				app.Nav().Class("center-align").Body(
@@ -112,7 +131,7 @@ func (h *header) Render() app.UI {
 			),
 
 			app.If(h.userLogged,
-				app.A().Href("/logout").Text("logout").Class("max").Body(
+				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Body(
 					app.I().Class("large").Body(
 						app.Text("logout")),
 					app.Span().Body(
@@ -124,6 +143,15 @@ func (h *header) Render() app.UI {
 						app.Text("login")),
 					app.Span().Body(
 						app.Text("login")),
+				),
+			),
+
+			// app logout modal
+			app.Div().Class("modal grey9 white-text"+modalLogoutActiveClass).Body(
+				app.H5().Text("really logout?"),
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
+					app.Button().Class("border deep-orange7 white-text").Text("nah").OnClick(h.onClickModalDismiss),
 				),
 			),
 		)
