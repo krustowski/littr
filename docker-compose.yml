@@ -12,11 +12,13 @@ services:
   litter-server:
     image: ${DOCKER_IMAGE_TAG}
     container_name: ${DOCKER_CONTAINER_NAME}
+    env_file:
+      - .env
     build:
       context: .
       args: 
         APP_NAME: ${APP_NAME}
-        APP_FLAGS: ${APP_NAME}
+        APP_FLAGS: ${APP_FLAGS}
         DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 
         DOCKER_USER: ${DOCKER_USER}
         GOLANG_VERSION: ${GOLANG_VERSION}
@@ -27,8 +29,7 @@ services:
       - 10.4.5.130
       - 1.0.0.2
     mem_reservation: 128m
-    environment:
-      APP_PEPPER: ${APP_PEPPER}
+    #environment:
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     volumes: 

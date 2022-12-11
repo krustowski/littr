@@ -2,16 +2,21 @@ package pages
 
 import (
 	"litter-go/backend"
+	"os"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 type header struct {
 	app.Compo
+
 	updateAvailable bool
 	appInstallable  bool
-	userLogged      bool
-	userStruct      backend.User
+
+	userLogged bool
+	userStruct backend.User
+
+	modalShow bool
 }
 
 type footer struct {
@@ -48,8 +53,20 @@ func (h *header) onInstallButtonClicked(ctx app.Context, e app.Event) {
 	ctx.ShowAppInstallPrompt()
 }
 
+func (h *header) onClickHeadline(ctx app.Context, e app.Event) {
+	h.modalShow = true
+}
+func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
+	h.modalShow = false
+}
+
 // top navbar
 func (h *header) Render() app.UI {
+	modalActiveClass := ""
+	if h.modalShow {
+		modalActiveClass = " active"
+	}
+
 	return app.Nav().ID("nav").Class("top fixed-top center-align deep-orange5").
 		//Style("background-color", navbarColor).
 		Body(
@@ -71,7 +88,16 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			app.H4().Text(headerString).Class("large-padding"),
+			app.H4().Text(headerString).Class("large-padding").OnClick(h.onClickHeadline),
+
+			// app modal
+			app.Div().Class("modal deep-orange white-text"+modalActiveClass).Body(
+				app.H5().Text("litter-go (littr) PWA"),
+				app.P().Text("version v"+string(os.Getenv("APP_VERSION"))),
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").Text("Close").OnClick(h.onClickModalDismiss),
+				),
+			),
 
 			// show update button on update
 			app.If(h.updateAvailable,
