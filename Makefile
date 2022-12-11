@@ -88,10 +88,13 @@ stop:
 	@echo -e "\n${YELLOW} Stopping and purging project (docker-compose down)... ${RESET}\n"
 	@docker compose down
 
+.PHONY: version
+version: 
+	@cp .env .env.example
+
 .PHONY: push
 push:
 	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
-	@cp .env .env.example
 	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
 	@git push --follow-tags
 	

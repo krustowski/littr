@@ -114,7 +114,7 @@ func (h *header) Render() app.UI {
 				app.H5().Text("litter-go (littr) PWA"),
 				app.P().Text("version v"+string(os.Getenv("APP_VERSION"))),
 				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").Text("Close").OnClick(h.onClickModalDismiss),
+					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
 				),
 			),
 

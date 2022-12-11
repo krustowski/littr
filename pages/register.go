@@ -20,9 +20,10 @@ type registerContent struct {
 	toastShow bool
 	toastText string
 
-	nickname   string
-	passphrase string
-	email      string
+	nickname        string
+	passphrase      string
+	passphraseAgain string
+	email           string
 }
 
 func (p *RegisterPage) OnNav(ctx app.Context) {
@@ -40,14 +41,21 @@ func (p *RegisterPage) Render() app.UI {
 
 func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		c.toastShow = true
-		if c.nickname == "" || c.passphrase == "" || c.email == "" {
+		if c.nickname == "" || c.passphrase == "" || c.passphraseAgain == "" || c.email == "" {
+			c.toastShow = true
 			c.toastText = "all fields need to be filled"
 			return
 		}
 
 		if len(c.nickname) > 20 {
+			c.toastShow = true
 			c.toastText = "nickname has to be 20 chars long at max"
+			return
+		}
+
+		if c.passphrase != c.passphraseAgain {
+			c.toastShow = true
+			c.toastText = "passphrases don't match!"
 			return
 		}
 
@@ -55,6 +63,7 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(c.email); err != nil {
 			log.Println(err)
+			c.toastShow = true
 			c.toastText = "wrong e-mail format entered"
 			return
 		}
@@ -68,7 +77,8 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if _, ok := litterAPI("POST", "/api/users", user); !ok {
-			c.toastText = "cannot send API request"
+			c.toastShow = true
+			c.toastText = "cannot send API request (backend error)"
 			return
 		}
 
@@ -106,6 +116,10 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true),
 			app.Label().Text("passphrase"),
+		),
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true),
+			app.Label().Text("passphrase again"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true),
