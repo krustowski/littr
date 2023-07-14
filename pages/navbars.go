@@ -27,12 +27,18 @@ type footer struct {
 const headerString = "littr"
 
 func (h *header) OnAppUpdate(ctx app.Context) {
+	// preserve update button
+	if h.updateAvailable {
+		return
+	}
+
 	// Reports that an app update is available.
 	h.updateAvailable = ctx.AppUpdateAvailable()
 }
 
 func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
 	// Reloads the page to display the modifications.
+	h.updateAvailable = false
 	ctx.Reload()
 }
 
