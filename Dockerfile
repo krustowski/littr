@@ -8,7 +8,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine AS litter-build
+FROM golang:${GOLANG_VERSION}-alpine3.18 AS litter-build
 
 ARG APP_NAME
 
@@ -35,7 +35,7 @@ RUN go build ${APP_NAME}
 # stage 1 -- release
 #
 
-FROM alpine:3.16 AS litter-release
+FROM alpine:3.18 AS litter-release
 
 ARG APP_FLAGS
 ARG APP_PEPPER
