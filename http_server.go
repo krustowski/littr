@@ -40,11 +40,11 @@ func initServer() {
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
 		Styles: []string{
-			"https://cdn.jsdelivr.net/npm/beercss@2.3.0/dist/cdn/beer.min.css",
+			"https://cdn.jsdelivr.net/npm/beercss@3.2.13/dist/cdn/beer.min.css",
 		},
 		Scripts: []string{
-			"https://cdn.jsdelivr.net/npm/beercss@2.3.0/dist/cdn/beer.min.js",
-			"https://cdn.jsdelivr.net/npm/material-dynamic-colors@0.0.10/dist/cdn/material-dynamic-colors.min.js",
+			"https://cdn.jsdelivr.net/npm/beercss@3.2.13/dist/cdn/beer.min.js",
+			"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.0.1/dist/cdn/material-dynamic-colors.min.js",
 		},
 	})
 

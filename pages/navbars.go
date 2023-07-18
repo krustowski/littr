@@ -116,7 +116,7 @@ func (h *header) Render() app.UI {
 			app.H4().Text(headerString).Class("large-padding").OnClick(h.onClickHeadline),
 
 			// app info modal
-			app.Div().Class("modal grey9 white-text"+modalInfoActiveClass).Body(
+			app.Dialog().Class("grey9 white-text"+modalInfoActiveClass).Body(
 				app.H5().Text("litter-go (littr) PWA"),
 				app.P().Text("version v"+string(os.Getenv("APP_VERSION"))),
 				app.Nav().Class("center-align").Body(
@@ -153,7 +153,7 @@ func (h *header) Render() app.UI {
 			),
 
 			// app logout modal
-			app.Div().Class("modal grey9 white-text"+modalLogoutActiveClass).Body(
+			app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Body(
 				app.H5().Text("really logout?"),
 				app.Nav().Class("center-align").Body(
 					app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
