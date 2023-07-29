@@ -50,6 +50,10 @@ func (h *header) OnMount(ctx app.Context) {
 	if !h.userLogged && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
 		ctx.Navigate("/login")
 	}
+
+	if h.userLogged && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
+		ctx.Navigate("/flow")
+	}
 }
 
 func (h *header) OnAppInstallChange(ctx app.Context) {
