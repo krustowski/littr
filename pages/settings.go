@@ -110,7 +110,7 @@ func (c *settingsContent) Render() app.UI {
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings"),
-		app.P().Text("change your passphrase, the about string or just fuck off ;)"),
+		app.P().Text("change your passphrase, and/or your bottom text"),
 		app.Div().Class("space"),
 
 		app.A().OnClick(c.dismissToast).Body(
@@ -133,7 +133,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("large-divider"),
 
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
-			app.Textarea().Text("change me").OnChange(c.ValueTo(&c.aboutText)),
+			app.Textarea().Text("").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),
