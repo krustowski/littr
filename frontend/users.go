@@ -1,4 +1,4 @@
-package pages
+package frontend
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ type UsersPage struct {
 
 type usersContent struct {
 	app.Compo
-	users []backend.User `json:"users"`
+	users map[string]backend.User `json:"users"`
 
 	loggedUser  string
 	flowRecords []string
@@ -45,7 +45,9 @@ func (c *usersContent) OnNav(ctx app.Context) {
 	ctx.LocalStorage().Get("flowRecords", &c.flowRecords)
 
 	ctx.Async(func() {
-		var usersPre backend.Users
+		usersPre := struct {
+			Users map[string]backend.User `json:"users"`
+		}{}
 
 		if data, _ := litterAPI("GET", "/api/users", nil); data != nil {
 			err := json.Unmarshal(*data, &usersPre)
@@ -138,8 +140,8 @@ func (c *usersContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(c.users).Slice(func(i int) app.UI {
-					user := c.users[i]
+				app.Range(c.users).Map(func(key string) app.UI {
+					user := c.users[key]
 
 					var inFlow bool = false
 					for _, rec := range c.flowRecords {

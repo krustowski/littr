@@ -1,4 +1,4 @@
-package pages
+package frontend
 
 import (
 	"crypto/sha512"

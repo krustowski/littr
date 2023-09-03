@@ -1,4 +1,4 @@
-package pages
+package frontend
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ type flowContent struct {
 
 	loaderShow bool
 
-	posts []backend.Post
+	posts map[string]backend.Post
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -38,10 +38,12 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 
 	ctx.Async(func() {
-		var postsRaw backend.Posts
+		postsRaw := struct {
+			Posts map[string]backend.Post `json:"posts"`
+		}{}
 
-		if data, _ := litterAPI("GET", "/api/flow", nil); data != nil {
-			err := json.Unmarshal(*data, &postsRaw)
+		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
+			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
 				return
@@ -79,8 +81,8 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(c.posts).Slice(func(i int) app.UI {
-					post := c.posts[i]
+				app.Range(c.posts).Map(func(key string) app.UI {
+					post := c.posts[key]
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
