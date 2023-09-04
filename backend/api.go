@@ -2,7 +2,6 @@ package backend
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -51,7 +50,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	resp.Write()
+	resp.Write(w)
 }
 
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +64,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "GET":
 		// fetch the flow, ergo post list
-		posts, _ := getAll(FlowCache, Post{})
+		posts, _ := getAll(FlowCache, models.Post{})
 
 		resp.Message = "ok, dumping posts"
 		resp.Code = http.StatusOK
@@ -109,7 +108,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	resp.Write()
+	resp.Write(w)
 }
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +124,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		// get user list
-		users, _ := getAll(UserCache, User{})
+		users, _ := getAll(UserCache, models.User{})
 
 		resp.Message = "ok, dumping users"
 		resp.Code = http.StatusOK
@@ -150,7 +149,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if _, found := getOne(UserCache, user.Nickname, User{}); found {
+		if _, found := getOne(UserCache, user.Nickname, models.User{}); found {
 			resp.Message = "user already exists"
 			resp.Code = http.StatusConflict
 			break
@@ -186,7 +185,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if _, found := getOne(UserCache, user.Nickname, User{}); !found {
+		if _, found := getOne(UserCache, user.Nickname, models.User{}); !found {
 			resp.Message = "user not found"
 			resp.Code = http.StatusNotFound
 			break
@@ -210,5 +209,5 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	resp.Write()
+	resp.Write(w)
 }

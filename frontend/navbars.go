@@ -1,8 +1,9 @@
 package frontend
 
 import (
-	"litter-go/backend"
 	"os"
+
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -14,7 +15,7 @@ type header struct {
 	appInstallable  bool
 
 	userLogged bool
-	userStruct backend.User
+	userStruct models.User
 
 	modalInfoShow   bool
 	modalLogoutShow bool

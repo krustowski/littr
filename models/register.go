@@ -1,8 +1,8 @@
-package backend
+package models
 
 type Registration struct {
-	ID         int    `json:""`
 	Nickname   string `json:"nickname"`
 	Passphrase string `json:"passphrase"`
 	Poll       int    `json:"poll_id"`
+	Type       string `json:"type"`
 }

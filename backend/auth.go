@@ -1,11 +1,15 @@
 package backend
 
+import (
+	"litter-go/models"
+)
+
 type UserAuth struct {
 	User     string `json:"user_name"`
 	PassHash string `json:"pass_hash"`
 }
 
-func authUser(authUser User) (*User, bool) {
+func authUser(authUser models.User) (*models.User, bool) {
 	/*users, _ := getAll(UserCache, User{})
 
 	for key, user := range users {
@@ -14,7 +18,7 @@ func authUser(authUser User) (*User, bool) {
 		}
 	}*/
 
-	user, found := getOne(UserCache, authUser.Nickname, User{})
+	user, found := getOne(UserCache, authUser.Nickname, models.User{})
 	if !found {
 		return nil, false
 	}

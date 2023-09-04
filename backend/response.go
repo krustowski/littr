@@ -20,7 +20,7 @@ type response struct {
 	Users       map[string]models.User `json:"users"`
 }
 
-func (r *Response) Write(w http.ResponseWriter) bool {
+func (r *response) Write(w http.ResponseWriter) error {
 	jsonData, err := json.Marshal(r)
 	if err != nil {
 		log.Println(err.Error())

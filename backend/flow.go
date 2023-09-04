@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"sort"
-	"time"
+	//"sort"
+	//"strconv"
+	//"time"
+
+	"litter-go/models"
 )
 
 type Posts struct {
-	Posts []Post `json:"posts"`
+	Posts map[string]models.Post `json:"posts"`
 }
 
-func getPosts() *[]Post {
+func getPosts() *map[string]models.Post {
 	var posts Posts
 
 	dat, err := os.ReadFile("/opt/data/posts.json")
@@ -28,23 +31,24 @@ func getPosts() *[]Post {
 	}
 
 	// order posts by timestamp DESC
-	sort.SliceStable(posts.Posts, func(i, j int) bool {
+	/*sort.SliceStable(posts.Posts, func(i, j int) bool {
 		return posts.Posts[i].Timestamp.After(posts.Posts[j].Timestamp)
-	})
+	})*/
 
 	return &posts.Posts
 }
 
-func addPost(post Post) bool {
-	var posts *[]Post = getPosts()
+func addPost(post models.Post) bool {
+	var posts *map[string]models.Post = getPosts()
 
-	var newPost Post = Post{
+	/*var newPost models.Post = models.Post{
 		Nickname:  post.Nickname,
 		Content:   post.Content,
 		Timestamp: time.Now(),
-	}
+	}*/
 
-	*posts = append(*posts, newPost)
+	//timestamp := strconv.FormatInt(newPost.Timestamp.Unix(), 10)
+	//*posts[timestamp] = newPost
 
 	postsToWrite := &Posts{
 		Posts: *posts,
