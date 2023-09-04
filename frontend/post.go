@@ -1,8 +1,10 @@
 package frontend
 
 import (
-	"litter-go/backend"
 	"log"
+
+	"litter-go/backend"
+	"litter-go/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -68,7 +70,7 @@ func (c *postContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("new flow post"),
+		app.H5().Text("add flow post").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("pleasure to be lit"),
 
 		app.A().OnClick(c.dismissToast).Body(

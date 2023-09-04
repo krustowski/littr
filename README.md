@@ -56,7 +56,7 @@ PUT  /api/users
 cp .env.example .env
 vi .env
 
-# build docker image (docker engine is needed)
+# build docker image (Docker engine is needed)
 make build
 
 # run docker-compose stack, start up the stack
@@ -71,12 +71,20 @@ make flush
 
 ## development
 
+litter-server container can be run locally on any dev machine (with Docker engine, or with the required Go runtime)
+
+```
+make build run
+
+http://localhost:8093/flow
+```
+
 ### roadmap to v0.4/v0.5
 + implement polls (create poll, voting)
 + implement stats
 + ~~stabilize database~~ (in-memory cache)
-+ fix layout (unwanted less-data page scrolling
-+ healthcheck as a periodic cache dumping)
++ ~~fix layout (unwanted less-data page scrolling~~
++ healthcheck as a periodic cache dumper
 
 ### roadmap to v0.3
 + ~~use local JSON storage~~

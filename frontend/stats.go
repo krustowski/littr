@@ -1,6 +1,10 @@
 package frontend
 
-import "github.com/maxence-charriere/go-app/v9/pkg/app"
+import (
+	"litter-go/config"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
+)
 
 type StatsPage struct {
 	app.Compo
@@ -26,7 +30,7 @@ func (p *StatsPage) Render() app.UI {
 
 func (c *statsContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr stats"),
+		app.H5().Text("littr stats").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
 		app.Div().Class("space"),
 	)
