@@ -37,8 +37,8 @@ func (p *PostPage) Render() app.UI {
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		c.toastShow = true
 		if c.newPost == "" {
+			c.toastShow = true
 			c.toastText = "post textarea must be filled"
 			return
 		}
@@ -52,6 +52,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			Content:   c.newPost,
 			Timestamp: time.Now(),
 		}); !ok {
+			c.toastShow = true
 			c.toastText = "backend error: cannot add new post"
 			log.Println("cannot post new post to API!")
 			return
