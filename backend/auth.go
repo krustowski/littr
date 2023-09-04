@@ -10,18 +10,20 @@ type UserAuth struct {
 }
 
 func authUser(authUser models.User) (*models.User, bool) {
-	/*users, _ := getAll(UserCache, User{})
+	users, _ := getAll(UserCache, models.User{})
 
-	for key, user := range users {
+	for _, user := range users {
 		if user.Nickname == authUser.Nickname && user.Passphrase == authUser.Passphrase {
 			return &user, true
 		}
-	}*/
-
-	user, found := getOne(UserCache, authUser.Nickname, models.User{})
-	if !found {
-		return nil, false
 	}
 
-	return &user, true
+	return nil, false
+
+	/*user, found := getOne(UserCache, authUser.Nickname, models.User{})
+	if !found {
+		return nil, false
+	}*/
+
+	//return &user, true
 }

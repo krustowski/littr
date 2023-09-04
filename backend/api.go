@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,8 +13,10 @@ import (
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
+	log.Println("[auth] new connection from: " + r.RemoteAddr)
 
 	w.Header().Add("Content-Type", "application/json")
+	resp.AuthGranted = false
 
 	switch r.Method {
 	case "POST":
@@ -21,13 +24,15 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			log.Println("[auth] " + err.Error())
+			resp.Message = "backend error: cannot read input stream"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
 		if err = json.Unmarshal(reqBody, &user); err != nil {
-			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			log.Println("[auth] " + err.Error())
+			resp.Message = "backend error: cannot unmarshall request data"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
@@ -35,15 +40,17 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
+			log.Println("[auth] wrong login")
 			resp.Message = "user not found, or wrong passphrase entered"
 			resp.Code = http.StatusNotFound
-			resp.AuthGranted = false
-			return
+			break
 		}
 
-		resp.AuthGranted = true
+		resp.AuthGranted = ok
+		resp.Code = http.StatusOK
 		resp.FlowList = u.FlowList
 		break
+
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
@@ -55,6 +62,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
+	log.Println("[flow] new connection from: " + r.RemoteAddr)
 
 	w.Header().Add("Content-Type", "application/json")
 
@@ -62,6 +70,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		// remove a post
 		break
+
 	case "GET":
 		// fetch the flow, ergo post list
 		posts, _ := getAll(FlowCache, models.Post{})
@@ -70,6 +79,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusOK
 		resp.Posts = posts
 		break
+
 	case "POST":
 		// post a new post
 		var post models.Post
@@ -94,14 +104,16 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		resp.Posts[key] = post
+		//resp.Posts[key] = post
 
 		resp.Message = "ok, adding new post"
 		resp.Code = http.StatusCreated
 		break
+
 	case "PUT":
 		// edit/update a post
 		break
+
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
@@ -111,10 +123,13 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+func StatsHandler(w http.ResponseWriter, r *http.Request) {
+}
+
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
+	log.Println("[user] new connection from: " + r.RemoteAddr)
 
-	//r.Header.Get("X-System-Token")
 	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
@@ -161,7 +176,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		resp.Users[user.Nickname] = user
+		//resp.Users[user.Nickname] = user
 
 		resp.Message = "ok, adding user"
 		resp.Code = http.StatusCreated
@@ -197,7 +212,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		resp.Users[user.Nickname] = user
+		//resp.Users[user.Nickname] = user
 
 		resp.Message = "ok, user updated"
 		resp.Code = http.StatusCreated

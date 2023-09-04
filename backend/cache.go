@@ -7,6 +7,7 @@ import (
 var (
 	FlowCache *core.Cache
 	PollCache *core.Cache
+	//SessionCache *core.Cache
 	UserCache *core.Cache
 )
 
