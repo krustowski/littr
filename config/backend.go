@@ -1,7 +1,11 @@
 package config
 
+import (
+	"os"
+)
+
 var (
-	BackendToken string = ""
+	BackendToken string
 )
 
 func initBackendConfig() {

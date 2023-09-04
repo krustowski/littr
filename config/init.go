@@ -2,6 +2,6 @@ package config
 
 func Init() {
 	initBackendConfig()
-	initDrontendConfig()
+	initFrontendConfig()
 	return
 }
