@@ -9,7 +9,7 @@ microblogging service without notifications and pesky messaging, just a raw mind
 + files related to REST API backend service, this API server is used by WASM client for fetching of app's data
 
 `config`
-+ configuration files for various litter module packages
++ configuration procedures for various litter module packages
 
 `data/`
 + sample data files used to flush existing container data by `make flush`

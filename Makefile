@@ -89,7 +89,7 @@ stop:
 
 .PHONY: version
 version: 
-	@[ -f "./.env" ] && cat .env | sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | sed -e 's/\(SWAPI_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
+	@[ -f "./.env" ] && cat .env | sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | sed -e 's/\(API_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
 
 .PHONY: push
 push:
