@@ -1,5 +1,5 @@
 # litter-go
-litter again, now in Go as PWA
+litter again, now in Go as a PWA
 
 microblogging service without notifications and pesky messaging, just a raw mind _flow_
 
@@ -11,14 +11,14 @@ microblogging service without notifications and pesky messaging, just a raw mind
 `data/`
 + sample data files used to flush existing container data by `make flush`
 
-`pages/`
+`frontend/`
 + app pages' files sorted by their name(s)
 
 `web/`
 + static web files, logos, manifest
 
-`.env`
-+ environmental contants/vars for the app to run smoothly
+`.env`/`.env.example`
++ environmental contants/vars for the app to run smoothly (in Docker)
 
 `http_server.go`
 + init app file for the app's backend side with REST API service
@@ -42,6 +42,7 @@ POST /api/auth
 
 POST /api/flow
 GET  /api/flow
+DELETE /api/flow/:key
 
 POST /api/users
 GET  /api/users
@@ -73,6 +74,9 @@ make flush
 ### roadmap to v0.4/v0.5
 + implement polls (create poll, voting)
 + implement stats
++ ~~stabilize database~~ (in-memory cache)
++ fix layout (unwanted less-data page scrolling
++ healthcheck as a periodic cache dumping)
 
 ### roadmap to v0.3
 + ~~use local JSON storage~~
