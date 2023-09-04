@@ -6,8 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	"litter-go/config"
+	//"litter-go/config"
 )
 
 func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
@@ -39,7 +38,7 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	req.Header.Set("X-API-Token", config.BackendToken)
+	//req.Header.Set("X-API-Token", config.BackendToken)
 
 	client := http.Client{}
 

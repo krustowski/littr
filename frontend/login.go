@@ -3,7 +3,8 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
-	"os"
+	//"log"
+	//"os"
 
 	"litter-go/config"
 	"litter-go/models"
@@ -54,33 +55,45 @@ func (p *LoginPage) Render() app.UI {
 
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		c.toastShow = true
 		if c.nickname == "" || c.passphrase == "" {
+			c.toastShow = true
 			c.toastText = "all fields need to be filled"
 			return
 		}
 
-		response := struct {
-			Message     string   `json:"message"`
-			AuthGranted bool     `json:"auth_granted"`
-			FlowRecords []string `json:"flow_records"`
-		}{}
+		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
 
-		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
-
-		respRaw, _ := litterAPI("POST", "/api/auth", &models.User{
+		respRaw, ok := litterAPI("POST", "/api/auth", &models.User{
 			Nickname:   c.nickname,
 			Passphrase: string(passHash[:]),
 		})
 
-		if respRaw == nil {
-			c.toastText = "generic backend error"
+		if !ok {
+			c.toastShow = true
+			c.toastText = "backend error: API call failed"
 			return
 		}
 
-		_ = json.Unmarshal(*respRaw, &response)
+		if respRaw == nil {
+			c.toastShow = true
+			c.toastText = "backend error: blank response from API"
+			return
+		}
+
+		response := struct {
+			Message     string `json:"message"`
+			AuthGranted bool   `json:"auth_granted"`
+			//FlowRecords []string `json:"flow_records"`
+		}{}
+
+		if err := json.Unmarshal(*respRaw, &response); err != nil {
+			c.toastShow = true
+			c.toastText = "backend error: cannot unmarshal response: " + err.Error()
+			return
+		}
+
 		if !response.AuthGranted {
-			//c.toastText = response.Message
+			c.toastShow = true
 			c.toastText = "access denied"
 			return
 		}
@@ -88,7 +101,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		c.toastShow = false
 		ctx.LocalStorage().Set("userLogged", true)
 		ctx.LocalStorage().Set("userName", c.nickname)
-		ctx.LocalStorage().Set("flowRecords", response.FlowRecords)
+		//ctx.LocalStorage().Set("flowRecords", response.FlowRecords)
 		ctx.Navigate("/flow")
 	})
 }

@@ -1,8 +1,7 @@
 package frontend
 
 import (
-	"os"
-
+	"litter-go/config"
 	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -122,8 +121,12 @@ func (h *header) Render() app.UI {
 
 			// app info modal
 			app.Dialog().Class("grey9 white-text"+modalInfoActiveClass).Body(
-				app.H5().Text("litter-go (littr) PWA"),
-				app.P().Text("version v"+string(os.Getenv("APP_VERSION"))),
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("litter-go (littr) PWA"),
+				),
+				app.Nav().Class("center-align").Body(
+					app.P().Text("version v"+config.Version),
+				),
 				app.Nav().Class("center-align").Body(
 					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
 				),
@@ -159,7 +162,10 @@ func (h *header) Render() app.UI {
 
 			// app logout modal
 			app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Body(
-				app.H5().Text("really logout?"),
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("really logout?"),
+				),
+				app.Div().Class("large-space"),
 				app.Nav().Class("center-align").Body(
 					app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
 					app.Button().Class("border deep-orange7 white-text").Text("nah").OnClick(h.onClickModalDismiss),
