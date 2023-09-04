@@ -18,6 +18,7 @@ type flowContent struct {
 	app.Compo
 
 	loaderShow bool
+	loggedUser string
 
 	posts map[string]models.Post
 }
@@ -33,6 +34,10 @@ func (p *FlowPage) Render() app.UI {
 		&footer{},
 		&flowContent{},
 	)
+}
+
+func (c *flowContent) OnMount(ctx app.Context) {
+	ctx.LocalStorage().Get("userName", &c.loggedUser)
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
@@ -90,11 +95,30 @@ func (c *flowContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
-							app.B().Text(post.Nickname).Class("deep-orange-text"),
-							app.Div().Class("space"),
-							app.Text(post.Content),
-							app.Div().Class("space"),
-							app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05")),
+							app.P().Body(
+								app.B().Text(post.Nickname).Class("deep-orange-text"),
+							),
+
+							app.P().Body(
+								app.Text(post.Content),
+							),
+
+							app.Div().Class("row").Body(
+								app.Div().Class("max").Body(
+									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05")),
+								),
+								app.If(c.loggedUser == post.Nickname,
+									app.B().Text(post.ReactionCount),
+									app.Button().Class("transparent circle").Body(
+										app.I().Text("delete"),
+									),
+								).Else(
+									app.B().Text(post.ReactionCount),
+									app.Button().Class("transparent circle").Body(
+										app.I().Text("star"),
+									),
+								),
+							),
 						),
 					)
 				}),
