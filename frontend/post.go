@@ -2,9 +2,10 @@ package frontend
 
 import (
 	"log"
+	"time"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -46,9 +47,10 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		ctx.LocalStorage().Get("userName", &author)
 
 		// add new post to backend struct
-		if _, ok := litterAPI("POST", "/api/flow", backend.Post{
-			Nickname: author,
-			Content:  c.newPost,
+		if _, ok := litterAPI("POST", "/api/flow", models.Post{
+			Nickname:  author,
+			Content:   c.newPost,
+			Timestamp: time.Now(),
 		}); !ok {
 			log.Println("cannot post new post to API!")
 			return

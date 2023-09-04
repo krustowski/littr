@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -19,7 +19,7 @@ type flowContent struct {
 
 	loaderShow bool
 
-	posts map[string]backend.Post
+	posts map[string]models.Post
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -40,7 +40,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		postsRaw := struct {
-			Posts map[string]backend.Post `json:"posts"`
+			Posts map[string]models.Post `json:"posts"`
 		}{}
 
 		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {

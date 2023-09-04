@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -16,7 +16,7 @@ type UsersPage struct {
 
 type usersContent struct {
 	app.Compo
-	users map[string]backend.User `json:"users"`
+	users map[string]models.User `json:"users"`
 
 	loggedUser  string
 	flowRecords []string
@@ -48,10 +48,10 @@ func (c *usersContent) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		usersPre := struct {
-			Users map[string]backend.User `json:"users"`
+			Users map[string]models.User `json:"users"`
 		}{}
 
-		if data, _ := litterAPI("GET", "/api/users", nil); data != nil {
+		if data, ok := litterAPI("GET", "/api/users", nil); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -80,7 +80,7 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
-		updateData := &backend.User{
+		updateData := &models.User{
 			Nickname:   c.loggedUser,
 			FlowToggle: flowName,
 		}

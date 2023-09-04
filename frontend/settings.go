@@ -4,8 +4,8 @@ import (
 	"crypto/sha512"
 	"os"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -59,7 +59,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 
 		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
 
-		if _, ok := litterAPI("PUT", "/api/users", backend.User{
+		if _, ok := litterAPI("PUT", "/api/users", models.User{
 			Nickname:   c.loggedUser,
 			Passphrase: string(passHash[:]),
 		}); !ok {
@@ -86,7 +86,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if _, ok := litterAPI("PUT", "/api/users", backend.User{
+		if _, ok := litterAPI("PUT", "/api/users", models.User{
 			Nickname: c.loggedUser,
 			About:    c.aboutText,
 		}); !ok {

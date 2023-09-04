@@ -3,8 +3,8 @@ package frontend
 import (
 	"strconv"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -16,7 +16,7 @@ type PollsPage struct {
 type pollsContent struct {
 	app.Compo
 
-	polls []backend.Poll
+	polls []models.Poll
 
 	toastShow bool
 	toastText string
@@ -40,18 +40,18 @@ func (c *pollsContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *pollsContent) Render() app.UI {
-	c.polls = []backend.Poll{
+	c.polls = []models.Poll{
 		{
 			Question: "wtf???",
-			OptionOne: backend.PollOption{
+			OptionOne: models.PollOption{
 				Content: "lmao",
 				Counter: 5,
 			},
-			OptionTwo: backend.PollOption{
+			OptionTwo: models.PollOption{
 				Content: "hm",
 				Counter: 2,
 			},
-			OptionThree: backend.PollOption{
+			OptionThree: models.PollOption{
 				Content: "idk",
 				Counter: 10,
 			},

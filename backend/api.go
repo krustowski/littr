@@ -7,17 +7,9 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-)
 
-type response struct {
-	AuthGranted bool            `json:"auth_granted" default:false`
-	Code        int             `json:"code"`
-	FlowList    []string        `json:"flow_records"`
-	Key         string          `json:"key"`
-	Message     string          `json:"message"`
-	Posts       map[string]Post `json:"posts"`
-	Users       map[string]User `json:"users"`
-}
+	"litter-go/models"
+)
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -26,7 +18,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
-		var user User
+		var user models.User
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -59,8 +51,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	jsonData, _ := json.Marshal(resp)
-	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+	resp.Write()
 }
 
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +73,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "POST":
 		// post a new post
-		var post Post
+		var post models.Post
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -118,8 +109,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	jsonData, _ := json.Marshal(resp)
-	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+	resp.Write()
 }
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +134,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 		// post new user
-		var user User
+		var user models.User
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -180,7 +170,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "PUT":
 		// edit/update an user
-		var user User
+		var user models.User
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -220,7 +210,5 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// send JSON response
-	jsonData, _ := json.Marshal(resp)
-	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+	resp.Write()
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -68,7 +68,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 
 		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
 
-		respRaw, _ := litterAPI("POST", "/api/auth", &backend.User{
+		respRaw, _ := litterAPI("POST", "/api/auth", &models.User{
 			Nickname:   c.nickname,
 			Passphrase: string(passHash[:]),
 		})

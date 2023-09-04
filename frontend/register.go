@@ -6,8 +6,8 @@ import (
 	"net/mail"
 	"os"
 
-	"litter-go/backend"
 	"litter-go/config"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -72,7 +72,7 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 
 		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
 
-		var user backend.User = backend.User{
+		var user models.User = models.User{
 			Nickname:   c.nickname,
 			Passphrase: string(passHash[:]),
 			Email:      c.email,
