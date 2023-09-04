@@ -63,10 +63,9 @@ info:
 
 
 .PHONY: fmt
-fmt:
+fmt: version
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
-	@gofmt -d .
-	@find . -name "*.go" -exec gofmt {} \;
+	@gofmt -w -s .
 
 .PHONY: build
 build: 
@@ -90,7 +89,7 @@ stop:
 
 .PHONY: version
 version: 
-	@cp .env .env.example
+	@[ -f "./.env" ] && cat .env | sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | sed -e 's/\(SWAPI_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
 
 .PHONY: push
 push:

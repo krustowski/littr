@@ -1,5 +1,5 @@
 # litter-go
-litter again, now in Go as PWA
+litter again, now in Go as a PWA
 
 microblogging service without notifications and pesky messaging, just a raw mind _flow_
 
@@ -8,17 +8,23 @@ microblogging service without notifications and pesky messaging, just a raw mind
 `backend/`
 + files related to REST API backend service, this API server is used by WASM client for fetching of app's data
 
+`config`
++ configuration files for various litter module packages
+
 `data/`
 + sample data files used to flush existing container data by `make flush`
 
-`pages/`
+`frontend/`
 + app pages' files sorted by their name(s)
+
+`models`
++ various model declarations
 
 `web/`
 + static web files, logos, manifest
 
-`.env`
-+ environmental contants/vars for the app to run smoothly
+`.env`/`.env.example`
++ environmental contants/vars for the app to run smoothly (in Docker)
 
 `http_server.go`
 + init app file for the app's backend side with REST API service
@@ -42,6 +48,7 @@ POST /api/auth
 
 POST /api/flow
 GET  /api/flow
+DELETE /api/flow/:key
 
 POST /api/users
 GET  /api/users
@@ -55,7 +62,7 @@ PUT  /api/users
 cp .env.example .env
 vi .env
 
-# build docker image (docker engine is needed)
+# build docker image (Docker engine is needed)
 make build
 
 # run docker-compose stack, start up the stack
@@ -70,9 +77,20 @@ make flush
 
 ## development
 
+litter-server container can be run locally on any dev machine (with Docker engine, or with the required Go runtime)
+
+```
+make fmt build run
+
+http://localhost:8093/flow
+```
+
 ### roadmap to v0.4/v0.5
 + implement polls (create poll, voting)
 + implement stats
++ ~~stabilize database~~ (in-memory cache)
++ ~~fix layout (unwanted less-data page scrolling~~
++ healthcheck as a periodic cache dumper
 
 ### roadmap to v0.3
 + ~~use local JSON storage~~

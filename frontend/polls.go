@@ -1,8 +1,10 @@
-package pages
+package frontend
 
 import (
-	"litter-go/backend"
 	"strconv"
+
+	"litter-go/backend"
+	"litter-go/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -62,7 +64,7 @@ func (c *pollsContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr polls"),
+		app.H5().Text("littr polls").Style("padding-top", config.HeaderTopPadding),
 		app.Div().Class("space"),
 
 		app.A().OnClick(c.dismissToast).Body(

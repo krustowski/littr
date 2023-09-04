@@ -1,9 +1,11 @@
-package pages
+package frontend
 
 import (
 	"crypto/sha512"
-	"litter-go/backend"
 	"os"
+
+	"litter-go/backend"
+	"litter-go/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -109,8 +111,8 @@ func (c *settingsContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr settings"),
-		app.P().Text("change your passphrase, and/or your bottom text"),
+		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
+		app.P().Text("change your passphrase, or your bottom text"),
 		app.Div().Class("space"),
 
 		app.A().OnClick(c.dismissToast).Body(

@@ -8,22 +8,23 @@ import (
 	"net/http"
 
 	"litter-go/backend"
-	"litter-go/pages"
+	"litter-go/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"go.savla.dev/swis/v5/pkg/core"
 )
 
 func initWASM() {
-	app.Route("/", &pages.LoginPage{})
-	app.Route("/flow", &pages.FlowPage{})
-	app.Route("/login", &pages.LoginPage{})
-	app.Route("/logout", &pages.LoginPage{})
-	app.Route("/polls", &pages.PollsPage{})
-	app.Route("/post", &pages.PostPage{})
-	app.Route("/register", &pages.RegisterPage{})
-	app.Route("/settings", &pages.SettingsPage{})
-	app.Route("/stats", &pages.StatsPage{})
-	app.Route("/users", &pages.UsersPage{})
+	app.Route("/", &frontend.LoginPage{})
+	app.Route("/flow", &frontend.FlowPage{})
+	app.Route("/login", &frontend.LoginPage{})
+	app.Route("/logout", &frontend.LoginPage{})
+	app.Route("/polls", &frontend.PollsPage{})
+	app.Route("/post", &frontend.PostPage{})
+	app.Route("/register", &frontend.RegisterPage{})
+	app.Route("/settings", &frontend.SettingsPage{})
+	app.Route("/stats", &frontend.StatsPage{})
+	app.Route("/users", &frontend.UsersPage{})
 
 	app.RunWhenOnBrowser()
 }
@@ -48,9 +49,13 @@ func initServer() {
 		},
 	})
 
+	backend.FlowCache = &core.Cache{}
+	backend.PollCache = &core.Cache{}
+	backend.UserCache = &core.Cache{}
+
+	http.HandleFunc("/api/auth", backend.AuthHandler)
 	http.HandleFunc("/api/flow", backend.FlowHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
-	http.HandleFunc("/api/auth", backend.AuthHandler)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

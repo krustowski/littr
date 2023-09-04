@@ -1,9 +1,9 @@
-package pages
+package frontend
 
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 )
@@ -27,7 +27,7 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 			log.Println(err.Error())
 			return nil, false
 		}
-		req.Header.Set("Content-Type", "application/byte")
+		req.Header.Set("Content-Type", "application/json")
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
@@ -47,7 +47,7 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 
 	defer res.Body.Close()
 
-	respData, err := ioutil.ReadAll(res.Body)
+	respData, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Print(err)
 		return nil, false

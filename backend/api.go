@@ -4,59 +4,68 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
+type response struct {
+	AuthGranted bool            `json:"auth_granted" default:false`
+	Code        int             `json:"code"`
+	FlowList    []string        `json:"flow_records"`
+	Key         string          `json:"key"`
+	Message     string          `json:"message"`
+	Posts       map[string]Post `json:"posts"`
+	Users       map[string]User `json:"users"`
+}
+
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
-	response := struct {
-		Message     string   `json:"message"`
-		Code        int      `json:"code"`
-		AuthGranted bool     `json:"auth_granted" default:false`
-		FlowRecords []string `json:"flow_records"`
-	}{}
+	resp := response{}
+
 	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
 	case "POST":
 		var user User
 
-		reqBody, _ := ioutil.ReadAll(r.Body)
-		err := json.Unmarshal(reqBody, &user)
+		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err.Error())
-			response.Message = err.Error()
-			return
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
 		}
 
+		if err = json.Unmarshal(reqBody, &user); err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
-			response.Message = "user not found or wrong passphrase entered"
-			response.Code = http.StatusNotFound
-			response.AuthGranted = false
+			resp.Message = "user not found, or wrong passphrase entered"
+			resp.Code = http.StatusNotFound
+			resp.AuthGranted = false
 			return
 		}
 
-		response.AuthGranted = true
-		response.FlowRecords = u.Flow
+		resp.AuthGranted = true
+		resp.FlowList = u.FlowList
 		break
 	default:
-		response.Message = "disallowed method"
-		response.Code = http.StatusBadRequest
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
 		break
 	}
 
-	jsonData, _ := json.Marshal(response)
+	jsonData, _ := json.Marshal(resp)
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 }
 
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
-	response := struct {
-		Message string `json:"message"`
-		Code    int    `json:"code"`
-		Posts   []Post `json:"posts"`
-	}{}
+	resp := response{}
+
 	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
@@ -64,58 +73,59 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		// remove a post
 		break
 	case "GET":
-		// get flow, ergo post list
-		var posts *[]Post = getPosts()
-		if posts == nil {
-			log.Println("error getting post flow list")
-			return
-		}
+		// fetch the flow, ergo post list
+		posts, _ := getAll(FlowCache, Post{})
 
-		response.Message = "ok, dumping posts"
-		response.Code = http.StatusOK
-		response.Posts = *posts
+		resp.Message = "ok, dumping posts"
+		resp.Code = http.StatusOK
+		resp.Posts = posts
 		break
 	case "POST":
 		// post a new post
 		var post Post
 
-		reqBody, _ := ioutil.ReadAll(r.Body)
-		err := json.Unmarshal(reqBody, &post)
+		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err.Error())
-			return
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
 		}
 
-		if ok := addPost(post); !ok {
-			log.Println("error adding new post")
-			return
+		if err := json.Unmarshal(reqBody, &post); err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
 		}
 
-		response.Message = "ok, adding post"
-		response.Code = http.StatusCreated
-		response.Posts = append(response.Posts, post)
+		key := strconv.FormatInt(time.Now().Unix(), 10)
+		if saved := setOne(FlowCache, key, post); !saved {
+			resp.Message = "backend error: cannot save new post (cache error)"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		resp.Posts[key] = post
+
+		resp.Message = "ok, adding new post"
+		resp.Code = http.StatusCreated
 		break
 	case "PUT":
 		// edit/update a post
 		break
 	default:
-		response.Message = "disallowed method"
-		response.Code = http.StatusBadRequest
-
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
 		break
 	}
 
-	jsonData, _ := json.Marshal(response)
+	jsonData, _ := json.Marshal(resp)
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 }
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
-	response := struct {
-		Message     string   `json:"message"`
-		Code        int      `json:"code"`
-		Users       []User   `json:"users"`
-		FlowRecords []string `json:"flow_records"`
-	}{}
+	resp := response{}
+
+	//r.Header.Get("X-System-Token")
 	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
@@ -125,95 +135,92 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		// get user list
-		var users *[]User = getUsers()
-		if users == nil {
-			log.Println("error getting user list")
-			return
-		}
+		users, _ := getAll(UserCache, User{})
 
-		response.Message = "ok, dumping users"
-		response.Code = http.StatusOK
-		response.Users = *users
+		resp.Message = "ok, dumping users"
+		resp.Code = http.StatusOK
+		resp.Users = users
 		break
 
 	case "POST":
 		// post new user
 		var user User
 
-		reqBody, _ := ioutil.ReadAll(r.Body)
-		err := json.Unmarshal(reqBody, &user)
+		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err.Error())
-			return
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
 		}
 
-		if ok := addUser(user); !ok {
-			log.Println("error adding new user")
-			return
+		err = json.Unmarshal(reqBody, &user)
+		if err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
 		}
 
-		response.Message = "ok, adding user"
-		response.Code = http.StatusCreated
-		response.Users = append(response.Users, user)
+		if _, found := getOne(UserCache, user.Nickname, User{}); found {
+			resp.Message = "user already exists"
+			resp.Code = http.StatusConflict
+			break
+		}
+
+		if saved := setOne(UserCache, user.Nickname, user); !saved {
+			resp.Message = "backend error: cannot save new user"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		resp.Users[user.Nickname] = user
+
+		resp.Message = "ok, adding user"
+		resp.Code = http.StatusCreated
 		break
 
 	case "PUT":
 		// edit/update an user
-		var reqUser User
+		var user User
 
-		reqBody, _ := ioutil.ReadAll(r.Body)
-		err := json.Unmarshal(reqBody, &reqUser)
+		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-
-		// userFlowToggle(User)
-		if reqUser.FlowToggle != "" {
-			u, ok := userFlowToggle(reqUser)
-			if !ok {
-				log.Println("error updating user's flow")
-				return
-			}
-			response.FlowRecords = u.Flow
-
-			response.Message = "ok, flow record list changed for user " + reqUser.Nickname
-			response.Code = http.StatusOK
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		//
-		if reqUser.About != "" {
-			_, ok := editUserAbout(reqUser)
-			if !ok {
-				log.Println("error updating user's about text")
-				return
-			}
-
-			response.Message = "ok, about text changed for user " + reqUser.Nickname
-			response.Code = http.StatusOK
+		err = json.Unmarshal(reqBody, &user)
+		if err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		if reqUser.Passphrase != "" {
-			_, ok := editUserPassphrase(reqUser)
-			if !ok {
-				log.Println("error updating user's passphrase")
-				return
-			}
-
-			response.Message = "ok, passphrase changed for user " + reqUser.Nickname
-			response.Code = http.StatusOK
+		if _, found := getOne(UserCache, user.Nickname, User{}); !found {
+			resp.Message = "user not found"
+			resp.Code = http.StatusNotFound
 			break
 		}
+
+		if saved := setOne(UserCache, user.Nickname, user); !saved {
+			resp.Message = "backend error: cannot update the user"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		resp.Users[user.Nickname] = user
+
+		resp.Message = "ok, user updated"
+		resp.Code = http.StatusCreated
 		break
 
 	default:
-		response.Message = "disallowed method"
-		response.Code = http.StatusBadRequest
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
 
 	}
 
-	jsonData, _ := json.Marshal(response)
+	// send JSON response
+	jsonData, _ := json.Marshal(resp)
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 }

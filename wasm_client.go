@@ -4,22 +4,22 @@
 package main
 
 import (
-	"litter-go/pages"
+	frontend "litter-go/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 func initWASM() {
-	app.Route("/", &pages.LoginPage{})
-	app.Route("/flow", &pages.FlowPage{})
-	app.Route("/login", &pages.LoginPage{})
-	app.Route("/logout", &pages.LoginPage{})
-	app.Route("/polls", &pages.PollsPage{})
-	app.Route("/post", &pages.PostPage{})
-	app.Route("/register", &pages.RegisterPage{})
-	app.Route("/settings", &pages.SettingsPage{})
-	app.Route("/stats", &pages.StatsPage{})
-	app.Route("/users", &pages.UsersPage{})
+	app.Route("/", &frontend.LoginPage{})
+	app.Route("/flow", &frontend.FlowPage{})
+	app.Route("/login", &frontend.LoginPage{})
+	app.Route("/logout", &frontend.LoginPage{})
+	app.Route("/polls", &frontend.PollsPage{})
+	app.Route("/post", &frontend.PostPage{})
+	app.Route("/register", &frontend.RegisterPage{})
+	app.Route("/settings", &frontend.SettingsPage{})
+	app.Route("/stats", &frontend.StatsPage{})
+	app.Route("/users", &frontend.UsersPage{})
 
 	app.RunWhenOnBrowser()
 }

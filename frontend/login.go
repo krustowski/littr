@@ -1,4 +1,4 @@
-package pages
+package frontend
 
 import (
 	"crypto/sha512"
@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"litter-go/backend"
+	"litter-go/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -103,7 +104,7 @@ func (c *loginContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr login"),
+		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
 		app.P().Body(
 			app.A().Href("/register").Text("littr, bc even litter can be lit ---> register here"),
 		),

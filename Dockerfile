@@ -2,6 +2,7 @@
 # litter-go / Dockerfile
 #
 
+
 #
 # stage 0 -- build
 #
@@ -19,10 +20,6 @@ RUN apk add git gcc
 
 WORKDIR /go/src/${APP_NAME}
 COPY . .
-
-#RUN go mod init ${APP_NAME}
-RUN go mod tidy
-#RUN go install
 
 # build the client -- wasm binary
 RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm
@@ -57,6 +54,6 @@ COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 WORKDIR /opt
 #USER ${DOCKER_USER}
 EXPOSE ${DOCKER_INTERNAL_PORT}
-CMD ./litter-go
+ENTRYPOINT ["/opt/litter-go"]
 
 
