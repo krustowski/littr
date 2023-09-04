@@ -194,7 +194,7 @@ func (c *usersContent) Render() app.UI {
 
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
-			app.A().Class("loader center large deep-orange"+loaderActiveClass),
+			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
 		),
 	)
 }

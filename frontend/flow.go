@@ -105,7 +105,7 @@ func (c *flowContent) Render() app.UI {
 
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
-									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05")),
+									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
 								),
 								app.If(c.loggedUser == post.Nickname,
 									app.B().Text(post.ReactionCount),
@@ -127,7 +127,7 @@ func (c *flowContent) Render() app.UI {
 
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
-			app.A().Class("loader center large deep-orange"+loaderActiveClass),
+			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
 		),
 	)
 }
