@@ -65,8 +65,7 @@ info:
 .PHONY: fmt
 fmt:
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
-	@gofmt -d .
-	@find . -name "*.go" -exec gofmt {} \;
+	@gofmt -w -s .
 
 .PHONY: build
 build: 
@@ -90,10 +89,10 @@ stop:
 
 .PHONY: version
 version: 
-	@cp .env .env.example
+	@[ -f "./.env" ] && cat .env | sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | sed -e 's/\(SWAPI_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
 
 .PHONY: push
-push:
+push: version
 	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
 	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
 	@git push --follow-tags

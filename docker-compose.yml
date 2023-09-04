@@ -4,12 +4,8 @@ networks:
   traefik_savla:
     name: ${DOCKER_NETWORK_NAME}
 
-volumes:
-  litter-json-storage:
-    name: litter-json-storage
-
 services:
-  litter-server:
+  litter-backend:
     image: ${DOCKER_IMAGE_TAG}
     container_name: ${DOCKER_CONTAINER_NAME}
     env_file:
@@ -25,15 +21,10 @@ services:
         TZ: ${TZ}
     restart: unless-stopped
     cpus: 0.3
-    dns:
-      - 10.4.5.130
-      - 1.0.0.2
     mem_reservation: 128m
     #environment:
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
-    volumes: 
-      - "litter-json-storage:/opt/data"
     networks:
       - ${DOCKER_NETWORK_NAME}
     labels:
