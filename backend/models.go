@@ -22,7 +22,7 @@ type User struct {
 	Active bool `json:"active"`
 
 	// List of other accounts to show in the flow.
-	Flow []string `json:"flow"`
+	FlowList []string `json:"flow_list"`
 
 	// Field used for flow user add/removal.
 	FlowToggle string `json:"flow_toggle"`
@@ -58,6 +58,9 @@ type Post struct {
 
 	// Post ID being replied to.
 	ReplyTo int `json:"reply_to"`
+
+	// ReactionCount counts the number of item's reactions.
+	ReactionCount int `json:"reaction_count"`
 }
 
 type Log struct {
