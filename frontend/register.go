@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"log"
 	"net/mail"
-	"os"
 
 	"litter-go/config"
 	"litter-go/models"
@@ -70,7 +69,7 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
+		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
 
 		var user models.User = models.User{
 			Nickname:   c.nickname,
