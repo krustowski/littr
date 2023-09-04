@@ -12,8 +12,14 @@ ARG GOLANG_VERSION
 FROM golang:${GOLANG_VERSION}-alpine3.18 AS litter-build
 
 ARG APP_NAME
+ARG APP_PEPPER
+ARG APP_VERSION
+ARG API_TOKEN
 
 ENV APP_NAME ${APP_NAME}
+ENV APP_PEPPER ${APP_PEPPER}
+ENV APP_VERSION ${APP_VERSION}
+ENV API_TOKEN ${API_TOKEN}
 ENV CGO_ENABLED 1
 
 RUN apk add git gcc
@@ -22,9 +28,10 @@ WORKDIR /go/src/${APP_NAME}
 COPY . .
 
 # build the client -- wasm binary
-RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm
+RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'litter-go/config.APIToken=$API_TOKEN' -X 'litter-go/config.Version=$APP_VERSION' -X 'litter-go/config.Pepper=$APP_PEPPER'"
 
 # build the server
+#RUN go build -ldflags "-X 'litter-go/config.Version=$APP_VERSION'" ${APP_NAME}
 RUN go build ${APP_NAME}
 
 

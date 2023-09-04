@@ -15,6 +15,9 @@ services:
       args: 
         APP_NAME: ${APP_NAME}
         APP_FLAGS: ${APP_FLAGS}
+        APP_PEPPER: ${APP_PEPPER}
+        APP_VERSION: ${APP_VERSION}
+        API_TOKEN: ${API_TOKEN}
         DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 
         DOCKER_USER: ${DOCKER_USER}
         GOLANG_VERSION: ${GOLANG_VERSION}
