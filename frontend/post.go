@@ -52,6 +52,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			Content:   c.newPost,
 			Timestamp: time.Now(),
 		}); !ok {
+			c.toastText = "backend error: cannot add new post"
 			log.Println("cannot post new post to API!")
 			return
 		}
