@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"litter-go/backend"
+	"litter-go/config"
 	"litter-go/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -30,6 +31,8 @@ func initWASM() {
 }
 
 func initServer() {
+	config.Init()
+
 	http.Handle("/", &app.Handler{
 		Name:        "litter-go",
 		Description: "litter-go PWA",
@@ -55,6 +58,7 @@ func initServer() {
 
 	http.HandleFunc("/api/auth", backend.AuthHandler)
 	http.HandleFunc("/api/flow", backend.FlowHandler)
+	http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
