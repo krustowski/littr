@@ -3,6 +3,7 @@ version: '3.9'
 networks:
   traefik_savla:
     name: ${DOCKER_NETWORK_NAME}
+    external: true
 
 services:
   litter-backend:
