@@ -45,6 +45,6 @@ func setOne[T any](cache *core.Cache, key string, model T) bool {
 	return cache.Set(key, model)
 }
 
-func DeleteOne[T any](cache *core.Cache, key string) bool {
+func deleteOne(cache *core.Cache, key string) bool {
 	return cache.Delete(key)
 }

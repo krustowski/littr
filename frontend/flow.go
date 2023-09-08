@@ -20,6 +20,11 @@ type flowContent struct {
 	loaderShow bool
 	loggedUser string
 
+	toastShow bool
+	toastText string
+
+	interactedPostKey string
+
 	posts map[string]models.Post
 }
 
@@ -34,6 +39,64 @@ func (p *FlowPage) Render() app.UI {
 		&footer{},
 		&flowContent{},
 	)
+}
+
+func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastShow = false
+}
+
+func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
+	ctx.Async(func() {
+		key := ctx.JSSrc().Get("id").String()
+		log.Println(key)
+
+		if key == "" {
+			return
+		}
+
+		var author string
+		ctx.LocalStorage().Get("userName", &author)
+
+		interactedPost := c.posts[key]
+
+		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost); !ok {
+			c.toastShow = true
+			c.toastText = "backend error: cannot delete a post"
+			log.Println("cannot delete a post via API!")
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/flow")
+	})
+}
+
+func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
+	ctx.Async(func() {
+		key := ctx.JSSrc().Get("id").String()
+		log.Println(key)
+
+		if key == "" {
+			return
+		}
+
+		var author string
+		ctx.LocalStorage().Get("userName", &author)
+
+		interactedPost := c.posts[key]
+		interactedPost.ReactionCount++
+
+		// add new post to backend struct
+		if _, ok := litterAPI("PUT", "/api/flow", interactedPost); !ok {
+			c.toastShow = true
+			c.toastText = "backend error: cannot rate a post"
+			log.Println("cannot rate a post via API!")
+			return
+		}
+
+		c.toastShow = false
+		ctx.Navigate("/flow")
+	})
 }
 
 func (c *flowContent) OnMount(ctx app.Context) {
@@ -75,10 +138,22 @@ func (c *flowContent) Render() app.UI {
 		loaderActiveClass = " active"
 	}
 
+	toastActiveClass := ""
+	if c.toastShow {
+		toastActiveClass = " active"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("exclusive content incoming frfr"),
 		app.Div().Class("space"),
+
+		app.A().OnClick(c.dismissToast).Body(
+			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
+				app.I().Text("error"),
+				app.Span().Text(c.toastText),
+			),
+		),
 
 		app.Table().Class("border left-align").Body(
 			// table header
@@ -109,12 +184,12 @@ func (c *flowContent) Render() app.UI {
 								),
 								app.If(c.loggedUser == post.Nickname,
 									app.B().Text(post.ReactionCount),
-									app.Button().Class("transparent circle").Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
 									app.B().Text(post.ReactionCount),
-									app.Button().Class("transparent circle").Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
 										app.I().Text("star"),
 									),
 								),

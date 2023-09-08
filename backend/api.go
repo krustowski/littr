@@ -69,6 +69,31 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "DELETE":
 		// remove a post
+		var post models.Post
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		if err := json.Unmarshal(reqBody, &post); err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+
+		if deleted := deleteOne(FlowCache, key); !deleted {
+			resp.Message = "cannot delete post"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		resp.Message = "ok, post removed"
+		resp.Code = http.StatusOK
 		break
 
 	case "GET":
@@ -112,6 +137,31 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "PUT":
 		// edit/update a post
+		var post models.Post
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		if err := json.Unmarshal(reqBody, &post); err != nil {
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+
+		if saved := setOne(FlowCache, key, post); !saved {
+			resp.Message = "cannot update post"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		resp.Message = "ok, post removed"
+		resp.Code = http.StatusOK
 		break
 
 	default:
