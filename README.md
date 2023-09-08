@@ -46,8 +46,9 @@ microblogging service without notifications and pesky messaging, just a raw mind
 ```http
 POST /api/auth
 
-POST /api/flow
-GET  /api/flow
+POST   /api/flow
+GET    /api/flow
+PUT    /api/flow
 DELETE /api/flow/:key
 
 POST /api/users
