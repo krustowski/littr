@@ -8,6 +8,6 @@ var (
 	BackendToken string
 )
 
-func initBackendConfig() {
+func ParseEnv() {
 	BackendToken = os.Getenv("API_TOKEN")
 }

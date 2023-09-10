@@ -1,38 +1,40 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
-	// Unique user ID.
+	// ID is an unique identifier.
 	ID int `json:"id" binding:"required" validation:"required"`
 
-	// User nickname.
+	// Nickname is a login name of such user.
 	Nickname string `json:"nickname" binding:"required"`
 
-	// Hashed user password.
+	// Passphrase is a hashed pass phrase string.
 	Passphrase string `json:"passphrase"`
 
-	// User's personal e-mail.
+	// Email is a primary user's e-mail address.
 	Email string `json:"email"`
 
-	// Little user description.
+	// About is a description string of such user.
 	About string `json:"about"`
 
-	// Important boolean to indicate user's active status; required for login.
+	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`
 
-	// List of other accounts to show in the flow.
+	// FlowList is a string array of users, which posts should be added to one's flow page.
 	FlowList []string `json:"flow_list"`
 
-	// Field used for flow user add/removal.
+	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`
 
-	// UI custom color.
+	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
 
-	// UNIX timestamp of the last login.
-	LastLoginTime time.Time `json:"last_login"`
+	// LastLoginTime is an UNIX timestamp of the last user's successful log-in.
+	LastLoginTime time.Time `json:"last_login_time"`
 
-	// UNIX timestamp of the last UI interaction -- useful for 'show online'.
-	LastActiveTime time.Time `json:"last_active"`
+	// LastLoginTime is an UNIX timestamp of the last action performed by such user.
+	LastActiveTime time.Time `json:"last_active_time"`
 }
