@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,13 +12,15 @@ import (
 	"syscall"
 
 	"litter-go/backend"
+	"litter-go/config"
 	"litter-go/frontend"
+	"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"go.savla.dev/swis/v5/pkg/core"
 )
 
-func initWASM() {
+func initClient() {
 	app.Route("/", &frontend.LoginPage{})
 	app.Route("/flow", &frontend.FlowPage{})
 	app.Route("/login", &frontend.LoginPage{})
@@ -33,16 +36,38 @@ func initWASM() {
 }
 
 func initServer() {
+	config.ParseEnv()
+
+	// create a channel for logging engine
+	config.LogsChan := make(chan models.Log, 1)
+
+	// logging goroutine
+	go func() {
+		lg := <- config.LogsChan
+
+		jsonData, err := json.Marshal(lg)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+
+		log.Println(jsonData)
+	}()
+
+	// initialize caches
 	backend.FlowCache = &core.Cache{}
 	backend.PollCache = &core.Cache{}
+	backend.SessionCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
+	// load up data from local dumps (/opt/data/)
 	backend.LoadData()
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	// signals goroutine
 	go func() {
 		sig := <-sigs
 		log.Printf("caught signal '%s', dumping data...", sig)

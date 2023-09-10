@@ -9,7 +9,7 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-func initWASM() {
+func initClient() {
 	app.Route("/", &frontend.LoginPage{})
 	app.Route("/flow", &frontend.FlowPage{})
 	app.Route("/login", &frontend.LoginPage{})
