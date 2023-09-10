@@ -25,7 +25,7 @@ type flowContent struct {
 
 	interactedPostKey string
 
-	posts map[int]models.Post
+	posts map[string]models.Post
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -47,7 +47,7 @@ func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		key := ctx.JSSrc().Get("id").Int()
+		key := ctx.JSSrc().Get("id").String()
 		log.Println(key)
 
 		var author string
@@ -69,7 +69,7 @@ func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 
 func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		key := ctx.JSSrc().Get("id").Int()
+		key := ctx.JSSrc().Get("id").String()
 		log.Println(key)
 
 		var author string
@@ -100,7 +100,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		postsRaw := struct {
-			Posts map[int]models.Post `json:"posts"`
+			Posts map[string]models.Post `json:"posts"`
 		}{}
 
 		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
@@ -162,7 +162,7 @@ func (c *flowContent) Render() app.UI {
 
 			// table body
 			app.TBody().Body(
-				app.Range(c.posts).Slice(func(key int) app.UI {
+				app.Range(c.posts).Map(func(key string) app.UI {
 					post := c.posts[key]
 
 					return app.Tr().Body(
