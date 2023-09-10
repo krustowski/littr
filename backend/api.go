@@ -84,7 +84,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+		key := post.Timestamp.Unix()
 
 		if deleted := deleteOne(FlowCache, key); !deleted {
 			resp.Message = "cannot delete post"
@@ -122,14 +122,13 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := strconv.FormatInt(time.Now().Unix(), 10)
+		key := time.Now().Unix()
+
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "backend error: cannot save new post (cache error)"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
-
-		//resp.Posts[key] = post
 
 		resp.Message = "ok, adding new post"
 		resp.Code = http.StatusCreated
@@ -152,7 +151,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+		key := post.Timestamp.Unix()
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "cannot update post"

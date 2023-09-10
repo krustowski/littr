@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"sort"
 
 	"litter-go/config"
 	"litter-go/models"
@@ -25,7 +26,7 @@ type flowContent struct {
 
 	interactedPostKey string
 
-	posts map[string]models.Post
+	posts map[int]models.Post
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -121,6 +122,11 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			log.Println("cannot fetch post flow list")
 			return
 		}
+
+		// order posts by timestamp DESC
+		sort.SliceStable(postsRaw.Posts, func(i, j int) bool {
+			return postsRaw.Posts[i].Timestamp.After(postsRaw.Posts[j].Timestamp)
+		})
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {

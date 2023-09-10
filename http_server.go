@@ -44,9 +44,9 @@ func initServer() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		sig := <- sigs
+		sig := <-sigs
 		log.Printf("caught signal '%s', dumping data...", sig)
-		
+
 		backend.DumpData()
 	}()
 
