@@ -16,7 +16,7 @@ type response struct {
 	FlowList    []string               `json:"flow_records"`
 	Key         string                 `json:"key"`
 	Message     string                 `json:"message"`
-	Posts       map[string]models.Post `json:"posts"`
+	Posts       map[int]models.Post    `json:"posts"`
 	Users       map[string]models.User `json:"users"`
 }
 
