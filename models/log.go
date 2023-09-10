@@ -1,8 +1,6 @@
 package models
 
 import (
-	"encoding/json"
-	"log"
 	"time"
 )
 
@@ -25,18 +23,18 @@ type Log struct {
 	Caller string `json:"caller_name"`
 
 	// Content describes the log's very content, message etc.
-	Content string `json:"content"`
+	Message string `json:"content"`
 }
 
 func NewLog(ipAddress string) *Log {
 	log := Log{
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now(),
 	}
 	return &log
 }
 
 func (l *Log) Content(message string) {
-	l.Content = message
-	LogsChan <- l
+	l.Message = message
+	LogsChan <- *l
 	return
 }

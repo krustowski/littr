@@ -3,7 +3,6 @@ package frontend
 import (
 	"encoding/json"
 	"log"
-	"sort"
 
 	"litter-go/config"
 	"litter-go/models"
@@ -48,12 +47,8 @@ func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		key := ctx.JSSrc().Get("id").String()
+		key := ctx.JSSrc().Get("id").Int()
 		log.Println(key)
-
-		if key == "" {
-			return
-		}
 
 		var author string
 		ctx.LocalStorage().Get("userName", &author)
@@ -74,12 +69,8 @@ func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 
 func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		key := ctx.JSSrc().Get("id").String()
+		key := ctx.JSSrc().Get("id").Int()
 		log.Println(key)
-
-		if key == "" {
-			return
-		}
 
 		var author string
 		ctx.LocalStorage().Get("userName", &author)
@@ -109,7 +100,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		postsRaw := struct {
-			Posts map[string]models.Post `json:"posts"`
+			Posts map[int]models.Post `json:"posts"`
 		}{}
 
 		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
@@ -124,9 +115,9 @@ func (c *flowContent) OnNav(ctx app.Context) {
 		}
 
 		// order posts by timestamp DESC
-		sort.SliceStable(postsRaw.Posts, func(i, j int) bool {
-			return postsRaw.Posts[i].Timestamp.After(postsRaw.Posts[j].Timestamp)
-		})
+		//sort.SliceStable(postsRaw.Posts, func(i, j int) bool {
+		//	return postsRaw.Posts[i].Timestamp.After(postsRaw.Posts[j].Timestamp)
+		//})
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
@@ -171,7 +162,7 @@ func (c *flowContent) Render() app.UI {
 
 			// table body
 			app.TBody().Body(
-				app.Range(c.posts).Map(func(key string) app.UI {
+				app.Range(c.posts).Slice(func(key int) app.UI {
 					post := c.posts[key]
 
 					return app.Tr().Body(
@@ -190,12 +181,12 @@ func (c *flowContent) Render() app.UI {
 								),
 								app.If(c.loggedUser == post.Nickname,
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
+									app.Button().ID(string(key)).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
+									app.Button().ID(string(key)).Class("transparent circle").OnClick(c.onClickStar).Body(
 										app.I().Text("star"),
 									),
 								),

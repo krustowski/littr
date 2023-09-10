@@ -15,7 +15,7 @@ const (
 
 var (
 	posts = struct {
-		Posts map[int]models.Post `json:"posts"`
+		Posts map[string]models.Post `json:"posts"`
 	}{}
 
 	users = struct {

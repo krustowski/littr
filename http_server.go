@@ -36,19 +36,20 @@ func initClient() {
 }
 
 func initServer() {
+	// parse ENV contants from .env file (should be loaded using Makefile and docker-compose.yml file)
 	config.ParseEnv()
 
 	// create a channel for logging engine
-	config.LogsChan := make(chan models.Log, 1)
+	models.LogsChan = make(chan models.Log, 1)
 
 	// logging goroutine
 	go func() {
-		lg := <- config.LogsChan
+		lg := <- models.LogsChan
 
 		jsonData, err := json.Marshal(lg)
 		if err != nil {
 			log.Println(err.Error())
-			return err
+			return
 		}
 
 		log.Println(jsonData)
@@ -75,11 +76,13 @@ func initServer() {
 		backend.DumpData()
 	}()
 
+	// API routes
 	http.HandleFunc("/api/auth", backend.AuthHandler)
 	http.HandleFunc("/api/flow", backend.FlowHandler)
 	http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
 
+	// root route with custom CSS and JS definitions
 	http.Handle("/", &app.Handler{
 		Name:        "litter-go",
 		Description: "litter-go PWA",
@@ -99,6 +102,7 @@ func initServer() {
 		},
 	})
 
+	// run a HTTP server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}

@@ -26,7 +26,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			lg.Content = "[auth] " + err.Error()
+			lg.Content("[auth] " + err.Error())
 
 			resp.Message = "backend error: cannot read input stream"
 			resp.Code = http.StatusInternalServerError
@@ -34,7 +34,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err = json.Unmarshal(reqBody, &user); err != nil {
-			lg.Content = "[auth] " + err.Error()
+			lg.Content("[auth] " + err.Error())
 
 			resp.Message = "backend error: cannot unmarshall request data"
 			resp.Code = http.StatusInternalServerError
@@ -44,7 +44,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
-			lg.Content = "[auth] wrong login"
+			lg.Content("[auth] wrong login")
 
 			resp.Message = "user not found, or wrong passphrase entered"
 			resp.Code = http.StatusNotFound
@@ -89,7 +89,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := post.Timestamp.Unix()
+		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
 
 		if deleted := deleteOne(FlowCache, key); !deleted {
 			resp.Message = "cannot delete post"
@@ -127,7 +127,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := time.Now().Unix()
+		key := strconv.FormatInt(time.Now().Unix(), 10)
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "backend error: cannot save new post (cache error)"
@@ -156,7 +156,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := post.Timestamp.Unix()
+		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "cannot update post"

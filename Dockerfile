@@ -27,6 +27,8 @@ RUN apk add git gcc
 WORKDIR /go/src/${APP_NAME}
 COPY . .
 
+RUN go mod tidy
+
 # build the client -- wasm binary
 RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'litter-go/config.APIToken=$API_TOKEN' -X 'litter-go/config.Version=$APP_VERSION' -X 'litter-go/config.Pepper=$APP_PEPPER'"
 
