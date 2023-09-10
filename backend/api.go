@@ -13,7 +13,9 @@ import (
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[auth] new connection from: " + r.RemoteAddr)
+
+	lg := models.NewLog(r.RemoteAddr)
+	lg.Caller = "[auth] new connection"
 
 	w.Header().Add("Content-Type", "application/json")
 	resp.AuthGranted = false
@@ -24,14 +26,16 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("[auth] " + err.Error())
+			lg.Content = "[auth] " + err.Error()
+
 			resp.Message = "backend error: cannot read input stream"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
 		if err = json.Unmarshal(reqBody, &user); err != nil {
-			log.Println("[auth] " + err.Error())
+			lg.Content = "[auth] " + err.Error()
+
 			resp.Message = "backend error: cannot unmarshall request data"
 			resp.Code = http.StatusInternalServerError
 			break
@@ -40,7 +44,8 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
-			log.Println("[auth] wrong login")
+			lg.Content = "[auth] wrong login"
+
 			resp.Message = "user not found, or wrong passphrase entered"
 			resp.Code = http.StatusNotFound
 			break
@@ -173,6 +178,22 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func StatsHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	log.Println("[user] new connection from: " + r.RemoteAddr)
+
+	w.Header().Add("Content-Type", "application/json")
+
+	switch r.Method {
+	case "GET":
+		break
+
+	default:
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
+		break
+	}
+
+	resp.Write(w)
 }
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {

@@ -19,11 +19,4 @@ func authUser(authUser models.User) (*models.User, bool) {
 	}
 
 	return nil, false
-
-	/*user, found := getOne(UserCache, authUser.Nickname, models.User{})
-	if !found {
-		return nil, false
-	}*/
-
-	//return &user, true
 }
