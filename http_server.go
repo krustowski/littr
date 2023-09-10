@@ -6,9 +6,11 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"litter-go/backend"
-	"litter-go/config"
 	"litter-go/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -31,7 +33,27 @@ func initWASM() {
 }
 
 func initServer() {
-	config.Init()
+	backend.FlowCache = &core.Cache{}
+	backend.PollCache = &core.Cache{}
+	backend.UserCache = &core.Cache{}
+
+	backend.LoadData()
+
+	// handle system calls, signals
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <- sigs
+		log.Printf("caught signal '%s', dumping data...", sig)
+		
+		backend.DumpData()
+	}()
+
+	http.HandleFunc("/api/auth", backend.AuthHandler)
+	http.HandleFunc("/api/flow", backend.FlowHandler)
+	http.HandleFunc("/api/stats", backend.StatsHandler)
+	http.HandleFunc("/api/users", backend.UsersHandler)
 
 	http.Handle("/", &app.Handler{
 		Name:        "litter-go",
@@ -51,15 +73,6 @@ func initServer() {
 			"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.0.1/dist/cdn/material-dynamic-colors.min.js",
 		},
 	})
-
-	backend.FlowCache = &core.Cache{}
-	backend.PollCache = &core.Cache{}
-	backend.UserCache = &core.Cache{}
-
-	http.HandleFunc("/api/auth", backend.AuthHandler)
-	http.HandleFunc("/api/flow", backend.FlowHandler)
-	http.HandleFunc("/api/stats", backend.StatsHandler)
-	http.HandleFunc("/api/users", backend.UsersHandler)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

@@ -54,7 +54,8 @@ ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
 ENV DOCKER_USER ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY data/ /opt/data/
+#COPY data/.gitkeep /opt/data/.gitkeep
+#COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/litter-go /opt/litter-go
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
