@@ -86,11 +86,14 @@ make fmt build run
 http://localhost:8093/flow
 ```
 
-### roadmap to v0.4/v0.5
+### roadmap to v0.6
 + implement polls (create poll, voting)
 + implement stats
+
+### roadmap to v0.4/v0.5
 + ~~stabilize database~~ (in-memory cache)
 + ~~fix layout (unwanted less-data page scrolling~~
++ dump data on container restart/SIGINT
 + healthcheck as a periodic cache dumper
 
 ### roadmap to v0.3
