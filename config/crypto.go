@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	encryptionEnabled bool = true
+	EncryptionEnabled bool = true
 )
 
 func Encrypt(stringKey, stringText string) []byte {
 	key := []byte(stringKey)
 	text := []byte(stringText)
 
-	if !encryptionEnabled {
+	if !EncryptionEnabled {
 		return text
 	}
 
@@ -55,7 +55,7 @@ func Encrypt(stringKey, stringText string) []byte {
 }
 
 func Decrypt(key, text []byte) []byte {
-	if !encryptionEnabled {
+	if !EncryptionEnabled {
 		return text
 	}
 

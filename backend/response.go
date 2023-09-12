@@ -29,7 +29,11 @@ func (r *response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	w.Header().Add("Content-Type", "application/octet-stream")
+	if config.EncryptionEnabled {
+		w.Header().Add("Content-Type", "application/octet-stream")
+	} else {
+		w.Header().Add("Content-Type", "application/json")
+	}
 	w.WriteHeader(r.Code)
 
 	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))

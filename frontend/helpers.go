@@ -39,8 +39,13 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 		}
 	}
 
-	req.Header.Set("Content-Type", "application/octet-stream")
-	//req.Header.Set("X-API-Token", config.BackendToken)
+	if config.EncryptionEnabled {
+		req.Header.Set("Content-Type", "application/octet-stream")
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	//req.Header.Set("X-API-Token", config.APIToken)
 
 	client := http.Client{}
 
