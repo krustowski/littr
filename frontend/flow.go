@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"sort"
 
 	"litter-go/config"
 	"litter-go/models"
@@ -26,6 +27,7 @@ type flowContent struct {
 	interactedPostKey string
 
 	posts map[string]models.Post
+	sortedPosts []models.Post
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -118,14 +120,21 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			return
 		}
 
+		var posts []models.Post
+
+		for _, post := range postsRaw.Posts {
+			posts = append(posts, post)
+		}
+
 		// order posts by timestamp DESC
-		//sort.SliceStable(postsRaw.Posts, func(i, j int) bool {
-		//	return postsRaw.Posts[i].Timestamp.After(postsRaw.Posts[j].Timestamp)
-		//})
+		sort.SliceStable(posts, func(i, j int) bool {
+			return posts[i].Timestamp.After(posts[j].Timestamp)
+		})
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = postsRaw.Posts
+			c.sortedPosts = posts
 
 			c.loaderShow = false
 			log.Println("dispatch ends")
@@ -166,8 +175,10 @@ func (c *flowContent) Render() app.UI {
 
 			// table body
 			app.TBody().Body(
-				app.Range(c.posts).Map(func(key string) app.UI {
-					post := c.posts[key]
+				//app.Range(c.posts).Map(func(key string) app.UI {
+				app.Range(c.sortedPosts).Slice(func(idx int) app.UI {
+					post := c.sortedPosts[idx]
+					key := post.ID
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
@@ -185,12 +196,12 @@ func (c *flowContent) Render() app.UI {
 								),
 								app.If(c.loggedUser == post.Nickname,
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(string(key)).Class("transparent circle").OnClick(c.onClickDelete).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(string(key)).Class("transparent circle").OnClick(c.onClickStar).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
 										app.I().Text("star"),
 									),
 								),

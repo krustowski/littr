@@ -127,6 +127,16 @@ func (h *header) Render() app.UI {
 				),
 				app.Nav().Class("center-align").Body(
 					app.P().Text("version v"+config.Version),
+					app.Div().Class("small-space"),
+				),
+
+				app.Nav().Class("center-align").Body(
+					app.P().Body(
+						app.Text("powered by "),
+						app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
+						app.Text(" and "),
+						app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
+					),
 				),
 				app.Nav().Class("center-align").Body(
 					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
