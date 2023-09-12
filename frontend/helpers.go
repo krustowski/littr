@@ -31,16 +31,15 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 			log.Println(err.Error())
 			return nil, false
 		}
-		req.Header.Set("Content-Type", "application/json")
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return nil, false
 		}
-		req.Header.Set("Content-Type", "application/json")
 	}
 
+	req.Header.Set("Content-Type", "application/octet-stream")
 	//req.Header.Set("X-API-Token", config.BackendToken)
 
 	client := http.Client{}

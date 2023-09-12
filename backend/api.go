@@ -20,7 +20,6 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	//lg.Caller = "[auth] new connection"
 	log.Println("[auth] new connection from: " + r.RemoteAddr)
 
-	w.Header().Add("Content-Type", "application/json")
 	resp.AuthGranted = false
 
 	switch r.Method {
@@ -73,8 +72,6 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[flow] new connection from: " + r.RemoteAddr)
-
-	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
 	case "DELETE":
@@ -192,8 +189,6 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[user] new connection from: " + r.RemoteAddr)
 
-	w.Header().Add("Content-Type", "application/json")
-
 	switch r.Method {
 	case "GET":
 		break
@@ -210,8 +205,6 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[user] new connection from: " + r.RemoteAddr)
-
-	w.Header().Add("Content-Type", "application/json")
 
 	switch r.Method {
 	case "DELETE":

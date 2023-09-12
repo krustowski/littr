@@ -29,6 +29,7 @@ func (r *response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
+	w.Header().Add("Content-Type", "application/octet-stream")
 	w.WriteHeader(r.Code)
 
 	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))
