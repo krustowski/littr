@@ -6,7 +6,7 @@ import (
 
 type Post struct {
 	// ID is an unique post's identificator.
-	ID int `json:"id"`
+	ID string `json:"id"`
 
 	// Type describes the post's type --- post, poll, reply, img.
 	Type string `json:"type"`

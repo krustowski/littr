@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	EncryptionEnabled bool = true
+	EncryptionEnabled bool = false
 )
 
 func Encrypt(stringKey, stringText string) []byte {

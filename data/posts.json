@@ -1,9 +1,9 @@
 {
     "posts": {
-	2: {
-	  "id": 0,
+	"2000": {
+	  "id": "2000",
 	  "nickname": "system", 
-	  "content": "this is just a testing flow post to see how or if it really does anything"
+	  "content": "welcome to littr, this is a very first flow post on this instance"
 	}
     }
 }

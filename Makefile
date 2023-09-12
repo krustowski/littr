@@ -109,3 +109,8 @@ flush:
 	@echo -e "\n${YELLOW} Flushing app data... ${RESET}\n"
 	@docker cp data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
 	@docker cp data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
+
+.PHONY: kill
+kill:
+	@echo -e "\n${YELLOW} Killing the container not to dump running caches... ${RESET}\n"
+	@docker kill ${DOCKER_CONTAINER_NAME}

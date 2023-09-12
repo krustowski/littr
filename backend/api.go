@@ -80,6 +80,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -88,19 +89,23 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+		key := post.ID
 
 		if deleted := deleteOne(FlowCache, key); !deleted {
-			resp.Message = "cannot delete post"
+			log.Println("cannot delete the post")
+			resp.Message = "cannot delete the post"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
+		log.Println("ok, post removed")
 		resp.Message = "ok, post removed"
 		resp.Code = http.StatusOK
 		break
@@ -120,6 +125,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -128,19 +134,23 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		key := strconv.FormatInt(time.Now().Unix(), 10)
+		key := strconv.FormatInt(time.Now().UnixNano(), 10)
+		post.ID = key
 
 		if saved := setOne(FlowCache, key, post); !saved {
+			log.Println("backend error: cannot save new post (cache error)")
 			resp.Message = "backend error: cannot save new post (cache error)"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
+		log.Println("ok, adding new post")
 		resp.Message = "ok, adding new post"
 		resp.Code = http.StatusCreated
 		break
@@ -151,6 +161,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -159,12 +170,21 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		key := strconv.FormatInt(post.Timestamp.Unix(), 10)
+		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+		key := post.ID
+
+		if _, found := getOne(FlowCache, key, models.User{}); !found {
+			log.Println("unknown post update requested")
+			resp.Message = "unknown post update requested"
+			resp.Code = http.StatusBadRequest
+			break
+		}
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "cannot update post"
@@ -172,7 +192,8 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		resp.Message = "ok, post removed"
+		log.Println("ok, post updated")
+		resp.Message = "ok, post updated"
 		resp.Code = http.StatusOK
 		break
 

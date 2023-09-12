@@ -50,8 +50,8 @@ func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 		key := ctx.JSSrc().Get("id").String()
 		log.Println(key)
 
-		var author string
-		ctx.LocalStorage().Get("userName", &author)
+		//var author string
+		//ctx.LocalStorage().Get("userName", &author)
 
 		interactedPost := c.posts[key]
 
@@ -61,6 +61,8 @@ func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 			log.Println("cannot delete a post via API!")
 			return
 		}
+
+		delete(c.posts, key)
 
 		c.toastShow = false
 		ctx.Navigate("/flow")
@@ -85,6 +87,8 @@ func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
 			log.Println("cannot rate a post via API!")
 			return
 		}
+
+		c.posts[key] = interactedPost
 
 		c.toastShow = false
 		ctx.Navigate("/flow")
