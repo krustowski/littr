@@ -51,7 +51,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("[auth] wrong login")
 
 			resp.Message = "user not found, or wrong passphrase entered"
-			resp.Code = http.StatusNotFound
+			resp.Code = http.StatusBadRequest
 			break
 		}
 
