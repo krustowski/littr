@@ -179,12 +179,12 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 		key := post.ID
 
-		if _, found := getOne(FlowCache, key, models.User{}); !found {
+		/*if _, found := getOne(FlowCache, key, models.User{}); !found {
 			log.Println("unknown post update requested")
 			resp.Message = "unknown post update requested"
 			resp.Code = http.StatusBadRequest
 			break
-		}
+		}*/
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "cannot update post"

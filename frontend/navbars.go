@@ -120,7 +120,8 @@ func (h *header) Render() app.UI {
 			app.H4().Text(headerString).Class("large-padding").OnClick(h.onClickHeadline),
 
 			// app info modal
-			app.Dialog().Class("grey9 white-text"+modalInfoActiveClass).Body(
+			app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
+				app.Img().Src("/web/android-chrome-192x192.png"),
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("litter-go (littr) PWA"),
 				),
