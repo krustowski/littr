@@ -6,7 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	//"litter-go/config"
+
+	"litter-go/config"
 )
 
 func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
@@ -56,5 +57,8 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 		return nil, false
 	}
 
-	return &respData, true
+	// decrypt the data
+	decrData := config.Decrypt([]byte(config.Pepper), respData)
+
+	return &decrData, true
 }

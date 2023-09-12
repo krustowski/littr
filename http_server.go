@@ -4,7 +4,8 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
+	//"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"litter-go/backend"
 	"litter-go/config"
 	"litter-go/frontend"
-	"litter-go/models"
+	//"litter-go/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"go.savla.dev/swis/v5/pkg/core"
@@ -40,10 +41,10 @@ func initServer() {
 	config.ParseEnv()
 
 	// create a channel for logging engine
-	models.LogsChan = make(chan models.Log, 1)
+	//models.LogsChan = make(chan models.Log, 1)
 
 	// logging goroutine
-	go func() {
+	/*go func() {
 		lg := <- models.LogsChan
 
 		jsonData, err := json.Marshal(lg)
@@ -52,8 +53,8 @@ func initServer() {
 			return
 		}
 
-		log.Println(jsonData)
-	}()
+		fmt.Println(string(jsonData))
+	}()*/
 
 	// initialize caches
 	backend.FlowCache = &core.Cache{}

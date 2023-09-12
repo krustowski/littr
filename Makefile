@@ -69,12 +69,12 @@ fmt: version
 
 .PHONY: build
 build: 
-	@echo -e "\n${YELLOW} Building the project (docker-compose build)... ${RESET}\n"
+	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
 	@docker compose build --no-cache
 
 .PHONY: run
 run:	
-	@echo -e "\n${YELLOW} Starting project (docker-compose up)... ${RESET}\n"
+	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
 	@docker compose up --force-recreate --detach --remove-orphans
 
 .PHONY: logs
@@ -84,7 +84,7 @@ logs:
 
 .PHONY: stop
 stop:  
-	@echo -e "\n${YELLOW} Stopping and purging project (docker-compose down)... ${RESET}\n"
+	@echo -e "\n${YELLOW} Stopping and purging project (docker compose down)... ${RESET}\n"
 	@docker compose down
 
 .PHONY: version

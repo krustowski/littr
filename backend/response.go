@@ -6,7 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 
+	"litter-go/config"
 	"litter-go/models"
 )
 
@@ -27,6 +29,8 @@ func (r *response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))
+
+	io.WriteString(w, fmt.Sprintf("%s", enData))
 	return nil
 }
