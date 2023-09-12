@@ -29,8 +29,10 @@ func (r *response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))
+	w.WriteHeader(r.Code)
 
+	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))
 	io.WriteString(w, fmt.Sprintf("%s", enData))
+
 	return nil
 }

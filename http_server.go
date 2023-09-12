@@ -62,8 +62,12 @@ func initServer() {
 	backend.SessionCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
+	log.Println("caches initialized")
+
 	// load up data from local dumps (/opt/data/)
 	backend.LoadData()
+
+	log.Println("dumped data loaded")
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
@@ -82,6 +86,8 @@ func initServer() {
 	http.HandleFunc("/api/flow", backend.FlowHandler)
 	http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
+
+	log.Println("API routes loaded")
 
 	// root route with custom CSS and JS definitions
 	http.Handle("/", &app.Handler{
@@ -102,6 +108,8 @@ func initServer() {
 			"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.0.1/dist/cdn/material-dynamic-colors.min.js",
 		},
 	})
+
+	log.Println("starting the server...")
 
 	// run a HTTP server
 	if err := http.ListenAndServe(":8080", nil); err != nil {

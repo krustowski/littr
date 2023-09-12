@@ -23,7 +23,9 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 			return nil, false
 		}
 
-		bodyReader = bytes.NewReader([]byte(jsonData))
+		payload := config.Encrypt(config.Pepper, string(jsonData))
+
+		bodyReader = bytes.NewReader([]byte(payload))
 		req, err = http.NewRequest(method, url, bodyReader)
 		if err != nil {
 			log.Println(err.Error())

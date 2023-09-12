@@ -5,17 +5,20 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
+	"litter-go/config"
 	"litter-go/models"
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 
-	lg := models.NewLog(r.RemoteAddr)
-	lg.Caller = "[auth] new connection"
+	//lg := models.NewLog(r.RemoteAddr)
+	//lg.Caller = "[auth] new connection"
+	log.Println("[auth] new connection from: " + r.RemoteAddr)
 
 	w.Header().Add("Content-Type", "application/json")
 	resp.AuthGranted = false
@@ -26,15 +29,17 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			lg.Content("[auth] " + err.Error())
+			log.Println("[auth] " + err.Error())
 
 			resp.Message = "backend error: cannot read input stream"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
-		if err = json.Unmarshal(reqBody, &user); err != nil {
-			lg.Content("[auth] " + err.Error())
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err = json.Unmarshal(data, &user); err != nil {
+			log.Println("[auth] " + err.Error())
 
 			resp.Message = "backend error: cannot unmarshall request data"
 			resp.Code = http.StatusInternalServerError
@@ -44,7 +49,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
-			lg.Content("[auth] wrong login")
+			log.Println("[auth] wrong login")
 
 			resp.Message = "user not found, or wrong passphrase entered"
 			resp.Code = http.StatusNotFound
@@ -83,7 +88,9 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if err := json.Unmarshal(reqBody, &post); err != nil {
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &post); err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -121,7 +128,9 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if err := json.Unmarshal(reqBody, &post); err != nil {
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &post); err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -150,7 +159,9 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if err := json.Unmarshal(reqBody, &post); err != nil {
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &post); err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 			break
@@ -227,7 +238,9 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		err = json.Unmarshal(reqBody, &user)
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		err = json.Unmarshal(data, &user)
 		if err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
@@ -263,7 +276,9 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		err = json.Unmarshal(reqBody, &user)
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		err = json.Unmarshal(data, &user)
 		if err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
