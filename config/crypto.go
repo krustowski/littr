@@ -8,9 +8,17 @@ import (
 	"log"
 )
 
+var (
+	encryptionEnabled bool = true
+)
+
 func Encrypt(stringKey, stringText string) []byte {
 	key := []byte(stringKey)
 	text := []byte(stringText)
+
+	if !encryptionEnabled {
+		return text
+	}
 
 	// generate a new aes cipher using our 32 byte long key
 	c, err := aes.NewCipher(key)
@@ -47,6 +55,10 @@ func Encrypt(stringKey, stringText string) []byte {
 }
 
 func Decrypt(key, text []byte) []byte {
+	if !encryptionEnabled {
+		return text
+	}
+
 	c, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println(err.Error())
