@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
-	"log"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -47,28 +46,27 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 	ctx.LocalStorage().Get("userName", &c.loggedUser)
 
 	var enUser string
-	var preUser []byte
 	var decUser []byte
+	var preUser []byte
 	var user models.User
 
 	ctx.LocalStorage().Get("user", &enUser)
-	preUser = config.Decrypt([]byte(config.Pepper), []byte(enUser))
 
 	// beware base64 being used by the framework/browser
-	decUser, err := base64.StdEncoding.DecodeString(string(preUser))
+	decUser, err := base64.StdEncoding.DecodeString(string(enUser))
 	if err != nil {
 		c.toastText = "frontend decoding failed: " + err.Error()
 		c.toastShow = true
 		return
 	}
-	
-	if err := json.Unmarshal(decUser, &user); err != nil {
+
+	preUser = config.Decrypt([]byte(config.Pepper), []byte(decUser))
+
+	if err := json.Unmarshal(preUser, &user); err != nil {
 		c.toastText = "frontend unmarshal failed: " + err.Error()
 		c.toastShow = true
 		return
 	}
-
-	log.Println(user.Nickname + user.About)
 
 	c.user = user
 }
@@ -77,7 +75,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		c.toastShow = true
 		if c.passphrase == "" || c.passphraseAgain == "" {
-			c.toastText = "both passphrases need to be filled"
+			c.toastText = "both passphrases need to be filled, or text changed"
 			return
 		}
 
@@ -168,7 +166,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("large-divider"),
 
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
-			app.Textarea().Text("").OnChange(c.ValueTo(&c.aboutText)),
+			app.Textarea().Text(c.user.About).OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),
