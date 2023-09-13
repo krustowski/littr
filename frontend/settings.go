@@ -52,6 +52,10 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 	ctx.LocalStorage().Get("user", &enUser)
 
+	if enUser == "" {
+		return
+	}
+
 	// beware base64 being used by the framework/browser
 	decUser, err := base64.StdEncoding.DecodeString(string(enUser))
 	if err != nil {

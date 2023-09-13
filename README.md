@@ -101,7 +101,7 @@ http://localhost:8093/flow
 
 ### roadmap to v0.6
 + healthcheck as a periodic cache dumper
-+ fix settings (broken pwd and about text change)
++ ~~fix settings (broken pwd and about text change)~~
 + ~~fix register when given user exists already~~
 
 ### roadmap to v0.4/v0.5

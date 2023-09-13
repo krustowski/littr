@@ -79,6 +79,7 @@ func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
 
 func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("userLogged", false)
+	ctx.LocalStorage().Set("user", "")
 	h.userLogged = false
 
 	ctx.Navigate("/logout")
