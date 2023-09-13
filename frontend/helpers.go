@@ -11,7 +11,7 @@ import (
 )
 
 func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
-	var bodyReader *bytes.Reader = nil
+	var bodyReader *bytes.Reader
 	var req *http.Request
 	var err error
 

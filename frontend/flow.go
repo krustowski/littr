@@ -26,7 +26,7 @@ type flowContent struct {
 
 	interactedPostKey string
 
-	posts map[string]models.Post
+	posts       map[string]models.Post
 	sortedPosts []models.Post
 }
 

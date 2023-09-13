@@ -23,7 +23,7 @@ type Post struct {
 	// Poll is an integrated Poll structure/object.
 	Poll Poll `json:"poll"`
 
-	// ReplyTo is a referrence to another post, that is being replied to.
+	// ReplyTo is a reference to another post, that is being replied to.
 	ReplyTo int `json:"reply_to"`
 
 	// ReactionCount counts the number of item's reactions.
