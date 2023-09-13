@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"crypto/sha512"
+	"encoding/json"
 	"log"
 	"net/mail"
 
@@ -77,9 +78,25 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			Email:      c.email,
 		}
 
-		if _, ok := litterAPI("POST", "/api/users", user); !ok {
+		resp, ok := litterAPI("POST", "/api/users", user)
+		if !ok {
 			c.toastShow = true
 			c.toastText = "cannot send API request (backend error)"
+			return
+		}
+
+		response := struct{
+			Code int `json:"code"`
+		}{}
+		if err := json.Unmarshal(*resp, &response); err != nil {
+			c.toastShow = true
+			c.toastText = "cannot unmarshal response"
+			return
+		}
+
+		if response.Code == 409 {
+			c.toastShow = true
+			c.toastText = "that user already exists!"
 			return
 		}
 

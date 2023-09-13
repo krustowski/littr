@@ -2,7 +2,9 @@ package frontend
 
 import (
 	"crypto/sha512"
-	"os"
+	"encoding/base64"
+	"encoding/json"
+	"log"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -22,6 +24,7 @@ type settingsContent struct {
 	passphrase      string
 	passphraseAgain string
 	aboutText       string
+	user		models.User
 
 	toastShow bool
 	toastText string
@@ -42,6 +45,32 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 
 func (c *settingsContent) OnNav(ctx app.Context) {
 	ctx.LocalStorage().Get("userName", &c.loggedUser)
+
+	var enUser string
+	var preUser []byte
+	var decUser []byte
+	var user models.User
+
+	ctx.LocalStorage().Get("user", &enUser)
+	preUser = config.Decrypt([]byte(config.Pepper), []byte(enUser))
+
+	// beware base64 being used by the framework/browser
+	decUser, err := base64.StdEncoding.DecodeString(string(preUser))
+	if err != nil {
+		c.toastText = "frontend decoding failed: " + err.Error()
+		c.toastShow = true
+		return
+	}
+	
+	if err := json.Unmarshal(decUser, &user); err != nil {
+		c.toastText = "frontend unmarshal failed: " + err.Error()
+		c.toastShow = true
+		return
+	}
+
+	log.Println(user.Nickname + user.About)
+
+	c.user = user
 }
 
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
@@ -57,11 +86,13 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(c.passphrase + os.Getenv("APP_PEPPER")))
+		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
 
 		if _, ok := litterAPI("PUT", "/api/users", models.User{
-			Nickname:   c.loggedUser,
+			Nickname:   c.user.Nickname,
 			Passphrase: string(passHash[:]),
+			About:      c.user.About,
+			Email:      c.user.Email,
 		}); !ok {
 			c.toastText = "generic backend error"
 			return
@@ -87,8 +118,10 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		}
 
 		if _, ok := litterAPI("PUT", "/api/users", models.User{
-			Nickname: c.loggedUser,
-			About:    c.aboutText,
+			Nickname:   c.user.Nickname,
+			Passphrase: c.user.Passphrase,
+			About:      c.aboutText,
+			Email:      c.user.Email,
 		}); !ok {
 			c.toastShow = true
 			c.toastText = "generic backend error"

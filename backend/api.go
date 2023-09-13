@@ -55,6 +55,8 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		resp.Users = make(map[string]models.User)
+		resp.Users[u.Nickname] = *u
 		resp.AuthGranted = ok
 		resp.Code = http.StatusOK
 		resp.FlowList = u.FlowList

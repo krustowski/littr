@@ -84,6 +84,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			Message     string `json:"message"`
 			AuthGranted bool   `json:"auth_granted"`
 			//FlowRecords []string `json:"flow_records"`
+			Users map[string]models.User `json:"users"`
 		}{}
 
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
@@ -102,6 +103,16 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		ctx.LocalStorage().Set("userLogged", true)
 		ctx.LocalStorage().Set("userName", c.nickname)
 		//ctx.LocalStorage().Set("flowRecords", response.FlowRecords)
+
+		user, err := json.Marshal(response.Users[c.nickname])
+		if err != nil {
+			c.toastShow = true
+			c.toastText = "frontend error: user marshal failed"
+			return
+		}
+
+		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
+
 		ctx.Navigate("/flow")
 	})
 }

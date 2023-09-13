@@ -77,7 +77,7 @@ make run
 make info
 
 # flush app data --- copy empty files from 'data/' to the container
-make flush
+make flush kill run
 ```
 
 ## development
