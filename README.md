@@ -1,7 +1,11 @@
-# litter-go
-litter again, now in Go as a PWA
+# litter-go (littr)
 
-microblogging service without notifications and pesky messaging, just a raw mind _flow_
+[![Go Reference](https://pkg.go.dev/badge/go.savla.dev/littr.svg)](https://pkg.go.dev/go.savla.dev/littr)
+[![Go Report Card](https://goreportcard.com/badge/go.savla.dev/littr)](https://goreportcard.com/report/go.savla.dev/littr)
+
+litter again, now in Go as a PWA --- a microblogging service without notifications and pesky messaging, just a raw mind _flow_
+
+[read more](https://krusty.space/projects/litter/) (a blog post)
 
 ## repo vademecum
 
@@ -86,14 +90,19 @@ make fmt build run
 http://localhost:8093/flow
 ```
 
-### roadmap to v0.7
-+ implement polls (create poll, voting)
-+ implement stats
-
-### roadmap to v0.6
+### nice-to-have(s)
++ implement infinite scroll for flow
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
+
+### roadmap to v0.7
++ implement polls (create poll, voting)
++ implement stats 
+
+### roadmap to v0.6
 + healthcheck as a periodic cache dumper
++ fix settings (broken pwd and about text change)
++ ~~fix register when given user exists already~~
 
 ### roadmap to v0.4/v0.5
 + ~~stabilize database~~ (implement in-memory caches)
