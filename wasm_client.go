@@ -4,7 +4,7 @@
 package main
 
 import (
-	frontend "litter-go/frontend"
+	frontend "go.savla.dev/littr/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )

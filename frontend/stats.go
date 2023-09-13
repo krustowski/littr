@@ -1,7 +1,7 @@
 package frontend
 
 import (
-	"litter-go/config"
+	"go.savla.dev/littr/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )

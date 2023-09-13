@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"litter-go/models"
+	"go.savla.dev/littr/models"
 )
 
 const (

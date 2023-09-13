@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"litter-go/config"
-	"litter-go/models"
+	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {

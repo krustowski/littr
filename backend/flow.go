@@ -8,7 +8,7 @@ import (
 	//"strconv"
 	//"time"
 
-	"litter-go/models"
+	"go.savla.dev/littr/models"
 )
 
 type Posts struct {

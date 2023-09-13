@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"litter-go/config"
+	"go.savla.dev/littr/config"
 )
 
 func litterAPI(method, url string, data interface{}) (*[]byte, bool) {

@@ -12,10 +12,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"litter-go/backend"
-	"litter-go/config"
-	"litter-go/frontend"
-	//"litter-go/models"
+	"go.savla.dev/littr/backend"
+	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/frontend"
+	//"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"go.savla.dev/swis/v5/pkg/core"

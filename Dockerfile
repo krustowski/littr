@@ -30,11 +30,11 @@ COPY . .
 RUN go mod tidy
 
 # build the client -- wasm binary
-RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'litter-go/config.APIToken=$API_TOKEN' -X 'litter-go/config.Version=$APP_VERSION' -X 'litter-go/config.Pepper=$APP_PEPPER'"
+RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/config.APIToken=$API_TOKEN' -X 'go.savla.dev/littr/config.Version=$APP_VERSION' -X 'go.savla.dev/littr/config.Pepper=$APP_PEPPER'"
 
 # build the server
 #RUN go build -ldflags "-X 'litter-go/config.Version=$APP_VERSION'" ${APP_NAME}
-RUN go build ${APP_NAME}
+RUN go build -o littr
 
 
 #
@@ -60,12 +60,10 @@ RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 COPY web/ /opt/web/
 #COPY data/.gitkeep /opt/data/.gitkeep
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
-COPY --from=litter-build /go/src/litter-go/litter-go /opt/litter-go
+COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
 WORKDIR /opt
 USER ${DOCKER_USER}
 EXPOSE ${DOCKER_INTERNAL_PORT}
-ENTRYPOINT ["/opt/litter-go"]
-
-
+ENTRYPOINT ["/opt/littr"]

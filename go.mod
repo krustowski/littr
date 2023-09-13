@@ -1,4 +1,4 @@
-module litter-go
+module go.savla.dev/littr
 
 go 1.19
 

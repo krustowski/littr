@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"litter-go/models"
+	"go.savla.dev/littr/models"
 )
 
 type UserAuth struct {

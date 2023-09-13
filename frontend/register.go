@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/mail"
 
-	"litter-go/config"
-	"litter-go/models"
+	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )

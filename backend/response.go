@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	"litter-go/config"
-	"litter-go/models"
+	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
 )
 
 type response struct {
