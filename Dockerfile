@@ -22,12 +22,13 @@ ENV APP_VERSION ${APP_VERSION}
 ENV API_TOKEN ${API_TOKEN}
 ENV CGO_ENABLED 1
 
-RUN apk add git gcc
+RUN --mount=type=cache,target=/var/cache/apk \
+	apk add git gcc
 
 WORKDIR /go/src/${APP_NAME}
+COPY go.mod .
+RUN go mod download
 COPY . .
-
-RUN go mod tidy
 
 # build the client -- wasm binary
 RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/config.APIToken=$API_TOKEN' -X 'go.savla.dev/littr/config.Version=$APP_VERSION' -X 'go.savla.dev/littr/config.Pepper=$APP_PEPPER'"
