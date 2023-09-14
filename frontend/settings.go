@@ -2,8 +2,6 @@ package frontend
 
 import (
 	"crypto/sha512"
-	"encoding/base64"
-	"encoding/json"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -18,13 +16,18 @@ type SettingsPage struct {
 type settingsContent struct {
 	app.Compo
 
+	// TODO: review this
 	loggedUser string
 
+	// used with forms
 	passphrase      string
 	passphraseAgain string
 	aboutText       string
-	user		models.User
 
+	// loaded logged user's struct
+	user models.User
+
+	// message toast vars
 	toastShow bool
 	toastText string
 }
@@ -43,36 +46,20 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 }
 
 func (c *settingsContent) OnNav(ctx app.Context) {
-	ctx.LocalStorage().Get("userName", &c.loggedUser)
-
 	var enUser string
-	var decUser []byte
-	var preUser []byte
 	var user models.User
 
 	ctx.LocalStorage().Get("user", &enUser)
 
-	if enUser == "" {
-		return
-	}
-
-	// beware base64 being used by the framework/browser
-	decUser, err := base64.StdEncoding.DecodeString(string(enUser))
-	if err != nil {
-		c.toastText = "frontend decoding failed: " + err.Error()
-		c.toastShow = true
-		return
-	}
-
-	preUser = config.Decrypt([]byte(config.Pepper), []byte(decUser))
-
-	if err := json.Unmarshal(preUser, &user); err != nil {
-		c.toastText = "frontend unmarshal failed: " + err.Error()
+	// decode, decrypt and unmarshal the local storage string
+	if err := prepare(enUser, &user); err != nil {
+		c.toastText = "frontend decoding/decryption failed: " + err.Error()
 		c.toastShow = true
 		return
 	}
 
 	c.user = user
+	c.loggedUser = user.Nickname
 }
 
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
@@ -158,20 +145,20 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)),
-			app.Label().Text("passphrase"),
+			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
+			app.Label().Text("passphrase").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)),
-			app.Label().Text("passphrase again"),
+			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).AutoComplete(true).MaxLength(50),
+			app.Label().Text("passphrase again").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass),
 
 		app.Div().Class("large-divider"),
 
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
-			app.Textarea().Text(c.user.About).OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("about"),
+			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
+			app.Label().Text("about").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),
 	)

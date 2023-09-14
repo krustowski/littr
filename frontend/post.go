@@ -85,8 +85,8 @@ func (c *postContent) Render() app.UI {
 		),
 
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
-			app.Textarea().Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
-			app.Label().Text("contents"),
+			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
+			app.Label().Text("contents").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("post").OnClick(c.onClick),
 	)

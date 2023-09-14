@@ -145,12 +145,12 @@ func (c *loginContent) Render() app.UI {
 		),
 
 		app.Div().Class("field border invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Min(5).Placeholder("nickname"),
-			//app.Label().Text("nickname"),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Min(5).Class("active"),
+			app.Label().Text("nickname").Class("active"),
 		),
 		app.Div().Class("field border invalid deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Min(8).Placeholder("passphrase").AutoComplete(true),
-			//app.Label().Text("passphrase"),
+			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Min(8).Class("active").AutoComplete(true),
+			app.Label().Text("passphrase").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
 		app.Div().Class("space"),

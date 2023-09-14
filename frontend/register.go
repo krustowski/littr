@@ -85,7 +85,7 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		response := struct{
+		response := struct {
 			Code int `json:"code"`
 		}{}
 		if err := json.Unmarshal(*resp, &response); err != nil {
@@ -128,20 +128,20 @@ func (c *registerContent) Render() app.UI {
 		),
 
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true),
-			app.Label().Text("nickname"),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50),
+			app.Label().Text("nickname").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true),
-			app.Label().Text("passphrase"),
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Label().Text("passphrase").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true),
-			app.Label().Text("passphrase again"),
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Label().Text("passphrase again").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true),
-			app.Label().Text("e-mail"),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60),
+			app.Label().Text("e-mail").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("register").OnClick(c.onClick),
 	)
