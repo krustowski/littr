@@ -16,10 +16,10 @@ type UsersPage struct {
 
 type usersContent struct {
 	app.Compo
+
 	users map[string]models.User `json:"users"`
 
-	loggedUser  string
-	flowRecords []string
+	user models.User
 
 	loaderShow bool
 
@@ -41,10 +41,26 @@ func (p *UsersPage) Render() app.UI {
 }
 
 func (c *usersContent) OnNav(ctx app.Context) {
+	// show loader
 	c.loaderShow = true
 
-	ctx.LocalStorage().Get("userName", &c.loggedUser)
-	ctx.LocalStorage().Get("flowRecords", &c.flowRecords)
+	var enUser string
+	var user models.User
+	user.FlowList = make(map[string]bool)
+
+	ctx.LocalStorage().Get("user", &enUser)
+
+	// decode, decrypt and unmarshal the local storage string
+	if err := prepare(enUser, &user); err != nil {
+		c.toastText = "frontend decoding/decryption failed: " + err.Error()
+		c.toastShow = true
+		return
+	}
+
+	c.user = user
+
+	//name := c.user.Nickname
+	//flowList := c.user.FlowList
 
 	ctx.Async(func() {
 		usersPre := struct {
@@ -80,9 +96,18 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
+		if _, found := c.user.FlowList[flowName]; found {
+			delete(c.user.FlowList, flowName)
+		} else {
+			c.user.FlowList[flowName] = true
+		}
+
 		updateData := &models.User{
-			Nickname:   c.loggedUser,
-			FlowToggle: flowName,
+			Nickname:   c.user.Nickname,
+			Passphrase: c.user.Passphrase,
+			About:      c.user.About,
+			Email:      c.user.Email,
+			FlowList:   c.user.FlowList,
 		}
 
 		respRaw, ok := litterAPI("PUT", "/api/users", updateData)
@@ -93,14 +118,28 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		response := struct {
-			Message     string   `json:"message"`
-			FlowRecords []string `json:"flow_records"`
+			Message string `json:"message"`
+			Code    int    `json:"code"`
 		}{}
-		_ = json.Unmarshal(*respRaw, &response)
+		if err := json.Unmarshal(*respRaw, &response); err != nil {
+			log.Println(err.Error())
+			return
+		}
 
-		// reload flow records for such user in WASM client
-		c.flowRecords = response.FlowRecords
-		ctx.LocalStorage().Set("flowRecords", c.flowRecords)
+		if response.Code != 200 {
+			c.toastShow = true
+			c.toastText = "user update failed"
+			return
+		}
+
+		var stream []byte
+		if err := reload(c.user, &stream); err != nil {
+			c.toastShow = true
+			c.toastText = "local storage reload failed: " + err.Error()
+			return
+		}
+
+		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(stream)))
 
 		c.toastShow = false
 		ctx.Navigate("/flow")
@@ -146,15 +185,14 @@ func (c *usersContent) Render() app.UI {
 					user := c.users[key]
 
 					var inFlow bool = false
-					for _, rec := range c.flowRecords {
-						log.Println(rec)
-						if user.Nickname == rec {
-							inFlow = true
+					for key, val := range c.user.FlowList {
+						if user.Nickname == key {
+							inFlow = val
 							break
 						}
 					}
 
-					log.Println(c.flowRecords)
+					log.Println(c.user.FlowList)
 
 					return app.Tr().Body(
 						app.Td().Body(
@@ -163,7 +201,7 @@ func (c *usersContent) Render() app.UI {
 							app.Text(user.About),
 						),
 						// make button inactive for logged user
-						app.If(user.Nickname == c.loggedUser,
+						app.If(user.Nickname == c.user.Nickname,
 							app.Td().Body(
 								app.Button().Class("responsive deep-orange7 white-text bold").
 									Disabled(true).Body(

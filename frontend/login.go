@@ -53,6 +53,10 @@ func (p *LoginPage) Render() app.UI {
 	)
 }
 
+func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
+	ctx.Navigate("/register")
+}
+
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		if c.nickname == "" || c.passphrase == "" {
@@ -102,7 +106,6 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		c.toastShow = false
 		ctx.LocalStorage().Set("userLogged", true)
 		ctx.LocalStorage().Set("userName", c.nickname)
-		//ctx.LocalStorage().Set("flowRecords", response.FlowRecords)
 
 		user, err := json.Marshal(response.Users[c.nickname])
 		if err != nil {
@@ -130,7 +133,7 @@ func (c *loginContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
 		app.P().Body(
-			app.A().Href("/register").Text("littr, bc even litter can be lit ---> register here"),
+			app.P().Text("littr, bc even litter can be lit"),
 		),
 		app.Div().Class("space"),
 
@@ -141,14 +144,19 @@ func (c *loginContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)),
-			app.Label().Text("nickname"),
+		app.Div().Class("field border invalid deep-orange-text").Body(
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Min(5).Placeholder("nickname"),
+			//app.Label().Text("nickname"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)),
-			app.Label().Text("passphrase"),
+		app.Div().Class("field border invalid deep-orange-text").Body(
+			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Min(8).Placeholder("passphrase").AutoComplete(true),
+			//app.Label().Text("passphrase"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
+		app.Div().Class("space"),
+		app.P().Class("center-align").Text("or"),
+		app.Div().Class("space"),
+
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("register").OnClick(c.onClickRegister),
 	)
 }

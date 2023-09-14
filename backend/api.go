@@ -59,7 +59,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Users[u.Nickname] = *u
 		resp.AuthGranted = ok
 		resp.Code = http.StatusOK
-		resp.FlowList = u.FlowList
+		//resp.FlowList = u.FlowList
 		break
 
 	default:

@@ -24,7 +24,7 @@ type User struct {
 	Active bool `json:"active"`
 
 	// FlowList is a string array of users, which posts should be added to one's flow page.
-	FlowList []string `json:"flow_list"`
+	FlowList map[string]bool `json:"flow_list"`
 
 	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`
