@@ -2,7 +2,9 @@ package frontend
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -68,3 +70,45 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 
 	return &decrData, true
 }
+
+func prepare[T any](localStorageInput string, model *T) error {
+	if localStorageInput == "" {
+		return nil
+	}
+
+	// beware base64 being used by the framework/browser
+	decodedString, err := base64.StdEncoding.DecodeString(string(localStorageInput))
+	if err != nil {
+		return err
+	}
+
+	// decrypt the decoded string if the encryption is enabled (config.EncryptionEnabled)
+	// returns the decodedString if the encryption is disabled
+	decryptedString := config.Decrypt(
+		[]byte(config.Pepper),
+		[]byte(decodedString),
+	)
+
+	// finally, unmarshal the byte stream into a model
+	if err := json.Unmarshal(decryptedString, model); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func reload[T any](model T, stream *[]byte) error {
+	if &model == nil {
+		return errors.New("reload: input model is blank")
+	}
+
+	preStream, err := json.Marshal(model)
+	if err != nil {
+		return errors.New("marshal error: model marshal failed" + err.Error())
+	}
+
+	*stream = preStream
+
+	return nil
+}
+		
