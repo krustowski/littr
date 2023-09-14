@@ -19,7 +19,9 @@ type flowContent struct {
 	app.Compo
 
 	loaderShow bool
+
 	loggedUser string
+	user models.User
 
 	toastShow bool
 	toastText string
@@ -98,7 +100,20 @@ func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) OnMount(ctx app.Context) {
-	ctx.LocalStorage().Get("userName", &c.loggedUser)
+	var enUser string
+	var user models.User
+
+	ctx.LocalStorage().Get("user", &enUser)
+
+	// decode, decrypt and unmarshal the local storage string
+	if err := prepare(enUser, &user); err != nil {
+		c.toastText = "frontend decoding/decryption failed: " + err.Error()
+		c.toastShow = true
+		return
+	}
+
+	c.user = user
+	c.loggedUser = user.Nickname
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {

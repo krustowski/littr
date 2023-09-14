@@ -43,8 +43,19 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		var author string
-		ctx.LocalStorage().Get("userName", &author)
+		var enUser string
+		var user models.User
+
+		ctx.LocalStorage().Get("user", &enUser)
+
+		// decode, decrypt and unmarshal the local storage string
+		if err := prepare(enUser, &user); err != nil {
+			c.toastText = "frontend decoding/decryption failed: " + err.Error()
+			c.toastShow = true
+			return
+		}
+
+		author := user.Nickname
 
 		// add new post to backend struct
 		if _, ok := litterAPI("POST", "/api/flow", models.Post{
