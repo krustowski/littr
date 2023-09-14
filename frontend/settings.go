@@ -96,7 +96,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		if c.aboutText == "" {
 			c.toastShow = true
-			c.toastText = "about textarea needs to be filled"
+			c.toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
 			return
 		}
 
@@ -116,6 +116,17 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			c.toastText = "generic backend error"
 			return
 		}
+
+		c.user.About = c.aboutText
+
+		var userStream []byte
+		if err := reload(c.user, &userStream); err != nil {
+			c.toastShow = true
+			c.toastText = "cannot update local storage"
+			return
+		}
+
+		ctx.LocalStorage().Set("user", userStream)
 
 		c.toastShow = false
 		ctx.Navigate("/users")

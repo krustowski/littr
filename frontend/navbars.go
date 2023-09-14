@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"go.savla.dev/littr/config"
-	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -14,7 +13,6 @@ type header struct {
 	appInstallable  bool
 
 	userLogged bool
-	userStruct models.User
 
 	modalInfoShow   bool
 	modalLogoutShow bool
@@ -24,7 +22,9 @@ type footer struct {
 	app.Compo
 }
 
-const headerString = "littr"
+const (
+	headerString = "littr"
+)
 
 func (h *header) OnAppUpdate(ctx app.Context) {
 	// preserve update button
@@ -45,14 +45,19 @@ func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
 func (h *header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
 
-	ctx.LocalStorage().Get("userLogged", &h.userLogged)
+	var encodedUser string
+	ctx.LocalStorage().Get("user", &encodedUser)
+
+	h.userLogged = verifyUser(encodedUser)
 
 	if !h.userLogged && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
 		ctx.Navigate("/login")
+		return
 	}
 
 	if h.userLogged && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
 		ctx.Navigate("/flow")
+		return
 	}
 }
 

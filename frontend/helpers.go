@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
 )
 
 func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
@@ -107,8 +108,32 @@ func reload[T any](model T, stream *[]byte) error {
 		return errors.New("marshal error: model marshal failed" + err.Error())
 	}
 
-	*stream = preStream
+	encryptedStream := config.Encrypt(
+		config.Pepper,
+		string(preStream),
+	)
+
+	*stream = encryptedStream
 
 	return nil
 }
-		
+
+func verifyUser(encodedUser string) bool {
+	var user models.User
+
+	if encodedUser == "" {
+		return false
+	}
+
+	// decode, decrypt and unmarshal the local storage string
+	if err := prepare(encodedUser, &user); err != nil {
+		return false
+	} 
+
+	// those fields should not be empty when the whole user struct is encoded/encrypted after login
+	if user.Nickname != "" && user.Passphrase != "" {
+		return true
+	}
+
+	return false
+}

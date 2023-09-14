@@ -30,9 +30,10 @@ type loginContent struct {
 func (p *LoginPage) OnMount(ctx app.Context) {
 	if ctx.Page().URL().Path == "/logout" {
 		// destroy auth manually without API
-		ctx.LocalStorage().Set("userLogged", false)
-		ctx.LocalStorage().Set("userName", "")
-		ctx.LocalStorage().Set("flowRecords", nil)
+		//ctx.LocalStorage().Set("userLogged", false)
+		//ctx.LocalStorage().Set("userName", "")
+		//ctx.LocalStorage().Set("flowRecords", nil)
+		ctx.LocalStorage().Set("user", "")
 
 		p.userLogged = false
 
@@ -104,8 +105,8 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		c.toastShow = false
-		ctx.LocalStorage().Set("userLogged", true)
-		ctx.LocalStorage().Set("userName", c.nickname)
+		//ctx.LocalStorage().Set("userLogged", true)
+		//ctx.LocalStorage().Set("userName", c.nickname)
 
 		user, err := json.Marshal(response.Users[c.nickname])
 		if err != nil {
@@ -144,12 +145,12 @@ func (c *loginContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("field border invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Min(5).Class("active"),
+		app.Div().Class("field border label invalid deep-orange-text").Body(
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Class("active"),
 			app.Label().Text("nickname").Class("active"),
 		),
-		app.Div().Class("field border invalid deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Min(8).Class("active").AutoComplete(true),
+		app.Div().Class("field border label invalid deep-orange-text").Body(
+			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").AutoComplete(true),
 			app.Label().Text("passphrase").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
