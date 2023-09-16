@@ -51,10 +51,22 @@ func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("delete", key)
+}
+
+func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	c.postKey = key
+
 	ctx.Async(func() {
 		var toastText string = ""
 
-		key := ctx.JSSrc().Get("id").String()
+		key := c.postKey
 		interactedPost := c.posts[key]
 
 		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost); !ok {
@@ -64,14 +76,15 @@ func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			delete(c.posts, key)
 
-			c.posts[key] = interactedPost
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
-
-			ctx.Navigate("/flow")
 		})
 	})
-	return
+}
+
+func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("star", key)
 }
 
 func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
@@ -101,7 +114,6 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		if _, ok := litterAPI("PUT", "/api/flow", interactedPost); !ok {
 			toastText = "backend error: cannot rate a post"
 		}
-		log.Println(interactedPost.ReactionCount)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts[key] = interactedPost
@@ -111,18 +123,13 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	ctx.NewActionWithValue("star", key)
-}
-
 func (c *flowContent) OnMount(ctx app.Context) {
 	var enUser string
 	var user models.User
 	var toastText string = ""
 
 	ctx.Handle("star", c.handleStar)
-	//ctx.Handle("delete")
+	ctx.Handle("delete", c.handleDelete)
 
 	ctx.LocalStorage().Get("user", &enUser)
 	// decode, decrypt and unmarshal the local storage string
