@@ -21,13 +21,14 @@ type flowContent struct {
 	loaderShow bool
 
 	loggedUser string
-	user models.User
+	user       models.User
 
 	toastShow bool
 	toastText string
 
 	interactedPostKey string
 
+	postKey     string
 	posts       map[string]models.Post
 	sortedPosts []models.Post
 }
@@ -51,74 +52,94 @@ func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
+		var toastText string = ""
+
 		key := ctx.JSSrc().Get("id").String()
-		log.Println(key)
-
-		//var author string
-		//ctx.LocalStorage().Get("userName", &author)
-
 		interactedPost := c.posts[key]
 
 		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost); !ok {
-			c.toastShow = true
-			c.toastText = "backend error: cannot delete a post"
-			log.Println("cannot delete a post via API!")
-			return
+			toastText = "backend error: cannot delete a post"
 		}
 
-		delete(c.posts, key)
+		ctx.Dispatch(func(ctx app.Context) {
+			delete(c.posts, key)
 
-		c.toastShow = false
-		ctx.Navigate("/flow")
+			c.posts[key] = interactedPost
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+
+			ctx.Navigate("/flow")
+		})
+	})
+	return
+}
+
+func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	// runs on the main UI goroutine via a component ActionHandler
+	post := c.posts[key]
+	post.ReactionCount++
+	c.posts[key] = post
+	c.postKey = key
+
+	ctx.Async(func() {
+		//var author string
+		var toastText string = ""
+
+		//key := ctx.JSSrc().Get("id").String()
+		key := c.postKey
+		//author = c.user.Nickname
+
+		interactedPost := c.posts[key]
+		//interactedPost.ReactionCount++
+
+		// add new post to backend struct
+		if _, ok := litterAPI("PUT", "/api/flow", interactedPost); !ok {
+			toastText = "backend error: cannot rate a post"
+		}
+		log.Println(interactedPost.ReactionCount)
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.posts[key] = interactedPost
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
 	})
 }
 
 func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
-	ctx.Async(func() {
-		key := ctx.JSSrc().Get("id").String()
-		log.Println(key)
-
-		var author string
-		ctx.LocalStorage().Get("userName", &author)
-
-		interactedPost := c.posts[key]
-		interactedPost.ReactionCount++
-
-		// add new post to backend struct
-		if _, ok := litterAPI("PUT", "/api/flow", interactedPost); !ok {
-			c.toastShow = true
-			c.toastText = "backend error: cannot rate a post"
-			log.Println("cannot rate a post via API!")
-			return
-		}
-
-		c.posts[key] = interactedPost
-
-		c.toastShow = false
-		ctx.Navigate("/flow")
-	})
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("star", key)
 }
 
 func (c *flowContent) OnMount(ctx app.Context) {
 	var enUser string
 	var user models.User
+	var toastText string = ""
+
+	ctx.Handle("star", c.handleStar)
+	//ctx.Handle("delete")
 
 	ctx.LocalStorage().Get("user", &enUser)
-
 	// decode, decrypt and unmarshal the local storage string
 	if err := prepare(enUser, &user); err != nil {
-		c.toastText = "frontend decoding/decryption failed: " + err.Error()
-		c.toastShow = true
-		return
+		toastText = "frontend decoding/decryption failed: " + err.Error()
 	}
 
-	c.user = user
-	c.loggedUser = user.Nickname
+	ctx.Dispatch(func(ctx app.Context) {
+		c.user = user
+		c.loggedUser = user.Nickname
+		c.toastText = toastText
+		c.toastShow = (toastText != "")
+	})
+	return
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
-	c.loaderShow = true
-
 	ctx.Async(func() {
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
@@ -135,25 +156,15 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		var posts []models.Post
-
-		for _, post := range postsRaw.Posts {
-			posts = append(posts, post)
-		}
-
-		// order posts by timestamp DESC
-		sort.SliceStable(posts, func(i, j int) bool {
-			return posts[i].Timestamp.After(posts[j].Timestamp)
-		})
-
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = postsRaw.Posts
-			c.sortedPosts = posts
+			//c.sortedPosts = posts
 
 			c.loaderShow = false
 			log.Println("dispatch ends")
 		})
+		return
 	})
 }
 
@@ -167,6 +178,17 @@ func (c *flowContent) Render() app.UI {
 	if c.toastShow {
 		toastActiveClass = " active"
 	}
+
+	var sortedPosts []models.Post
+
+	for _, sortedPost := range c.posts {
+		sortedPosts = append(sortedPosts, sortedPost)
+	}
+
+	// order posts by timestamp DESC
+	sort.SliceStable(sortedPosts, func(i, j int) bool {
+		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
+	})
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
@@ -191,8 +213,9 @@ func (c *flowContent) Render() app.UI {
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
-				app.Range(c.sortedPosts).Slice(func(idx int) app.UI {
-					post := c.sortedPosts[idx]
+				app.Range(sortedPosts).Slice(func(idx int) app.UI {
+					//post := c.sortedPosts[idx]
+					post := sortedPosts[idx]
 					key := post.ID
 
 					return app.Tr().Body(

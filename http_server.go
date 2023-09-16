@@ -113,7 +113,9 @@ func initServer() {
 
 	// run a HTTP server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
+		// https://github.com/maxence-charriere/go-app-demo/blob/V7/hello-docker/main.go
+		//log.Fatal(err)
+		panic(err)
 	}
 
 }

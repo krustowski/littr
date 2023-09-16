@@ -128,7 +128,7 @@ func verifyUser(encodedUser string) bool {
 	// decode, decrypt and unmarshal the local storage string
 	if err := prepare(encodedUser, &user); err != nil {
 		return false
-	} 
+	}
 
 	// those fields should not be empty when the whole user struct is encoded/encrypted after login
 	if user.Nickname != "" && user.Passphrase != "" {
