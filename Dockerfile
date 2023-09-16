@@ -59,7 +59,7 @@ ENV DOCKER_USER ${DOCKER_USER}
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-#COPY data/.gitkeep /opt/data/.gitkeep
+COPY data/.gitkeep /opt/data/
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
