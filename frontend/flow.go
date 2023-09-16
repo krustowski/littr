@@ -225,6 +225,10 @@ func (c *flowContent) Render() app.UI {
 					post := sortedPosts[idx]
 					key := post.ID
 
+					if !c.user.FlowList[post.Nickname] {
+						return nil
+					}
+
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
 							app.P().Body(

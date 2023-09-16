@@ -46,8 +46,8 @@ func (c *usersContent) OnNav(ctx app.Context) {
 
 	var enUser string
 	var user models.User
-	user.FlowList = make(map[string]bool)
 
+	//user.FlowList = make(map[string]bool)
 	ctx.LocalStorage().Get("user", &enUser)
 
 	// decode, decrypt and unmarshal the local storage string
@@ -88,26 +88,42 @@ func (c *usersContent) OnNav(ctx app.Context) {
 	})
 }
 
-func (c *usersContent) onClick(ctx app.Context, e app.Event) {
-	ctx.Async(func() {
-		flowName := ctx.JSSrc().Get("name").String()
-		log.Println("toggle flow user: " + flowName)
+func (c *usersContent) OnMount(ctx app.Context) {
+	ctx.Handle("toggle", c.handleToggle)
+}
 
+func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	flowList := c.user.FlowList
+
+	if flowList == nil {
+		flowList = make(map[string]bool)
+		flowList[c.user.Nickname] = true
+		c.user.FlowList = flowList
+	}
+
+	if _, found := flowList[key]; found {
+		flowList[key] = !flowList[key]
+	} else {
+		flowList[key] = true
+	}
+
+	c.user.FlowList = flowList
+
+	ctx.Async(func() {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
-
-		if _, found := c.user.FlowList[flowName]; found {
-			delete(c.user.FlowList, flowName)
-		} else {
-			c.user.FlowList[flowName] = true
-		}
 
 		updateData := &models.User{
 			Nickname:   c.user.Nickname,
 			Passphrase: c.user.Passphrase,
 			About:      c.user.About,
 			Email:      c.user.Email,
-			FlowList:   c.user.FlowList,
+			FlowList:   flowList,
 		}
 
 		respRaw, ok := litterAPI("PUT", "/api/users", updateData)
@@ -121,14 +137,17 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 			Message string `json:"message"`
 			Code    int    `json:"code"`
 		}{}
+
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			log.Println(err.Error())
+			c.toastShow = true
+			c.toastText = "user update failed: " + err.Error()
 			return
 		}
 
-		if response.Code != 200 {
+		if response.Code != 200 && response.Code != 201 {
 			c.toastShow = true
-			c.toastText = "user update failed"
+			c.toastText = "user update failed: " + response.Message
+			log.Println(response.Message)
 			return
 		}
 
@@ -139,11 +158,15 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(stream)))
+		ctx.LocalStorage().Set("user", stream)
 
 		c.toastShow = false
-		ctx.Navigate("/flow")
 	})
+}
+
+func (c *usersContent) onClick(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("toggle", key)
 }
 
 func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
@@ -185,14 +208,13 @@ func (c *usersContent) Render() app.UI {
 					user := c.users[key]
 
 					var inFlow bool = false
+
 					for key, val := range c.user.FlowList {
 						if user.Nickname == key {
 							inFlow = val
 							break
 						}
 					}
-
-					log.Println(c.user.FlowList)
 
 					return app.Tr().Body(
 						app.Td().Body(
@@ -203,24 +225,23 @@ func (c *usersContent) Render() app.UI {
 						// make button inactive for logged user
 						app.If(user.Nickname == c.user.Nickname,
 							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").
-									Disabled(true).Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").Disabled(true).Body(
 									app.Text("that's you"),
 								),
 							),
 						//
 						).ElseIf(inFlow,
 							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").
-									Name(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
+									app.I().Text("close"),
 									app.Text("flow off"),
 								),
 							),
 						//
 						).Else(
 							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").
-									Name(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
+									app.I().Text("done"),
 									app.Text("flow on"),
 								),
 							),

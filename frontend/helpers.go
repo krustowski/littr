@@ -127,6 +127,7 @@ func verifyUser(encodedUser string) bool {
 
 	// decode, decrypt and unmarshal the local storage string
 	if err := prepare(encodedUser, &user); err != nil {
+		log.Println("verification err:" + err.Error())
 		return false
 	}
 
