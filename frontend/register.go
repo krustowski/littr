@@ -76,7 +76,9 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			Nickname:   c.nickname,
 			Passphrase: string(passHash[:]),
 			Email:      c.email,
+			FlowList:   make(map[string]bool),
 		}
+		user.FlowList[c.nickname] = true
 
 		resp, ok := litterAPI("POST", "/api/users", user)
 		if !ok {

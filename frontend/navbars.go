@@ -82,6 +82,10 @@ func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
 	h.modalLogoutShow = false
 }
 
+func (h *header) onClickReload(ctx app.Context, e app.Event) {
+	ctx.Reload()
+}
+
 func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("userLogged", false)
 	ctx.LocalStorage().Set("user", "")
@@ -145,6 +149,7 @@ func (h *header) Render() app.UI {
 					),
 				),
 				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").Text("reload").OnClick(h.onClickReload),
 					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
 				),
 			),

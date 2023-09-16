@@ -95,6 +95,8 @@ http://localhost:8093/flow
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
 + healthcheck as a periodic cache dumper
++ allow emojis in usernames?
++ show offline mode notice
 
 ### roadmap to v0.8
 + implement polls (create poll, voting)
@@ -103,6 +105,7 @@ http://localhost:8093/flow
 ### readmap to v0.7
 + ~~implement functional flowList editting via UI~~
 + ~~implement functional filtering using flowList~~
++ ~~fix dynamic stargazing and post deletion~~
 
 ### roadmap to v0.6
 + ~~fix settings (broken pwd and about text change)~~
