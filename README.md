@@ -94,13 +94,17 @@ http://localhost:8093/flow
 + implement infinite scroll for flow
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
++ healthcheck as a periodic cache dumper
 
-### roadmap to v0.7
+### roadmap to v0.8
 + implement polls (create poll, voting)
 + implement stats 
 
+### readmap to v0.7
++ ~~implement functional flowList editting via UI~~
++ ~~implement functional filtering using flowList~~
+
 ### roadmap to v0.6
-+ healthcheck as a periodic cache dumper
 + ~~fix settings (broken pwd and about text change)~~
 + ~~fix register when given user exists already~~
 
