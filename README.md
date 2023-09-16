@@ -101,6 +101,8 @@ http://localhost:8093/flow
 ### roadmap to v0.8
 + implement polls (create poll, voting)
 + implement stats 
++ ensure system user unregisterable by the app logic (not hurcoded) 
+  - define data/users.json system users (regular users, but simply taken already by the init time)
 
 ### readmap to v0.7
 + ~~implement functional flowList editting via UI~~

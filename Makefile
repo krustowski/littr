@@ -70,7 +70,8 @@ fmt: version
 .PHONY: build
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
-	@docker compose build
+	@DOCKER_BUILDKIT=1 docker compose build
+# ^https://stackoverflow.com/questions/67910547/why-docker-copy-doesnt-change-file-permissions-chmod
 #@docker compose build --no-cache
 
 .PHONY: run
