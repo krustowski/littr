@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -78,13 +79,13 @@ func (c *statsContent) OnNav(ctx app.Context) {
 func (c *statsContent) calculateStats() map[string]int {
 	stats := make(map[string]int)
 
-	stats["flow_posts_total_count"] = c.postCount
+	stats["flow_posts_total-count"] = c.postCount
 
 	// iterate over all posts, compose stats results
 	for _, val := range c.posts {
 		// increment user's stats
-		stats["users_" + val.Nickname + "_posts_count"]++
-		stats["users_" + val.Nickname + "_total_reactions"] += val.ReactionCount
+		stats["users_" + val.Nickname + "_posts-count"]++
+		stats["users_" + val.Nickname + "_total-reactions"] += val.ReactionCount
 	}
 
 	return stats
@@ -108,11 +109,38 @@ func (c *statsContent) Render() app.UI {
 			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
 		),
 
-		app.Range(stats).Map(func(key string) app.UI {
-			return app.P().Body(
-				app.Text(key + ": " + strconv.FormatInt(int64(stats[key]), 10)),
-				app.Br(),
-			)
-		}),
+		app.Table().Class("border left-align").Body(
+			// table header
+			app.THead().Body(
+				app.Tr().Body(
+					app.Th().Class("align-left").Text("namespace, key, value name"),
+					app.Th().Class("align-left").Text("value"),
+				),
+			),
+
+			// table body
+			app.TBody().Body(
+				app.Range(stats).Map(func(key string) app.UI {
+					slice := strings.Split(key, "_")
+
+					return app.Tr().Body(
+						app.Td().Class("align-left").Body(
+							app.P().Body(
+								app.Text(slice[0]),
+								app.P().Body(
+									app.B().Text(slice[1]).Class("deep-orange-text"),
+								),
+								app.Text(slice[2]),
+							),
+						),
+						app.Td().Class("align-left").Body(
+							app.P().Body(
+								app.Text(strconv.FormatInt(int64(stats[key]), 10)),
+							),
+						),
+					)
+				}),
+			),
+		),
 	)
 }
