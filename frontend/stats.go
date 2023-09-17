@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
-	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -76,23 +75,35 @@ func (c *statsContent) OnNav(ctx app.Context) {
 	})
 }
 
-func (c *statsContent) calculateStats() map[string]int {
-	stats := make(map[string]int)
+type userStat struct {
+	PostCount int `default:0`
+	ReactionCount int `default:0`
+}
 
-	stats["flow_posts_total-count"] = c.postCount
+func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
+	flowStats := make(map[string]int)
+	
+	userStats := make(map[string]userStat)
+
+	flowStats["posts-total-count"] = c.postCount
 
 	// iterate over all posts, compose stats results
 	for _, val := range c.posts {
 		// increment user's stats
-		stats["users_" + val.Nickname + "_posts-count"]++
-		stats["users_" + val.Nickname + "_total-reactions"] += val.ReactionCount
+		stat, ok := userStats[val.Nickname]
+		if !ok {
+			stat = userStat{}
+		}
+		stat.PostCount++
+		stat.ReactionCount += val.ReactionCount
+		userStats[val.Nickname] = stat
 	}
 
-	return stats
+	return flowStats, userStats
 }
 
 func (c *statsContent) Render() app.UI {
-	stats := c.calculateStats()
+	_, userStats := c.calculateStats()
 
 	loaderActiveClass := ""
 	if c.loaderShow {
@@ -104,43 +115,45 @@ func (c *statsContent) Render() app.UI {
 		app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
 		app.Div().Class("space"),
 
-		app.If(c.loaderShow,
-			app.Div().Class("small-space"),
-			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
-		),
-
 		app.Table().Class("border left-align").Body(
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Class("align-left").Text("namespace, key, value name"),
-					app.Th().Class("align-left").Text("value"),
+					app.Th().Class("align-left").Text("nickname"),
+					app.Th().Class("align-left").Text("posts count"),
+					app.Th().Class("align-left").Text("reaction count"),
 				),
 			),
 
 			// table body
 			app.TBody().Body(
-				app.Range(stats).Map(func(key string) app.UI {
-					slice := strings.Split(key, "_")
-
+				app.Range(userStats).Map(func(key string) app.UI {
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
 							app.P().Body(
-								app.Text(slice[0]),
 								app.P().Body(
-									app.B().Text(slice[1]).Class("deep-orange-text"),
+									app.B().Text(key).Class("deep-orange-text"),
 								),
-								app.Text(slice[2]),
 							),
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
-								app.Text(strconv.FormatInt(int64(stats[key]), 10)),
+								app.Text(strconv.FormatInt(int64(userStats[key].PostCount), 10)),
+							),
+						),
+						app.Td().Class("align-left").Body(
+							app.P().Body(
+								app.Text(strconv.FormatInt(int64(userStats[key].ReactionCount), 10)),
 							),
 						),
 					)
 				}),
 			),
+		),
+
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
 		),
 	)
 }
