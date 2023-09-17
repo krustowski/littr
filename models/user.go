@@ -6,7 +6,7 @@ import (
 
 type User struct {
 	// ID is an unique identifier.
-	ID int `json:"id" binding:"required" validation:"required"`
+	ID string `json:"id" binding:"required" validation:"required"`
 
 	// Nickname is a login name of such user.
 	Nickname string `json:"nickname" binding:"required"`

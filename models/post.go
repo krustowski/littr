@@ -32,7 +32,7 @@ type Post struct {
 
 type Poll struct {
 	// ID is an unique poll's identifier.
-	ID int `json:"id"`
+	ID string `json:"id"`
 
 	// Question is to describe the main purpose of such poll.
 	Question string `json:"question"`

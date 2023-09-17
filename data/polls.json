@@ -1,0 +1,21 @@
+{
+  "polls": {
+    "test": {
+      "id": "test", 
+      "question": "lmao what", 
+      "option_one": {
+        "content": "broo", 
+        "counter": 67
+      },
+      "option_two": {
+        "content": "stfu", 
+        "counter": 7
+      },
+      "option_three": {
+        "content": "idk", 
+        "counter": 33
+      }, 
+      "voted": [ "krusty" ]
+    }
+  }
+}

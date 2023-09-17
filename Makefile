@@ -109,8 +109,9 @@ sh:
 .PHONY: flush
 flush:
 	@echo -e "\n${YELLOW} Flushing app data... ${RESET}\n"
-	@docker cp data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
+	@docker cp data/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
 	@docker cp data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
+	@docker cp data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
 
 .PHONY: kill
 kill:
