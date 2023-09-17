@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"log"
+	"net/url"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -17,6 +18,7 @@ type PostPage struct {
 type postContent struct {
 	app.Compo
 	newPost string
+	newFigLink string
 
 	toastShow bool
 	toastText string
@@ -36,13 +38,47 @@ func (p *PostPage) Render() app.UI {
 }
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
-	ctx.Async(func() {
+	// post, fig, poll
+	postType := ctx.JSSrc().Get("id").String()
+	content := ""
+
+	switch postType {
+	case "fig":
+		if c.newFigLink == "" {
+			c.toastShow = true
+			c.toastText = "fig link must be filled"
+			return
+		}
+
+		if _, err := url.ParseRequestURI(c.newFigLink); err != nil {
+			c.toastShow = true
+			c.toastText = "fig link prolly not a valid URL"
+			return
+		}
+		content = c.newFigLink
+
+		break
+
+	case "poll":
+		return
+		break
+
+	case "post":
 		if c.newPost == "" {
 			c.toastShow = true
 			c.toastText = "post textarea must be filled"
 			return
 		}
+		content = c.newPost
 
+		break
+
+	default:
+		return
+		break
+	}
+
+	ctx.Async(func() {
 		var enUser string
 		var user models.User
 
@@ -60,7 +96,8 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		// add new post to backend struct
 		if _, ok := litterAPI("POST", "/api/flow", models.Post{
 			Nickname:  author,
-			Content:   c.newPost,
+			Type:      postType,
+			Content:   content,
 			Timestamp: time.Now(),
 		}); !ok {
 			c.toastShow = true
@@ -68,6 +105,10 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			log.Println("cannot post new post to API!")
 			return
 		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+		
+		})
 
 		c.toastShow = false
 		ctx.Navigate("/flow")
@@ -86,7 +127,7 @@ func (c *postContent) Render() app.UI {
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("add flow post").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("pleasure to be lit"),
+		app.P().Text("drop it, drop it"),
 
 		app.A().OnClick(c.dismissToast).Body(
 			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
@@ -99,12 +140,44 @@ func (c *postContent) Render() app.UI {
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
 			app.Label().Text("text contents").Class("active"),
 		),
+		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").Text("post text").OnClick(c.onClick),
+
+		app.Div().Class("large-divider"),
+
+		app.H5().Text("add flow fig").Style("padding-top", config.HeaderTopPadding),
+		app.P().Text("provide me with the image URL, papi"),
+		app.Div().Class("space"),
+
 		app.Div().Class("field label border invalid extra deep-orange-text").Body(
-			app.Input().Type("text"),
-			app.Input().Type("file"),
-			app.Label().Text("fig").Class("active"),
+			app.Input().Class("active").Type("text").OnChange(c.ValueTo(&c.newFigLink)),
+			//app.Input().Class("active").Type("file"),
+			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
+                ),
+		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").Text("post fig").OnClick(c.onClick),
+
+		app.Div().Class("large-divider"),
+
+		app.H5().Text("add flow poll").Style("padding-top", config.HeaderTopPadding),
+		app.P().Text("lmao gotem"),
+		app.Div().Class("space"),
+
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50),
+			app.Label().Text("question").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("post").OnClick(c.onClick),
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Label().Text("option one").Class("active"),
+		),
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("password").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Label().Text("option two").Class("active"),
+		),
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(60),
+			app.Label().Text("option three").Class("active"),
+		),
+		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(nil).Disabled(true),
 	)
 }

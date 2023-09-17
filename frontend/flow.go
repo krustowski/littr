@@ -239,8 +239,14 @@ func (c *flowContent) Render() app.UI {
 								app.B().Text(post.Nickname).Class("deep-orange-text"),
 							),
 
-							app.P().Body(
-								app.Text(post.Content),
+							app.If(post.Type == "fig",
+								app.Article().Class("medium no-padding transparent").Body(
+									app.Img().Class("no-padding priamry absolute center middle").Src(post.Content),
+								),
+							).Else(
+								app.P().Body(
+									app.Text(post.Content),
+								),
 							),
 
 							app.Div().Class("row").Body(
