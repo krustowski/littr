@@ -114,11 +114,12 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		// fetch the flow, ergo post list
-		posts, _ := getAll(FlowCache, models.Post{})
+		posts, count := getAll(FlowCache, models.Post{})
 
 		resp.Message = "ok, dumping posts"
 		resp.Code = http.StatusOK
 		resp.Posts = posts
+		resp.Count = count
 		break
 
 	case "POST":

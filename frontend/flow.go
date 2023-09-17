@@ -225,7 +225,8 @@ func (c *flowContent) Render() app.UI {
 					post := sortedPosts[idx]
 					key := post.ID
 
-					if !c.user.FlowList[post.Nickname] {
+					// only show posts of users in one's flowList
+					if (!c.user.FlowList[post.Nickname] && post.Nickname != "system") {
 						return nil
 					}
 

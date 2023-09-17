@@ -20,6 +20,7 @@ type response struct {
 	Message     string                 `json:"message"`
 	Posts       map[string]models.Post `json:"posts"`
 	Users       map[string]models.User `json:"users"`
+	Count       int                    `json:"count"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {
