@@ -43,12 +43,11 @@ func (c *statsContent) OnMount(ctx app.Context) {
 	c.loaderShow = true
 }
 
-
 func (c *statsContent) OnNav(ctx app.Context) {
 	ctx.Async(func() {
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
-			Count int `json:"count"`
+			Count int                    `json:"count"`
 		}{}
 
 		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
@@ -76,13 +75,14 @@ func (c *statsContent) OnNav(ctx app.Context) {
 }
 
 type userStat struct {
-	PostCount int `default:0`
+	PostCount     int `default:0`
 	ReactionCount int `default:0`
+	FlowerCount   int `default:0`
 }
 
 func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	flowStats := make(map[string]int)
-	
+
 	userStats := make(map[string]userStat)
 
 	flowStats["posts-total-count"] = c.postCount
@@ -120,8 +120,8 @@ func (c *statsContent) Render() app.UI {
 			app.THead().Body(
 				app.Tr().Body(
 					app.Th().Class("align-left").Text("nickname"),
-					app.Th().Class("align-left").Text("posts count"),
-					app.Th().Class("align-left").Text("reaction count"),
+					app.Th().Class("align-left").Text("posts"),
+					app.Th().Class("align-left").Text("reactions got"),
 				),
 			),
 

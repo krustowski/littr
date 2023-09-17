@@ -200,7 +200,7 @@ func (c *usersContent) Render() app.UI {
 			app.THead().Body(
 				app.Tr().Body(
 					app.Th().Text("nick, about"),
-					app.Th().Text("flow"),
+					app.Th().Text("flow list"),
 				),
 			),
 			app.TBody().Body(
@@ -222,6 +222,7 @@ func (c *usersContent) Render() app.UI {
 							app.Div().Class("space"),
 							app.Text(user.About),
 						),
+
 						// make button inactive for logged user
 						app.If(user.Nickname == c.user.Nickname,
 							app.Td().Body(
@@ -229,20 +230,23 @@ func (c *usersContent) Render() app.UI {
 									app.Text("that's you"),
 								),
 							),
-						//
+
+						// toggle off
 						).ElseIf(inFlow,
 							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
+								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
 									app.I().Text("close"),
-									app.Text("flow off"),
+									app.Text("toggle off"),
 								),
 							),
-						//
+
+						// toggle on
 						).Else(
 							app.Td().Body(
 								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
 									app.I().Text("done"),
-									app.Text("flow on"),
+									app.Text("toggle on"),
 								),
 							),
 						),

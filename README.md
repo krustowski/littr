@@ -43,8 +43,16 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + any signed (by logged user) post can be written and sent by the post (`/post`) page
 + user can logout too by navigating themselves to the logout (`/logout`) page 
 
+## features
+
++ toggable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
++ in-memory runtime caches
++ data persistence at container restart (on `SIGINT`)
++ flow posts filtering using the FlowList --- simply choose whose posts to show
++ can run offline (no data can be fetched from the server though)
+
 ## REST API service
-+ the service is reachable via (`/api`) endpoint --- API auth-wall to be implemented
++ the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
 + there are three main endpoints: 
 
 ```http
@@ -82,7 +90,7 @@ make flush kill run
 
 ## development
 
-litter-server container can be run locally on any dev machine (with Docker engine, or with the required Go runtime)
+`litter-backend` container can be run locally on any dev machine (with Docker engine, or with the required tag-locked Go runtime)
 
 ```
 make fmt build run
@@ -97,11 +105,15 @@ http://localhost:8093/flow
 + healthcheck as a periodic cache dumper
 + allow emojis in usernames?
 + show offline mode notice
++ swagger docs
++ implement picture posting
+
+### roadmap to v0.9
++ implement polls (create poll, voting)
 
 ### roadmap to v0.8
-+ implement polls (create poll, voting)
-+ implement stats 
-+ ensure system user unregisterable by the app logic (not hurcoded) 
++ ~~implement stats~~
++ ensure system user unregisterable by the app logic (not hardcoded) 
   - define data/users.json system users (regular users, but simply taken already by the init time)
 
 ### readmap to v0.7
