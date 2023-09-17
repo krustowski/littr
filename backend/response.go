@@ -18,9 +18,10 @@ type response struct {
 	FlowList    []string               `json:"flow_records"`
 	Key         string                 `json:"key"`
 	Message     string                 `json:"message"`
+	Count       int                    `json:"count"`
+	Polls       map[string]models.Poll `json:"polls"`
 	Posts       map[string]models.Post `json:"posts"`
 	Users       map[string]models.User `json:"users"`
-	Count       int                    `json:"count"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {

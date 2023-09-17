@@ -247,7 +247,7 @@ func (c *flowContent) Render() app.UI {
 								app.Div().Class("max").Body(
 									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
 								),
-								app.If(c.loggedUser == post.Nickname,
+								app.If(c.user.Nickname == post.Nickname,
 									app.B().Text(post.ReactionCount),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),

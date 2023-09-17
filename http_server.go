@@ -84,6 +84,7 @@ func initServer() {
 	// API routes
 	http.HandleFunc("/api/auth", backend.AuthHandler)
 	http.HandleFunc("/api/flow", backend.FlowHandler)
+	http.HandleFunc("/api/polls", backend.PollsHandler)
 	http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
 

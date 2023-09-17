@@ -209,9 +209,31 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+func PollsHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	log.Println("[poll] new connection from: " + r.RemoteAddr)
+
+	switch r.Method {
+	case "GET":
+		polls, _ := getAll(PollCache, models.Poll{})
+
+		resp.Message = "ok, dumping polls"
+		resp.Code = http.StatusOK
+		resp.Polls = polls
+		break
+
+	default:
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
+		break
+	}
+
+	resp.Write(w)
+}
+
 func StatsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[user] new connection from: " + r.RemoteAddr)
+	log.Println("[stats] new connection from: " + r.RemoteAddr)
 
 	switch r.Method {
 	case "GET":

@@ -9,11 +9,16 @@ import (
 )
 
 const (
+	pollsFile = "/opt/data/polls.json"
 	postsFile = "/opt/data/posts.json"
 	usersFile = "/opt/data/users.json"
 )
 
 var (
+	polls = struct {
+		Polls map[string]models.Poll `json:"polls"`
+	}{}
+
 	posts = struct {
 		Posts map[string]models.Post `json:"posts"`
 	}{}
@@ -24,6 +29,33 @@ var (
 )
 
 func LoadData() {
+	rawPollsData, err := os.ReadFile(pollsFile)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	if string(rawPollsData) == "" {
+		return
+	}
+
+	err = json.Unmarshal(rawPollsData, &polls)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	for key, val := range polls.Polls {
+		if key == "" || &val == nil {
+			continue
+		}
+
+		if saved := setOne(PollCache, key, val); !saved {
+			log.Printf("cannot load poll from file (key: %s)", key)
+			continue
+		}
+	}
+
 	rawPostsData, err := os.ReadFile(postsFile)
 	if err != nil {
 		log.Println(err.Error())
@@ -81,6 +113,7 @@ func LoadData() {
 
 func DumpData() {
 	posts.Posts, _ = getAll(FlowCache, models.Post{})
+	polls.Polls, _ = getAll(PollCache, models.Poll{})
 	users.Users, _ = getAll(UserCache, models.User{})
 
 	postsJsonData, err := json.Marshal(posts)
@@ -89,7 +122,19 @@ func DumpData() {
 		return
 	}
 
+	pollsJsonData, err := json.Marshal(polls)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
 	usersJsonData, err := json.Marshal(users)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	err = os.WriteFile(pollsFile, pollsJsonData, 0644)
 	if err != nil {
 		log.Println(err.Error())
 		return
