@@ -97,7 +97,13 @@ func (c *postContent) Render() app.UI {
 
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
-			app.Label().Text("contents").Class("active"),
+			app.Label().Text("text contents").Class("active"),
+		),
+		app.Div().Class("field label border invalid extra deep-orange-text").Body(
+			app.Input().Type("text"),
+			app.Input().Type("file"),
+			app.Label().Text("fig").Class("active"),
+			app.I().Text("attach_file"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("post").OnClick(c.onClick),
 	)

@@ -147,6 +147,9 @@ func (c *flowContent) OnMount(ctx app.Context) {
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
+	// show loader
+	c.loaderShow = true
+
 	ctx.Async(func() {
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
