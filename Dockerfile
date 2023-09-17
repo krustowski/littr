@@ -60,6 +60,7 @@ RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
 COPY --chmod=755 data/ /opt/data/
+COPY --chmod=755 data/.gitkeep /opt/pix/
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm

@@ -8,6 +8,8 @@ networks:
 volumes:
   litter-data:
     name: "litter-data"
+  litter-pix:
+    name: "litter-pix"
 
 services:
   litter-backend:
@@ -32,6 +34,7 @@ services:
     mem_reservation: 128m
     volumes:
       - "litter-data:/opt/data"
+      - "litter-pix:/opt/pix"
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     networks:
