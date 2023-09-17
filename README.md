@@ -56,16 +56,22 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + there are three main endpoints: 
 
 ```http
-POST /api/auth
+POST   /api/auth
 
 POST   /api/flow
 GET    /api/flow
 PUT    /api/flow
 DELETE /api/flow/:key
 
-POST /api/users
-GET  /api/users
-PUT  /api/users
+POST   /api/polls
+GET    /api/polls
+PUT    /api/polls
+DELETE /api/polls/:key
+
+POST   /api/users
+GET    /api/users
+PUT    /api/users
+DE"ETE /api/users/:key
 ```
 
 ## how to run
@@ -114,7 +120,7 @@ http://localhost:8093/flow
 ### roadmap to v0.8
 + ~~implement stats~~
 + ensure system user unregisterable by the app logic (not hardcoded) 
-  - define data/users.json system users (regular users, but simply taken already by the init time)
+  - ~~define data/users.json system users (regular users, but simply taken already by the init time)~~
 
 ### readmap to v0.7
 + ~~implement functional flowList editting via UI~~
