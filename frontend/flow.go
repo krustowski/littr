@@ -241,7 +241,7 @@ func (c *flowContent) Render() app.UI {
 
 							app.If(post.Type == "fig",
 								app.Article().Class("medium no-padding transparent").Body(
-									app.Img().Class("no-padding priamry absolute center middle").Src(post.Content),
+									app.Img().Class("no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%"),
 								),
 							).Else(
 								app.P().Body(
