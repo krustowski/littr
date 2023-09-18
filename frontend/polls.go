@@ -78,6 +78,39 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 	return
 }
 
+func (c *pollsContent) onClickPollOption(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	option := ctx.JSSrc().Get("text").String()
+	ctx.NewActionWithValue("vote", []string{key, option})
+}
+
+func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
+	keys, ok := a.Value.([]string)
+	if !ok {
+		return
+	}
+
+	key := keys[0]
+	//option := keys[1]
+
+	ctx.Async(func() {
+		var toastText string = ""
+
+		interactedPoll := c.polls[key]
+
+		if _, ok := litterAPI("PUT", "/api/polls", interactedPoll); !ok {
+			toastText = "backend error: cannot update a poll"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			//delete(c.polls, key)
+
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+	})
+}
+
 func (c *pollsContent) onClickDelete(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("delete", key)
@@ -112,6 +145,7 @@ func (c *pollsContent) OnMount(ctx app.Context) {
 	var user models.User
 	var toastText string = ""
 
+	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
 
 	ctx.LocalStorage().Get("user", &enUser)
@@ -128,6 +162,18 @@ func (c *pollsContent) OnMount(ctx app.Context) {
 	})
 	return
 }
+
+// contains checks if a string is present in a slice
+// https://freshman.tech/snippets/go/check-if-slice-contains-element/
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *pollsContent) Render() app.UI {
 	loaderActiveClass := ""
 	if c.loaderShow {
@@ -160,60 +206,82 @@ func (c *pollsContent) Render() app.UI {
 				app.Range(c.polls).Map(func(key string) app.UI {
 					poll := c.polls[key]
 
-					// calculate poll votes base
-					pollCounterSum := 0
-					pollCounterSum = poll.OptionOne.Counter + poll.OptionTwo.Counter
-					if poll.OptionThree.Content != "" {
-						pollCounterSum += poll.OptionThree.Counter
-					}
+					userVoted := contains(poll.Voted, c.user.Nickname)
 
 					optionOneShare := 0
 					optionTwoShare := 0
 					optionThreeShare := 0
 
-					// at least one vote has to be already recorded to show the progresses
-					if pollCounterSum > 0 {
-						optionOneShare = poll.OptionOne.Counter * 100 / pollCounterSum
-						optionTwoShare = poll.OptionTwo.Counter * 100 / pollCounterSum
-						optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
-					}
+					// calculate the poll votes base
+					if userVoted {
+						pollCounterSum := 0
+						pollCounterSum = poll.OptionOne.Counter + poll.OptionTwo.Counter
+						if poll.OptionThree.Content != "" {
+							pollCounterSum += poll.OptionThree.Counter
+						}
 
-					//userVoted := contains(slice, c.user.Nickname)
-					userVoted := true
+						// at least one vote has to be already recorded to show the progresses
+						if pollCounterSum > 0 {
+							optionOneShare = poll.OptionOne.Counter * 100 / pollCounterSum
+							optionTwoShare = poll.OptionTwo.Counter * 100 / pollCounterSum
+							optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
+						}
+					}
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
-							app.B().Text(poll.Question).Class("deep-orange-text"),
-							app.Div().Class("space"),
-
-							app.Text(poll.OptionOne.Content),
-							app.Div().Class("small-space border").Body(
-								app.Div().Class("progress left deep-orange").
-									Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);"),
+							app.P().Body(
+								app.Text("Q: "),
+								app.B().Text(poll.Question).Class("deep-orange-text space"),
 							),
 							app.Div().Class("space"),
 
-							app.Text(poll.OptionTwo.Content),
-							app.Div().Class("small-space border").Body(
-								app.Div().Class("progress left deep-orange").
-									Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);"),
-							),
-							app.Div().Class("space"),
+							app.If(!userVoted,
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content),
+								app.Div().Class("space"),
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content),
+								app.Div().Class("space"),
+								app.If(poll.OptionThree.Content != "",
+									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content),
+									app.Div().Class("space"),
+								),
+							).Else(
 
-							app.If(poll.OptionThree.Content != "",
-								app.Text(poll.OptionThree.Content),
-								app.Div().Class("small-space border").Body(
-									app.Div().Class("progress left deep-orange").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);"),
+								// voted option I
+								app.Div().Class("medium-space border").Body(
+									app.P().Class("middle").Body(
+										app.Text(poll.OptionOne.Content),
+									),
+									app.Div().Class("progress left deep-orange large").
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionOne.Content),
 								),
 								app.Div().Class("space"),
-							),
 
+								// voted option II
+								app.Div().Class("medium-space border").Body(
+									app.P().Class("middle").Body(
+										app.Text(poll.OptionTwo.Content),
+									),
+									app.Div().Class("progress left deep-orange").
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionTwo.Content),
+								),
+								app.Div().Class("space"),
+
+								// voted option III
+								app.If(poll.OptionThree.Content != "",
+									app.Div().Class("medium-space border").Body(
+										app.P().Class("middle").Text(poll.OptionThree.Content),
+										app.Div().Class("progress left deep-orange").
+											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionThree.Content),
+									),
+									app.Div().Class("space"),
+								),
+							),
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
 									app.Text(poll.Timestamp.Format("Jan 02, 2006; 15:04:05")),
 								),
-								app.If(userVoted,
+								app.If(poll.Author == c.user.Nickname,
 									app.B().Text(len(poll.Voted)),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),

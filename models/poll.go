@@ -25,6 +25,9 @@ type Poll struct {
 
 	// Timestamp is an UNIX timestamp indication the poll's creation time; should be identical to the upstream post's Timestamp.
 	Timestamp time.Time `json:"timestamp"`
+	
+	// Author is the back key to the user originally posting that poll.
+	Author string `json:"author"`
 }
 
 type PollOption struct {

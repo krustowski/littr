@@ -15,7 +15,8 @@
         "content": "idk", 
         "counter": 33
       }, 
-      "voted": [ "krusty" ]
+      "voted": [ "generic" ], 
+      "author": "generic"
     }
   }
 }
