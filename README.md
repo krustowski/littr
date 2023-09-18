@@ -71,7 +71,7 @@ DELETE /api/polls/:key
 POST   /api/users
 GET    /api/users
 PUT    /api/users
-DE"ETE /api/users/:key
+DELETE /api/users/:key
 ```
 
 ## how to run

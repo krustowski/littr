@@ -3,6 +3,7 @@ package frontend
 import (
 	"log"
 	"net/url"
+	"strconv"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -17,8 +18,14 @@ type PostPage struct {
 
 type postContent struct {
 	app.Compo
-	newPost string
+
+	newPost    string
 	newFigLink string
+
+	pollQuestion  string
+	pollOptionI   string
+	pollOptionII  string
+	pollOptionIII string
 
 	toastShow bool
 	toastText string
@@ -41,6 +48,9 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	// post, fig, poll
 	postType := ctx.JSSrc().Get("id").String()
 	content := ""
+	poll := models.Poll{}
+
+	var payload interface{}
 
 	switch postType {
 	case "fig":
@@ -60,7 +70,21 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		break
 
 	case "poll":
-		return
+		if c.pollOptionI == "" || c.pollOptionII == "" || c.pollQuestion == "" {
+			c.toastShow = true
+			c.toastText = "poll question and at least two option have to be filled"
+			return
+		}
+		now := time.Now()
+		content = strconv.FormatInt(now.UnixNano(), 10)
+
+		poll.ID = content
+		poll.Question = c.pollQuestion
+		poll.OptionOne.Content = c.pollOptionI
+		poll.OptionTwo.Content = c.pollOptionII
+		poll.OptionThree.Content = c.pollOptionIII
+		poll.Timestamp = now
+
 		break
 
 	case "post":
@@ -92,23 +116,28 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		author := user.Nickname
+		path := "/api/flow"
 
-		// add new post to backend struct
-		if _, ok := litterAPI("POST", "/api/flow", models.Post{
-			Nickname:  author,
-			Type:      postType,
-			Content:   content,
-			Timestamp: time.Now(),
-		}); !ok {
-			c.toastShow = true
-			c.toastText = "backend error: cannot add new post"
-			log.Println("cannot post new post to API!")
-			return
+		if postType == "post" || postType == "fig" {
+			payload = models.Post{
+				Nickname:  author,
+				Type:      postType,
+				Content:   content,
+				Timestamp: time.Now(),
+				PollID:    poll.ID,
+			}
+		} else if postType == "poll" {
+			path = "/api/polls"
+			payload = poll
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-		
-		})
+		// add new post/poll to backend struct
+		if _, ok := litterAPI("POST", path, payload); !ok {
+			c.toastShow = true
+			c.toastText = "backend error: cannot add new content"
+			log.Println("cannot post new content to API!")
+			return
+		}
 
 		c.toastShow = false
 		ctx.Navigate("/flow")
@@ -153,7 +182,7 @@ func (c *postContent) Render() app.UI {
 			//app.Input().Class("active").Type("file"),
 			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
-                ),
+		),
 		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").Text("post fig").OnClick(c.onClick),
 
 		app.Div().Class("large-divider"),
@@ -163,21 +192,21 @@ func (c *postContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50),
 			app.Label().Text("question").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionI)).Required(true).Class("active").MaxLength(50),
 			app.Label().Text("option one").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionII)).Required(true).Class("active").MaxLength(50),
 			app.Label().Text("option two").Class("active"),
 		),
 		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(nil)).Required(true).Class("active").MaxLength(60),
-			app.Label().Text("option three").Class("active"),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60),
+			app.Label().Text("option three (optional)").Class("active"),
 		),
-		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(nil).Disabled(true),
+		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(c.onClick).Disabled(false),
 	)
 }

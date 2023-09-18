@@ -222,6 +222,40 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Polls = polls
 		break
 
+	case "POST":
+		var poll models.Poll
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &poll); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		key := poll.ID
+
+		if saved := setOne(PollCache, key, poll); !saved {
+			log.Println("backend error: cannot save new poll (cache error)")
+			resp.Message = "backend error: cannot save new poll (cache error)"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		log.Println("ok, adding new poll")
+		resp.Message = "ok, adding new poll"
+		resp.Code = http.StatusCreated
+		break
+
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest

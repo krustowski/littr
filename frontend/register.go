@@ -145,6 +145,6 @@ func (c *registerContent) Render() app.UI {
 			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60),
 			app.Label().Text("e-mail").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("register").OnClick(c.onClick),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("register").OnClick(c.onClick).Disabled(false),
 	)
 }
