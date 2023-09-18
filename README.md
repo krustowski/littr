@@ -112,7 +112,8 @@ http://localhost:8093/flow
 + allow emojis in usernames?
 + show offline mode notice
 + swagger docs
-+ refactor
++ deep code refactor
++ replies to posts (just one iteration, no reply to a reply)
 
 ### roadmap to v0.9
 + ~~implement polls (create poll, voting)~~
