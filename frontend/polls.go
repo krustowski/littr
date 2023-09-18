@@ -80,7 +80,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 
 func (c *pollsContent) onClickPollOption(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
-	option := ctx.JSSrc().Get("text").String()
+	option := ctx.JSSrc().Get("name").String()
 	ctx.NewActionWithValue("vote", []string{key, option})
 }
 
@@ -91,19 +91,48 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	}
 
 	key := keys[0]
-	//option := keys[1]
+	option := keys[1]
+
+	poll := c.polls[key]
+	toastText := ""
+
+	poll.Voted = append(poll.Voted, c.user.Nickname)	
+
+	// check where to vote
+	options := []string{
+		poll.OptionOne.Content,
+		poll.OptionTwo.Content,
+		poll.OptionThree.Content,
+	}
+
+	// use the vote
+	if found := contains(options, option); found {
+		switch option {
+		case poll.OptionOne.Content:
+			poll.OptionOne.Counter++
+			break
+
+		case poll.OptionTwo.Content:
+			poll.OptionTwo.Counter++
+			break
+
+		case poll.OptionThree.Content:
+			poll.OptionThree.Counter++
+			break
+		}
+	} else {
+		toastText = "option not associated to the poll well"
+	}
 
 	ctx.Async(func() {
-		var toastText string = ""
+		//var toastText string
 
-		interactedPoll := c.polls[key]
-
-		if _, ok := litterAPI("PUT", "/api/polls", interactedPoll); !ok {
+		if _, ok := litterAPI("PUT", "/api/polls", poll); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
-			//delete(c.polls, key)
+			c.polls[key] = poll
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
@@ -235,12 +264,12 @@ func (c *pollsContent) Render() app.UI {
 
 							// show buttons to vote
 							app.If(!userVoted && poll.Author != c.user.Nickname,
-								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content),
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content).DataSet("option", poll.OptionOne.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionOne.Content),
 								app.Div().Class("space"),
-								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content),
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content).DataSet("option", poll.OptionTwo.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionTwo.Content),
 								app.Div().Class("space"),
 								app.If(poll.OptionThree.Content != "",
-									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content),
+									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content).DataSet("option", poll.OptionThree.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionThree.Content),
 									app.Div().Class("space"),
 								),
 
@@ -251,8 +280,8 @@ func (c *pollsContent) Render() app.UI {
 									app.P().Class("middle right-align bold padding").Body(
 										app.Text(poll.OptionOne.Content),
 									),
-									app.Div().Class("progress left deep-orange large").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionOne.Content),
+									app.Div().Class("padding bold progress left deep-orange large").
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").Text(poll.OptionOne.Content),
 								),
 								app.Div().Class("space"),
 
@@ -261,8 +290,8 @@ func (c *pollsContent) Render() app.UI {
 									app.P().Class("middle right-align bold padding").Body(
 										app.Text(poll.OptionTwo.Content),
 									),
-									app.Div().Class("progress left deep-orange").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionTwo.Content),
+									app.Div().Class("padding bold progress left deep-orange").
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").Text(poll.OptionTwo.Content),
 								),
 								app.Div().Class("space"),
 
@@ -270,8 +299,8 @@ func (c *pollsContent) Render() app.UI {
 								app.If(poll.OptionThree.Content != "",
 									app.Div().Class("medium-space border").Body(
 										app.P().Class("middle bold right-align padding").Text(poll.OptionThree.Content),
-										app.Div().Class("progress left deep-orange").
-											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionThree.Content),
+										app.Div().Class("padding bold progress left deep-orange").
+											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").Text(poll.OptionThree.Content),
 									),
 									app.Div().Class("space"),
 								),
@@ -289,8 +318,8 @@ func (c *pollsContent) Render() app.UI {
 									),
 								).Else(
 									app.B().Text(len(poll.Voted)),
-									app.Button().ID(key).Class("transparent circle").OnClick(nil).Body(
-										app.I().Text("star"),
+									app.Button().ID(key).Class("transparent circle").Disabled(true).Body(
+										app.I().Text("how_to_vote"),
 									),
 								),
 							),
