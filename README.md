@@ -112,15 +112,16 @@ http://localhost:8093/flow
 + allow emojis in usernames?
 + show offline mode notice
 + swagger docs
-+ implement picture posting
++ refactor
 
 ### roadmap to v0.9
-+ implement polls (create poll, voting)
++ implement polls (~~create poll~~, voting)
 
 ### roadmap to v0.8
 + ~~implement stats~~
-+ ensure system user unregisterable by the app logic (not hardcoded) 
++ ~~ensure system user unregisterable by the app logic (not hardcoded)~~
   - ~~define data/users.json system users (regular users, but simply taken already by the init time)~~
++ ~~implement picture posting~~ (via URL)
 
 ### readmap to v0.7
 + ~~implement functional flowList editting via UI~~

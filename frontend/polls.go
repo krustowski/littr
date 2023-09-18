@@ -78,13 +78,41 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 	return
 }
 
+func (c *pollsContent) onClickDelete(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("delete", key)
+}
+
+func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Async(func() {
+		var toastText string = ""
+
+		interactedPoll := c.polls[key]
+
+		if _, ok := litterAPI("DELETE", "/api/polls", interactedPoll); !ok {
+			toastText = "backend error: cannot delete a poll"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			delete(c.polls, key)
+
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+	})
+}
+
 func (c *pollsContent) OnMount(ctx app.Context) {
 	var enUser string
 	var user models.User
 	var toastText string = ""
 
-	//ctx.Handle("star", c.handleStar)
-	//ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("delete", c.handleDelete)
 
 	ctx.LocalStorage().Get("user", &enUser)
 	// decode, decrypt and unmarshal the local storage string
@@ -94,12 +122,12 @@ func (c *pollsContent) OnMount(ctx app.Context) {
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.user = user
+		c.loggedUser = user.Nickname
 		c.toastText = toastText
 		c.toastShow = (toastText != "")
 	})
 	return
 }
-
 func (c *pollsContent) Render() app.UI {
 	loaderActiveClass := ""
 	if c.loaderShow {
@@ -187,7 +215,7 @@ func (c *pollsContent) Render() app.UI {
 								),
 								app.If(userVoted,
 									app.B().Text(len(poll.Voted)),
-									app.Button().ID(key).Class("transparent circle").OnClick(nil).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
