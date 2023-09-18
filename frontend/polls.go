@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"strconv"
 
 	"go.savla.dev/littr/config"
@@ -214,6 +215,17 @@ func (c *pollsContent) Render() app.UI {
 		toastActiveClass = " active"
 	}
 
+	var sortedPolls []models.Poll
+
+	for _, sortedPoll := range c.polls {
+		sortedPolls = append(sortedPolls, sortedPoll)
+	}
+
+	// order polls by timestamp DESC
+	sort.SliceStable(sortedPolls, func(i, j int) bool {
+		return sortedPolls[i].Timestamp.After(sortedPolls[j].Timestamp)
+	})
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr polls").Style("padding-top", config.HeaderTopPadding),
 		app.Div().Class("space"),
@@ -232,8 +244,9 @@ func (c *pollsContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(c.polls).Map(func(key string) app.UI {
-					poll := c.polls[key]
+				app.Range(sortedPolls).Slice(func(idx int) app.UI {
+					poll := sortedPolls[idx]
+					key := poll.ID
 
 					userVoted := contains(poll.Voted, c.user.Nickname)
 
