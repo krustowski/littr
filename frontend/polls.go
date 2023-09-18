@@ -212,20 +212,17 @@ func (c *pollsContent) Render() app.UI {
 					optionTwoShare := 0
 					optionThreeShare := 0
 
-					// calculate the poll votes base
-					if userVoted {
-						pollCounterSum := 0
-						pollCounterSum = poll.OptionOne.Counter + poll.OptionTwo.Counter
-						if poll.OptionThree.Content != "" {
-							pollCounterSum += poll.OptionThree.Counter
-						}
+					pollCounterSum := 0
+					pollCounterSum = poll.OptionOne.Counter + poll.OptionTwo.Counter
+					if poll.OptionThree.Content != "" {
+						pollCounterSum += poll.OptionThree.Counter
+					}
 
-						// at least one vote has to be already recorded to show the progresses
-						if pollCounterSum > 0 {
-							optionOneShare = poll.OptionOne.Counter * 100 / pollCounterSum
-							optionTwoShare = poll.OptionTwo.Counter * 100 / pollCounterSum
-							optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
-						}
+					// at least one vote has to be already recorded to show the progresses
+					if pollCounterSum > 0 {
+						optionOneShare = poll.OptionOne.Counter * 100 / pollCounterSum
+						optionTwoShare = poll.OptionTwo.Counter * 100 / pollCounterSum
+						optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
 					}
 
 					return app.Tr().Body(
@@ -236,7 +233,8 @@ func (c *pollsContent) Render() app.UI {
 							),
 							app.Div().Class("space"),
 
-							app.If(!userVoted,
+							// show buttons to vote
+							app.If(!userVoted && poll.Author != c.user.Nickname,
 								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content),
 								app.Div().Class("space"),
 								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content),
@@ -245,38 +243,41 @@ func (c *pollsContent) Render() app.UI {
 									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content),
 									app.Div().Class("space"),
 								),
-							).Else(
 
+							// show results instead
+							).ElseIf(userVoted || poll.Author == c.user.Nickname,
 								// voted option I
 								app.Div().Class("medium-space border").Body(
-									app.P().Class("middle").Body(
+									app.P().Class("middle right-align bold padding").Body(
 										app.Text(poll.OptionOne.Content),
 									),
 									app.Div().Class("progress left deep-orange large").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionOne.Content),
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionOne.Content),
 								),
 								app.Div().Class("space"),
 
 								// voted option II
 								app.Div().Class("medium-space border").Body(
-									app.P().Class("middle").Body(
+									app.P().Class("middle right-align bold padding").Body(
 										app.Text(poll.OptionTwo.Content),
 									),
 									app.Div().Class("progress left deep-orange").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionTwo.Content),
+										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionTwo.Content),
 								),
 								app.Div().Class("space"),
 
 								// voted option III
 								app.If(poll.OptionThree.Content != "",
 									app.Div().Class("medium-space border").Body(
-										app.P().Class("middle").Text(poll.OptionThree.Content),
+										app.P().Class("middle bold right-align padding").Text(poll.OptionThree.Content),
 										app.Div().Class("progress left deep-orange").
-											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").OnClick(c.onClickPollOption).Text(poll.OptionThree.Content),
+											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").OnClick(c.onClickPollOption).DataSet("option", poll.OptionThree.Content),
 									),
 									app.Div().Class("space"),
 								),
 							),
+
+							// bottom row of the poll
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
 									app.Text(poll.Timestamp.Format("Jan 02, 2006; 15:04:05")),

@@ -24,6 +24,9 @@ type statsContent struct {
 	stats map[string]int
 
 	loaderShow bool
+
+	toastShow bool
+	toastText string
 }
 
 func (p *StatsPage) OnNav(ctx app.Context) {
@@ -37,6 +40,10 @@ func (p *StatsPage) Render() app.UI {
 		&footer{},
 		&statsContent{},
 	)
+}
+
+func (c *statsContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastShow = false
 }
 
 func (c *statsContent) OnMount(ctx app.Context) {
@@ -110,10 +117,22 @@ func (c *statsContent) Render() app.UI {
 		loaderActiveClass = " active"
 	}
 
+	toastActiveClass := ""
+	if c.toastShow {
+		toastActiveClass = " active"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr stats").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
 		app.Div().Class("space"),
+
+		app.A().OnClick(c.dismissToast).Body(
+			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
+				app.I().Text("error"),
+				app.Span().Text(c.toastText),
+			),
+		),
 
 		app.Table().Class("border left-align").Body(
 			// table header
