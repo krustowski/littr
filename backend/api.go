@@ -214,6 +214,40 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("[poll] new connection from: " + r.RemoteAddr)
 
 	switch r.Method {
+	case "DELETE":
+		var poll models.Poll
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &poll); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		key := poll.ID
+
+		if deleted := deleteOne(PollCache, key); !deleted {
+			log.Println("cannot delete the poll")
+			resp.Message = "cannot delete the poll"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		log.Println("ok, poll removed")
+		resp.Message = "ok, poll removed"
+		resp.Code = http.StatusOK
+		break
+
 	case "GET":
 		polls, _ := getAll(PollCache, models.Poll{})
 
@@ -256,6 +290,46 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusCreated
 		break
 
+	case "PUT":
+		var poll models.Poll
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Println("backend error: cannot read input stream: " + err.Error())
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		if err := json.Unmarshal(data, &poll); err != nil {
+			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
+			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+		key := poll.ID
+
+		if _, found := getOne(PollCache, key, models.Poll{}); !found {
+			log.Println("unknown poll update requested")
+			resp.Message = "unknown poll update requested"
+			resp.Code = http.StatusBadRequest
+			break
+		}
+
+		if saved := setOne(PollCache, key, poll); !saved {
+			resp.Message = "cannot update post"
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		log.Println("ok, poll updated")
+		resp.Message = "ok, poll updated"
+		resp.Code = http.StatusOK
+		break
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest

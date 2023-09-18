@@ -128,6 +128,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			}
 		} else if postType == "poll" {
 			path = "/api/polls"
+			poll.Author = user.Nickname
 			payload = poll
 		}
 
