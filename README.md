@@ -115,7 +115,7 @@ http://localhost:8093/flow
 + refactor
 
 ### roadmap to v0.9
-+ implement polls (~~create poll~~, voting)
++ ~~implement polls (create poll, voting)~~
 
 ### roadmap to v0.8
 + ~~implement stats~~
