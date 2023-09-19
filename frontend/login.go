@@ -114,7 +114,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastShow = (c.toastText != "")			
+			c.toastShow = (c.toastText != "")
 
 			if response.AuthGranted {
 				ctx.Navigate("/flow")

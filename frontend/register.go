@@ -107,10 +107,10 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// update the context of UI goroutine 
+		// update the context of UI goroutine
 		ctx.Dispatch(func(ctx app.Context) {
 			c.toastShow = (c.toastText != "")
-	
+
 			if !c.toastShow {
 				ctx.Navigate("/login")
 			}
