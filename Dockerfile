@@ -60,11 +60,13 @@ ENV DOCKER_USER ${DOCKER_USER}
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY --chmod=755 data/ /opt/data/
-COPY --chmod=755 data/.gitkeep /opt/pix/
+COPY --chmod=750 data/ /opt/data/
+COPY --chmod=750 data/.gitkeep /opt/pix/
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
+
+RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /opt/data
 
 WORKDIR /opt
 USER ${DOCKER_USER}
