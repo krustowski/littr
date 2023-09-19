@@ -108,12 +108,13 @@ http://localhost:8093/flow
 + implement infinite scroll for flow
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
-+ healthcheck as a periodic cache dumper
++ ~~healthcheck as a periodic cache dumper~~
 + allow emojis in usernames?
 + show offline mode notice
 + swagger docs
 + deep code refactor
 + replies to posts (just one iteration, no reply to a reply)
++ implement user searching on `users` and `stats` pages
 
 ### roadmap to v0.9
 + ~~implement polls (create poll, voting)~~
