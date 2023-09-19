@@ -53,10 +53,12 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 
 ## REST API service
 + the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
-+ there are three main endpoints: 
++ there are five main endpoints: 
 
 ```http
 POST   /api/auth
+
+GET    /api/dump
 
 POST   /api/flow
 GET    /api/flow
