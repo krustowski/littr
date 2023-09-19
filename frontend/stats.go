@@ -149,12 +149,12 @@ func (c *statsContent) Render() app.UI {
 			app.TBody().Body(
 				app.Range(userStats).Map(func(key string) app.UI {
 					// calculate a ratio
-					ratio := func() int {
+					ratio := func() float64 {
 						if userStats[key].PostCount <= 0 {
 							return 0
 						}
 
-						return userStats[key].ReactionCount / userStats[key].PostCount
+						return float64(userStats[key].ReactionCount) / float64(userStats[key].PostCount)
 					}()
 
 					return app.Tr().Body(
@@ -177,7 +177,7 @@ func (c *statsContent) Render() app.UI {
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
-								app.Text(strconv.FormatInt(int64(ratio), 10)),
+								app.Text(strconv.FormatFloat(ratio, 'f', 2, 64)),
 							),
 						),
 					)
