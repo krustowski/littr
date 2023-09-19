@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"crypto/sha512"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -64,18 +65,22 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		c.toastShow = true
-		if c.passphrase == "" || c.passphraseAgain == "" {
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		passphrase := strings.TrimSpace(c.passphrase)
+		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
+
+		if passphrase == "" || passphraseAgain == "" {
 			c.toastText = "both passphrases need to be filled, or text changed"
 			return
 		}
 
-		if c.passphrase != c.passphraseAgain {
+		if passphrase != passphraseAgain {
 			c.toastText = "passphrases do not match"
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
+		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 
 		if _, ok := litterAPI("PUT", "/api/users", models.User{
 			Nickname:   c.user.Nickname,
@@ -87,21 +92,22 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		c.toastShow = false
 		ctx.Navigate("/users")
 	})
 }
 
 func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		if c.aboutText == "" {
-			c.toastShow = true
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		aboutText := strings.TrimSpace(c.aboutText)
+
+		if aboutText == "" {
 			c.toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
 			return
 		}
 
-		if len(c.aboutText) > 100 {
-			c.toastShow = true
+		if len(aboutText) > 100 {
 			c.toastText = "about text has to be shorter than 100 chars"
 			return
 		}
@@ -109,10 +115,9 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		if _, ok := litterAPI("PUT", "/api/users", models.User{
 			Nickname:   c.user.Nickname,
 			Passphrase: c.user.Passphrase,
-			About:      c.aboutText,
+			About:      aboutText,
 			Email:      c.user.Email,
 		}); !ok {
-			c.toastShow = true
 			c.toastText = "generic backend error"
 			return
 		}
@@ -121,25 +126,24 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 
 		var userStream []byte
 		if err := reload(c.user, &userStream); err != nil {
-			c.toastShow = true
 			c.toastText = "cannot update local storage"
 			return
 		}
 
 		ctx.LocalStorage().Set("user", userStream)
 
-		c.toastShow = false
 		ctx.Navigate("/users")
 	})
 }
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastText = ""
 	c.toastShow = false
 }
 
 func (c *settingsContent) Render() app.UI {
 	toastActiveClass := ""
-	if c.toastShow {
+	if c.toastText != "" {
 		toastActiveClass = " active"
 	}
 

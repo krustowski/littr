@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -54,46 +55,59 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 	switch postType {
 	case "fig":
-		if c.newFigLink == "" {
-			c.toastShow = true
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		newFigLink := strings.TrimSpace(c.newFigLink)
+
+		if newFigLink == "" {
 			c.toastText = "fig link must be filled"
 			return
 		}
 
-		if _, err := url.ParseRequestURI(c.newFigLink); err != nil {
-			c.toastShow = true
+		// check the URL/URI format
+		if _, err := url.ParseRequestURI(newFigLink); err != nil {
 			c.toastText = "fig link prolly not a valid URL"
 			return
 		}
-		content = c.newFigLink
+		content = newFigLink
 
 		break
 
 	case "poll":
-		if c.pollOptionI == "" || c.pollOptionII == "" || c.pollQuestion == "" {
-			c.toastShow = true
-			c.toastText = "poll question and at least two option have to be filled"
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		pollQuestion := strings.TrimSpace(c.pollQuestion)
+		pollOptionI := strings.TrimSpace(c.pollOptionI)
+		pollOptionII := strings.TrimSpace(c.pollOptionII)
+		pollOptionIII := strings.TrimSpace(c.pollOptionIII)
+
+		if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
+			c.toastText = "poll question and at least two options have to be filled"
 			return
 		}
+
 		now := time.Now()
 		content = strconv.FormatInt(now.UnixNano(), 10)
 
 		poll.ID = content
-		poll.Question = c.pollQuestion
-		poll.OptionOne.Content = c.pollOptionI
-		poll.OptionTwo.Content = c.pollOptionII
-		poll.OptionThree.Content = c.pollOptionIII
+		poll.Question = pollQuestion
+		poll.OptionOne.Content = pollOptionI
+		poll.OptionTwo.Content = pollOptionII
+		poll.OptionThree.Content = pollOptionIII
 		poll.Timestamp = now
 
 		break
 
 	case "post":
-		if c.newPost == "" {
-			c.toastShow = true
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		newPost := strings.TrimSpace(c.newPost)
+
+		if newPost == "" {
 			c.toastText = "post textarea must be filled"
 			return
 		}
-		content = c.newPost
+		content = newPost
 
 		break
 
@@ -108,10 +122,9 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		ctx.LocalStorage().Get("user", &enUser)
 
-		// decode, decrypt and unmarshal the local storage string
+		// decode, decrypt and unmarshal the local storage user data
 		if err := prepare(enUser, &user); err != nil {
 			c.toastText = "frontend decoding/decryption failed: " + err.Error()
-			c.toastShow = true
 			return
 		}
 
@@ -134,24 +147,24 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		// add new post/poll to backend struct
 		if _, ok := litterAPI("POST", path, payload); !ok {
-			c.toastShow = true
 			c.toastText = "backend error: cannot add new content"
 			log.Println("cannot post new content to API!")
 			return
 		}
 
-		c.toastShow = false
+		c.toastShow = (c.toastText != "")
 		ctx.Navigate("/flow")
 	})
 }
 
 func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastText = ""
 	c.toastShow = false
 }
 
 func (c *postContent) Render() app.UI {
 	toastActiveClass := ""
-	if c.toastShow {
+	if c.toastText != "" {
 		toastActiveClass = " active"
 	}
 
