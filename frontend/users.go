@@ -196,7 +196,7 @@ func (c *usersContent) Render() app.UI {
 			),
 		),
 
-		app.Table().Class("border left-align").Body(
+		app.Table().Class("border left-align").Style("max-width", "100%").Body(
 			app.THead().Body(
 				app.Tr().Body(
 					app.Th().Text("nick, about"),
@@ -217,10 +217,10 @@ func (c *usersContent) Render() app.UI {
 					}
 
 					return app.Tr().Body(
-						app.Td().Body(
-							app.B().Text(user.Nickname).Class("deep-orange-text"),
+						app.Td().Style("max-width", "0").Style("text-overflow", "-").Style("overflow", "clip").Style("word-break", "break-all").Style("hyphens", "auto").Body(
+							app.P().Text(user.Nickname).Class("deep-orange-text bold"),
 							app.Div().Class("space"),
-							app.Text(user.About),
+							app.P().Style("word-break", "break-word").Style("hyphens", "auto").Text(user.About),
 						),
 
 						// make button inactive for logged user
@@ -233,7 +233,7 @@ func (c *usersContent) Render() app.UI {
 
 						// toggle off
 						).ElseIf(inFlow,
-							app.Td().Body(
+							app.Td().Style("max-width", "50%").Body(
 								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
 								app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
 									app.I().Text("close"),
@@ -243,7 +243,7 @@ func (c *usersContent) Render() app.UI {
 
 						// toggle on
 						).Else(
-							app.Td().Body(
+							app.Td().Style("max-width", "50%").Body(
 								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
 									app.I().Text("done"),
 									app.Text("toggle on"),

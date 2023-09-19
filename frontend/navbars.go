@@ -144,8 +144,10 @@ func (h *header) Render() app.UI {
 					app.P().Body(
 						app.Text("powered by "),
 						app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
-						app.Text(" and "),
+						app.Text(", "),
 						app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
+						app.Text(" & "),
+						app.A().Href("https://github.com/savla-dev/swis-api").Text("swapi").Style("font-weight", "bolder"),
 					),
 				),
 				app.Nav().Class("center-align").Body(
