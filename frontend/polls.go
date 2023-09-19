@@ -97,7 +97,7 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	poll := c.polls[key]
 	toastText := ""
 
-	poll.Voted = append(poll.Voted, c.user.Nickname)	
+	poll.Voted = append(poll.Voted, c.user.Nickname)
 
 	// check where to vote
 	options := []string{

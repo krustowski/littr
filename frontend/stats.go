@@ -140,13 +140,23 @@ func (c *statsContent) Render() app.UI {
 				app.Tr().Body(
 					app.Th().Class("align-left").Text("nickname"),
 					app.Th().Class("align-left").Text("posts"),
-					app.Th().Class("align-left").Text("reactions got"),
+					app.Th().Class("align-left").Text("stars"),
+					app.Th().Class("align-left").Text("ratio"),
 				),
 			),
 
 			// table body
 			app.TBody().Body(
 				app.Range(userStats).Map(func(key string) app.UI {
+					// calculate a ratio
+					ratio := func() int {
+						if userStats[key].PostCount <= 0 {
+							return 0
+						}
+
+						return userStats[key].ReactionCount / userStats[key].PostCount
+					}()
+
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
 							app.P().Body(
@@ -163,6 +173,11 @@ func (c *statsContent) Render() app.UI {
 						app.Td().Class("align-left").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(userStats[key].ReactionCount), 10)),
+							),
+						),
+						app.Td().Class("align-left").Body(
+							app.P().Body(
+								app.Text(strconv.FormatInt(int64(ratio), 10)),
 							),
 						),
 					)
