@@ -71,6 +71,57 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+func DumpHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	log.Println("[dump] new connection from: " + r.RemoteAddr)
+
+	// check the incoming API token
+	token := r.Header.Get("X-App-Token")
+
+	if token == "" {
+		resp.Message = "empty token"
+		resp.Code = http.StatusUnauthorized
+		log.Println(resp.Message)
+		return
+	}
+
+	if token != os.Getenv("API_TOKEN") {
+		resp.Message = "wrong token"
+		resp.Code = http.StatusForbidden
+		log.Println(resp.Message)
+		return
+	}
+
+	switch r.Method {
+	case "GET":
+		DumpData()
+
+		resp.Code = http.StatusOK
+		resp.Message = "data dumped successfully"
+		log.Println(resp.Message)
+		break
+
+	default:
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
+		log.Println(resp.Message)
+		break
+	}
+
+	// dynamic encryption bypass hack --- we need unecrypted JSON for curl (healthcheck)
+	if config.EncryptionEnabled {
+		log.Printf("[dump] disabling encryption (was %t)", config.EncryptionEnabled)
+		config.EncryptionEnabled = !config.EncryptionEnabled
+
+		resp.Write(w)
+
+		log.Printf("[dump] enabling encryption (was %t)", config.EncryptionEnabled)
+		config.EncryptionEnabled = !config.EncryptionEnabled
+	} else {
+		resp.Write(w)
+	}
+}
+
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[flow] new connection from: " + r.RemoteAddr)
