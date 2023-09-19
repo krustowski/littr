@@ -3,8 +3,7 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
-	//"log"
-	//"os"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -56,31 +55,34 @@ func (p *LoginPage) Render() app.UI {
 
 func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
 	ctx.Navigate("/register")
+	return
 }
 
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		if c.nickname == "" || c.passphrase == "" {
-			c.toastShow = true
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		nickname := strings.TrimSpace(c.nickname)
+		passphrase := strings.TrimSpace(c.passphrase)
+
+		if nickname == "" || passphrase == "" {
 			c.toastText = "all fields need to be filled"
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
+		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 
 		respRaw, ok := litterAPI("POST", "/api/auth", &models.User{
-			Nickname:   c.nickname,
+			Nickname:   nickname,
 			Passphrase: string(passHash[:]),
 		})
 
 		if !ok {
-			c.toastShow = true
 			c.toastText = "backend error: API call failed"
 			return
 		}
 
 		if respRaw == nil {
-			c.toastShow = true
 			c.toastText = "backend error: blank response from API"
 			return
 		}
@@ -93,41 +95,42 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}{}
 
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			c.toastShow = true
 			c.toastText = "backend error: cannot unmarshal response: " + err.Error()
 			return
 		}
 
 		if !response.AuthGranted {
-			c.toastShow = true
 			c.toastText = "access denied"
 			return
 		}
 
-		c.toastShow = false
-		//ctx.LocalStorage().Set("userLogged", true)
-		//ctx.LocalStorage().Set("userName", c.nickname)
-
-		user, err := json.Marshal(response.Users[c.nickname])
+		user, err := json.Marshal(response.Users[nickname])
 		if err != nil {
-			c.toastShow = true
 			c.toastText = "frontend error: user marshal failed"
 			return
 		}
 
+		// save enrypted user data to their Local browser storage
 		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
 
-		ctx.Navigate("/flow")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastShow = (c.toastText != "")			
+
+			if response.AuthGranted {
+				ctx.Navigate("/flow")
+			}
+		})
 	})
 }
 
 func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastText = ""
 	c.toastShow = false
 }
 
 func (c *loginContent) Render() app.UI {
 	toastActiveClass := ""
-	if c.toastShow {
+	if c.toastText != "" {
 		toastActiveClass = " active"
 	}
 

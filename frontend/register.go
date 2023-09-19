@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/mail"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -43,46 +44,51 @@ func (p *RegisterPage) Render() app.UI {
 
 func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
-		if c.nickname == "" || c.passphrase == "" || c.passphraseAgain == "" || c.email == "" {
-			c.toastShow = true
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		nickname := strings.TrimSpace(c.nickname)
+		passphrase := strings.TrimSpace(c.passphrase)
+		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
+		email := strings.TrimSpace(c.email)
+
+		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
 			c.toastText = "all fields need to be filled"
 			return
 		}
 
-		if len(c.nickname) > 20 {
-			c.toastShow = true
+		// don't allow very long nicknames
+		if len(nickname) > 20 {
 			c.toastText = "nickname has to be 20 chars long at max"
 			return
 		}
 
-		if c.passphrase != c.passphraseAgain {
-			c.toastShow = true
+		// do passphrases match?
+		if passphrase != passphraseAgain {
 			c.toastText = "passphrases don't match!"
 			return
 		}
 
 		// validate e-mail struct
 		// https://stackoverflow.com/a/66624104
-		if _, err := mail.ParseAddress(c.email); err != nil {
+		if _, err := mail.ParseAddress(email); err != nil {
 			log.Println(err)
-			c.toastShow = true
 			c.toastText = "wrong e-mail format entered"
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(c.passphrase + config.Pepper))
+		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 
 		var user models.User = models.User{
-			Nickname:   c.nickname,
+			Nickname:   nickname,
 			Passphrase: string(passHash[:]),
-			Email:      c.email,
+			Email:      email,
 			FlowList:   make(map[string]bool),
 		}
-		user.FlowList[c.nickname] = true
+		user.FlowList[nickname] = true
+		user.FlowList["system"] = true
 
 		resp, ok := litterAPI("POST", "/api/users", user)
 		if !ok {
-			c.toastShow = true
 			c.toastText = "cannot send API request (backend error)"
 			return
 		}
@@ -90,30 +96,36 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 		response := struct {
 			Code int `json:"code"`
 		}{}
+
 		if err := json.Unmarshal(*resp, &response); err != nil {
-			c.toastShow = true
 			c.toastText = "cannot unmarshal response"
 			return
 		}
 
 		if response.Code == 409 {
-			c.toastShow = true
 			c.toastText = "that user already exists!"
 			return
 		}
 
-		c.toastShow = false
-		ctx.Navigate("/login")
+		// update the context of UI goroutine 
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastShow = (c.toastText != "")
+	
+			if !c.toastShow {
+				ctx.Navigate("/login")
+			}
+		})
 	})
 }
 
 func (c *registerContent) dismissToast(ctx app.Context, e app.Event) {
+	c.toastText = ""
 	c.toastShow = false
 }
 
 func (c *registerContent) Render() app.UI {
 	toastActiveClass := ""
-	if c.toastShow {
+	if c.toastText != "" {
 		toastActiveClass = " active"
 	}
 

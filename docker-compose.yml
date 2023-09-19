@@ -46,7 +46,7 @@ services:
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
     healthcheck:
       #test: ["CMD", "/opt/periodic-dump.sh"]
-      test: ["CMD", "wget", "--header", "'X-App-Token: ${API_TOKEN}'", "localhost:8080/api/dump", "-O", "-", "-S" ]
+      test: ["CMD", "wget", "--header", "'X-App-Token: ", "${API_TOKEN}", "'", "localhost:8080/api/dump", "-O", "-", "-S" ]
       interval: 15m
       timeout: 5s
       retries: 3
