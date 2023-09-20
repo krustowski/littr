@@ -19,6 +19,7 @@ type flowContent struct {
 	app.Compo
 
 	loaderShow bool
+	loaderShowImage bool
 
 	loggedUser string
 	user       models.User
@@ -48,6 +49,15 @@ func (p *FlowPage) Render() app.UI {
 
 func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastShow = false
+}
+
+func (c *flowContent) onLoadStartImage(ctx app.Context, e app.Event) {
+	log.Println("media started loading...")
+	c.loaderShowImage = true
+}
+func (c *flowContent) onLoadedDataImage(ctx app.Context, e app.Event) {
+	log.Println("media loaded")
+	c.loaderShowImage = false
 }
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
@@ -149,6 +159,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 func (c *flowContent) OnNav(ctx app.Context) {
 	// show loader
 	c.loaderShow = true
+	c.loaderShowImage = true
 
 	ctx.Async(func() {
 		postsRaw := struct {
@@ -172,6 +183,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			//c.sortedPosts = posts
 
 			c.loaderShow = false
+			c.loaderShowImage = false
 			log.Println("dispatch ends")
 		})
 		return
@@ -240,8 +252,13 @@ func (c *flowContent) Render() app.UI {
 							),
 
 							app.If(post.Type == "fig",
-								app.Article().Class("medium no-padding transparent").Body(
-									app.Img().Class("no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%"),
+								app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
+									app.If(c.loaderShowImage,
+										app.Div().Class("small-space"),
+											app.Div().Class("loader center large deep-orange active"),
+									),
+									app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
+									
 								),
 							).Else(
 								app.P().Body(

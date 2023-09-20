@@ -235,7 +235,7 @@ func (c *usersContent) Render() app.UI {
 						).ElseIf(inFlow,
 							app.Td().Style("max-width", "50%").Body(
 								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
-								app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("border responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
 									app.I().Text("close"),
 									app.Text("toggle off"),
 								),

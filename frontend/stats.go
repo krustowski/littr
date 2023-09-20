@@ -148,7 +148,7 @@ func (c *statsContent) Render() app.UI {
 			// table body
 			app.TBody().Body(
 				app.Range(userStats).Map(func(key string) app.UI {
-					// calculate a ratio
+					// calculate the ratio
 					ratio := func() float64 {
 						if userStats[key].PostCount <= 0 {
 							return 0
