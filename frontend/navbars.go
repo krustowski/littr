@@ -136,7 +136,10 @@ func (h *header) Render() app.UI {
 					app.H5().Text("litter-go (littr) PWA"),
 				),
 				app.Nav().Class("center-align").Body(
-					app.P().Text("version v"+config.Version),
+					app.P().Body(
+						app.Text("version "),
+						app.A().Text("v"+config.Version).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+					),
 					app.Div().Class("small-space"),
 				),
 
