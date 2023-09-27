@@ -231,13 +231,20 @@ func (c *usersContent) Render() app.UI {
 								),
 							),
 
+						).ElseIf(user.Nickname == "system",
+							app.Td().Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").Disabled(true).Body(
+									app.Text("system acc"),
+								),
+							),
+
 						// toggle off
 						).ElseIf(inFlow,
 							app.Td().Style("max-width", "50%").Body(
 								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
 								app.Button().Class("border responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
-									app.I().Text("close"),
-									app.Text("toggle off"),
+									//app.I().Text("done"),
+									app.Text("remove from flow"),
 								),
 							),
 
@@ -245,8 +252,8 @@ func (c *usersContent) Render() app.UI {
 						).Else(
 							app.Td().Style("max-width", "50%").Body(
 								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
-									app.I().Text("done"),
-									app.Text("toggle on"),
+									//app.I().Text("done"),
+									app.Text("add to flow"),
 								),
 							),
 						),
