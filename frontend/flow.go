@@ -18,7 +18,7 @@ type FlowPage struct {
 type flowContent struct {
 	app.Compo
 
-	loaderShow bool
+	loaderShow      bool
 	loaderShowImage bool
 
 	loggedUser string
@@ -255,10 +255,9 @@ func (c *flowContent) Render() app.UI {
 								app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
 									app.If(c.loaderShowImage,
 										app.Div().Class("small-space"),
-											app.Div().Class("loader center large deep-orange active"),
+										app.Div().Class("loader center large deep-orange active"),
 									),
 									app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
-									
 								),
 							).Else(
 								app.P().Body(
