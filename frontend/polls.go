@@ -290,31 +290,33 @@ func (c *pollsContent) Render() app.UI {
 							).ElseIf(userVoted || poll.Author == c.user.Nickname,
 								// voted option I
 								app.Div().Class("medium-space border").Body(
-									app.P().Class("middle right-align bold padding").Body(
-										app.Text(poll.OptionOne.Content),
+									app.Div().Class("padding bold progress left deep-orange large").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);"),
+									app.Div().Class("middle right-align bold padding").Body(
+										app.Span().Text(poll.OptionOne.Content+" ("+strconv.Itoa(optionOneShare)+"%)"),
 									),
-									app.Div().Class("padding bold progress left deep-orange large").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);").Text(poll.OptionOne.Content),
 								),
+
 								app.Div().Class("space"),
 
 								// voted option II
 								app.Div().Class("medium-space border").Body(
-									app.P().Class("middle right-align bold padding").Body(
-										app.Text(poll.OptionTwo.Content),
+									app.Div().Class("padding bold progress left deep-orange").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").Body(),
+									app.Div().Class("middle right-align bold padding").Body(
+										app.Span().Text(poll.OptionTwo.Content+" ("+strconv.Itoa(optionTwoShare)+"%)"),
 									),
-									app.Div().Class("padding bold progress left deep-orange").
-										Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").Text(poll.OptionTwo.Content),
 								),
+
 								app.Div().Class("space"),
 
 								// voted option III
 								app.If(poll.OptionThree.Content != "",
 									app.Div().Class("medium-space border").Body(
-										app.P().Class("middle bold right-align padding").Text(poll.OptionThree.Content),
-										app.Div().Class("padding bold progress left deep-orange").
-											Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);").Text(poll.OptionThree.Content),
+										app.Div().Class("padding bold progress left deep-orange").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);"),
+										app.Div().Class("middle bold right-align padding").Body(
+											app.Span().Text(poll.OptionThree.Content+" ("+strconv.Itoa(optionThreeShare)+"%)"),
+										),
 									),
+
 									app.Div().Class("space"),
 								),
 							),
