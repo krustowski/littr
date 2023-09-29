@@ -58,11 +58,6 @@ func (c *usersContent) OnNav(ctx app.Context) {
 		return
 	}
 
-	c.user = user
-
-	//name := c.user.Nickname
-	//flowList := c.user.FlowList
-
 	ctx.Async(func() {
 		usersPre := struct {
 			Users map[string]models.User `json:"users"`
@@ -87,10 +82,10 @@ func (c *usersContent) OnNav(ctx app.Context) {
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
+			c.user = user
 			c.users = usersPre.Users
 
 			c.loaderShow = false
-			log.Println("dispatch ends")
 		})
 	})
 }
@@ -111,7 +106,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 	if flowList == nil {
 		flowList = make(map[string]bool)
 		flowList[c.user.Nickname] = true
-		c.user.FlowList = flowList
+		//c.user.FlowList = flowList
 	}
 
 	if _, found := flowList[key]; found {
@@ -120,9 +115,9 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		flowList[key] = true
 	}
 
-	c.user.FlowList = flowList
-
 	ctx.Async(func() {
+		toastText := ""
+
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
@@ -136,8 +131,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 
 		respRaw, ok := litterAPI("PUT", "/api/users", updateData)
 		if !ok {
-			c.toastShow = true
-			c.toastText = "generic backend error"
+			toastText = "generic backend error"
 			return
 		}
 
@@ -147,28 +141,31 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		}{}
 
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			c.toastShow = true
-			c.toastText = "user update failed: " + err.Error()
+			toastText = "user update failed: " + err.Error()
 			return
 		}
 
 		if response.Code != 200 && response.Code != 201 {
-			c.toastShow = true
-			c.toastText = "user update failed: " + response.Message
+			toastText = "user update failed: " + response.Message
 			log.Println(response.Message)
 			return
 		}
 
 		var stream []byte
 		if err := reload(c.user, &stream); err != nil {
-			c.toastShow = true
-			c.toastText = "local storage reload failed: " + err.Error()
+			toastText = "local storage reload failed: " + err.Error()
 			return
 		}
 
-		ctx.LocalStorage().Set("user", stream)
+		ctx.Dispatch(func(ctx app.Context) {
+			ctx.LocalStorage().Set("user", stream)
 
-		c.toastShow = false
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+
+			c.user.FlowList = flowList
+			log.Println("dispatch ends")
+		})
 	})
 }
 
@@ -208,7 +205,6 @@ func (c *usersContent) handleSearch(ctx app.Context, a app.Action) {
 			c.users = users
 
 			c.loaderShow = false
-			log.Println("search dispatch")
 		})
 		return
 	})
@@ -267,7 +263,7 @@ func (c *usersContent) Render() app.UI {
 
 					var inFlow bool = false
 
-					for key, val := range user.FlowList {
+					for key, val := range c.user.FlowList {
 						if user.Nickname == key {
 							inFlow = val
 							break
