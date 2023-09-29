@@ -37,4 +37,7 @@ type User struct {
 
 	// LastLoginTime is an UNIX timestamp of the last action performed by such user.
 	LastActiveTime time.Time `json:"last_active_time"`
+
+	// searched is a bool indicating a status for the search engine.
+	Searched bool `json:"-" default:true`
 }

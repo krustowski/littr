@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -78,6 +79,12 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			return
 		}
 
+		// delet dis
+		for k, u := range usersPre.Users {
+			u.Searched = true
+			usersPre.Users[k] = u
+		}
+
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users = usersPre.Users
@@ -90,6 +97,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 
 func (c *usersContent) OnMount(ctx app.Context) {
 	ctx.Handle("toggle", c.handleToggle)
+	ctx.Handle("search", c.handleSearch)
 }
 
 func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
@@ -164,6 +172,48 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *usersContent) onSearch(ctx app.Context, e app.Event) {
+	val := ctx.JSSrc().Get("value").String()
+
+	if len(val) > 20 {
+		return
+	}
+
+	ctx.NewActionWithValue("search", val)
+}
+
+func (c *usersContent) handleSearch(ctx app.Context, a app.Action) {
+	val, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Async(func() {
+		users := c.users
+
+		// iterate over calculated stats' "rows" and find matchings
+		for key, user := range users {
+			//user := users[key]
+			user.Searched = false
+
+			if strings.Contains(key, val) {
+				log.Println(key)
+				user.Searched = true
+			}
+
+			users[key] = user
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.users = users
+
+			c.loaderShow = false
+			log.Println("search dispatch")
+		})
+		return
+	})
+}
+
 func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("toggle", key)
@@ -184,6 +234,8 @@ func (c *usersContent) Render() app.UI {
 		loaderActiveClass = " active"
 	}
 
+	users := c.users
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flowers").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("simplified user table, available to add to the flow!"),
@@ -196,6 +248,12 @@ func (c *usersContent) Render() app.UI {
 			),
 		),
 
+		app.Div().Class("field prefix round fill").Body(
+			app.I().Class("front").Text("search"),
+			//app.Input().Type("search").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
+			app.Input().Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
+		),
+
 		app.Table().Class("border left-align").Style("max-width", "100%").Body(
 			app.THead().Body(
 				app.Tr().Body(
@@ -204,16 +262,20 @@ func (c *usersContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(c.users).Map(func(key string) app.UI {
-					user := c.users[key]
+				app.Range(users).Map(func(key string) app.UI {
+					user := users[key]
 
 					var inFlow bool = false
 
-					for key, val := range c.user.FlowList {
+					for key, val := range user.FlowList {
 						if user.Nickname == key {
 							inFlow = val
 							break
 						}
+					}
+
+					if !user.Searched {
+						return app.Text("")
 					}
 
 					return app.Tr().Body(
@@ -230,7 +292,6 @@ func (c *usersContent) Render() app.UI {
 									app.Text("that's you"),
 								),
 							),
-
 						).ElseIf(user.Nickname == "system",
 							app.Td().Body(
 								app.Button().Class("responsive deep-orange7 white-text bold").Disabled(true).Body(
