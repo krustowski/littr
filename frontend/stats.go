@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"strings"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -20,10 +21,15 @@ type statsContent struct {
 
 	postCount int
 
-	posts map[string]models.Post
-	stats map[string]int
+	posts     map[string]models.Post
+	stats     map[string]int
+	userStats map[string]userStat
+
+	nicknames []string
 
 	loaderShow bool
+
+	searchString string
 
 	toastShow bool
 	toastText string
@@ -42,12 +48,66 @@ func (p *StatsPage) Render() app.UI {
 	)
 }
 
+func (c *statsContent) onSearch(ctx app.Context, e app.Event) {
+	val := ctx.JSSrc().Get("value").String()
+
+	//if c.searchString == "" {
+	//if val == "" {
+	//	return
+	//}
+
+	if len(val) > 20 {
+		return
+	}
+
+	ctx.NewActionWithValue("search", val)
+}
+
+func (c *statsContent) handleSearch(ctx app.Context, a app.Action) {
+	matchedList := []string{}
+
+	val, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Async(func() {
+		users := c.userStats		
+
+		// iterate over calculated stats' "rows" and find matchings
+		for key, user := range users {
+			//user := users[key]
+			user.Searched = false
+
+			if strings.Contains(key, val) {
+				log.Println(key)
+				user.Searched = true
+	
+				//matchedList = append(matchedList, key)
+			}
+
+			users[key] = user
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.userStats = users
+			c.nicknames = matchedList
+
+			c.loaderShow = false
+			log.Println("search dispatch")
+		})
+		return
+	})
+
+}
+
 func (c *statsContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastShow = false
 }
 
 func (c *statsContent) OnMount(ctx app.Context) {
 	c.loaderShow = true
+	ctx.Handle("search", c.handleSearch)
 }
 
 func (c *statsContent) OnNav(ctx app.Context) {
@@ -68,11 +128,12 @@ func (c *statsContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = postsRaw.Posts
 			c.postCount = postsRaw.Count
 			//c.sortedPosts = posts
+
+			_, c.userStats = c.calculateStats()
 
 			c.loaderShow = false
 			log.Println("dispatch ends")
@@ -82,14 +143,14 @@ func (c *statsContent) OnNav(ctx app.Context) {
 }
 
 type userStat struct {
-	PostCount     int `default:0`
-	ReactionCount int `default:0`
-	FlowerCount   int `default:0`
+	PostCount     int  `default:0`
+	ReactionCount int  `default:0`
+	FlowerCount   int  `default:0`
+	Searched      bool `default:true`
 }
 
 func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	flowStats := make(map[string]int)
-
 	userStats := make(map[string]userStat)
 
 	flowStats["posts-total-count"] = c.postCount
@@ -100,6 +161,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 		stat, ok := userStats[val.Nickname]
 		if !ok {
 			stat = userStat{}
+			stat.Searched = true
 		}
 		stat.PostCount++
 		stat.ReactionCount += val.ReactionCount
@@ -110,7 +172,8 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 }
 
 func (c *statsContent) Render() app.UI {
-	_, userStats := c.calculateStats()
+	log.Println("render")
+	users := c.userStats
 
 	loaderActiveClass := ""
 	if c.loaderShow {
@@ -134,6 +197,13 @@ func (c *statsContent) Render() app.UI {
 			),
 		),
 
+		app.Div().Class("field prefix round fill").Body(
+			app.I().Class("front").Text("search"),
+			//app.Input().Type("search").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
+			//app.Input().ID("search").Type("text").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
+			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
+		),
+
 		app.Table().Class("border left-align").Body(
 			// table header
 			app.THead().Body(
@@ -147,15 +217,22 @@ func (c *statsContent) Render() app.UI {
 
 			// table body
 			app.TBody().Body(
-				app.Range(userStats).Map(func(key string) app.UI {
+				app.Range(users).Map(func(key string) app.UI {
 					// calculate the ratio
 					ratio := func() float64 {
-						if userStats[key].PostCount <= 0 {
+						if users[key].PostCount <= 0 {
 							return 0
 						}
 
-						return float64(userStats[key].ReactionCount) / float64(userStats[key].PostCount)
+						return float64(users[key].ReactionCount) / float64(users[key].PostCount)
 					}()
+
+					// filter out unmatched keys
+					//log.Printf("%s: %t\n", key, users[key].Searched)
+
+					if !users[key].Searched {
+						return app.P().Text("")
+					}
 
 					return app.Tr().Body(
 						app.Td().Class("align-left").Body(
@@ -167,12 +244,12 @@ func (c *statsContent) Render() app.UI {
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
-								app.Text(strconv.FormatInt(int64(userStats[key].PostCount), 10)),
+								app.Text(strconv.FormatInt(int64(users[key].PostCount), 10)),
 							),
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
-								app.Text(strconv.FormatInt(int64(userStats[key].ReactionCount), 10)),
+								app.Text(strconv.FormatInt(int64(users[key].ReactionCount), 10)),
 							),
 						),
 						app.Td().Class("align-left").Body(
