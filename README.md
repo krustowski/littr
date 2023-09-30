@@ -108,6 +108,7 @@ http://localhost:8093/flow
 
 ### nice-to-have(s)
 + implement loading new posts
++ check for double posting same content
 + implement infinite flow scroll
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
