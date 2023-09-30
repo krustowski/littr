@@ -12,7 +12,7 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 `backend/`
 + files related to REST API backend service, this API server is used by WASM client for fetching of app's data
 
-`config`
+`config/`
 + configuration procedures for various litter module packages
 
 `data/`
@@ -21,13 +21,13 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 `frontend/`
 + app pages' files sorted by their name(s)
 
-`models`
+`models/`
 + various model declarations
 
 `web/`
 + static web files, logos, manifest
 
-`.env`/`.env.example`
+`.env` + `.env.example`
 + environmental contants/vars for the app to run smoothly (in Docker)
 
 `http_server.go`
@@ -37,19 +37,19 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + lightened version of HTTP server, includes basic app router, lacks REST API service
 
 ## how it should work
-+ each user has to register (`/register`) and login (`/login`) to app for them to use it
-+ user is then logged-in and navigated to the flow (`/flow`) page when one can read other's mind _flows_
-+ user can change their passphrase or the _about_ description on the settings (`/settings`) page
-+ any signed (by logged user) post can be written and sent by the post (`/post`) page
-+ user can logout too by navigating themselves to the logout (`/logout`) page 
++ each user has to register (`/register`) or existed users login (`/login`)
++ users can navigate to the flow (`/flow`) to read other's mind _flows_
++ users can change their passphrase or the _about_ description in settings (`/settings`)
++ posts can be written and sent (`/post`) by any logged in user
++ users can logout (`/logout`)
 
 ## features
 
-+ toggable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
-+ in-memory runtime caches
-+ data persistence at container restart (on `SIGINT`)
++ togglable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
++ in-memory runtime cache
++ data persistence on container restart (on `SIGINT`)
 + flow posts filtering using the FlowList --- simply choose whose posts to show
-+ can run offline (no data can be fetched from the server though)
++ can run offline (using the cache)
 
 ## REST API service
 + the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
@@ -79,11 +79,11 @@ DELETE /api/users/:key
 ## how to run
 
 ```bash
-# create environmental file copy and modify it
+# create env file copy and modify it
 cp .env.example .env
 vi .env
 
-# build docker image (Docker engine is needed)
+# build docker image (Docker engine mandatory)
 make build
 
 # run docker-compose stack, start up the stack
@@ -98,7 +98,7 @@ make flush kill run
 
 ## development
 
-`litter-backend` container can be run locally on any dev machine (with Docker engine, or with the required tag-locked Go runtime)
+`litter-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime)
 
 ```
 make fmt build run
@@ -107,18 +107,26 @@ http://localhost:8093/flow
 ```
 
 ### nice-to-have(s)
-+ implement infinite scroll for flow
++ implement loading new posts
++ implement infinite flow scroll
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
 + ~~healthcheck as a periodic cache dumper~~
-+ allow emojis in usernames?
-+ show offline mode notice
++ allow emojis in usernames? NO! 😂
++ show offline mode notification
 + swagger docs
-+ deep code refactor
-+ replies to posts (just one iteration, no reply to a reply)
-+ implement user searching on `users` and `stats` pages
++ deep code refactoring
++ replies to posts (just one level deep iteration, no reply to a reply)
++ implement user search on `users` and `stats` pages
++ Ctrl+Enter to submit posts
++ image uploads to gspace.gscloud.cz 😎
++ autosubmit on password manager autofill
++ break lines on \n in posts
++ automatic links for known TLDs
++ user's real name
++ user's home page link
 
-### roadmap to v0.9
+### roadmap to v0.9 *OUTDATED*
 + ~~implement polls (create poll, voting)~~
 
 ### roadmap to v0.8
