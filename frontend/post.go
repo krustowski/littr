@@ -222,5 +222,6 @@ func (c *postContent) Render() app.UI {
 			app.Label().Text("option three (optional)").Class("active"),
 		),
 		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(c.onClick).Disabled(false),
+		app.Div().Class("space"),
 	)
 }
