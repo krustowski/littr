@@ -10,25 +10,26 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 ## repo vademecum
 
 `backend/`
-+ files related to REST API backend service, this API server is used by WASM client for fetching of app's data
++ REST API backend service
++ service is used by WASM client for fetching of app data
 
 `config/`
-+ configuration procedures for various litter module packages
++ configuration procedures for litter module packages
 
 `data/`
-+ sample data files used to flush existing container data by `make flush`
++ sample data used to flush existing container data by `make flush`
 
 `frontend/`
-+ app pages' files sorted by their name(s)
++ frontend pages
 
 `models/`
-+ various model declarations
++ model declarations
 
 `web/`
-+ static web files, logos, manifest
++ static web files, logos, web manifest
 
 `.env` + `.env.example`
-+ environmental contants/vars for the app to run smoothly (in Docker)
++ environmental contants and vars for the app to run smoothly (in Docker)
 
 `http_server.go`
 + init app file for the app's backend side with REST API service
@@ -37,18 +38,18 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + lightened version of HTTP server, includes basic app router, lacks REST API service
 
 ## how it should work
-+ each user has to register (`/register`) or existed users login (`/login`)
-+ users can navigate to the flow (`/flow`) to read other's mind _flows_
++ users must register (`/register`) or existed users login (`/login`)
++ users can navigate to the flow (`/flow`) and read other's mind _flows_
 + users can change their passphrase or the _about_ description in settings (`/settings`)
-+ posts can be written and sent (`/post`) by any logged in user
++ posts can be written and sent (`/post`) by any logged-in user
 + users can logout (`/logout`)
 
 ## features
 
-+ togglable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
++ switchable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
 + in-memory runtime cache
 + data persistence on container restart (on `SIGINT`)
-+ flow posts filtering using the FlowList --- simply choose whose posts to show
++ flow posts filtering using the FlowList --- simply choose who to follow
 + can run offline (using the cache)
 
 ## REST API service
@@ -76,7 +77,7 @@ PUT    /api/users
 DELETE /api/users/:key
 ```
 
-## how to run
+## how to run it
 
 ```bash
 # create env file copy and modify it
@@ -107,9 +108,10 @@ http://localhost:8093/flow
 ```
 
 ### nice-to-have(s)
-+ implement loading new posts
-+ check for double posting same content
++ implement loading of new posts
 + implement infinite flow scroll
++ fix NaN% when loading
++ check for double posting the same content
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
 + ~~healthcheck as a periodic cache dumper~~
@@ -119,16 +121,18 @@ http://localhost:8093/flow
 + deep code refactoring
 + replies to posts (just one level deep iteration, no reply to a reply)
 + implement user search on `users` and `stats` pages
-+ Ctrl+Enter to submit posts
-+ image uploads to gspace.gscloud.cz 😎
-+ autosubmit on password manager autofill
++ Ctrl+Enter to submit posts like YouTube or X
++ image uploads to gspace.gscloud.cz 😎 via REST API POST
++ autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + automatic links for known TLDs
 + user's real name
 + user's home page link
 
-### roadmap to v0.9 *OUTDATED*
+### roadmap to v0.9
 + ~~implement polls (create poll, voting)~~
+
+### roadmap to v0.11
 
 ### roadmap to v0.8
 + ~~implement stats~~
