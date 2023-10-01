@@ -109,26 +109,30 @@ http://localhost:8093/flow
 ### nice-to-have(s)
 + implement loading new posts
 + check for double posting same content
-+ implement infinite flow scroll
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
-+ ~~healthcheck as a periodic cache dumper~~
-+ allow emojis in usernames? NO! 😂
 + show offline mode notification
 + swagger docs
 + deep code refactoring
 + replies to posts (just one level deep iteration, no reply to a reply)
-+ implement user search on `users` and `stats` pages
 + Ctrl+Enter to submit posts
-+ image uploads to gspace.gscloud.cz 😎
++ image uploads to gspace.gscloud.cz
 + autosubmit on password manager autofill
-+ break lines on \n in posts
++ break lines on `\n` in posts
 + automatic links for known TLDs
-+ user's real name
-+ user's home page link
++ implement user's profile (real name, home page, followers,...)
 
-### roadmap to v0.9 *OUTDATED*
+### roadmap to v0.11
++ upgrade toasts to snackbars (beercss v3.3.5)
++ implement infinite scroll (for flow only this time)
++ disable buttons on processing to prevent multiple action fires
+
+### roadmap to v0.10
++ ~~implement search bar (`stats` and `users` pages only)~~
+
+### roadmap to v0.9
 + ~~implement polls (create poll, voting)~~
++ ~~healthcheck as a periodic cache dumper~~
 
 ### roadmap to v0.8
 + ~~implement stats~~
