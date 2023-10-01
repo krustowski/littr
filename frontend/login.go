@@ -59,6 +59,14 @@ func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
 }
 
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
+	response := struct {
+		Message     string `json:"message"`
+		AuthGranted bool   `json:"auth_granted"`
+		//FlowRecords []string `json:"flow_records"`
+		Users map[string]models.User `json:"users"`
+	}{}
+	toastText := ""
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -66,7 +74,12 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		passphrase := strings.TrimSpace(c.passphrase)
 
 		if nickname == "" || passphrase == "" {
-			c.toastText = "all fields need to be filled"
+			toastText = "all fields need to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -78,49 +91,64 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		})
 
 		if !ok {
-			c.toastText = "backend error: API call failed"
+			toastText = "backend error: API call failed"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if respRaw == nil {
-			c.toastText = "backend error: blank response from API"
+			toastText = "backend error: blank response from API"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
-		response := struct {
-			Message     string `json:"message"`
-			AuthGranted bool   `json:"auth_granted"`
-			//FlowRecords []string `json:"flow_records"`
-			Users map[string]models.User `json:"users"`
-		}{}
-
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			c.toastText = "backend error: cannot unmarshal response: " + err.Error()
+			toastText = "backend error: cannot unmarshal response: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if !response.AuthGranted {
-			c.toastText = "access denied"
+			toastText = "access denied"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		user, err := json.Marshal(response.Users[nickname])
 		if err != nil {
-			c.toastText = "frontend error: user marshal failed"
+			toastText = "frontend error: user marshal failed"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		// save enrypted user data to their Local browser storage
 		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastShow = (c.toastText != "")
-
-			if response.AuthGranted {
-				ctx.Navigate("/flow")
-			}
-		})
+		if response.AuthGranted {
+			ctx.Navigate("/flow")
+		}
 	})
+
 }
 
 func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {

@@ -50,73 +50,81 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	postType := ctx.JSSrc().Get("id").String()
 	content := ""
 	poll := models.Poll{}
+	toastText := ""
 
 	var payload interface{}
 
-	switch postType {
-	case "fig":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		newFigLink := strings.TrimSpace(c.newFigLink)
-
-		if newFigLink == "" {
-			c.toastText = "fig link must be filled"
-			return
-		}
-
-		// check the URL/URI format
-		if _, err := url.ParseRequestURI(newFigLink); err != nil {
-			c.toastText = "fig link prolly not a valid URL"
-			return
-		}
-		content = newFigLink
-
-		break
-
-	case "poll":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		pollQuestion := strings.TrimSpace(c.pollQuestion)
-		pollOptionI := strings.TrimSpace(c.pollOptionI)
-		pollOptionII := strings.TrimSpace(c.pollOptionII)
-		pollOptionIII := strings.TrimSpace(c.pollOptionIII)
-
-		if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
-			c.toastText = "poll question and at least two options have to be filled"
-			return
-		}
-
-		now := time.Now()
-		content = strconv.FormatInt(now.UnixNano(), 10)
-
-		poll.ID = content
-		poll.Question = pollQuestion
-		poll.OptionOne.Content = pollOptionI
-		poll.OptionTwo.Content = pollOptionII
-		poll.OptionThree.Content = pollOptionIII
-		poll.Timestamp = now
-
-		break
-
-	case "post":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		newPost := strings.TrimSpace(c.newPost)
-
-		if newPost == "" {
-			c.toastText = "post textarea must be filled"
-			return
-		}
-		content = newPost
-
-		break
-
-	default:
-		return
-		break
-	}
-
 	ctx.Async(func() {
+		switch postType {
+		case "fig":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			newFigLink := strings.TrimSpace(c.newFigLink)
+
+			if newFigLink == "" {
+				toastText = "fig link must be filled"
+				break
+			}
+
+			// check the URL/URI format
+			if _, err := url.ParseRequestURI(newFigLink); err != nil {
+				toastText = "fig link prolly not a valid URL"
+				break
+			}
+			content = newFigLink
+
+			break
+
+		case "poll":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			pollQuestion := strings.TrimSpace(c.pollQuestion)
+			pollOptionI := strings.TrimSpace(c.pollOptionI)
+			pollOptionII := strings.TrimSpace(c.pollOptionII)
+			pollOptionIII := strings.TrimSpace(c.pollOptionIII)
+
+			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
+				toastText = "poll question and at least two options have to be filled"
+				break
+			}
+
+			now := time.Now()
+			content = strconv.FormatInt(now.UnixNano(), 10)
+
+			poll.ID = content
+			poll.Question = pollQuestion
+			poll.OptionOne.Content = pollOptionI
+			poll.OptionTwo.Content = pollOptionII
+			poll.OptionThree.Content = pollOptionIII
+			poll.Timestamp = now
+
+			break
+
+		case "post":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			newPost := strings.TrimSpace(c.newPost)
+
+			if newPost == "" {
+				toastText = "post textarea must be filled"
+				break
+			}
+			content = newPost
+
+			break
+
+		default:
+			break
+		}
+
+		if toastText != "" {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		var enUser string
 		var user models.User
 
@@ -124,8 +132,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		// decode, decrypt and unmarshal the local storage user data
 		if err := prepare(enUser, &user); err != nil {
-			c.toastText = "frontend decoding/decryption failed: " + err.Error()
-			return
+			toastText = "frontend decoding/decryption failed: " + err.Error()
 		}
 
 		author := user.Nickname
@@ -147,13 +154,17 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		// add new post/poll to backend struct
 		if _, ok := litterAPI("POST", path, payload); !ok {
-			c.toastText = "backend error: cannot add new content"
+			toastText = "backend error: cannot add new content"
 			log.Println("cannot post new content to API!")
-			return
+		} else {
+			ctx.Navigate("/flow")
 		}
 
-		c.toastShow = (c.toastText != "")
-		ctx.Navigate("/flow")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+		return
 	})
 }
 
