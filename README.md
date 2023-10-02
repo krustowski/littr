@@ -77,7 +77,7 @@ PUT    /api/users
 DELETE /api/users/:key
 ```
 
-## how to run it
+## how to run
 
 ```bash
 # create env file copy and modify it
@@ -116,12 +116,28 @@ http://localhost:8093/flow
 + swagger docs
 + deep code refactoring
 + replies to posts (just one level deep iteration, no reply to a reply)
-+ implement user search on `users` and `stats` pages
 + Ctrl+Enter to submit posts like YouTube
-+ image uploads to gspace.gscloud.cz 😎 via REST API POST
++ image uploads to gspace.gscloud.cz (via REST API POST)
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + automatic links for known TLDs
+
+### roadmap to v0.12
++ implement user's profile (real name, home page, followers) as modal?
++ show offline mode notification
+
+### roadmap to v0.11
++ ~~upgrade toasts to snackbars (beercss v3.3.5)~~
++ implement infinite scroll (for `flow` only this time) -- WIP
++ ~~disable buttons on action to prevent multiple action fires~~
++ check for double posting same content
+
+### roadmap to v0.10
++ ~~implement search bar (`stats` and `users` pages only)~~
+
+### roadmap to v0.9
++ ~~implement polls (create poll, voting)~~
++ ~~healthcheck as a periodic cache dumper~~
 
 ### roadmap to v0.8
 + ~~implement stats~~
