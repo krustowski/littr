@@ -252,14 +252,14 @@ func (c *flowContent) Render() app.UI {
 							return nil
 						}
 
-						return app.Tr().Body(
-							app.Td().Class("align-left").Body(
+						return app.Tr().Class().Body(
+							app.Td().Class("post align-left").Body(
 								app.P().Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
 
 								app.If(post.Type == "fig",
-									app.Article().Class("post medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
+									app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -296,23 +296,14 @@ func (c *flowContent) Render() app.UI {
 		),
 
 		app.Div().Class("scroller-status").Body(
-			app.P().Class("infinite-scroll-last").Text("you just hit the rock bottom"),
-			app.P().Class("infinite-scroll-error").Text("no content to load"),
 			app.Div().Class("infinite-scroll-request").Body(
 				app.If(c.loaderShow,
 					app.Div().Class("small-space"),
 					app.Div().Class("loader center large deep-orange active"),
 				),
 			),
+			app.P().Class("infinite-scroll-last").Text("you just hit the rock bottom"),
+			app.P().Class("infinite-scroll-error").Text("no content to load"),
 		),
-
-		app.Raw(`<script>
-			let infScroll = new InfiniteScroll( '.container', {
- 				// options
-  				path: '.pagination__next',
-  				append: '.post',
-  				history: false,
-			});
-		</script>`),
 	)
 }

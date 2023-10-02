@@ -121,16 +121,17 @@ http://localhost:8093/flow
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + automatic links for known TLDs
++ implement infinite scroll (for `flow` only this time) -- WIP
 
 ### roadmap to v0.12
 + implement user's profile (real name, home page, followers) as modal?
 + show offline mode notification
++ implement pagination
++ check for double posting same content
 
 ### roadmap to v0.11
 + ~~upgrade toasts to snackbars (beercss v3.3.5)~~
-+ implement infinite scroll (for `flow` only this time) -- WIP
 + ~~disable buttons on action to prevent multiple action fires~~
-+ check for double posting same content
 + ~~implement system stats, add flowers (follower) count~~
 
 ### roadmap to v0.10
