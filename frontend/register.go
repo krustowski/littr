@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -109,10 +110,11 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 
 		var user models.User = models.User{
-			Nickname:   nickname,
-			Passphrase: string(passHash[:]),
-			Email:      email,
-			FlowList:   make(map[string]bool),
+			Nickname:       nickname,
+			Passphrase:     string(passHash[:]),
+			Email:          email,
+			FlowList:       make(map[string]bool),
+			RegisteredTime: time.Now(),
 		}
 
 		user.FlowList[nickname] = true

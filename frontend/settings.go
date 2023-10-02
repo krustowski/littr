@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"crypto/sha512"
+	"net/url"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -24,6 +25,7 @@ type settingsContent struct {
 	passphrase      string
 	passphraseAgain string
 	aboutText       string
+	website         string
 
 	// loaded logged user's struct
 	user models.User
@@ -181,6 +183,55 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 	})
 }
 
+func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
+	website := c.website
+	toastText := ""
+
+	c.settingsButtonDisabled = true
+
+	ctx.Async(func() {
+		if website == "" {
+			toastText = "website URL has to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// check the URL/URI format
+		if _, err := url.ParseRequestURI(website); err != nil {
+			toastText = "website prolly not a valid URL"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if _, ok := litterAPI("PUT", "/api/users", models.User{
+			Nickname:   c.user.Nickname,
+			Passphrase: c.user.Passphrase,
+			About:      c.user.About,
+			Email:      c.user.Email,
+			Web:        website,
+		}); !ok {
+			toastText = "generic backend error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		ctx.Navigate("/users")
+	})
+	return
+}
+
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = (c.toastText != "")
@@ -209,10 +260,12 @@ func (c *settingsContent) Render() app.UI {
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
 			app.Label().Text("passphrase").Class("active"),
 		),
+
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).AutoComplete(true).MaxLength(50),
 			app.Label().Text("passphrase again").Class("active"),
 		),
+
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-divider"),
@@ -222,7 +275,18 @@ func (c *settingsContent) Render() app.UI {
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about").Class("active"),
 		),
+
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+
+		app.Div().Class("large-divider"),
+
+		// website link
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60),
+			app.Label().Text("website URL").Class("active"),
+		),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+
 		app.Div().Class("space"),
 	)
 }
