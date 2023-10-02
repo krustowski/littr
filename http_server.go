@@ -110,6 +110,7 @@ func initServer() {
 			"https://cdn.gscloud.cz/js/jquery.min.js",
 			"https://cdn.gscloud.cz/js/beer.nomodule.min.js",
 			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
+			"https://cdn.gscloud.cz/js/litter.js",
 		},
 	})
 
