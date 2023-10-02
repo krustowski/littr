@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/mail"
+	"strconv"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -71,8 +72,8 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// don't allow very long nicknames
-		if len(nickname) > 20 {
-			toastText = "nickname has to be 20 chars long at max"
+		if len(nickname) > config.NicknameLengthMax {
+			toastText = "nickname has to be " + strconv.Itoa(config.NicknameLengthMax) + " chars long at max"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText

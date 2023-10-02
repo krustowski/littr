@@ -182,7 +182,7 @@ func (c *loginContent) Render() app.UI {
 
 		// login credentials fields
 		app.Div().Class("field border label invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Class("active"),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active"),
 			app.Label().Text("nickname").Class("active"),
 		),
 
