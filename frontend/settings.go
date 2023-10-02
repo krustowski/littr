@@ -31,6 +31,8 @@ type settingsContent struct {
 	// message toast vars
 	toastShow bool
 	toastText string
+
+	settingsButtonDisabled bool
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -64,6 +66,10 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 }
 
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
+	toastText := ""
+
+	c.settingsButtonDisabled = true
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -71,12 +77,22 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
 
 		if passphrase == "" || passphraseAgain == "" {
-			c.toastText = "both passphrases need to be filled, or text changed"
+			toastText = "both passphrases need to be filled, or text changed"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if passphrase != passphraseAgain {
-			c.toastText = "passphrases do not match"
+			toastText = "passphrases do not match"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -88,7 +104,12 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			About:      c.user.About,
 			Email:      c.user.Email,
 		}); !ok {
-			c.toastText = "generic backend error"
+			toastText = "generic backend error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -97,18 +118,32 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
+	toastText := ""
+
+	c.settingsButtonDisabled = true
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		aboutText := strings.TrimSpace(c.aboutText)
 
 		if aboutText == "" {
-			c.toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
+			toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if len(aboutText) > 100 {
-			c.toastText = "about text has to be shorter than 100 chars"
+			toastText = "about text has to be shorter than 100 chars"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -118,7 +153,12 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			About:      aboutText,
 			Email:      c.user.Email,
 		}); !ok {
-			c.toastText = "generic backend error"
+			toastText = "generic backend error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -126,7 +166,12 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 
 		var userStream []byte
 		if err := reload(c.user, &userStream); err != nil {
-			c.toastText = "cannot update local storage"
+			toastText = "cannot update local storage"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -138,27 +183,28 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
-	c.toastShow = false
+	c.toastShow = (c.toastText != "")
+	c.settingsButtonDisabled = false
 }
 
 func (c *settingsContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastText != "" {
-		toastActiveClass = " active"
-	}
-
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("change your passphrase, or your bottom text"),
+
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
+		// password change
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
 			app.Label().Text("passphrase").Class("active"),
@@ -167,14 +213,16 @@ func (c *settingsContent) Render() app.UI {
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).AutoComplete(true).MaxLength(50),
 			app.Label().Text("passphrase again").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-divider"),
 
+		// about textarea
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout),
+		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+		app.Div().Class("space"),
 	)
 }

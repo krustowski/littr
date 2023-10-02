@@ -24,6 +24,8 @@ type loginContent struct {
 
 	toastShow bool
 	toastText string
+
+	loginButtonDisabled bool
 }
 
 func (p *LoginPage) OnMount(ctx app.Context) {
@@ -59,6 +61,17 @@ func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
 }
 
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
+	response := struct {
+		Message     string `json:"message"`
+		AuthGranted bool   `json:"auth_granted"`
+		//FlowRecords []string `json:"flow_records"`
+		Users map[string]models.User `json:"users"`
+	}{}
+	toastText := ""
+
+	// fix this!
+	c.loginButtonDisabled = true
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -66,7 +79,12 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		passphrase := strings.TrimSpace(c.passphrase)
 
 		if nickname == "" || passphrase == "" {
-			c.toastText = "all fields need to be filled"
+			toastText = "all fields need to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -78,62 +96,73 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		})
 
 		if !ok {
-			c.toastText = "backend error: API call failed"
+			toastText = "backend error: API call failed"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if respRaw == nil {
-			c.toastText = "backend error: blank response from API"
+			toastText = "backend error: blank response from API"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
-		response := struct {
-			Message     string `json:"message"`
-			AuthGranted bool   `json:"auth_granted"`
-			//FlowRecords []string `json:"flow_records"`
-			Users map[string]models.User `json:"users"`
-		}{}
-
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			c.toastText = "backend error: cannot unmarshal response: " + err.Error()
+			toastText = "backend error: cannot unmarshal response: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if !response.AuthGranted {
-			c.toastText = "access denied"
+			toastText = "access denied"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		user, err := json.Marshal(response.Users[nickname])
 		if err != nil {
-			c.toastText = "frontend error: user marshal failed"
+			toastText = "frontend error: user marshal failed"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		// save enrypted user data to their Local browser storage
 		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastShow = (c.toastText != "")
-
-			if response.AuthGranted {
-				ctx.Navigate("/flow")
-			}
-		})
+		if response.AuthGranted {
+			ctx.Navigate("/flow")
+		}
 	})
+
 }
 
 func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = false
+	c.loginButtonDisabled = false
 }
 
 func (c *loginContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastText != "" {
-		toastActiveClass = " active"
-	}
-
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
 		app.P().Body(
@@ -141,26 +170,41 @@ func (c *loginContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
+		// login credentials fields
 		app.Div().Class("field border label invalid deep-orange-text").Body(
 			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Class("active"),
 			app.Label().Text("nickname").Class("active"),
 		),
+
 		app.Div().Class("field border label invalid deep-orange-text").Body(
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").AutoComplete(true),
 			app.Label().Text("passphrase").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
+
+		// login button
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
+			app.Text("login"),
+		),
 		app.Div().Class("space"),
+
 		app.P().Class("center-align").Text("or"),
 		app.Div().Class("space"),
 
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("register").OnClick(c.onClickRegister),
+		// register button
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+			app.Text("register"),
+		),
+
+		app.Div().Class("space"),
 	)
 }

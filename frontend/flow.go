@@ -161,26 +161,32 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 	c.loaderShowImage = true
 
+	toastText := ""
+
 	ctx.Async(func() {
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
 		}{}
 
+		// call the flow API endpoint to fetch all posts
 		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
 			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
-				return
+				toastText = "JSON parsing error: " + err.Error()
 			}
 		} else {
 			log.Println("cannot fetch post flow list")
-			return
+			toastText = "API error: cannot fetch the post list"
+
 		}
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = postsRaw.Posts
 			//c.sortedPosts = posts
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
 
 			c.loaderShow = false
 			c.loaderShowImage = false
@@ -191,18 +197,9 @@ func (c *flowContent) OnNav(ctx app.Context) {
 }
 
 func (c *flowContent) Render() app.UI {
-	loaderActiveClass := ""
-	if c.loaderShow {
-		loaderActiveClass = " active"
-	}
-
-	toastActiveClass := ""
-	if c.toastShow {
-		toastActiveClass = " active"
-	}
-
 	var sortedPosts []models.Post
 
+	// fetch posts and put them in an array
 	for _, sortedPost := range c.posts {
 		sortedPosts = append(sortedPosts, sortedPost)
 	}
@@ -212,84 +209,101 @@ func (c *flowContent) Render() app.UI {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
 
+	infiniteScrollOptionsRaw := `{"path": ".pagination__next", "append": ".post", "history": false, "status": ".scroller-status"}`
+
+	//var infiniteScrollOptions string
+	//json.Unmarshal([]byte(infiniteScrollOptionsRaw), &infiniteScrollOptions)
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("exclusive content incoming frfr"),
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
-			),
-		),
-
-		app.Table().Class("border left-align").Body(
-			// table header
-			app.THead().Body(
-				app.Tr().Body(
-					app.Th().Class("align-left").Text("nickname, content, timestamp"),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
 				),
 			),
+		),
 
-			// table body
-			app.TBody().Body(
-				//app.Range(c.posts).Map(func(key string) app.UI {
-				app.Range(sortedPosts).Slice(func(idx int) app.UI {
-					//post := c.sortedPosts[idx]
-					post := sortedPosts[idx]
-					key := post.ID
+		// flow posts/articles
+		app.Div().Class("container").Attr("data-infinite-scroll", infiniteScrollOptionsRaw).Body(
+			app.Table().Class("border left-align").Body(
+				// table header
+				app.THead().Body(
+					app.Tr().Body(
+						app.Th().Class("align-left").Text("nickname, content, timestamp"),
+					),
+				),
 
-					// only show posts of users in one's flowList
-					if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
-						return nil
-					}
+				// table body
+				app.TBody().Body(
+					//app.Range(c.posts).Map(func(key string) app.UI {
+					app.Range(sortedPosts).Slice(func(idx int) app.UI {
+						//post := c.sortedPosts[idx]
+						post := sortedPosts[idx]
+						key := post.ID
 
-					return app.Tr().Body(
-						app.Td().Class("align-left").Body(
-							app.P().Body(
-								app.B().Text(post.Nickname).Class("deep-orange-text"),
-							),
+						// only show posts of users in one's flowList
+						if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
+							return nil
+						}
 
-							app.If(post.Type == "fig",
-								app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
-									app.If(c.loaderShowImage,
-										app.Div().Class("small-space"),
-										app.Div().Class("loader center large deep-orange active"),
-									),
-									app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
-								),
-							).Else(
+						return app.Tr().Body(
+							app.Td().Class("align-left").Body(
 								app.P().Body(
-									app.Text(post.Content),
+									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
-							),
 
-							app.Div().Class("row").Body(
-								app.Div().Class("max").Body(
-									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
-								),
-								app.If(c.user.Nickname == post.Nickname,
-									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
-										app.I().Text("delete"),
+								app.If(post.Type == "fig",
+									app.Article().Class("post medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
+										app.If(c.loaderShowImage,
+											app.Div().Class("small-space"),
+											app.Div().Class("loader center large deep-orange active"),
+										),
+										app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
 									),
 								).Else(
-									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
-										app.I().Text("star"),
+									app.Article().Class("post").Body(
+										app.Text(post.Content),
+									),
+								),
+
+								app.Div().Class("row").Body(
+									app.Div().Class("max").Body(
+										app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
+									),
+									app.If(c.user.Nickname == post.Nickname,
+										app.B().Text(post.ReactionCount),
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
+											app.I().Text("delete"),
+										),
+									).Else(
+										app.B().Text(post.ReactionCount),
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
+											app.I().Text("star"),
+										),
 									),
 								),
 							),
-						),
-					)
-				}),
+						)
+					}),
+				),
 			),
 		),
 
-		app.If(c.loaderShow,
-			app.Div().Class("small-space"),
-			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
+		app.Div().Class("scroller-status").Body(
+			app.P().Class("infinite-scroll-last").Text("you just hit the rock bottom"),
+			app.P().Class("infinite-scroll-error").Text("no content to load"),
+			app.Div().Class("infinite-scroll-request").Body(
+				app.If(c.loaderShow,
+					app.Div().Class("small-space"),
+					app.Div().Class("loader center large deep-orange active"),
+				),
+			),
 		),
 	)
 }

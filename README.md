@@ -109,30 +109,19 @@ http://localhost:8093/flow
 
 ### nice-to-have(s)
 + implement loading of new posts
-+ implement infinite flow scroll
 + fix NaN% when loading
-+ check for double posting the same content
++ implement loading new posts
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
-+ ~~healthcheck as a periodic cache dumper~~
-+ allow emojis in usernames? NO! 😂
-+ show offline mode notification
 + swagger docs
 + deep code refactoring
 + replies to posts (just one level deep iteration, no reply to a reply)
 + implement user search on `users` and `stats` pages
-+ Ctrl+Enter to submit posts like YouTube or X
++ Ctrl+Enter to submit posts like YouTube
 + image uploads to gspace.gscloud.cz 😎 via REST API POST
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + automatic links for known TLDs
-+ user's real name
-+ user's home page link
-
-### roadmap to v0.9
-+ ~~implement polls (create poll, voting)~~
-
-### roadmap to v0.11
 
 ### roadmap to v0.8
 + ~~implement stats~~
@@ -165,4 +154,3 @@ http://localhost:8093/flow
 + ~~Go backend (BE) --- server-side~~
 + ~~connect frontend (FE) to BE~~
 + ~~application logic --- functional pages' inputs, buttons, lists (flow, users)~~
-

@@ -30,6 +30,8 @@ type postContent struct {
 
 	toastShow bool
 	toastText string
+
+	postButtonsDisabled bool
 }
 
 func (p *PostPage) OnNav(ctx app.Context) {
@@ -50,73 +52,83 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	postType := ctx.JSSrc().Get("id").String()
 	content := ""
 	poll := models.Poll{}
+	toastText := ""
 
 	var payload interface{}
 
-	switch postType {
-	case "fig":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		newFigLink := strings.TrimSpace(c.newFigLink)
-
-		if newFigLink == "" {
-			c.toastText = "fig link must be filled"
-			return
-		}
-
-		// check the URL/URI format
-		if _, err := url.ParseRequestURI(newFigLink); err != nil {
-			c.toastText = "fig link prolly not a valid URL"
-			return
-		}
-		content = newFigLink
-
-		break
-
-	case "poll":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		pollQuestion := strings.TrimSpace(c.pollQuestion)
-		pollOptionI := strings.TrimSpace(c.pollOptionI)
-		pollOptionII := strings.TrimSpace(c.pollOptionII)
-		pollOptionIII := strings.TrimSpace(c.pollOptionIII)
-
-		if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
-			c.toastText = "poll question and at least two options have to be filled"
-			return
-		}
-
-		now := time.Now()
-		content = strconv.FormatInt(now.UnixNano(), 10)
-
-		poll.ID = content
-		poll.Question = pollQuestion
-		poll.OptionOne.Content = pollOptionI
-		poll.OptionTwo.Content = pollOptionII
-		poll.OptionThree.Content = pollOptionIII
-		poll.Timestamp = now
-
-		break
-
-	case "post":
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		newPost := strings.TrimSpace(c.newPost)
-
-		if newPost == "" {
-			c.toastText = "post textarea must be filled"
-			return
-		}
-		content = newPost
-
-		break
-
-	default:
-		return
-		break
-	}
+	c.postButtonsDisabled = true
 
 	ctx.Async(func() {
+		switch postType {
+		case "fig":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			newFigLink := strings.TrimSpace(c.newFigLink)
+
+			if newFigLink == "" {
+				toastText = "fig link must be filled"
+				break
+			}
+
+			// check the URL/URI format
+			if _, err := url.ParseRequestURI(newFigLink); err != nil {
+				toastText = "fig link prolly not a valid URL"
+				break
+			}
+			content = newFigLink
+
+			break
+
+		case "poll":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			pollQuestion := strings.TrimSpace(c.pollQuestion)
+			pollOptionI := strings.TrimSpace(c.pollOptionI)
+			pollOptionII := strings.TrimSpace(c.pollOptionII)
+			pollOptionIII := strings.TrimSpace(c.pollOptionIII)
+
+			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
+				toastText = "poll question and at least two options have to be filled"
+				break
+			}
+
+			now := time.Now()
+			content = strconv.FormatInt(now.UnixNano(), 10)
+
+			poll.ID = content
+			poll.Question = pollQuestion
+			poll.OptionOne.Content = pollOptionI
+			poll.OptionTwo.Content = pollOptionII
+			poll.OptionThree.Content = pollOptionIII
+			poll.Timestamp = now
+
+			break
+
+		case "post":
+			// trim the padding spaces on the extremities
+			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+			newPost := strings.TrimSpace(c.newPost)
+
+			if newPost == "" {
+				toastText = "post textarea must be filled"
+				break
+			}
+			content = newPost
+
+			break
+
+		default:
+			break
+		}
+
+		if toastText != "" {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		var enUser string
 		var user models.User
 
@@ -124,8 +136,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		// decode, decrypt and unmarshal the local storage user data
 		if err := prepare(enUser, &user); err != nil {
-			c.toastText = "frontend decoding/decryption failed: " + err.Error()
-			return
+			toastText = "frontend decoding/decryption failed: " + err.Error()
 		}
 
 		author := user.Nickname
@@ -147,64 +158,72 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 		// add new post/poll to backend struct
 		if _, ok := litterAPI("POST", path, payload); !ok {
-			c.toastText = "backend error: cannot add new content"
+			toastText = "backend error: cannot add new content"
 			log.Println("cannot post new content to API!")
-			return
+		} else {
+			ctx.Navigate("/flow")
 		}
 
-		c.toastShow = (c.toastText != "")
-		ctx.Navigate("/flow")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+		return
 	})
 }
 
 func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
-	c.toastShow = false
+	c.toastShow = (c.toastText != "")
+	c.postButtonsDisabled = false
 }
 
 func (c *postContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastText != "" {
-		toastActiveClass = " active"
-	}
-
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("add flow post").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("drop it, drop it"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
+		// new post textarea
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
 			app.Label().Text("text contents").Class("active"),
 		),
-		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").Text("post text").OnClick(c.onClick),
+		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").Text("post text").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
 
 		app.Div().Class("large-divider"),
 
+		// new fig header text
 		app.H5().Text("add flow fig").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("provide me with the image URL, papi"),
 		app.Div().Class("space"),
 
+		// new fig input
 		app.Div().Class("field label border invalid extra deep-orange-text").Body(
 			app.Input().Class("active").Type("text").OnChange(c.ValueTo(&c.newFigLink)),
 			//app.Input().Class("active").Type("file"),
 			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
 		),
-		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").Text("post fig").OnClick(c.onClick),
+		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").Text("post fig").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
 
 		app.Div().Class("large-divider"),
 
+		// new poll header text
 		app.H5().Text("add flow poll").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("lmao gotem"),
 		app.Div().Class("space"),
 
+		// newx poll input area
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50),
 			app.Label().Text("question").Class("active"),
@@ -221,6 +240,7 @@ func (c *postContent) Render() app.UI {
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60),
 			app.Label().Text("option three (optional)").Class("active"),
 		),
-		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(c.onClick).Disabled(false),
+		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
+		app.Div().Class("space"),
 	)
 }

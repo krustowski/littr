@@ -35,6 +35,13 @@ type statsContent struct {
 	toastText string
 }
 
+type userStat struct {
+	PostCount     int  `default:0`
+	ReactionCount int  `default:0`
+	FlowerCount   int  `default:0`
+	Searched      bool `default:true`
+}
+
 func (p *StatsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("stats / littr")
 }
@@ -72,7 +79,7 @@ func (c *statsContent) handleSearch(ctx app.Context, a app.Action) {
 	}
 
 	ctx.Async(func() {
-		users := c.userStats		
+		users := c.userStats
 
 		// iterate over calculated stats' "rows" and find matchings
 		for key, user := range users {
@@ -82,7 +89,7 @@ func (c *statsContent) handleSearch(ctx app.Context, a app.Action) {
 			if strings.Contains(key, val) {
 				log.Println(key)
 				user.Searched = true
-	
+
 				//matchedList = append(matchedList, key)
 			}
 
@@ -142,13 +149,6 @@ func (c *statsContent) OnNav(ctx app.Context) {
 	})
 }
 
-type userStat struct {
-	PostCount     int  `default:0`
-	ReactionCount int  `default:0`
-	FlowerCount   int  `default:0`
-	Searched      bool `default:true`
-}
-
 func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	flowStats := make(map[string]int)
 	userStats := make(map[string]userStat)
@@ -172,28 +172,20 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 }
 
 func (c *statsContent) Render() app.UI {
-	log.Println("render")
 	users := c.userStats
-
-	loaderActiveClass := ""
-	if c.loaderShow {
-		loaderActiveClass = " active"
-	}
-
-	toastActiveClass := ""
-	if c.toastShow {
-		toastActiveClass = " active"
-	}
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr stats").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
@@ -264,7 +256,7 @@ func (c *statsContent) Render() app.UI {
 
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
-			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
+			app.Div().Class("loader center large deep-orange active"),
 		),
 	)
 }

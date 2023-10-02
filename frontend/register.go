@@ -27,6 +27,8 @@ type registerContent struct {
 	passphrase      string
 	passphraseAgain string
 	email           string
+
+	registerButtonDisabled bool
 }
 
 func (p *RegisterPage) OnNav(ctx app.Context) {
@@ -42,7 +44,14 @@ func (p *RegisterPage) Render() app.UI {
 	)
 }
 
-func (c *registerContent) onClick(ctx app.Context, e app.Event) {
+func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
+	c.registerButtonDisabled = true
+	toastText := ""
+
+	response := struct {
+		Code int `json:"code"`
+	}{}
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -52,19 +61,34 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 		email := strings.TrimSpace(c.email)
 
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
-			c.toastText = "all fields need to be filled"
+			toastText = "all fields need to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		// don't allow very long nicknames
 		if len(nickname) > 20 {
-			c.toastText = "nickname has to be 20 chars long at max"
+			toastText = "nickname has to be 20 chars long at max"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		// do passphrases match?
 		if passphrase != passphraseAgain {
-			c.toastText = "passphrases don't match!"
+			toastText = "passphrases don't match!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -72,7 +96,12 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
 			log.Println(err)
-			c.toastText = "wrong e-mail format entered"
+			toastText = "wrong e-mail format entered"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -84,63 +113,71 @@ func (c *registerContent) onClick(ctx app.Context, e app.Event) {
 			Email:      email,
 			FlowList:   make(map[string]bool),
 		}
+
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
 		resp, ok := litterAPI("POST", "/api/users", user)
 		if !ok {
-			c.toastText = "cannot send API request (backend error)"
+			toastText = "cannot send API request (backend error)"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
-		response := struct {
-			Code int `json:"code"`
-		}{}
-
 		if err := json.Unmarshal(*resp, &response); err != nil {
-			c.toastText = "cannot unmarshal response"
+			toastText = "cannot unmarshal response"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		if response.Code == 409 {
-			c.toastText = "that user already exists!"
+			toastText = "that user already exists!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
-		// update the context of UI goroutine
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastShow = (c.toastText != "")
+		if toastText == "" {
+			ctx.Navigate("/login")
+		}
 
-			if !c.toastShow {
-				ctx.Navigate("/login")
-			}
-		})
 	})
 }
 
 func (c *registerContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = false
+	c.registerButtonDisabled = false
 }
 
 func (c *registerContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastText != "" {
-		toastActiveClass = " active"
-	}
-
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr registration").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("do not be mid, join us to be lit"),
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
+		// register credentials fields
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50),
 			app.Label().Text("nickname").Class("active"),
@@ -157,6 +194,12 @@ func (c *registerContent) Render() app.UI {
 			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60),
 			app.Label().Text("e-mail").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("register").OnClick(c.onClick).Disabled(false),
+
+		// register button
+		app.Button().Class("responsive deep-orange7 white-text bold").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(
+			app.Text("register"),
+		),
+
+		app.Div().Class("space"),
 	)
 }
