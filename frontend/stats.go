@@ -208,7 +208,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 
 	flowStats["posts"] = c.postCount
 	//flowStats["users"] = c.userCount
-	flowStats["users"] = 0
+	flowStats["users"] = -1
 	flowStats["stars"] = 0
 
 	// iterate over all posts, compose stats results
@@ -230,7 +230,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	// iterate over all users, compose global flower count
 	for _, user := range c.users {
 		for key, enabled := range user.FlowList {
-			if enabled {
+			if enabled && key != user.Nickname {
 				flowers[key]++
 			}
 		}
@@ -242,7 +242,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 		stat := userStats[key]
 
 		// FlowList also contains the user itself
-		stat.FlowerCount = (count - 1)
+		stat.FlowerCount = count
 		userStats[key] = stat
 	}
 
