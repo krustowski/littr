@@ -163,11 +163,6 @@ func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *loginContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastText != "" {
-		toastActiveClass = " active"
-	}
-
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
 		app.P().Body(
@@ -175,11 +170,13 @@ func (c *loginContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		// snack
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("snackbar red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
