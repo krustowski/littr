@@ -103,14 +103,11 @@ func initServer() {
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
 		Styles: []string{
-			//"https://cdn.jsdelivr.net/npm/beercss@3.3.5/dist/cdn/beer.min.css",
-			"https://cdn.gscloud.cz/css/beer.min.css",
+			"https://cdn.jsdelivr.net/npm/beercss@3.3.5/dist/cdn/beer.min.css",
 		},
 		Scripts: []string{
-			//"https://cdn.jsdelivr.net/npm/beercss@3.3.5/dist/cdn/beer.min.js",
-			//"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.0.1/dist/cdn/material-dynamic-colors.min.js",
-			"https://cdn.gscloud.cz/js/beer.nomodule.min.js",
-			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
+			"https://cdn.jsdelivr.net/npm/beercss@3.3.5/dist/cdn/beer.min.js",
+			"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.0.1/dist/cdn/material-dynamic-colors.min.js",
 			"https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js",
 		},
 	})

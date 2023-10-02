@@ -78,8 +78,8 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 
 		if passphrase == "" || passphraseAgain == "" {
 			toastText = "both passphrases need to be filled, or text changed"
-
-			ctx.Dispatch(func(ctx app.Context) {
+			
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -89,7 +89,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		if passphrase != passphraseAgain {
 			toastText = "passphrases do not match"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -106,7 +106,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		}); !ok {
 			toastText = "generic backend error"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -130,7 +130,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		if aboutText == "" {
 			toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -140,7 +140,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		if len(aboutText) > 100 {
 			toastText = "about text has to be shorter than 100 chars"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -155,7 +155,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		}); !ok {
 			toastText = "generic backend error"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -168,7 +168,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		if err := reload(c.user, &userStream); err != nil {
 			toastText = "cannot update local storage"
 
-			ctx.Dispatch(func(ctx app.Context) {
+			ctx.Dispatch(func(ctx app.Context){
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
