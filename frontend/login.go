@@ -24,6 +24,8 @@ type loginContent struct {
 
 	toastShow bool
 	toastText string
+
+	loginButtonDisabled bool
 }
 
 func (p *LoginPage) OnMount(ctx app.Context) {
@@ -66,6 +68,9 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		Users map[string]models.User `json:"users"`
 	}{}
 	toastText := ""
+
+	// fix this!
+	c.loginButtonDisabled = true
 
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
@@ -154,6 +159,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = false
+	c.loginButtonDisabled = false
 }
 
 func (c *loginContent) Render() app.UI {
@@ -169,26 +175,39 @@ func (c *loginContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
+		// snack
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
+			app.Div().Class("snackbar red10 white-text top"+toastActiveClass).Body(
 				app.I().Text("error"),
 				app.Span().Text(c.toastText),
 			),
 		),
 
+		// login credentials fields
 		app.Div().Class("field border label invalid deep-orange-text").Body(
 			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(30).Class("active"),
 			app.Label().Text("nickname").Class("active"),
 		),
+
 		app.Div().Class("field border label invalid deep-orange-text").Body(
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").AutoComplete(true),
 			app.Label().Text("passphrase").Class("active"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("login").OnClick(c.onClick),
+
+		// login button
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
+			app.Text("login"),
+		),
 		app.Div().Class("space"),
+
 		app.P().Class("center-align").Text("or"),
 		app.Div().Class("space"),
 
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).Text("register").OnClick(c.onClickRegister),
+		// register button
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+			app.Text("register"),
+		),
+
+		app.Div().Class("space"),
 	)
 }
