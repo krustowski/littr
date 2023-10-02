@@ -206,10 +206,10 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	userStats := make(map[string]userStat)
 	flowers := make(map[string]int)
 
-	flowStats["posts-total-count"] = c.postCount
-	//flowStats["users-total-count"] = c.userCount
-	flowStats["users-total-count"] = -1
-	flowStats["stars-total-count"] = 0
+	flowStats["posts"] = c.postCount
+	//flowStats["users"] = c.userCount
+	flowStats["users"] = -1
+	flowStats["stars"] = 0
 
 	// iterate over all posts, compose stats results
 	for _, val := range c.posts {
@@ -224,7 +224,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 		stat.PostCount++
 		stat.ReactionCount += val.ReactionCount
 		userStats[val.Nickname] = stat
-		flowStats["stars-total-count"] += val.ReactionCount
+		flowStats["stars"] += val.ReactionCount
 	}
 
 	// iterate over all users, compose global flower count
@@ -234,7 +234,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 				flowers[key]++
 			}
 		}
-		flowStats["users-total-count"]++
+		flowStats["users"]++
 	}
 
 	// iterate over composed flowers, assign the count to a user
