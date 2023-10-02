@@ -160,7 +160,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	// show loader
 	c.loaderShow = true
 	c.loaderShowImage = true
-	
+
 	toastText := ""
 
 	ctx.Async(func() {
@@ -173,12 +173,12 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
-				toastText = "JSON parsing error: "+err.Error()
+				toastText = "JSON parsing error: " + err.Error()
 			}
 		} else {
 			log.Println("cannot fetch post flow list")
 			toastText = "API error: cannot fetch the post list"
-			
+
 		}
 
 		// Storing HTTP response in component field:
@@ -213,7 +213,6 @@ func (c *flowContent) Render() app.UI {
 
 	//var infiniteScrollOptions string
 	//json.Unmarshal([]byte(infiniteScrollOptionsRaw), &infiniteScrollOptions)
-		
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
@@ -306,6 +305,5 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
-
 	)
 }
