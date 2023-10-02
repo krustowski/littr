@@ -209,7 +209,7 @@ func (c *flowContent) Render() app.UI {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
 
-	infiniteScrollOptionsRaw := `{"path": ".pagination__next", "append": ".post", "history": false, "status": ".scroller-status"}`
+	//infiniteScrollOptionsRaw := `{"path": ".pagination__next", "append": ".post", "history": false, "status": ".scroller-status"}`
 
 	//var infiniteScrollOptions string
 	//json.Unmarshal([]byte(infiniteScrollOptionsRaw), &infiniteScrollOptions)
@@ -230,7 +230,7 @@ func (c *flowContent) Render() app.UI {
 		),
 
 		// flow posts/articles
-		app.Div().Class("container").Attr("data-infinite-scroll", infiniteScrollOptionsRaw).Body(
+		app.Div().Class("container").Body( //Attr("data-infinite-scroll", infiniteScrollOptionsRaw).Body(
 			app.Table().Class("border left-align").Body(
 				// table header
 				app.THead().Body(
@@ -267,8 +267,8 @@ func (c *flowContent) Render() app.UI {
 										app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
 									),
 								).Else(
-									app.Article().Class("post").Body(
-										app.Text(post.Content),
+									app.Article().Class("post").Style("max-width", "100%").Body(
+										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
 									),
 								),
 
@@ -305,5 +305,14 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
+
+		app.Raw(`<script>
+			let infScroll = new InfiniteScroll( '.container', {
+ 				// options
+  				path: '.pagination__next',
+  				append: '.post',
+  				history: false,
+			});
+		</script>`),
 	)
 }
