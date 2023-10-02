@@ -22,9 +22,9 @@ type statsContent struct {
 	postCount int
 	userCount int
 
-	posts     map[string]models.Post
-	stats     map[string]int
-	users     map[string]models.User
+	posts map[string]models.Post
+	stats map[string]int
+	users map[string]models.User
 
 	flowStats map[string]int
 	userStats map[string]userStat
@@ -41,16 +41,16 @@ type statsContent struct {
 
 type userStat struct {
 	// PostCount is a number of posts of such user.
-	PostCount     int  `default:0`
+	PostCount int `default:0`
 
 	// ReactionCount tells the number of interactions (stars given).
-	ReactionCount int  `default:0`
+	ReactionCount int `default:0`
 
 	// FlowerCount is basically a number of followers.
-	FlowerCount   int  `default:0`
+	FlowerCount int `default:0`
 
 	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
-	Searched      bool `default:true`
+	Searched bool `default:true`
 }
 
 func (p *StatsPage) OnNav(ctx app.Context) {
@@ -208,7 +208,7 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 
 	flowStats["posts"] = c.postCount
 	//flowStats["users"] = c.userCount
-	flowStats["users"] = -1
+	flowStats["users"] = 0
 	flowStats["stars"] = 0
 
 	// iterate over all posts, compose stats results
@@ -363,7 +363,6 @@ func (c *statsContent) Render() app.UI {
 									app.B().Text(key).Class("deep-orange-text"),
 								),
 							),
-
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
