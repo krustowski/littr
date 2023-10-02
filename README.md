@@ -124,9 +124,9 @@ http://localhost:8093/flow
 + implement infinite scroll (for `flow` only this time) -- WIP
 
 ### roadmap to v0.12
-+ implement user's profile (real name, home page, followers) as modal?
++ ~~implement user's profile (real name, home page, followers) as modal~~
 + show offline mode notification
-+ implement pagination
++ implement pagination for flow (on backend prolly)
 + check for double posting same content
 
 ### roadmap to v0.11
