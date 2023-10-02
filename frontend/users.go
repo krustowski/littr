@@ -26,6 +26,8 @@ type usersContent struct {
 
 	toastShow bool
 	toastText string
+
+	usersButtonDisabled bool
 }
 
 func (p *UsersPage) OnNav(ctx app.Context) {
@@ -162,6 +164,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
+			c.usersButtonDisabled = false
 
 			c.user.FlowList = flowList
 			log.Println("dispatch ends")
@@ -213,23 +216,16 @@ func (c *usersContent) handleSearch(ctx app.Context, a app.Action) {
 func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("toggle", key)
+	c.usersButtonDisabled = true
 }
 
 func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastShow = false
+	c.toastText = ""
+	c.toastShow = (c.toastText != "")
+	c.usersButtonDisabled = false
 }
 
 func (c *usersContent) Render() app.UI {
-	toastActiveClass := ""
-	if c.toastShow {
-		toastActiveClass = " active"
-	}
-
-	loaderActiveClass := ""
-	if c.loaderShow {
-		loaderActiveClass = " active"
-	}
-
 	users := c.users
 
 	return app.Main().Class("responsive").Body(
@@ -237,10 +233,13 @@ func (c *usersContent) Render() app.UI {
 		app.P().Text("simplified user table, available to add to the flow!"),
 		app.Div().Class("space"),
 
+		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
-			app.Div().Class("toast red10 white-text top"+toastActiveClass).Body(
-				app.I().Text("error"),
-				app.Span().Text(c.toastText),
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar red10 white-text top active").Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
 			),
 		),
 
@@ -299,7 +298,7 @@ func (c *usersContent) Render() app.UI {
 						).ElseIf(inFlow,
 							app.Td().Style("max-width", "50%").Body(
 								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
-								app.Button().Class("border responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("border responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
 									//app.I().Text("done"),
 									app.Text("remove from flow"),
 								),
@@ -308,7 +307,7 @@ func (c *usersContent) Render() app.UI {
 						// toggle on
 						).Else(
 							app.Td().Style("max-width", "50%").Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Body(
+								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
 									//app.I().Text("done"),
 									app.Text("add to flow"),
 								),
@@ -321,7 +320,7 @@ func (c *usersContent) Render() app.UI {
 
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
-			app.Div().Class("loader center large deep-orange"+loaderActiveClass),
+			app.Div().Class("loader center large deep-orange active"),
 		),
 	)
 }
