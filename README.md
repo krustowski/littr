@@ -131,6 +131,7 @@ http://localhost:8093/flow
 + implement infinite scroll (for `flow` only this time) -- WIP
 + ~~disable buttons on action to prevent multiple action fires~~
 + check for double posting same content
++ ~~implement system stats, add flowers (follower) count~~
 
 ### roadmap to v0.10
 + ~~implement search bar (`stats` and `users` pages only)~~
