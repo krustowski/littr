@@ -269,7 +269,7 @@ func (c *usersContent) Render() app.UI {
 						}
 					}
 
-					if !user.Searched {
+					if !user.Searched || user.Nickname == "system" {
 						return app.Text("")
 					}
 
