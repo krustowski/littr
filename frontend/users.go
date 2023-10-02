@@ -1,8 +1,12 @@
 package frontend
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"log"
+	"net/http"
+	"strconv"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -20,14 +24,16 @@ type usersContent struct {
 
 	users map[string]models.User `json:"users"`
 
-	user models.User
+	user        models.User
+	userInModal models.User
 
 	loaderShow bool
 
 	toastShow bool
 	toastText string
 
-	usersButtonDisabled bool
+	usersButtonDisabled  bool
+	showUserPreviewModal bool
 }
 
 func (p *UsersPage) OnNav(ctx app.Context) {
@@ -95,6 +101,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 func (c *usersContent) OnMount(ctx app.Context) {
 	ctx.Handle("toggle", c.handleToggle)
 	ctx.Handle("search", c.handleSearch)
+	ctx.Handle("preview", c.handleUserPreview)
 }
 
 func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
@@ -213,6 +220,30 @@ func (c *usersContent) handleSearch(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *usersContent) handleUserPreview(ctx app.Context, a app.Action) {
+	val, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Async(func() {
+		user := c.users[val]
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.showUserPreviewModal = true
+			c.userInModal = user
+		})
+	})
+	return
+}
+
+func (c *usersContent) onClickUser(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("preview", key)
+	c.usersButtonDisabled = true
+	c.showUserPreviewModal = true
+}
+
 func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("toggle", key)
@@ -223,10 +254,49 @@ func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = (c.toastText != "")
 	c.usersButtonDisabled = false
+	c.showUserPreviewModal = false
+}
+
+func (c *usersContent) getGravatarURL() string {
+	// TODO: do not hardcode this
+	baseURL := "https://littr.n0p.cz/"
+	email := strings.ToLower(c.userInModal.Email)
+	size := 150
+
+	defaultImage := "/web/android-chrome-192x192.png"
+
+	byteEmail := []byte(email)
+	hashEmail := md5.Sum(byteEmail)
+	hashedStringEmail := hex.EncodeToString(hashEmail[:])
+
+	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?d=" + baseURL + "&s=" + strconv.Itoa(size)
+
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode != 200 {
+		return defaultImage
+	}
+
+	return url
 }
 
 func (c *usersContent) Render() app.UI {
 	users := c.users
+	userGravatarURL := ""
+
+	var userInModalInfo map[string]string = nil
+
+	if c.showUserPreviewModal {
+		userInModalInfo = map[string]string{
+			"full name": c.userInModal.FullName,
+			"web":       c.userInModal.Web,
+			//"e-mail":    c.userInModal.Email,
+			"last active": c.userInModal.LastActiveTime.String(),
+			"registered":  c.userInModal.RegisteredTime.String(),
+		}
+
+		//userGravatarURL := getGravatar(c.userInModal.Email)
+		userGravatarURL = c.getGravatarURL()
+	}
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flowers").Style("padding-top", config.HeaderTopPadding),
@@ -239,6 +309,56 @@ func (c *usersContent) Render() app.UI {
 				app.Div().Class("snackbar red10 white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
+				),
+			),
+		),
+
+		// user info modal
+		app.If(c.showUserPreviewModal && userGravatarURL != "" && userInModalInfo != nil,
+			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
+
+				app.Img().Class("small-width small-heigh").Src(userGravatarURL),
+
+				app.Nav().Class("center-align").Body(
+					app.H5().Text(c.userInModal.Nickname),
+				),
+
+				app.Div().Class("space"),
+
+				app.If(c.userInModal.About != "",
+					app.Article().Class("center-align").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About),
+					app.Div().Class("space"),
+				),
+
+				app.Table().Class("border center-align").Style("max-width", "100%").Body(
+					app.TBody().Body(
+						app.Range(userInModalInfo).Map(func(key string) app.UI {
+							if userInModalInfo[key] == "" {
+								return app.Text("")
+							}
+
+							return app.Tr().Body(
+								app.Td().Body(
+									app.Text(key),
+								),
+
+								app.If(key == "web",
+									app.Td().Body(
+										app.A().Class("bold").Href(userInModalInfo[key]).Text(userInModalInfo[key]),
+									),
+								).Else(
+									app.Td().Body(
+										app.Span().Class("bold").Text(userInModalInfo[key]),
+									),
+								),
+							)
+						}),
+					),
+				),
+
+				//app.Div().Class("large-space"),
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(c.dismissToast),
 				),
 			),
 		),
@@ -275,7 +395,7 @@ func (c *usersContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Style("max-width", "0").Style("text-overflow", "-").Style("overflow", "clip").Style("word-break", "break-all").Style("hyphens", "auto").Body(
-							app.P().Text(user.Nickname).Class("deep-orange-text bold"),
+							app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser),
 							app.Div().Class("space"),
 							app.P().Style("word-break", "break-word").Style("hyphens", "auto").Text(user.About),
 						),

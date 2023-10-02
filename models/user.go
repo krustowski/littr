@@ -11,11 +11,20 @@ type User struct {
 	// Nickname is a login name of such user.
 	Nickname string `json:"nickname" binding:"required"`
 
+	// FullName is the "genuine" name of such user.
+	FullName string `json:"full_name"`
+
 	// Passphrase is a hashed pass phrase string.
 	Passphrase string `json:"passphrase"`
 
 	// Email is a primary user's e-mail address.
 	Email string `json:"email"`
+
+	// Web is user's personal homepage.
+	Web string `json:"web"`
+
+	// AvatarURL is an URL to the user's custom profile picture.
+	AvatarURL string `json:"avatar_url"`
 
 	// About is a description string of such user.
 	About string `json:"about"`
@@ -31,6 +40,9 @@ type User struct {
 
 	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
+
+	// RegisteredTime is an UNIX timestamp of the user's registeration.
+	RegisteredTime time.Time `json:"registered_time"`
 
 	// LastLoginTime is an UNIX timestamp of the last user's successful log-in.
 	LastLoginTime time.Time `json:"last_login_time"`
