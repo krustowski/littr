@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -232,12 +233,14 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
-	website := c.website
 	toastText := ""
 
 	c.settingsButtonDisabled = true
 
 	ctx.Async(func() {
+		website := strings.TrimSpace(c.website)
+
+		// check the trimmed version of website string
 		if website == "" {
 			toastText = "website URL has to be filled"
 
@@ -257,6 +260,23 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 				c.toastShow = (toastText != "")
 			})
 			return
+		}
+
+		// create a regex object
+		regex, err := regexp.Compile("^(http|https)://")
+		if err != nil {
+			toastText := "failed to check the website (regex object fail)"
+			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if !regex.MatchString(website) {
+			website = "https://" + website
 		}
 
 		updatedUser := c.user
