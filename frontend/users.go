@@ -52,21 +52,26 @@ func (p *UsersPage) Render() app.UI {
 func (c *usersContent) OnNav(ctx app.Context) {
 	// show loader
 	c.loaderShow = true
+	toastText := ""
 
 	var enUser string
 	var user models.User
 
-	//user.FlowList = make(map[string]bool)
-	ctx.LocalStorage().Get("user", &enUser)
-
-	// decode, decrypt and unmarshal the local storage string
-	if err := prepare(enUser, &user); err != nil {
-		c.toastText = "frontend decoding/decryption failed: " + err.Error()
-		c.toastShow = true
-		return
-	}
-
 	ctx.Async(func() {
+		//user.FlowList = make(map[string]bool)
+		ctx.LocalStorage().Get("user", &enUser)
+
+		// decode, decrypt and unmarshal the local storage string
+		if err := prepare(enUser, &user); err != nil {
+			toastText = "frontend decoding/decryption failed: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		usersPre := struct {
 			Users map[string]models.User `json:"users"`
 		}{}
@@ -75,10 +80,22 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
+				toastText = "JSON parse error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
 				return
 			}
 		} else {
-			log.Println("cannot fetch user list")
+			toastText = "cannot fetch users list"
+			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
@@ -88,9 +105,11 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			usersPre.Users[k] = u
 		}
 
+		updatedUser := usersPre.Users[user.Nickname]
+
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
+			c.user = updatedUser
 			c.users = usersPre.Users
 
 			c.loaderShow = false
@@ -130,15 +149,10 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
-		updateData := &models.User{
-			Nickname:   c.user.Nickname,
-			Passphrase: c.user.Passphrase,
-			About:      c.user.About,
-			Email:      c.user.Email,
-			FlowList:   flowList,
-		}
+		updatedData := c.user
+		updatedData.FlowList = flowList
 
-		respRaw, ok := litterAPI("PUT", "/api/users", updateData)
+		respRaw, ok := litterAPI("PUT", "/api/users", updatedData)
 		if !ok {
 			toastText = "generic backend error"
 			return
