@@ -344,7 +344,7 @@ func (c *usersContent) Render() app.UI {
 					app.Div().Class("space"),
 				),
 
-				app.Table().Class("border center-align").Style("max-width", "100%").Body(
+				app.Table().Class("border center-align").ID("table-users").Style("max-width", "100%").Body(
 					app.TBody().Body(
 						app.Range(userInModalInfo).Map(func(key string) app.UI {
 							if userInModalInfo[key] == "" {

@@ -231,7 +231,7 @@ func (c *flowContent) Render() app.UI {
 
 		// flow posts/articles
 		app.Div().Class("container").Body( //Attr("data-infinite-scroll", infiniteScrollOptionsRaw).Body(
-			app.Table().Class("border left-align").Body(
+			app.Table().Class("border left-align").ID("table-flow").Body(
 				// table header
 				app.THead().Body(
 					app.Tr().Body(
@@ -253,7 +253,7 @@ func (c *flowContent) Render() app.UI {
 						}
 
 						return app.Tr().Class().Body(
-							app.Td().Class("post align-left").Body(
+							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
 								app.P().Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),

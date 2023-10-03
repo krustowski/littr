@@ -128,11 +128,13 @@ http://localhost:8093/flow
 + show offline mode notification
 + implement pagination for flow (on backend prolly)
 + check for double posting same content
++ mark selected fields with data labels (`data-author` etc)
 
 ### roadmap to v0.11
 + ~~upgrade toasts to snackbars (beercss v3.3.5)~~
 + ~~disable buttons on action to prevent multiple action fires~~
 + ~~implement system stats, add flowers (follower) count~~
++ ~~add LitterJS external lib~~
 
 ### roadmap to v0.10
 + ~~implement search bar (`stats` and `users` pages only)~~

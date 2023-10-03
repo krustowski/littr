@@ -238,7 +238,7 @@ func (c *pollsContent) Render() app.UI {
 			),
 		),
 
-		app.Table().Class("border left-align").Body(
+		app.Table().Class("border left-align").ID("table-poll").Body(
 			app.THead().Body(
 				app.Tr().Body(
 					app.Th().Class("align-left").Text("poll question, options, timestamp"),
@@ -269,7 +269,7 @@ func (c *pollsContent) Render() app.UI {
 					}
 
 					return app.Tr().Body(
-						app.Td().Class("align-left").Body(
+						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
 							app.P().Body(
 								app.Text("Q: "),
 								app.B().Text(poll.Question).Class("deep-orange-text space"),
