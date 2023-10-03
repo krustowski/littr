@@ -304,8 +304,8 @@ func (c *usersContent) Render() app.UI {
 			"full name": c.userInModal.FullName,
 			"web":       c.userInModal.Web,
 			//"e-mail":    c.userInModal.Email,
-			"last active": c.userInModal.LastActiveTime.String(),
-			"registered":  c.userInModal.RegisteredTime.String(),
+			"last active": c.userInModal.LastActiveTime.Format("Jan 02, 2006; 15:04:05 -0700"),
+			"registered":  c.userInModal.RegisteredTime.Format("Jan 02, 2006; 15:04:05 -0700"),
 		}
 
 		//userGravatarURL := getGravatar(c.userInModal.Email)
@@ -377,12 +377,14 @@ func (c *usersContent) Render() app.UI {
 			),
 		),
 
+		// search bar
 		app.Div().Class("field prefix round fill").Body(
 			app.I().Class("front").Text("search"),
 			//app.Input().Type("search").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
 			app.Input().Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
 		),
 
+		// users table
 		app.Table().Class("border left-align").Style("max-width", "100%").Body(
 			app.THead().Body(
 				app.Tr().Body(
