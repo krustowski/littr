@@ -109,6 +109,8 @@ http://localhost:8093/flow
 
 ### nice-to-have(s)
 + implement loading of new posts
++ text contents -> text content
++ white color for content input
 + fix NaN% when loading
 + implement loading new posts
 + implement sessions (SessionsCache)
