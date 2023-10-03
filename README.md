@@ -109,8 +109,9 @@ http://localhost:8093/flow
 
 ### nice-to-have(s)
 + implement loading of new posts
++ OAuth 2.0 login implementation
++ fix password HTML fields to reflect Chromium recommendations
 + fix NaN% when loading
-+ implement loading new posts
 + implement sessions (SessionsCache)
 + implement custom logger goroutine
 + swagger docs
