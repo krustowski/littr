@@ -108,27 +108,32 @@ http://localhost:8093/flow
 ```
 
 ### nice-to-have(s)
-+ implement loading of new posts
-+ fix NaN% when loading
-+ implement loading new posts
-+ implement sessions (SessionsCache)
-+ implement custom logger goroutine
-+ swagger docs
-+ deep code refactoring
-+ replies to posts (just one level deep iteration, no reply to a reply)
-+ Ctrl+Enter to submit posts like YouTube
-+ image uploads to gspace.gscloud.cz (via REST API POST)
++ automatic links for known TLDs
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
-+ automatic links for known TLDs
++ Ctrl+Enter to submit posts like YouTube
++ custom colour theme per user
++ deep code refactoring
++ fix NaN% when loading
++ image uploads to gspace.gscloud.cz (via REST API POST)
++ implement custom logger goroutine
 + implement infinite scroll (for `flow` only this time) -- WIP
++ implement loading of new posts
++ OAuth2
++ swagger docs
++ test if dump dir writable (on init)
+
+### roadmap to v0.13
++ account deletion (`settings`)
++ implement sessions (SessionsCache)
++ replies to any post in flow
 
 ### roadmap to v0.12
-+ ~~implement user's profile (real name, home page, followers) as modal~~
-+ show offline mode notification
-+ implement pagination for flow (on backend prolly)
 + check for double posting same content
-+ mark selected fields with data labels (`data-author` etc)
++ implement pagination for flow (on backend prolly)
++ ~~implement user's profile (real name, home page, followers) as modal~~
++ ~~mark selected fields with data labels (`data-author` etc)~~
++ show offline mode notification
 
 ### roadmap to v0.11
 + ~~upgrade toasts to snackbars (beercss v3.3.5)~~
