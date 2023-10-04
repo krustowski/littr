@@ -18,6 +18,8 @@ type FlowPage struct {
 type flowContent struct {
 	app.Compo
 
+	eventListener func()
+
 	loaderShow      bool
 	loaderShowImage bool
 
@@ -29,8 +31,9 @@ type flowContent struct {
 
 	interactedPostKey string
 
+	paginationEnd bool
 	pagination int
-	pageNo int
+	pageNo     int
 
 	postKey     string
 	posts       map[string]models.Post
@@ -64,11 +67,23 @@ func (c *flowContent) onLoadedDataImage(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
+	ctx.NewAction("scroll")
+}
+
+func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
-		ctx.Dispatch(func(ctx app.Context) {
-			c.pageNo++
-			log.Println("onscroll")
-		})
+		elem := app.Window().GetElementByID("page-end-anchor")
+		boundary := elem.JSValue().Call("getBoundingClientRect")
+		bottom := boundary.Get("bottom").Int()
+
+		_, height := app.Window().Size()
+
+		if bottom - height < 0 && !c.paginationEnd {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.pageNo++
+				log.Println("new content fire")
+			})
+		}
 	})
 }
 
@@ -146,12 +161,20 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 }
 
 func (c *flowContent) OnMount(ctx app.Context) {
-	ctx.Handle("star", c.handleStar)
 	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("star", c.handleStar)
 
+	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
 
+	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+}
+
+func (c *flowContent) OnDismount() {
+	// https://go-app.dev/reference#BrowserWindow
+	c.eventListener()
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
@@ -248,17 +271,18 @@ func (c *flowContent) Render() app.UI {
 		}
 
 		if quest > end {
+			c.paginationEnd = true
 			return (end - 1)
 		}
-	
+
 		if quest < 0 {
 			return 0
-		}	
-	
+		}
+
 		return quest
 	}(c)
 
-	if end > 0 && end > 0{
+	if end > 0 && end > 0 {
 		pagedPosts = sortedPosts[start:stop]
 	}
 
@@ -301,7 +325,7 @@ func (c *flowContent) Render() app.UI {
 						}
 
 						return app.Tr().Class().Body(
-							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).OnFocus(c.onScroll).Body(
+							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
 								app.P().Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
@@ -342,9 +366,7 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
-		app.Div().On("click", c.onScroll).Body(
-			app.Text("lmao"),
-		),
+		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
 			app.Div().Class("loader center large deep-orange active"),

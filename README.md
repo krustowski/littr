@@ -111,6 +111,7 @@ http://localhost:8093/flow
 + automatic links for known TLDs
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
++ check for double posting same content
 + Ctrl+Enter to submit posts like YouTube
 + custom colour theme per user
 + deep code refactoring
@@ -120,6 +121,8 @@ http://localhost:8093/flow
 + implement infinite scroll (for `flow` only this time) -- WIP
 + implement loading of new posts
 + OAuth2
++ send verification e-mail
++ show offline mode notification
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
@@ -127,14 +130,12 @@ http://localhost:8093/flow
 + account deletion (`settings`)
 + implement sessions (SessionsCache)
 + replies to any post in flow
++ implement pagination for flow (on backend prolly)
 
 ### roadmap to v0.12
-+ check for double posting same content
-+ implement pagination for flow (on backend prolly)
 + ~~implement user's profile (real name, home page, followers) as modal~~
 + ~~mark selected fields with data labels (`data-author` etc)~~
 + ~~notice user's activity (`User.LastActiveTime`)~~
-+ show offline mode notification
 
 ### roadmap to v0.11
 + ~~upgrade toasts to snackbars (beercss v3.3.5)~~
