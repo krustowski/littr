@@ -125,6 +125,7 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[flow] new connection from: " + r.RemoteAddr)
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
 	case "DELETE":
@@ -263,6 +264,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 func PollsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[poll] new connection from: " + r.RemoteAddr)
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
 	case "DELETE":
@@ -410,6 +412,7 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	log.Println("[user] new connection from: " + r.RemoteAddr)
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
 	case "DELETE":
@@ -508,4 +511,17 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.Write(w)
+}
+
+func noteUsersActivity(caller string) bool {
+	// check if caller exists
+	callerUser, found := getOne(UserCache, caller, models.User{})
+	if !found {
+		return false
+	}
+
+	// update user's activity timestamp
+	callerUser.LastActiveTime = time.Now()
+
+	return setOne(UserCache, caller, callerUser)
 }

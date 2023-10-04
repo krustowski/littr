@@ -13,7 +13,7 @@ import (
 	"go.savla.dev/littr/models"
 )
 
-func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
+func litterAPI(method, url string, data interface{}, caller string) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
 	var err error
@@ -29,6 +29,7 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 		payload := config.Encrypt(config.Pepper, string(jsonData))
 
 		bodyReader = bytes.NewReader([]byte(payload))
+
 		req, err = http.NewRequest(method, url, bodyReader)
 		if err != nil {
 			log.Println(err.Error())
@@ -48,7 +49,7 @@ func litterAPI(method, url string, data interface{}) (*[]byte, bool) {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	//req.Header.Set("X-API-Token", config.APIToken)
+	req.Header.Set("X-API-Caller-ID", caller)
 
 	client := http.Client{}
 
