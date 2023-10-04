@@ -57,6 +57,8 @@ ENV APP_VERSION ${APP_VERSION}
 ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
 ENV DOCKER_USER ${DOCKER_USER}
 
+RUN apk add tzdata
+
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
