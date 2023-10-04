@@ -166,7 +166,8 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		// fetch the flow, ergo post list
-		posts, count := getAll(FlowCache, models.Post{})
+		//posts, count := getAll(FlowCache, models.Post{})
+		posts, count := getMany(FlowCache, models.Post{}, "", 5, true)
 
 		resp.Message = "ok, dumping posts"
 		resp.Code = http.StatusOK
