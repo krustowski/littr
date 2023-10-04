@@ -29,6 +29,9 @@ type flowContent struct {
 
 	interactedPostKey string
 
+	pagination int
+	pageNo int
+
 	postKey     string
 	posts       map[string]models.Post
 	sortedPosts []models.Post
@@ -58,6 +61,15 @@ func (c *flowContent) onLoadStartImage(ctx app.Context, e app.Event) {
 func (c *flowContent) onLoadedDataImage(ctx app.Context, e app.Event) {
 	log.Println("media loaded")
 	c.loaderShowImage = false
+}
+
+func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
+	ctx.Async(func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.pageNo++
+			log.Println("onscroll")
+		})
+	})
 }
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
@@ -136,6 +148,10 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("star", c.handleStar)
 	ctx.Handle("delete", c.handleDelete)
+
+	c.pagination = 0
+	c.pageNo = 1
+
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
@@ -183,6 +199,9 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.loggedUser = user.Nickname
 			c.user = user
 
+			c.pagination = 10
+			c.pageNo = 1
+
 			c.posts = postsRaw.Posts
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
@@ -206,6 +225,42 @@ func (c *flowContent) Render() app.UI {
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
+
+	// pagination test
+	pagedPosts := []models.Post{}
+	end := len(sortedPosts)
+
+	start := func() int {
+		/*if end >= c.pagination {
+			return (c.pageNo - 1) * c.pagination
+		}*/
+
+		// fix this?
+		return 0
+	}()
+
+	stop := func(c *flowContent) int {
+		var quest int
+
+		if c.pagination > 0 {
+			// (c.pageNo - 1) * c.pagination + c.pagination
+			quest = c.pageNo * c.pagination
+		}
+
+		if quest > end {
+			return (end - 1)
+		}
+	
+		if quest < 0 {
+			return 0
+		}	
+	
+		return quest
+	}(c)
+
+	if end > 0 && end > 0{
+		pagedPosts = sortedPosts[start:stop]
+	}
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
@@ -235,7 +290,7 @@ func (c *flowContent) Render() app.UI {
 				// table body
 				app.TBody().Body(
 					//app.Range(c.posts).Map(func(key string) app.UI {
-					app.Range(sortedPosts).Slice(func(idx int) app.UI {
+					app.Range(pagedPosts).Slice(func(idx int) app.UI {
 						//post := c.sortedPosts[idx]
 						post := sortedPosts[idx]
 						key := post.ID
@@ -246,7 +301,7 @@ func (c *flowContent) Render() app.UI {
 						}
 
 						return app.Tr().Class().Body(
-							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
+							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).OnFocus(c.onScroll).Body(
 								app.P().Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
@@ -287,16 +342,12 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
-
-		app.Div().Class("scroller-status").Body(
-			app.Div().Class("infinite-scroll-request").Body(
-				app.If(c.loaderShow,
-					app.Div().Class("small-space"),
-					app.Div().Class("loader center large deep-orange active"),
-				),
-			),
-			app.P().Class("infinite-scroll-last").Text("you just hit the rock bottom"),
-			app.P().Class("infinite-scroll-error").Text("no content to load"),
+		app.Div().On("click", c.onScroll).Body(
+			app.Text("lmao"),
+		),
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.Div().Class("loader center large deep-orange active"),
 		),
 	)
 }
