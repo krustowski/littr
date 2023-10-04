@@ -241,7 +241,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 
 		// check the trimmed version of website string
 		if website == "" {
-			toastText = "website URL has to be filled"
+			toastText = "website URL has to be filled, or changed"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
