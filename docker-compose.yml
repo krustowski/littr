@@ -24,7 +24,6 @@ services:
         APP_FLAGS: ${APP_FLAGS}
         APP_PEPPER: ${APP_PEPPER}
         APP_VERSION: ${APP_VERSION}
-        API_TOKEN: ${API_TOKEN}
         DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 
         DOCKER_USER: ${DOCKER_USER}
         GOLANG_VERSION: ${GOLANG_VERSION}
@@ -44,10 +43,12 @@ services:
       - "traefik.http.routers.${APP_NAME}.rule=Host(${APP_URLS_TRAEFIK})"
       - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${DOCKER_INTERNAL_PORT}"
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
+    environment:
+      API_TOKEN: ${API_TOKEN}
     healthcheck:
       #test: ["CMD", "/opt/periodic-dump.sh"]
-      test: ["CMD", "wget", "--header", "'X-App-Token: ", "${API_TOKEN}", "'", "localhost:8080/api/dump", "-O", "-", "-S" ]
-      interval: 15m
+      test: ["CMD", "wget", "--header", "X-App-Token: ${API_TOKEN}", "localhost:8080/api/dump", "-O", "-", "-S" ]
+      interval: 5m
       timeout: 5s
       retries: 3
 
