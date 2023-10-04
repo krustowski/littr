@@ -62,7 +62,7 @@ RUN apk add tzdata
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY --chmod=750 data/ /opt/data/
+COPY --chown=1000:1000 --chmod=750 data/ /opt/data/
 COPY --chmod=750 data/.gitkeep /opt/pix/
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr

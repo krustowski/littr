@@ -121,7 +121,7 @@ http://localhost:8093/flow
 + implement loading of new posts
 + OAuth2
 + swagger docs
-+ test if dump dir writable (on init)
++ ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### roadmap to v0.13
 + account deletion (`settings`)
@@ -133,7 +133,7 @@ http://localhost:8093/flow
 + implement pagination for flow (on backend prolly)
 + ~~implement user's profile (real name, home page, followers) as modal~~
 + ~~mark selected fields with data labels (`data-author` etc)~~
-+ notice user's activity (`User.LastActiveTime`)
++ ~~notice user's activity (`User.LastActiveTime`)~~
 + show offline mode notification
 
 ### roadmap to v0.11
