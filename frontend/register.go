@@ -120,7 +120,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok := litterAPI("POST", "/api/users", user)
+		resp, ok := litterAPI("POST", "/api/users", user, user.Nickname)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 

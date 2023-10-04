@@ -130,7 +130,25 @@ func (c *statsContent) OnMount(ctx app.Context) {
 }
 
 func (c *statsContent) OnNav(ctx app.Context) {
+	toastText := ""
+
 	ctx.Async(func() {
+		var enUser string
+		var user models.User
+
+		ctx.LocalStorage().Get("user", &enUser)
+
+		// decode, decrypt and unmarshal the local storage string
+		if err := prepare(enUser, &user); err != nil {
+			toastText = "frontend decoding/decryption failed: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
 			Count int                    `json:"count"`
@@ -142,7 +160,7 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}{}
 
 		// fetch posts
-		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -164,7 +182,7 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}
 
 		// fetch users
-		if byteData, _ := litterAPI("GET", "/api/users", nil); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/users", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &usersRaw)
 			if err != nil {
 				log.Println(err.Error())

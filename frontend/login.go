@@ -93,7 +93,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		respRaw, ok := litterAPI("POST", "/api/auth", &models.User{
 			Nickname:   nickname,
 			Passphrase: string(passHash[:]),
-		})
+		}, nickname)
 
 		if !ok {
 			toastText = "backend error: API call failed"

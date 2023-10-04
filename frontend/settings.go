@@ -72,8 +72,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Users map[string]models.User `json:"users"`
 		}{}
 
-		//if data, ok := litterAPI("GET", "/api/users/" + c.user.Nickname, nil); ok {
-		if data, ok := litterAPI("GET", "/api/users", nil); ok {
+		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -143,7 +142,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.Passphrase = string(passHash[:])
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser); ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -203,7 +202,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.About = aboutText
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser); !ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -282,7 +281,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.Web = website
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser); !ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {

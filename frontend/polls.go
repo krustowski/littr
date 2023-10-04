@@ -53,31 +53,60 @@ func (c *pollsContent) dismissToast(ctx app.Context, e app.Event) {
 func (c *pollsContent) OnNav(ctx app.Context) {
 	// show loader
 	c.loaderShow = true
+	toastText := ""
 
 	ctx.Async(func() {
+		var enUser string
+		var user models.User
+
+		ctx.LocalStorage().Get("user", &enUser)
+
+		// decode, decrypt and unmarshal the local storage string
+		if err := prepare(enUser, &user); err != nil {
+			toastText = "frontend decoding/decryption failed: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		pollsRaw := struct {
 			Polls map[string]models.Poll `json:"polls"`
 		}{}
 
-		if byteData, _ := litterAPI("GET", "/api/polls", nil); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = err.Error()
+					c.toastShow = (toastText != "")
+				})
 				return
 			}
 		} else {
-			log.Println("cannot fetch polls list")
+			toastText = "cannot fetch polls list"
+			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
 			return
 		}
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
+			c.loggedUser = user.Nickname
+			c.user = user
+
 			c.polls = pollsRaw.Polls
-			//c.sortedPosts = posts
 
 			c.pollsButtonDisabled = false
 			c.loaderShow = false
-			log.Println("dispatch ends")
 		})
 	})
 	return
@@ -86,7 +115,9 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 func (c *pollsContent) onClickPollOption(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	option := ctx.JSSrc().Get("name").String()
+
 	ctx.NewActionWithValue("vote", []string{key, option})
+
 	c.pollsButtonDisabled = true
 }
 
@@ -133,7 +164,7 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		//var toastText string
 
-		if _, ok := litterAPI("PUT", "/api/polls", poll); !ok {
+		if _, ok := litterAPI("PUT", "/api/polls", poll, c.user.Nickname); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 
@@ -150,6 +181,7 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 func (c *pollsContent) onClickDelete(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("delete", key)
+
 	c.pollsButtonDisabled = true
 }
 
@@ -164,7 +196,7 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 
 		interactedPoll := c.polls[key]
 
-		if _, ok := litterAPI("DELETE", "/api/polls", interactedPoll); !ok {
+		if _, ok := litterAPI("DELETE", "/api/polls", interactedPoll, c.user.Nickname); !ok {
 			toastText = "backend error: cannot delete a poll"
 		}
 
@@ -179,26 +211,8 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 }
 
 func (c *pollsContent) OnMount(ctx app.Context) {
-	var enUser string
-	var user models.User
-	var toastText string = ""
-
 	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
-
-	ctx.LocalStorage().Get("user", &enUser)
-	// decode, decrypt and unmarshal the local storage string
-	if err := prepare(enUser, &user); err != nil {
-		toastText = "frontend decoding/decryption failed: " + err.Error()
-	}
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.user = user
-		c.loggedUser = user.Nickname
-		c.toastText = toastText
-		c.toastShow = (toastText != "")
-	})
-	return
 }
 
 // contains checks if a string is present in a slice

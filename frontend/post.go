@@ -157,7 +157,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		// add new post/poll to backend struct
-		if _, ok := litterAPI("POST", path, payload); !ok {
+		if _, ok := litterAPI("POST", path, payload, user.Nickname); !ok {
 			toastText = "backend error: cannot add new content"
 			log.Println("cannot post new content to API!")
 		} else {

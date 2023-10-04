@@ -76,7 +76,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			Users map[string]models.User `json:"users"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil); ok {
+		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -152,7 +152,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		updatedData := c.user
 		updatedData.FlowList = flowList
 
-		respRaw, ok := litterAPI("PUT", "/api/users", updatedData)
+		respRaw, ok := litterAPI("PUT", "/api/users", updatedData, c.user.Nickname)
 		if !ok {
 			toastText = "generic backend error"
 			return

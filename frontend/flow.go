@@ -79,7 +79,7 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 		key := c.postKey
 		interactedPost := c.posts[key]
 
-		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost); !ok {
+		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost, c.user.Nickname); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
 
@@ -121,7 +121,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		//interactedPost.ReactionCount++
 
 		// add new post to backend struct
-		if _, ok := litterAPI("PUT", "/api/flow", interactedPost); !ok {
+		if _, ok := litterAPI("PUT", "/api/flow", interactedPost, c.user.Nickname); !ok {
 			toastText = "backend error: cannot rate a post"
 		}
 
@@ -134,42 +134,39 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 }
 
 func (c *flowContent) OnMount(ctx app.Context) {
-	var enUser string
-	var user models.User
-	var toastText string = ""
-
 	ctx.Handle("star", c.handleStar)
 	ctx.Handle("delete", c.handleDelete)
-
-	ctx.LocalStorage().Get("user", &enUser)
-	// decode, decrypt and unmarshal the local storage string
-	if err := prepare(enUser, &user); err != nil {
-		toastText = "frontend decoding/decryption failed: " + err.Error()
-	}
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.user = user
-		c.loggedUser = user.Nickname
-		c.toastText = toastText
-		c.toastShow = (toastText != "")
-	})
-	return
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
-	// show loader
 	c.loaderShow = true
 	c.loaderShowImage = true
 
 	toastText := ""
 
 	ctx.Async(func() {
+		var enUser string
+		var user models.User
+
+		ctx.LocalStorage().Get("user", &enUser)
+
+		// decode, decrypt and unmarshal the local storage string
+		if err := prepare(enUser, &user); err != nil {
+			toastText = "frontend decoding/decryption failed: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		postsRaw := struct {
 			Posts map[string]models.Post `json:"posts"`
 		}{}
 
 		// call the flow API endpoint to fetch all posts
-		if byteData, _ := litterAPI("GET", "/api/flow", nil); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -183,14 +180,15 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
+			c.loggedUser = user.Nickname
+			c.user = user
+
 			c.posts = postsRaw.Posts
-			//c.sortedPosts = posts
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 
 			c.loaderShow = false
 			c.loaderShowImage = false
-			log.Println("dispatch ends")
 		})
 		return
 	})
@@ -208,11 +206,6 @@ func (c *flowContent) Render() app.UI {
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
-
-	//infiniteScrollOptionsRaw := `{"path": ".pagination__next", "append": ".post", "history": false, "status": ".scroller-status"}`
-
-	//var infiniteScrollOptions string
-	//json.Unmarshal([]byte(infiniteScrollOptionsRaw), &infiniteScrollOptions)
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
