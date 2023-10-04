@@ -133,6 +133,7 @@ http://localhost:8093/flow
 + implement pagination for flow (on backend prolly)
 + ~~implement user's profile (real name, home page, followers) as modal~~
 + ~~mark selected fields with data labels (`data-author` etc)~~
++ notice user's activity (`User.LastActiveTime`)
 + show offline mode notification
 
 ### roadmap to v0.11
