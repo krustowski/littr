@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,12 +23,18 @@ type UsersPage struct {
 type usersContent struct {
 	app.Compo
 
+	eventListener func()
+
 	users map[string]models.User `json:"users"`
 
 	user        models.User
 	userInModal models.User
 
 	loaderShow bool
+	
+	paginationEnd bool
+	pagination int
+	pageNo int
 
 	toastShow bool
 	toastText string
@@ -112,6 +119,9 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			c.user = updatedUser
 			c.users = usersPre.Users
 
+			c.pagination = 20
+			c.pageNo = 1
+
 			c.loaderShow = false
 		})
 	})
@@ -121,7 +131,37 @@ func (c *usersContent) OnMount(ctx app.Context) {
 	ctx.Handle("toggle", c.handleToggle)
 	ctx.Handle("search", c.handleSearch)
 	ctx.Handle("preview", c.handleUserPreview)
+	ctx.Handle("scroll", c.handleScroll)
+
+	c.paginationEnd = false
+	c.pagination = 0
+	c.pageNo = 1
+
+	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 }
+
+func (c *usersContent) onScroll(ctx app.Context, e app.Event) {
+       ctx.NewAction("scroll")
+}
+
+func (c *usersContent) handleScroll(ctx app.Context, a app.Action) {
+	ctx.Async(func() {
+		elem := app.Window().GetElementByID("page-end-anchor")
+		boundary := elem.JSValue().Call("getBoundingClientRect")
+		bottom := boundary.Get("bottom").Int()
+
+		_, height := app.Window().Size()
+
+		if bottom-height < 0 && !c.paginationEnd {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.pageNo++
+				log.Println("new content page request fired")
+			})
+			return
+		}
+	})
+}
+
 
 func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 	key, ok := a.Value.(string)
@@ -294,8 +334,28 @@ func (c *usersContent) getGravatarURL() string {
 }
 
 func (c *usersContent) Render() app.UI {
-	users := c.users
 	userGravatarURL := ""
+
+	keys := []string{}
+
+	// prepare the keys array
+	for key, _ := range c.users {
+		keys = append(keys, key)
+	}
+
+	// sort them keys
+	sort.Strings(keys)
+
+	// prepare the sorted users array
+	sortedUsers := func() []models.User {
+		var sorted []models.User
+
+		for _, key := range keys {
+			sorted = append(sorted, c.users[key])
+		}
+
+		return sorted
+	}()
 
 	var userInModalInfo map[string]string = nil
 
@@ -310,6 +370,39 @@ func (c *usersContent) Render() app.UI {
 
 		//userGravatarURL := getGravatar(c.userInModal.Email)
 		userGravatarURL = c.getGravatarURL()
+	}
+
+	// prepare posts according to the actual pagination and pageNo
+	pagedUsers := []models.User{}
+
+	end := len(sortedUsers)
+	start := 0
+
+	stop := func(c *usersContent) int {
+		var pos int
+
+		if c.pagination > 0 {
+			// (c.pageNo - 1) * c.pagination + c.pagination
+			pos = c.pageNo * c.pagination
+		}
+
+		if pos > end {
+			// kill the eventListener (observers scrolling)
+			c.eventListener()
+			c.paginationEnd = true
+
+			return (end - 1)
+		}
+
+		if pos < 0 {
+			return 0
+		}
+
+		return pos
+	}(c)
+
+	if end > 0 && stop > 0 {
+		pagedUsers = sortedUsers[start:stop]
 	}
 
 	return app.Main().Class("responsive").Body(
@@ -393,8 +486,8 @@ func (c *usersContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(users).Map(func(key string) app.UI {
-					user := users[key]
+				app.Range(pagedUsers).Slice(func(idx int) app.UI {
+					user := pagedUsers[idx]
 
 					var inFlow bool = false
 
@@ -406,7 +499,7 @@ func (c *usersContent) Render() app.UI {
 					}
 
 					if !user.Searched || user.Nickname == "system" {
-						return app.Text("")
+						return nil
 					}
 
 					return app.Tr().Body(
@@ -453,7 +546,7 @@ func (c *usersContent) Render() app.UI {
 				}),
 			),
 		),
-
+		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
 			app.Div().Class("loader center large deep-orange active"),
