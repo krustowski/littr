@@ -108,6 +108,7 @@ http://localhost:8093/flow
 ```
 
 ### nice-to-have(s)
++ account deletion (`settings` page)
 + automatic links for known TLDs
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
@@ -116,21 +117,25 @@ http://localhost:8093/flow
 + custom colour theme per user
 + deep code refactoring
 + fix NaN% when loading
++ fix update indicator checker (runs only on once after reload)
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement custom logger goroutine
-+ implement infinite scroll (for `flow` only this time) -- WIP
 + implement loading of new posts
++ implement sessions (SessionsCache)
 + OAuth2
++ replies to any post in flow
 + send verification e-mail
 + show offline mode notification
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
+### roadmap to v0.14
++ ensure infinite scroll works properly with flow filtering
++ include infinite scroll to other pages
+
 ### roadmap to v0.13
-+ account deletion (`settings`)
-+ implement sessions (SessionsCache)
-+ replies to any post in flow
-+ implement pagination for flow (on backend prolly)
++ ~~implement infinite scroll (for `flow` only this time)~~
++ ~~implement pagination for flow (on backend prolly)~~
 
 ### roadmap to v0.12
 + ~~implement user's profile (real name, home page, followers) as modal~~

@@ -293,7 +293,7 @@ func (c *statsContent) Render() app.UI {
 			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
 		),
 
-		app.Table().Class("border left-align").ID("table-stats").Body(
+		app.Table().Class("border left-align").ID("table-stats-flow").Body(
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
@@ -363,7 +363,7 @@ func (c *statsContent) Render() app.UI {
 		app.P().Text("pop in to see how much this instance lit nocap"),
 		app.Div().Class("space"),
 
-		app.Table().Class("border left-align").Body(
+		app.Table().Class("border left-align").ID("table-stats-system").Body(
 			// table header
 			app.THead().Body(
 				app.Tr().Body(

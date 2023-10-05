@@ -83,6 +83,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 				c.pageNo++
 				log.Println("new content fire")
 			})
+			return
 		}
 	})
 }
@@ -282,7 +283,7 @@ func (c *flowContent) Render() app.UI {
 		return quest
 	}(c)
 
-	if end > 0 && end > 0 {
+	if end > 0 && stop > 0 {
 		pagedPosts = sortedPosts[start:stop]
 	}
 
@@ -336,7 +337,7 @@ func (c *flowContent) Render() app.UI {
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
 										),
-										app.Img().Class("lazy no-padding priamry absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
+										app.Img().Class("no-padding absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
 									),
 								).Else(
 									app.Article().Class("post").Style("max-width", "100%").Body(
