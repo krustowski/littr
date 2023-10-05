@@ -32,8 +32,8 @@ type flowContent struct {
 	interactedPostKey string
 
 	paginationEnd bool
-	pagination int
-	pageNo     int
+	pagination    int
+	pageNo        int
 
 	postKey     string
 	posts       map[string]models.Post
@@ -78,10 +78,10 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 		_, height := app.Window().Size()
 
-		if bottom - height < 0 && !c.paginationEnd {
+		if bottom-height < 0 && !c.paginationEnd {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.pageNo++
-				log.Println("new content fire")
+				log.Println("new content page request fired")
 			})
 			return
 		}
@@ -175,7 +175,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 
 func (c *flowContent) OnDismount() {
 	// https://go-app.dev/reference#BrowserWindow
-	c.eventListener()
+	//c.eventListener()
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
@@ -242,6 +242,11 @@ func (c *flowContent) Render() app.UI {
 
 	// fetch posts and put them in an array
 	for _, sortedPost := range c.posts {
+		// do not append a post that is not meant to be shown
+		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" {
+			continue
+		}
+
 		sortedPosts = append(sortedPosts, sortedPost)
 	}
 
@@ -250,37 +255,33 @@ func (c *flowContent) Render() app.UI {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
 
-	// pagination test
+	// prepare posts according to the actual pagination and pageNo
 	pagedPosts := []models.Post{}
+
 	end := len(sortedPosts)
-
-	start := func() int {
-		/*if end >= c.pagination {
-			return (c.pageNo - 1) * c.pagination
-		}*/
-
-		// fix this?
-		return 0
-	}()
+	start := 0
 
 	stop := func(c *flowContent) int {
-		var quest int
+		var pos int
 
 		if c.pagination > 0 {
 			// (c.pageNo - 1) * c.pagination + c.pagination
-			quest = c.pageNo * c.pagination
+			pos = c.pageNo * c.pagination
 		}
 
-		if quest > end {
+		if pos > end {
+			// kill the eventListener (observers scrolling)
+			c.eventListener()
 			c.paginationEnd = true
+
 			return (end - 1)
 		}
 
-		if quest < 0 {
+		if pos < 0 {
 			return 0
 		}
 
-		return quest
+		return pos
 	}(c)
 
 	if end > 0 && stop > 0 {
@@ -303,68 +304,66 @@ func (c *flowContent) Render() app.UI {
 		),
 
 		// flow posts/articles
-		app.Div().Class("container").Body( //Attr("data-infinite-scroll", infiniteScrollOptionsRaw).Body(
-			app.Table().Class("border left-align").ID("table-flow").Body(
-				// table header
-				app.THead().Body(
-					app.Tr().Body(
-						app.Th().Class("align-left").Text("nickname, content, timestamp"),
-					),
+		app.Table().Class("border left-align").ID("table-flow").Body(
+			// table header
+			app.THead().Body(
+				app.Tr().Body(
+					app.Th().Class("align-left").Text("nickname, content, timestamp"),
 				),
+			),
 
-				// table body
-				app.TBody().Body(
-					//app.Range(c.posts).Map(func(key string) app.UI {
-					app.Range(pagedPosts).Slice(func(idx int) app.UI {
-						//post := c.sortedPosts[idx]
-						post := sortedPosts[idx]
-						key := post.ID
+			// table body
+			app.TBody().Body(
+				//app.Range(c.posts).Map(func(key string) app.UI {
+				app.Range(pagedPosts).Slice(func(idx int) app.UI {
+					//post := c.sortedPosts[idx]
+					post := sortedPosts[idx]
+					key := post.ID
 
-						// only show posts of users in one's flowList
-						if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
-							return nil
-						}
+					// only show posts of users in one's flowList
+					if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
+						return nil
+					}
 
-						return app.Tr().Class().Body(
-							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-								app.P().Body(
-									app.B().Text(post.Nickname).Class("deep-orange-text"),
+					return app.Tr().Class().Body(
+						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+							app.P().Body(
+								app.B().Text(post.Nickname).Class("deep-orange-text"),
+							),
+
+							app.If(post.Type == "fig",
+								app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
+									app.If(c.loaderShowImage,
+										app.Div().Class("small-space"),
+										app.Div().Class("loader center large deep-orange active"),
+									),
+									app.Img().Class("no-padding absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
 								),
+							).Else(
+								app.Article().Class("post").Style("max-width", "100%").Body(
+									app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+								),
+							),
 
-								app.If(post.Type == "fig",
-									app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
-										app.If(c.loaderShowImage,
-											app.Div().Class("small-space"),
-											app.Div().Class("loader center large deep-orange active"),
-										),
-										app.Img().Class("no-padding absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
+							app.Div().Class("row").Body(
+								app.Div().Class("max").Body(
+									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
+								),
+								app.If(c.user.Nickname == post.Nickname,
+									app.B().Text(post.ReactionCount),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
+										app.I().Text("delete"),
 									),
 								).Else(
-									app.Article().Class("post").Style("max-width", "100%").Body(
-										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
-									),
-								),
-
-								app.Div().Class("row").Body(
-									app.Div().Class("max").Body(
-										app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
-									),
-									app.If(c.user.Nickname == post.Nickname,
-										app.B().Text(post.ReactionCount),
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
-											app.I().Text("delete"),
-										),
-									).Else(
-										app.B().Text(post.ReactionCount),
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
-											app.I().Text("star"),
-										),
+									app.B().Text(post.ReactionCount),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
+										app.I().Text("star"),
 									),
 								),
 							),
-						)
-					}),
-				),
+						),
+					)
+				}),
 			),
 		),
 		app.Div().ID("page-end-anchor"),
