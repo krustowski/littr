@@ -27,18 +27,10 @@ const (
 )
 
 func (h *header) OnAppUpdate(ctx app.Context) {
-	// preserve update button
-	if h.updateAvailable {
-		return
-	}
-
 	// Reports that an app update is available.
 	h.updateAvailable = ctx.AppUpdateAvailable()
-}
 
-func (h *header) onUpdateClick(ctx app.Context, e app.Event) {
-	// Reloads the page to display the modifications.
-	h.updateAvailable = false
+	// force reload the app on update
 	ctx.Reload()
 }
 
@@ -87,7 +79,7 @@ func (h *header) onClickReload(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickLogout(ctx app.Context, e app.Event) {
-	ctx.LocalStorage().Set("userLogged", false)
+	//ctx.LocalStorage().Set("userLogged", false)
 	ctx.LocalStorage().Set("user", "")
 	h.userLogged = false
 
@@ -106,7 +98,7 @@ func (h *header) Render() app.UI {
 		modalLogoutActiveClass = " active"
 	}
 
-	return app.Nav().ID("nav").Class("top fixed-top center-align deep-orange5").
+	return app.Nav().ID("nav-top").Class("top fixed-top center-align deep-orange").
 		//Style("background-color", navbarColor).
 		Body(
 			app.A().Href("/settings").Text("settings").Class("max").Body(
@@ -159,18 +151,6 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			// show update button on update
-			app.If(h.updateAvailable,
-				app.A().Text("update").OnClick(h.onUpdateClick).Body(
-					app.I().Class("large").Body(
-						app.Text("update"),
-					),
-					app.Span().Body(
-						app.Text("update"),
-					),
-				),
-			),
-
 			app.If(h.userLogged,
 				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Body(
 					app.I().Class("large").Body(
@@ -203,7 +183,7 @@ func (h *header) Render() app.UI {
 
 // bottom navbar
 func (f *footer) Render() app.UI {
-	return app.Nav().ID("nav").Class("bottom fixed-bottom center-align deep-orange5").
+	return app.Nav().ID("nav-bottom").Class("bottom fixed-bottom center-align deep-orange8").
 		//Style("background-color", navbarColor).
 		Body(
 			app.A().Href("/stats").Text("stats").Class("max").Body(
