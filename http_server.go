@@ -10,7 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"go.savla.dev/littr/backend"
 	"go.savla.dev/littr/config"
@@ -109,7 +111,7 @@ func initServer() {
 			"https://cdn.gscloud.cz/js/jquery.min.js",
 			"https://cdn.gscloud.cz/js/beer.nomodule.min.js",
 			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
-			"https://cdn.gscloud.cz/js/litter.js",
+			"https://cdn.gscloud.cz/js/litter.js?nonce=" + strconv.FormatInt(time.Now().UnixNano(), 10),
 		},
 	})
 

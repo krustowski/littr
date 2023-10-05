@@ -123,14 +123,17 @@ http://localhost:8093/flow
 + implement loading of new posts
 + implement sessions (SessionsCache)
 + OAuth2
-+ replies to any post in flow
 + send verification e-mail
 + show offline mode notification
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
+### roadmap to v0.15
++ replies to any post in flow
+
 ### roadmap to v0.14
-+ ensure infinite scroll works properly with flow filtering
++ ~~ensure infinite scroll works properly with flow filtering~~
++ ~~disable update button, autoreload on update instead~~
 + include infinite scroll to other pages
 
 ### roadmap to v0.13
