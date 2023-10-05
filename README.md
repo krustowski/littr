@@ -129,12 +129,13 @@ http://localhost:8093/flow
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### roadmap to v0.15
++ implement inf. scroll to stats (complex)
 + replies to any post in flow
 
 ### roadmap to v0.14
 + ~~ensure infinite scroll works properly with flow filtering~~
 + ~~disable update button, autoreload on update instead~~
-+ include infinite scroll to other pages
++ ~~include infinite scroll to `polls` and `users`~~
 
 ### roadmap to v0.13
 + ~~implement infinite scroll (for `flow` only this time)~~

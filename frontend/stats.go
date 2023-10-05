@@ -391,7 +391,7 @@ func (c *statsContent) Render() app.UI {
 				}),
 			),
 		),
-
+		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
 			app.Div().Class("loader center large deep-orange active"),
