@@ -57,17 +57,8 @@ func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastShow = false
 }
 
-func (c *flowContent) onLoadStartImage(ctx app.Context, e app.Event) {
-	log.Println("media started loading...")
-	c.loaderShowImage = true
-}
-func (c *flowContent) onLoadedDataImage(ctx app.Context, e app.Event) {
-	log.Println("media loaded")
-	c.loaderShowImage = false
-}
-
 func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
-	ctx.NewAction("scroll")
+       ctx.NewAction("scroll")
 }
 
 func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
@@ -332,12 +323,12 @@ func (c *flowContent) Render() app.UI {
 							),
 
 							app.If(post.Type == "fig",
-								app.Article().Class("medium no-padding transparent").OnScroll(c.onLoadStartImage).Body(
+								app.Article().Class("medium no-padding transparent").Body(
 									app.If(c.loaderShowImage,
 										app.Div().Class("small-space"),
 										app.Div().Class("loader center large deep-orange active"),
 									),
-									app.Img().Class("no-padding absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").OnLoadStart(c.onLoadStartImage).OnLoadedData(c.onLoadedDataImage).Attr("loading", "lazy").On("onloadstart", c.onLoadStartImage).OnScroll(c.onLoadStartImage),
+									app.Img().Class("no-padding absolute center middle").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 								),
 							).Else(
 								app.Article().Class("post").Style("max-width", "100%").Body(

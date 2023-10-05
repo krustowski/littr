@@ -32,6 +32,8 @@ func (p *PollsPage) Render() app.UI {
 type pollsContent struct {
 	app.Compo
 
+	eventListener func()
+
 	loggedUser string
 	user       models.User
 
@@ -39,6 +41,10 @@ type pollsContent struct {
 
 	toastShow bool
 	toastText string
+
+	paginationEnd bool
+	pagination int
+	pageNo int
 
 	polls map[string]models.Poll
 
@@ -103,6 +109,9 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 			c.loggedUser = user.Nickname
 			c.user = user
 
+			c.pagination = 10
+			c.pageNo = 1
+
 			c.polls = pollsRaw.Polls
 
 			c.pollsButtonDisabled = false
@@ -110,6 +119,28 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 		})
 	})
 	return
+}
+
+func (c *pollsContent) onScroll(ctx app.Context, e app.Event) {
+       ctx.NewAction("scroll")
+}
+
+func (c *pollsContent) handleScroll(ctx app.Context, a app.Action) {
+	ctx.Async(func() {
+		elem := app.Window().GetElementByID("page-end-anchor")
+		boundary := elem.JSValue().Call("getBoundingClientRect")
+		bottom := boundary.Get("bottom").Int()
+
+		_, height := app.Window().Size()
+
+		if bottom-height < 0 && !c.paginationEnd {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.pageNo++
+				log.Println("new content page request fired")
+			})
+			return
+		}
+	})
 }
 
 func (c *pollsContent) onClickPollOption(ctx app.Context, e app.Event) {
@@ -213,6 +244,13 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 func (c *pollsContent) OnMount(ctx app.Context) {
 	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("scroll", c.handleScroll)
+
+	c.paginationEnd = false
+	c.pagination = 0
+	c.pageNo = 1
+
+	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 }
 
 // contains checks if a string is present in a slice
@@ -238,6 +276,39 @@ func (c *pollsContent) Render() app.UI {
 		return sortedPolls[i].Timestamp.After(sortedPolls[j].Timestamp)
 	})
 
+	// prepare posts according to the actual pagination and pageNo
+	pagedPolls := []models.Poll{}
+
+	end := len(sortedPolls)
+	start := 0
+
+	stop := func(c *pollsContent) int {
+		var pos int
+
+		if c.pagination > 0 {
+			// (c.pageNo - 1) * c.pagination + c.pagination
+			pos = c.pageNo * c.pagination
+		}
+
+		if pos > end {
+			// kill the eventListener (observers scrolling)
+			c.eventListener()
+			c.paginationEnd = true
+
+			return (end - 1)
+		}
+
+		if pos < 0 {
+			return 0
+		}
+
+		return pos
+	}(c)
+
+	if end > 0 && stop > 0 {
+		pagedPolls = sortedPolls[start:stop]
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr polls").Style("padding-top", config.HeaderTopPadding),
 		app.Div().Class("space"),
@@ -259,8 +330,8 @@ func (c *pollsContent) Render() app.UI {
 				),
 			),
 			app.TBody().Body(
-				app.Range(sortedPolls).Slice(func(idx int) app.UI {
-					poll := sortedPolls[idx]
+				app.Range(pagedPolls).Slice(func(idx int) app.UI {
+					poll := pagedPolls[idx]
 					key := poll.ID
 
 					userVoted := contains(poll.Voted, c.user.Nickname)
@@ -363,6 +434,7 @@ func (c *pollsContent) Render() app.UI {
 				}),
 			),
 		),
+		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
 			app.Div().Class("loader center large deep-orange active"),
