@@ -106,7 +106,6 @@ func initServer() {
 			"https://cdn.gscloud.cz/css/beer.min.css",
 		},
 		Scripts: []string{
-			"https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js",
 			"https://cdn.gscloud.cz/js/jquery.min.js",
 			"https://cdn.gscloud.cz/js/beer.nomodule.min.js",
 			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
