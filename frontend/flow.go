@@ -29,6 +29,11 @@ type flowContent struct {
 	toastShow bool
 	toastText string
 
+	buttonDisabled     bool
+	postButtonDisabled bool
+	modalReplyActive   bool
+	replyPostContent   string
+
 	interactedPostKey string
 
 	paginationEnd bool
@@ -53,12 +58,42 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
-func (c *flowContent) dismissToast(ctx app.Context, e app.Event) {
+func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.toastShow = false
+	c.modalReplyActive = false
+	c.buttonDisabled = false
+}
+
+func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
+	c.interactedPostKey = ctx.JSSrc().Get("id").String()
+
+	c.modalReplyActive = true
+	c.buttonDisabled = true
+}
+
+func (c *flowContent) onClickPostReply(ctx app.Context, e app.Event) {
+	c.interactedPostKey = ctx.JSSrc().Get("id").String()
+
+	c.modalReplyActive = true
+	c.postButtonDisabled = true
+	c.buttonDisabled = true
+
+	ctx.NewAction("reply")
+}
+
+func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
+	ctx.Async(func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			//
+			c.modalReplyActive = false
+			c.postButtonDisabled = false
+			c.buttonDisabled = false
+		})
+	})
 }
 
 func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
-       ctx.NewAction("scroll")
+	ctx.NewAction("scroll")
 }
 
 func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
@@ -154,6 +189,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 
 func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
 
@@ -285,11 +321,31 @@ func (c *flowContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.A().OnClick(c.dismissToast).Body(
+		app.A().OnClick(c.onClickDismiss).Body(
 			app.If(c.toastText != "",
 				app.Div().Class("snackbar red10 white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
+				),
+			),
+		),
+
+		// reply sketchy modal
+		app.If(c.modalReplyActive,
+			app.Dialog().Class("grey9 white-text active").Body(
+
+				app.Article().Class("post").Style("max-width", "100%").Body(
+					app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+				),
+
+				app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
+					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true),
+					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active"),
+				),
+
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text bold").Text("cancel").OnClick(c.onClickDismiss).Disabled(c.postButtonDisabled),
+					app.Button().ID("button-post").Class("border deep-orange7 white-text bold").Text("reply").OnClick(c.onClickPostReply).Disabled(c.postButtonDisabled),
 				),
 			),
 		),
@@ -340,14 +396,19 @@ func (c *flowContent) Render() app.UI {
 								app.Div().Class("max").Body(
 									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
 								),
+								app.If(post.Nickname != "system",
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
+										app.I().Text("reply"),
+									),
+								),
 								app.If(c.user.Nickname == post.Nickname,
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
 									app.B().Text(post.ReactionCount),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
 										app.I().Text("star"),
 									),
 								),
