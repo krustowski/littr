@@ -130,7 +130,7 @@ http://localhost:8093/flow
 
 ### roadmap to v0.15
 + implement inf. scroll to stats (complex)
-+ replies to any post in flow
++ ~~replies to any post in flow~~
 
 ### roadmap to v0.14
 + ~~ensure infinite scroll works properly with flow filtering~~
