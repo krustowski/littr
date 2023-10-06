@@ -391,7 +391,9 @@ func (c *usersContent) Render() app.UI {
 			c.eventListener()
 			c.paginationEnd = true
 
-			return (end - 1)
+			log.Println("cya")
+
+			return (end)
 		}
 
 		if pos < 0 {

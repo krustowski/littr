@@ -265,7 +265,7 @@ func (c *flowContent) Render() app.UI {
 			c.eventListener()
 			c.paginationEnd = true
 
-			return (end - 1)
+			return (end)
 		}
 
 		if pos < 0 {
