@@ -61,6 +61,8 @@ info:
 	@echo -e "${YELLOW} make stop    --- stop and purge project (only docker containers!) ${RESET}"
 	@echo -e ""
 
+.PHONY: dev
+dev: fmt build run logs
 
 .PHONY: fmt
 fmt: version
