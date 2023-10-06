@@ -31,10 +31,10 @@ type usersContent struct {
 	userInModal models.User
 
 	loaderShow bool
-	
+
 	paginationEnd bool
-	pagination int
-	pageNo int
+	pagination    int
+	pageNo        int
 
 	toastShow bool
 	toastText string
@@ -141,7 +141,7 @@ func (c *usersContent) OnMount(ctx app.Context) {
 }
 
 func (c *usersContent) onScroll(ctx app.Context, e app.Event) {
-       ctx.NewAction("scroll")
+	ctx.NewAction("scroll")
 }
 
 func (c *usersContent) handleScroll(ctx app.Context, a app.Action) {
@@ -161,7 +161,6 @@ func (c *usersContent) handleScroll(ctx app.Context, a app.Action) {
 		}
 	})
 }
-
 
 func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 	key, ok := a.Value.(string)
@@ -339,7 +338,7 @@ func (c *usersContent) Render() app.UI {
 	keys := []string{}
 
 	// prepare the keys array
-	for key, _ := range c.users {
+	for key := range c.users {
 		keys = append(keys, key)
 	}
 
@@ -390,8 +389,6 @@ func (c *usersContent) Render() app.UI {
 			// kill the eventListener (observers scrolling)
 			c.eventListener()
 			c.paginationEnd = true
-
-			log.Println("cya")
 
 			return (end)
 		}
@@ -529,7 +526,7 @@ func (c *usersContent) Render() app.UI {
 						).ElseIf(inFlow,
 							app.Td().Style("max-width", "50%").Body(
 								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
-								app.Button().Class("border responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
+								app.Button().Class("border responsive black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
 									//app.I().Text("done"),
 									app.Text("remove from flow"),
 								),
