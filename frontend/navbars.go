@@ -86,7 +86,6 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.Navigate("/logout")
 }
 
-// top navbar
 func (h *header) Render() app.UI {
 	modalInfoActiveClass := ""
 	if h.modalInfoShow {
@@ -98,6 +97,7 @@ func (h *header) Render() app.UI {
 		modalLogoutActiveClass = " active"
 	}
 
+	// top navbar
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align deep-orange").
 		//Style("background-color", navbarColor).
 		Body(

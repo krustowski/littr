@@ -43,8 +43,8 @@ type pollsContent struct {
 	toastText string
 
 	paginationEnd bool
-	pagination int
-	pageNo int
+	pagination    int
+	pageNo        int
 
 	polls map[string]models.Poll
 
@@ -122,7 +122,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 }
 
 func (c *pollsContent) onScroll(ctx app.Context, e app.Event) {
-       ctx.NewAction("scroll")
+	ctx.NewAction("scroll")
 }
 
 func (c *pollsContent) handleScroll(ctx app.Context, a app.Action) {
