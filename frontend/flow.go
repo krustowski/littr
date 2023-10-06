@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"sort"
+	"strconv"
+	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -29,10 +32,10 @@ type flowContent struct {
 	toastShow bool
 	toastText string
 
-	buttonDisabled     bool
-	postButtonDisabled bool
-	modalReplyActive   bool
-	replyPostContent   string
+	buttonDisabled      bool
+	postButtonsDisabled bool
+	modalReplyActive    bool
+	replyPostContent    string
 
 	interactedPostKey string
 
@@ -72,10 +75,10 @@ func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onClickPostReply(ctx app.Context, e app.Event) {
-	c.interactedPostKey = ctx.JSSrc().Get("id").String()
+	//c.interactedPostKey = ctx.JSSrc().Get("id").String()
 
 	c.modalReplyActive = true
-	c.postButtonDisabled = true
+	c.postButtonsDisabled = true
 	c.buttonDisabled = true
 
 	ctx.NewAction("reply")
@@ -83,10 +86,61 @@ func (c *flowContent) onClickPostReply(ctx app.Context, e app.Event) {
 
 func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
+		toastText := ""
+
+		// TODO: allow figs in replies
+		// check if the contents is a valid URL, then change the type to "fig"
+		postType := "post"
+
+		// trim the spaces on the extremites
+		replyPost := strings.TrimSpace(c.replyPostContent)
+
+		if replyPost == "" {
+			toastText = "no valid reply entered"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		newPostID := time.Now()
+		stringID := strconv.FormatInt(newPostID.UnixNano(), 10)
+
+		path := "/api/flow"
+
+		// TODO: the Post data model has to be changed
+		// migrate Post.ReplyID (int) to Post.ReplyID (string)
+		// ReplyID is to be string key to easily refer to other post
+		payload := models.Post{
+			ID:        stringID,
+			Nickname:  c.user.Nickname,
+			Type:      postType,
+			Content:   replyPost,
+			Timestamp: newPostID,
+			//ReplyTo: replyID, <--- is type int
+			ReplyToID: c.interactedPostKey,
+		}
+
+		// add new post/poll to backend struct
+		if _, ok := litterAPI("POST", path, payload, c.user.Nickname); !ok {
+			toastText = "backend error: cannot add new content"
+			log.Println("cannot post new content (reply) to API!")
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		ctx.Dispatch(func(ctx app.Context) {
-			//
+			// add new post to post list on frontend side to render
+			c.posts[stringID] = payload
+
 			c.modalReplyActive = false
-			c.postButtonDisabled = false
+			c.postButtonsDisabled = false
 			c.buttonDisabled = false
 		})
 	})
@@ -330,9 +384,10 @@ func (c *flowContent) Render() app.UI {
 			),
 		),
 
-		// reply sketchy modal
+		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().Class("grey9 white-text active").Body(
+			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
+				app.Div().Class("space"),
 
 				app.Article().Class("post").Style("max-width", "100%").Body(
 					app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
@@ -344,9 +399,10 @@ func (c *flowContent) Render() app.UI {
 				),
 
 				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text bold").Text("cancel").OnClick(c.onClickDismiss).Disabled(c.postButtonDisabled),
-					app.Button().ID("button-post").Class("border deep-orange7 white-text bold").Text("reply").OnClick(c.onClickPostReply).Disabled(c.postButtonDisabled),
+					app.Button().Class("border deep-orange7 white-text bold").Text("cancel").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
+					app.Button().ID("").Class("border deep-orange7 white-text bold").Text("reply").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled),
 				),
+				app.Div().Class("space"),
 			),
 		),
 
@@ -366,6 +422,16 @@ func (c *flowContent) Render() app.UI {
 					//post := c.sortedPosts[idx]
 					post := sortedPosts[idx]
 					key := post.ID
+
+					previousContent := ""
+
+					if post.ReplyToID != "" {
+						if previous, found := c.posts[post.ReplyToID]; found {
+							previousContent = previous.Nickname + " posted: " + previous.Content
+						} else {
+							previousContent = "the post was deleted bye"
+						}
+					}
 
 					// only show posts of users in one's flowList
 					if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
@@ -387,6 +453,11 @@ func (c *flowContent) Render() app.UI {
 									app.Img().Class("no-padding absolute center middle lazy").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 								),
 							).Else(
+								app.If(post.ReplyToID != "",
+									app.Article().Class("post tertiary").Style("max-width", "100%").Body(
+										app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+									),
+								),
 								app.Article().Class("post").Style("max-width", "100%").Body(
 									app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
 								),
