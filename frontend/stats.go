@@ -361,6 +361,9 @@ func (c *statsContent) Render() app.UI {
 
 		app.H5().Text("system stats"),
 		app.P().Text("pop in to see how much this instance lit nocap"),
+		app.P().Body(
+			app.A().Class("deep-orange-text bold").Href("https://umami.gscloud.cz/share/NAA3vF0M8uBpeARj/LITTER").Text("web analytics (external link)"),
+		),
 		app.Div().Class("space"),
 
 		app.Table().Class("border left-align").ID("table-stats-system").Body(
