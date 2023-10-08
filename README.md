@@ -109,6 +109,7 @@ http://localhost:8093/flow
 
 ### nice-to-have(s)
 + account deletion (`settings` page)
++ add timestamps on server, render them on client side
 + automatic links for known TLDs
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
@@ -128,8 +129,12 @@ http://localhost:8093/flow
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
+### known bugs
++ post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
+
 ### roadmap to v0.16
-+ profile icons on the flow page (with link to user info modal
++ add switch for light/dark mode toggle
++ profile icons on the flow page (with link to user info modal)
 
 ### roadmap to v0.15
 + implement inf. scroll to stats (complex)
