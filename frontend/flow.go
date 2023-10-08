@@ -454,7 +454,7 @@ func (c *flowContent) Render() app.UI {
 								),
 							).Else(
 								app.If(post.ReplyToID != "",
-									app.Article().Class("post tertiary").Style("max-width", "100%").Body(
+									app.Article().Class("post black-text yellow10").Style("max-width", "100%").Body(
 										app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
 									),
 								),
