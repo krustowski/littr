@@ -75,7 +75,7 @@ func initServer() {
 	// run migrations
 	ok := backend.RunMigrations()
 
-	log.Println("migrations result: "+ok)
+	log.Println("migrations result:", ok)
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
