@@ -128,9 +128,13 @@ http://localhost:8093/flow
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
+### roadmap to v0.16
++ profile icons on the flow page (with link to user info modal
+
 ### roadmap to v0.15
 + implement inf. scroll to stats (complex)
 + ~~replies to any post in flow~~
++ ~~add simple ToS (terms of service)~~
 
 ### roadmap to v0.14
 + ~~ensure infinite scroll works properly with flow filtering~~
