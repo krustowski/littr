@@ -1,15 +1,21 @@
 package backend
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"go.savla.dev/littr/models"
 )
 
-func runMigrations() bool {
+func RunMigrations() bool {
 	return migrateAvatarURL()
 }
 
 func migrateAvatarURL() bool {
-	users := getAll(UserCache, models.User{})
+	users, _ := getAll(UserCache, models.User{})
 
 	for key, user := range users {
 		if user.AvatarURL != "" {

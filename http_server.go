@@ -72,6 +72,11 @@ func initServer() {
 
 	log.Println("dumped data loaded")
 
+	// run migrations
+	ok := backend.RunMigrations()
+
+	log.Println("migrations result: "+ok)
+
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
