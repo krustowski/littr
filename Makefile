@@ -119,3 +119,11 @@ flush:
 kill:
 	@echo -e "\n${YELLOW} Killing the container not to dump running caches... ${RESET}\n"
 	@docker kill ${DOCKER_CONTAINER_NAME}
+
+.PHONY: fetch_running_dump
+fetch_running_dump:
+	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ./run_data/
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ./run_data/
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ./run_data/
+	
