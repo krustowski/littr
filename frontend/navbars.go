@@ -127,6 +127,11 @@ func (h *header) Render() app.UI {
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("litter-go (littr) PWA"),
 				),
+				app.Nav().Class("center-align large-text").Body(
+					app.P().Body(
+						app.A().Class("deep-orange-text bold").Href("/tos").Text("ToS"),
+					),
+				),
 				app.Nav().Class("center-align").Body(
 					app.P().Body(
 						app.Text("version "),

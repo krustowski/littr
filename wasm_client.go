@@ -19,6 +19,7 @@ func initClient() {
 	app.Route("/register", &frontend.RegisterPage{})
 	app.Route("/settings", &frontend.SettingsPage{})
 	app.Route("/stats", &frontend.StatsPage{})
+	app.Route("/tos", &frontend.ToSPage{})
 	app.Route("/users", &frontend.UsersPage{})
 
 	app.RunWhenOnBrowser()
