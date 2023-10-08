@@ -51,7 +51,7 @@ func (c *tosContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("padding").Body(
+		app.Div().Class("padding responsive").Body(
 			app.Ol().Class("extra-line large-text padding").Body(
 				app.Li().Text("don't comment on things you got no context to"),
 				app.Li().Text("you don't have to comment on every post available"),
@@ -62,10 +62,13 @@ func (c *tosContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("label padding").Body(
+		app.Div().Class("large-space"),
+		app.Div().Class("label padding responsive").Body(
 			app.Article().Class("bottom-align medium transparent padding").Body(
 				app.Img().Src("https://i.kym-cdn.com/photos/images/original/001/970/928/ce5.jpg").Class("no-padding absolute center middle").Style("max-width", "90%"),
 			),
 		),
+		app.Div().Class("large-space"),
+		app.Div().Class("large-space"),
 	)
 }
