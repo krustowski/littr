@@ -45,6 +45,7 @@ type flowContent struct {
 
 	postKey     string
 	posts       map[string]models.Post
+	users       map[string]models.User
 	sortedPosts []models.Post
 }
 
@@ -286,17 +287,56 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			Posts map[string]models.Post `json:"posts"`
 		}{}
 
+		usersRaw := struct {
+			Users map[string]models.User `json:"users"`
+		}{}
+
 		// call the flow API endpoint to fetch all posts
 		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
 				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
 			}
 		} else {
 			log.Println("cannot fetch post flow list")
 			toastText = "API error: cannot fetch the post list"
 
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// call the flow API endpoint to fetch all users
+		if byteData, _ := litterAPI("GET", "/api/users", nil, user.Nickname); byteData != nil {
+			err := json.Unmarshal(*byteData, &usersRaw)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+		} else {
+			log.Println("cannot fetch users list")
+			toastText = "API error: cannot fetch the users list"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
 		}
 
 		// Storing HTTP response in component field:
@@ -307,7 +347,9 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.pagination = 10
 			c.pageNo = 1
 
+			c.users = usersRaw.Users
 			c.posts = postsRaw.Posts
+
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 
@@ -440,8 +482,11 @@ func (c *flowContent) Render() app.UI {
 
 					return app.Tr().Class().Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-							app.P().Body(
-								app.B().Text(post.Nickname).Class("deep-orange-text"),
+							app.Nav().Class("max").Body(
+								app.Img().Class("responsive").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px"),
+								app.P().Body(
+									app.B().Text(post.Nickname).Class("deep-orange-text"),
+								),
 							),
 
 							app.If(post.Type == "fig",

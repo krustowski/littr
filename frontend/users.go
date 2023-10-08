@@ -1,13 +1,9 @@
 package frontend
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"log"
-	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -310,31 +306,7 @@ func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
 	c.showUserPreviewModal = false
 }
 
-func (c *usersContent) getGravatarURL() string {
-	// TODO: do not hardcode this
-	baseURL := "https://littr.n0p.cz/"
-	email := strings.ToLower(c.userInModal.Email)
-	size := 150
-
-	defaultImage := "/web/android-chrome-192x192.png"
-
-	byteEmail := []byte(email)
-	hashEmail := md5.Sum(byteEmail)
-	hashedStringEmail := hex.EncodeToString(hashEmail[:])
-
-	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?d=" + baseURL + "&s=" + strconv.Itoa(size)
-
-	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode != 200 {
-		return defaultImage
-	}
-
-	return url
-}
-
 func (c *usersContent) Render() app.UI {
-	userGravatarURL := ""
-
 	keys := []string{}
 
 	// prepare the keys array
@@ -368,7 +340,7 @@ func (c *usersContent) Render() app.UI {
 		}
 
 		//userGravatarURL := getGravatar(c.userInModal.Email)
-		userGravatarURL = c.getGravatarURL()
+		//userGravatarURL = c.getGravatarURL()
 	}
 
 	// prepare posts according to the actual pagination and pageNo
@@ -420,10 +392,10 @@ func (c *usersContent) Render() app.UI {
 		),
 
 		// user info modal
-		app.If(c.showUserPreviewModal && userGravatarURL != "" && userInModalInfo != nil,
+		app.If(c.showUserPreviewModal && userInModalInfo != nil,
 			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
 
-				app.Img().Class("small-width small-heigh").Src(userGravatarURL),
+				app.Img().Class("small-width small-heigh").Src(c.userInModal.AvatarURL),
 
 				app.Nav().Class("center-align").Body(
 					app.H5().Text(c.userInModal.Nickname),
