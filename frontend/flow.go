@@ -483,7 +483,7 @@ func (c *flowContent) Render() app.UI {
 					return app.Tr().Class().Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
 							app.Div().Class("row max").Body(
-								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px"),
+								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("").Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
