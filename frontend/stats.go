@@ -356,6 +356,10 @@ func (c *statsContent) Render() app.UI {
 				}),
 			),
 		),
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.Progress().Class("circle center large deep-orange-border active"),
+		),
 
 		app.Div().Class("large-space"),
 
@@ -397,7 +401,7 @@ func (c *statsContent) Render() app.UI {
 		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow,
 			app.Div().Class("small-space"),
-			app.Div().Class("loader center large deep-orange active"),
+			app.Progress().Class("circle center large deep-orange-border active"),
 		),
 	)
 }
