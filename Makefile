@@ -123,7 +123,12 @@ kill:
 .PHONY: fetch_running_dump
 fetch_running_dump:
 	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
+	@mkdir -p ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ./run_data/
 	
+.PHONY: backup
+backup: fetch_running_dump
+	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
+	@tar czvf /mnt/backup/litter-go/$(date +%Y-%m-%d-%H:%M:%S).tar.gz ./run_data/
