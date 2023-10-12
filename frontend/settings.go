@@ -16,6 +16,8 @@ import (
 
 type SettingsPage struct {
 	app.Compo
+
+	mode string
 }
 
 type settingsContent struct {
@@ -46,7 +48,7 @@ type settingsContent struct {
 
 func (p *SettingsPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
+		app.Body().Class(p.mode),
 		&header{},
 		&footer{},
 		&settingsContent{},
@@ -55,6 +57,7 @@ func (p *SettingsPage) Render() app.UI {
 
 func (p *SettingsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
+	ctx.LocalStorage().Get("mode", &p.mode)
 }
 
 func (c *settingsContent) OnNav(ctx app.Context) {
@@ -101,9 +104,16 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 		updatedUser := usersPre.Users[user.Nickname]
 
+		// get the mode
+		var mode string
+		ctx.LocalStorage().Get("mode", &mode)
+
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = updatedUser
 			c.loggedUser = user.Nickname
+			c.darkModeOn = mode == "dark"
+
+			//c.darkModeOn = user.AppBgMode == "dark"
 		})
 		return
 	})
@@ -340,6 +350,21 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
+
+	m := ctx.JSSrc().Get("value").String()
+	log.Println(m)
+
+	c.darkModeOn = !c.darkModeOn
+
+	ctx.LocalStorage().Set("mode", "dark")
+	if !c.darkModeOn {
+		ctx.LocalStorage().Set("mode", "light")
+	}
+
+	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
+}
+
 func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
 	c.deleteAccountModalShow = true
 	c.settingsButtonDisabled = true
@@ -385,12 +410,16 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// darkmode switch
-		app.Div().Class("row max center-align").Body(
-			app.Span().Text("light/dark mode"),
-			app.Label().Class("switch icon").Body(
-				app.Input().Type("checkbox").Checked(true),
-				app.Span().Body(
-					app.I().Text("dark_mode"),
+		app.Div().Class("field middle-align").Body(
+			app.Nav().Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("light/dark mode switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch),
+					app.Span().Body(
+						app.I().Text("dark_mode"),
+					),
 				),
 			),
 		),

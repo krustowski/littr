@@ -55,4 +55,7 @@ type User struct {
 
 	// GDPR
 	GDPR bool `json:"gdpr" default:false`
+
+	// AppBgMode string defines the colour mode of the app's background (light vs dark).
+	AppBgMode string `json:"app_bg_mode" default:"dark"`
 }
