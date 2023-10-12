@@ -3,6 +3,7 @@ package backend
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,7 +12,10 @@ import (
 )
 
 func RunMigrations() bool {
-	return migrateAvatarURL()
+	log.Println("migrateAvatarURL():", migrateAvatarURL())
+	log.Println("migrateUsersDeletion():", migrateUsersDeletion())
+
+	return true
 }
 
 func migrateAvatarURL() bool {
@@ -25,6 +29,25 @@ func migrateAvatarURL() bool {
 		user.AvatarURL = getGravatarURL(user.Email)
 		if ok := setOne(UserCache, key, user); !ok {
 			return false
+		}
+	}
+
+	return true
+}
+
+func migrateUsersDeletion() bool {
+	users, _ := getAll(UserCache, models.User{})
+	posts, _ := getAll(FlowCache, models.Post{})
+
+	for key, user := range users {
+		if user.Nickname == "fred" || user.Nickname == "fred2" || user.Nickname == "admin" || user.Nickname == "alternative" {
+			deleteOne(UserCache, key)
+		}
+	}
+
+	for key, post := range posts {
+		if post.Nickname == "fred" || post.Nickname == "fred2" || post.Nickname == "admin" || post.Nickname == "alternative" {
+			deleteOne(FlowCache, key)
 		}
 	}
 
