@@ -108,7 +108,7 @@ http://localhost:8093/flow
 ```
 
 ### nice-to-have(s)
-+ account deletion (`settings` page)
++ ~~account deletion (`settings` page)~~
 + add timestamps on server, render them on client side
 + automatic links for known TLDs
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
@@ -118,7 +118,7 @@ http://localhost:8093/flow
 + custom colour theme per user
 + deep code refactoring
 + fix NaN% when loading
-+ fix update indicator checker (runs only on once after reload)
++ ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement custom logger goroutine
 + implement loading of new posts
@@ -132,11 +132,14 @@ http://localhost:8093/flow
 ### known bugs
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
 
+### roadmap to v0.18
++ fix local JS and CSS deps
+
 ### roadmap to v0.17
 + ~~implement user deletion (settings page)~~
 
 ### roadmap to v0.16
-+ add switch for light/dark mode toggle
++ ~~add switch for light/dark mode toggle~~
 + ~~profile icons on the flow page~~ (with link to user info modal???)
 + ~~fix register date (migration)~~
 
