@@ -28,7 +28,7 @@ func migrateAvatarURL() bool {
 			continue
 		}
 
-		user.AvatarURL = getGravatarURL(user.Email)
+		user.AvatarURL = GetGravatarURL(user.Email)
 		if ok := setOne(UserCache, key, user); !ok {
 			return false
 		}
@@ -75,7 +75,7 @@ func migrateUserRegisteredTime() bool {
  *  helpers
  */
 
-func getGravatarURL(emailInput string) string {
+func GetGravatarURL(emailInput string) string {
 	// TODO: do not hardcode this
 	baseURL := "https://littr.n0p.cz/"
 	email := strings.ToLower(emailInput)

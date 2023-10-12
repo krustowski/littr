@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.savla.dev/littr/backend"
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
@@ -115,6 +116,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			Email:          email,
 			FlowList:       make(map[string]bool),
 			RegisteredTime: time.Now(),
+			AvatarURL	GetGravatarURL(email),
 		}
 
 		user.FlowList[nickname] = true
