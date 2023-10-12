@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/models"
 )
@@ -14,6 +15,7 @@ import (
 func RunMigrations() bool {
 	log.Println("migrateAvatarURL():", migrateAvatarURL())
 	log.Println("migrateUsersDeletion():", migrateUsersDeletion())
+	log.Println("migrateUserRegisteredTime():", migrateUserRegisteredTime())
 
 	return true
 }
@@ -53,6 +55,25 @@ func migrateUsersDeletion() bool {
 
 	return true
 }
+
+func migrateUserRegisteredTime() bool {
+	users, _ := getAll(UserCache, models.User{})
+
+	for key, user := range users {
+		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
+			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
+			if ok := setOne(UserCache, key, user); !ok {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+/*
+ *  helpers
+ */
 
 func getGravatarURL(emailInput string) string {
 	// TODO: do not hardcode this

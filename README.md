@@ -132,12 +132,15 @@ http://localhost:8093/flow
 ### known bugs
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
 
+### roadmap to v0.17
++ implement user deletion (settings page)
+
 ### roadmap to v0.16
 + add switch for light/dark mode toggle
 + profile icons on the flow page (with link to user info modal)
 
 ### roadmap to v0.15
-+ implement inf. scroll to stats (complex)
++ implement inf. scroll to stats (complex)???
 + ~~replies to any post in flow~~
 + ~~add simple ToS (terms of service)~~
 

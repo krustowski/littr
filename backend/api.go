@@ -455,6 +455,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		user.LastActiveTime = time.Now()
+
 		if saved := setOne(UserCache, user.Nickname, user); !saved {
 			resp.Message = "backend error: cannot save new user"
 			resp.Code = http.StatusInternalServerError
