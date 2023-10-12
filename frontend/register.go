@@ -116,7 +116,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			Email:          email,
 			FlowList:       make(map[string]bool),
 			RegisteredTime: time.Now(),
-			AvatarURL	GetGravatarURL(email),
+			AvatarURL:      backend.GetGravatarURL(email),
 		}
 
 		user.FlowList[nickname] = true
