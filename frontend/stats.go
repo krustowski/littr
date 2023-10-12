@@ -19,9 +19,11 @@ type StatsPage struct {
 type statsContent struct {
 	app.Compo
 
+	pollCount int
 	postCount int
 	userCount int
 
+	polls map[string]models.Poll
 	posts map[string]models.Post
 	stats map[string]int
 	users map[string]models.User
@@ -159,6 +161,11 @@ func (c *statsContent) OnNav(ctx app.Context) {
 			Count int                    `json:"count"`
 		}{}
 
+		pollsRaw := struct {
+			Polls map[string]models.Poll `json:"polls"`
+			Count int                    `json:"count"`
+		}{}
+
 		// fetch posts
 		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
 			err := json.Unmarshal(*byteData, &postsRaw)
@@ -194,7 +201,29 @@ func (c *statsContent) OnNav(ctx app.Context) {
 				return
 			}
 		} else {
-			log.Println("cannot fetch user list")
+			log.Println("cannot fetch users list")
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = "cannot fetch user list"
+				c.toastShow = (c.toastText != "")
+			})
+			return
+		}
+
+		// fetch polls
+		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname); byteData != nil {
+			err := json.Unmarshal(*byteData, &pollsRaw)
+			if err != nil {
+				log.Println(err.Error())
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = "backend error: " + err.Error()
+					c.toastShow = (c.toastText != "")
+				})
+				return
+			}
+		} else {
+			log.Println("cannot fetch polls list")
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "cannot fetch user list"
@@ -209,6 +238,9 @@ func (c *statsContent) OnNav(ctx app.Context) {
 
 			c.users = usersRaw.Users
 			c.userCount = usersRaw.Count
+
+			c.polls = pollsRaw.Polls
+			c.pollCount = pollsRaw.Count
 
 			c.flowStats, c.userStats = c.calculateStats()
 
@@ -262,6 +294,11 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 		// FlowList also contains the user itself
 		stat.FlowerCount = count
 		userStats[key] = stat
+	}
+
+	// iterate over all polls, count them good
+	for range c.polls {
+		flowStats["polls"]++
 	}
 
 	return flowStats, userStats
