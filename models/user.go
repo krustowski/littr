@@ -52,4 +52,7 @@ type User struct {
 
 	// searched is a bool indicating a status for the search engine.
 	Searched bool `json:"-" default:true`
+
+	// GDPR
+	GDPR bool `json:"gdpr" default:false`
 }

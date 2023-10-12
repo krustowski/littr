@@ -19,7 +19,7 @@ func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	for key, rawItem := range itemsInterface {
 		item, ok := rawItem.(T)
 		if !ok {
-			return items, 0
+			return items, count
 		}
 		items[key] = item
 	}
