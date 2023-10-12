@@ -416,7 +416,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("light/dark mode switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch),
+					app.Input().Type("checkbox").ID("dark-mode-switch").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch),
 					app.Span().Body(
 						app.I().Text("dark_mode"),
 					),
