@@ -138,6 +138,7 @@ http://localhost:8093/flow
 ### roadmap to v0.16
 + add switch for light/dark mode toggle
 + profile icons on the flow page (with link to user info modal)
++ ~~fix register date (migration)~~
 
 ### roadmap to v0.15
 + implement inf. scroll to stats (complex)???
