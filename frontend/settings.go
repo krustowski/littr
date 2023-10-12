@@ -37,7 +37,11 @@ type settingsContent struct {
 	toastShow bool
 	toastText string
 
+	darkModeOn bool
+
 	settingsButtonDisabled bool
+
+	deleteAccountModalShow bool
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -309,10 +313,43 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
+	toastText := ""
+
+	c.settingsButtonDisabled = true
+
+	//ctx.LocalStorage().Set("userLogged", false)
+	ctx.LocalStorage().Set("user", "")
+	//h.userLogged = false
+
+	ctx.Async(func() {
+		if _, ok := litterAPI("DELETE", "/api/users", c.user, c.user.Nickname); !ok {
+			toastText = "generic backend error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		//c.userLogged = false
+		//ctx.Navigate("/login")
+		ctx.Navigate("/logout")
+	})
+	return
+}
+
+func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
+	c.deleteAccountModalShow = true
+	c.settingsButtonDisabled = true
+}
+
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = (c.toastText != "")
 	c.settingsButtonDisabled = false
+	c.deleteAccountModalShow = false
 }
 
 func (c *settingsContent) Render() app.UI {
@@ -321,6 +358,21 @@ func (c *settingsContent) Render() app.UI {
 		app.P().Text("change your passphrase, or your bottom text"),
 
 		app.Div().Class("space"),
+
+		// acc deletion modal
+		app.If(c.deleteAccountModalShow,
+			app.Dialog().Class("grey9 white-text active").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("account deletion"),
+				),
+				app.P().Text("are you sure you want to delete your account and all posted items?"),
+				app.Div().Class("space"),
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").Text("yeah").OnClick(c.onClickDeleteAccount),
+					app.Button().Class("border deep-orange7 white-text").Text("nope").OnClick(c.dismissToast),
+				),
+			),
+		),
 
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
@@ -331,6 +383,19 @@ func (c *settingsContent) Render() app.UI {
 				),
 			),
 		),
+
+		// darkmode switch
+		app.Div().Class("row max center-align").Body(
+			app.Span().Text("light/dark mode"),
+			app.Label().Class("switch icon").Body(
+				app.Input().Type("checkbox").Checked(true),
+				app.Span().Body(
+					app.I().Text("dark_mode"),
+				),
+			),
+		),
+
+		app.Div().Class("large-divider"),
 
 		// password change
 		app.Div().Class("field label border invalid deep-orange-text").Body(
@@ -364,6 +429,14 @@ func (c *settingsContent) Render() app.UI {
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 
-		app.Div().Class("space"),
+		app.Div().Class("large-divider"),
+
+		// acc deletion
+		app.Div().Class("field label border invalid deep-orange-text").Body(
+			app.P().Text("down here, you can delete your account; please note that this action is irreversible!"),
+		),
+		app.Button().Class("responsive red9 white-text bold").Text("delete account").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+
+		app.Div().Class("large-space"),
 	)
 }

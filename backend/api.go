@@ -418,6 +418,38 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "DELETE":
 		// remove an user
+		key := r.Header.Get("X-API-Caller-ID")
+
+		if _, found := getOne(UserCache, key, models.User{}); !found {
+			resp.Message = "user nout found: " + key
+			resp.Code = http.StatusNotFound
+			break
+		}
+
+		if deleted := deleteOne(UserCache, key); !deleted {
+			resp.Message = "error deleting: " + key
+			resp.Code = http.StatusInternalServerError
+			break
+		}
+
+		// delete all user's posts and polls
+		posts, _ := getAll(FlowCache, models.Post{})
+		polls, _ := getAll(PollCache, models.Poll{})
+
+		for id, post := range posts {
+			if post.Nickname == key {
+				deleteOne(FlowCache, id)
+			}
+		}
+
+		for id, poll := range polls {
+			if poll.Author == key {
+				deleteOne(PollCache, id)
+			}
+		}
+
+		resp.Message = "ok, deleting user: " + key
+		resp.Code = http.StatusOK
 		break
 
 	case "GET":

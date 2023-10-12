@@ -126,7 +126,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if !response.AuthGranted {
-			toastText = "access denied"
+			toastText = "wrong credentials on input"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
