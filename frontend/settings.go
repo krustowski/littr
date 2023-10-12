@@ -411,7 +411,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// darkmode switch
 		app.Div().Class("field middle-align").Body(
-			app.Nav().Body(
+			app.Div().Class("row").Body(
 				app.Div().Class("max").Body(
 					app.Span().Text("light/dark mode switch"),
 				),

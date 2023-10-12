@@ -47,7 +47,7 @@ func (h *header) OnMount(ctx app.Context) {
 		return
 	}
 
-	if h.userLogged && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register" || ctx.Page().URL().Path == "/tos") {
+	if h.userLogged && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
 		ctx.Navigate("/flow")
 		return
 	}

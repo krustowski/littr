@@ -335,7 +335,7 @@
     }
 
     // Sortable tables - https://www.cssscript.com/fast-html-table-sorting/
-    $('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.gscloud.cz/css/sortable.min.css">')
+    $('head').append('<link rel="stylesheet" type="text/css" href="/web/sortable.min.css">')
 
     // set fix UI action interval
     setInterval(LIT.fixUI, 250)
@@ -343,16 +343,16 @@
 })()
 
 // add Umami analytics - https://umami.is
-;(function () {
-  var x = document.createElement('script')
-  x.setAttribute('src', 'https://umami.gscloud.cz/script.js')
-  x.setAttribute('data-website-id', '9c3bf149-ca5c-4e90-af79-1e228ec4cf4b')
-  document.body.appendChild(x)
-})()
+// ;(function () {
+//   var x = document.createElement('script')
+//   x.setAttribute('src', 'https://umami.gscloud.cz/script.js')
+//   x.setAttribute('data-website-id', '9c3bf149-ca5c-4e90-af79-1e228ec4cf4b')
+//   document.body.appendChild(x)
+// })()
 
 // add Sortable tables - https://www.cssscript.com/fast-html-table-sorting/
 ;(function () {
   var x = document.createElement('script')
-  x.setAttribute('src', 'https://cdn.gscloud.cz/js/sortable.min.js')
+  x.setAttribute('src', 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js')
   document.body.appendChild(x)
 })()
