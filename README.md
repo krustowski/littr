@@ -134,6 +134,7 @@ http://localhost:8093/flow
 
 ### roadmap to v0.18
 + fix local JS and CSS deps
++ implement shadow function (acc disabling)
 
 ### roadmap to v0.17
 + ~~implement user deletion (settings page)~~
