@@ -409,6 +409,10 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		app.Div().Class("large-divider"),
+		app.H5().Text("switches"),
+		app.Div().Class("space"),
+
 		// darkmode switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
@@ -424,7 +428,24 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// left-hand switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("left-hand switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").ID("left-hand-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Span().Body(
+						app.I().Text("front_hand"),
+					),
+				),
+			),
+		),
+
 		app.Div().Class("large-divider"),
+		app.H5().Text("password change"),
+		app.Div().Class("space"),
 
 		// password change
 		app.Div().Class("field label border invalid deep-orange-text").Body(
@@ -440,6 +461,8 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-divider"),
+		app.H6().Text("about text change"),
+		app.Div().Class("space"),
 
 		// about textarea
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
@@ -450,6 +473,8 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-divider"),
+		app.H5().Text("website link change"),
+		app.Div().Class("space"),
 
 		// website link
 		app.Div().Class("field label border invalid deep-orange-text").Body(
@@ -459,6 +484,8 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-divider"),
+		app.H5().Text("account deletion"),
+		app.Div().Class("space"),
 
 		// acc deletion
 		app.Div().Class("field label border invalid deep-orange-text").Body(

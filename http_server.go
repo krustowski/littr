@@ -112,7 +112,7 @@ func initServer() {
 		ThemeColor:      "#000000",
 		Styles: []string{
 			"https://cdn.gscloud.cz/css/beer.min.css",
-			"/web/sortable.min.css",
+			//"/web/sortable.min.css",
 		},
 		Scripts: []string{
 			"https://cdn.gscloud.cz/js/jquery.min.js",
