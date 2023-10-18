@@ -552,6 +552,7 @@ func (c *flowContent) Render() app.UI {
 								),
 							),
 
+							// pic post
 							app.If(post.Type == "fig",
 								app.Article().Class("medium no-padding transparent").Body(
 									app.If(c.loaderShowImage,
@@ -560,10 +561,16 @@ func (c *flowContent) Render() app.UI {
 									),
 									app.Img().Class("no-padding absolute center middle lazy").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 								),
+							// reply
 							).Else(
 								app.If(post.ReplyToID != "",
 									app.Article().Class("post black-text yellow10").Style("max-width", "100%").Body(
-										app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+										app.Div().Class("row max").Body(
+											app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+												app.I().Text("history"),
+											),
+										),
 									),
 								),
 								app.Article().Class("post").Style("max-width", "100%").Body(
