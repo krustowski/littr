@@ -462,7 +462,13 @@ func (c *flowContent) Render() app.UI {
 		pagedPosts = sortedPosts[start:stop]
 	}
 
+	// disable pagination for single posts (resource distress???)
+	if c.singlePostID != "" {
+		pagedPosts = sortedPosts[start:end]
+	}
+
 	return app.Main().Class("responsive").Body(
+		// page heading
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("exclusive content incoming frfr"),
 		app.Div().Class("space"),

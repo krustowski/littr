@@ -137,8 +137,8 @@ http://localhost:8093/flow
 + implement shadow function (acc disabling)
 
 ### roadmap to v0.18
-+ add links to a single flow post
-+ show replies in the single post view
++ ~~add links to a single flow post~~
++ ~~show replies (+history) in the single post view~~
 
 ### roadmap to v0.17
 + ~~implement user deletion (settings page)~~
