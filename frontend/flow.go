@@ -38,6 +38,7 @@ type flowContent struct {
 	replyPostContent    string
 
 	interactedPostKey string
+	singlePostID      string
 
 	paginationEnd bool
 	pagination    int
@@ -62,8 +63,21 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
+func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	url := ctx.Page().URL()
+	scheme := url.Scheme
+	host := url.Host
+
+	// write the link to browsers's clipboard
+	app.Window().Get("navigator").Get("clipboard").Call("writeText", scheme+"://"+host+"/flow/"+key)
+	ctx.Navigate("/flow/" + key)
+}
+
 func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.toastShow = false
+	c.toastText = ""
 	c.modalReplyActive = false
 	c.buttonDisabled = false
 }
@@ -266,6 +280,13 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 	toastText := ""
 
+	singlePostID := ""
+	url := strings.Split(ctx.Page().URL().Path, "/")
+	if len(url) > 2 && url[2] != "" {
+		singlePostID = url[2]
+	}
+	log.Println(singlePostID)
+
 	ctx.Async(func() {
 		var enUser string
 		var user models.User
@@ -339,6 +360,15 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			return
 		}
 
+		// try the singlePostID var if present
+		if singlePostID != "" {
+			_, found := postsRaw.Posts[singlePostID]
+			if !found {
+				toastText = "post not found"
+			}
+
+		}
+
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.loggedUser = user.Nickname
@@ -349,6 +379,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 			c.users = usersRaw.Users
 			c.posts = postsRaw.Posts
+			c.singlePostID = singlePostID
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
@@ -360,11 +391,22 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	})
 }
 
-func (c *flowContent) Render() app.UI {
+func (c *flowContent) sortPosts() []models.Post {
 	var sortedPosts []models.Post
+	var found bool
+
+	posts := make(map[string]models.Post)
+
+	if c.singlePostID != "" {
+		if posts[c.singlePostID], found = c.posts[c.singlePostID]; !found {
+			posts = c.posts
+		}
+	} else {
+		posts = c.posts
+	}
 
 	// fetch posts and put them in an array
-	for _, sortedPost := range c.posts {
+	for _, sortedPost := range posts {
 		// do not append a post that is not meant to be shown
 		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" {
 			continue
@@ -372,6 +414,12 @@ func (c *flowContent) Render() app.UI {
 
 		sortedPosts = append(sortedPosts, sortedPost)
 	}
+
+	return sortedPosts
+}
+
+func (c *flowContent) Render() app.UI {
+	sortedPosts := c.sortPosts()
 
 	// order posts by timestamp DESC
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
@@ -482,10 +530,16 @@ func (c *flowContent) Render() app.UI {
 
 					return app.Tr().Class().Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-							app.Div().Class("row max").Body(
+							app.Div().Class("row").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
-								app.P().Class("").Body(
+								app.P().Class("max").Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
+								),
+
+								app.If(post.Nickname != "system",
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+										app.I().Text("link"),
+									),
 								),
 							),
 

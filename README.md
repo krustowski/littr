@@ -132,9 +132,13 @@ http://localhost:8093/flow
 ### known bugs
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
 
-### roadmap to v0.18
+### roadmap to v0.19
 + fix local JS and CSS deps
 + implement shadow function (acc disabling)
+
+### roadmap to v0.18
++ add links to a single flow post
++ show replies in the single post view
 
 ### roadmap to v0.17
 + ~~implement user deletion (settings page)~~
