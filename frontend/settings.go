@@ -156,16 +156,16 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.Passphrase = string(passHash[:])
 
-		response := struct{
+		response := struct {
 			Message string `json:"message"`
 			Code    int    `json:"code"`
 		}{}
 
 		if data, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
-				toastText = "JSON parse error: "+err.Error()
+				toastText = "JSON parse error: " + err.Error()
 			}
-			toastText = "generic backend error: "+response.Message
+			toastText = "generic backend error: " + response.Message
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText

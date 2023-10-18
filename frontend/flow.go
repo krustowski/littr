@@ -393,17 +393,20 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 func (c *flowContent) sortPosts() []models.Post {
 	var sortedPosts []models.Post
-	var found bool
+	//var found bool
 
 	posts := make(map[string]models.Post)
 
-	if c.singlePostID != "" {
+	/*if c.singlePostID != "" {
 		if posts[c.singlePostID], found = c.posts[c.singlePostID]; !found {
 			posts = c.posts
+		} else {
+
 		}
 	} else {
 		posts = c.posts
-	}
+	}*/
+	posts = c.posts
 
 	// fetch posts and put them in an array
 	for _, sortedPost := range posts {
@@ -520,6 +523,12 @@ func (c *flowContent) Render() app.UI {
 							previousContent = previous.Nickname + " posted: " + previous.Content
 						} else {
 							previousContent = "the post was deleted bye"
+						}
+					}
+
+					if c.singlePostID != "" {
+						if post.ID != c.singlePostID && c.singlePostID != post.ReplyToID {
+							return nil
 						}
 					}
 

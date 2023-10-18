@@ -308,7 +308,8 @@
     // FLOW tab
     if ($('#table-flow') && $('#table-flow').length) {
       $('#nav-bottom > a:nth-child(5)').click(function () {
-        location.reload()
+        //LIT.scrollTop()
+        location.href("/flow")
       })
     }
 
