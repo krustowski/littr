@@ -24,7 +24,7 @@ func migrateAvatarURL() bool {
 	users, _ := getAll(UserCache, models.User{})
 
 	for key, user := range users {
-		if user.AvatarURL != "" {
+		if user.AvatarURL != "" || user.AvatarURL != defaultAvatarImage {
 			continue
 		}
 
@@ -75,13 +75,13 @@ func migrateUserRegisteredTime() bool {
  *  helpers
  */
 
+var defaultAvatarImage := "/web/android-chrome-192x192.png"
+
 func GetGravatarURL(emailInput string) string {
 	// TODO: do not hardcode this
 	baseURL := "https://littr.n0p.cz/"
 	email := strings.ToLower(emailInput)
 	size := 150
-
-	defaultImage := "/web/android-chrome-192x192.png"
 
 	byteEmail := []byte(email)
 	hashEmail := md5.Sum(byteEmail)
@@ -91,7 +91,7 @@ func GetGravatarURL(emailInput string) string {
 
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != 200 {
-		return defaultImage
+		return defaulAvatartImage
 	}
 
 	return url
