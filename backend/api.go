@@ -17,7 +17,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the Logger instance
 	l := Logger{
-		IPAddress:  r.RemoteAddr,
+		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
 		WorkerName: "auth",
 	}
@@ -271,7 +271,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 		key := post.ID
 
-		if _, found := getOne(FlowCache, key, models.User{}); !found {
+		if _, found := getOne(FlowCache, key, models.Post{}); !found {
 			resp.Message = "unknown post update requested"
 			resp.Code = http.StatusBadRequest
 
