@@ -19,6 +19,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	l := Logger{
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
+		Route:      r.URL.String(),
 		WorkerName: "auth",
 	}
 
@@ -90,6 +91,7 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 		//IPAddress:  r.RemoteAddr,
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
+		Route:      r.URL.String(),
 		WorkerName: "dump",
 	}
 
@@ -153,6 +155,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		IPAddress: r.Header.Get("X-Real-IP"),
 		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
+		Route:      r.URL.String(),
 		WorkerName: "flow",
 	}
 
@@ -320,6 +323,7 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 		IPAddress: r.Header.Get("X-Real-IP"),
 		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
+		Route:      r.URL.String(),
 		WorkerName: "polls",
 	}
 
@@ -478,6 +482,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		IPAddress: r.Header.Get("X-Real-IP"),
 		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
+		Route:      r.URL.String(),
 		WorkerName: "users",
 	}
 
