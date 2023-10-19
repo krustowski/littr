@@ -32,8 +32,11 @@ type User struct {
 	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`
 
-	// FlowList is a string array of users, which posts should be added to one's flow page.
+	// FlowList is a string map of users, which posts should be added to one's flow page.
 	FlowList map[string]bool `json:"flow_list"`
+
+	// ShadeList is a map of account/users to be shaded (soft-blocked) from following.
+	ShadeList map[string]bool `json:"shade_list"`
 
 	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`

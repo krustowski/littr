@@ -51,6 +51,9 @@ type userStat struct {
 	// FlowerCount is basically a number of followers.
 	FlowerCount int `default:0`
 
+	// ShadeCount is basically a number of blockers.
+	ShadeCount int `default:0`
+
 	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
 	Searched bool `default:true`
 }
@@ -254,7 +257,9 @@ func (c *statsContent) OnNav(ctx app.Context) {
 func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	flowStats := make(map[string]int)
 	userStats := make(map[string]userStat)
+
 	flowers := make(map[string]int)
+	shades := make(map[string]int)
 
 	flowStats["posts"] = c.postCount
 	//flowStats["users"] = c.userCount
@@ -277,22 +282,38 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 		flowStats["stars"] += val.ReactionCount
 	}
 
-	// iterate over all users, compose global flower count
+	// iterate over all users, compose global flower and shade count
 	for _, user := range c.users {
 		for key, enabled := range user.FlowList {
 			if enabled && key != user.Nickname {
 				flowers[key]++
 			}
 		}
+
+		for key, shaded := range user.ShadeList {
+			if shaded && key != user.Nickname {
+				shades[key]++
+			}
+		}
+
 		flowStats["users"]++
 	}
 
-	// iterate over composed flowers, assign the count to a user
+	// iterate over composed flowers, assign the count to an user
 	for key, count := range flowers {
 		stat := userStats[key]
 
 		// FlowList also contains the user itself
 		stat.FlowerCount = count
+		userStats[key] = stat
+	}
+
+	// iterate over compose shades, assign the count to an user
+	for key, count := range shades {
+		stat := userStats[key]
+
+		// FlowList also contains the user itself
+		stat.ShadeCount = count
 		userStats[key] = stat
 	}
 
@@ -334,11 +355,24 @@ func (c *statsContent) Render() app.UI {
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Class("align-left").Text("nickname"),
-					app.Th().Class("align-left").Text("posts"),
-					app.Th().Class("align-left").Text("stars"),
-					app.Th().Class("align-left").Text("flowers"),
-					app.Th().Class("align-left").Text("ratio"),
+					app.Th().Class("align-left").Body(
+						app.Span().Text("nickname"),
+					),
+					app.Th().Class("align-left").Body(
+						app.Span().Style("writing-mode", "vertical-lr").Text("posts"),
+					),
+					app.Th().Class("align-left").Body(
+						app.Span().Style("writing-mode", "vertical-lr").Text("stars"),
+					),
+					app.Th().Class("align-left").Body(
+						app.Span().Style("writing-mode", "vertical-lr").Text("flowers"),
+					),
+					app.Th().Class("align-left").Body(
+						app.Span().Style("writing-mode", "vertical-lr").Text("shades"),
+					),
+					app.Th().Class("align-left").Body(
+						app.Span().Style("writing-mode", "vertical-lr").Text("ratio"),
+					),
 				),
 			),
 
@@ -386,6 +420,11 @@ func (c *statsContent) Render() app.UI {
 						),
 						app.Td().Class("align-left").Body(
 							app.P().Body(
+								app.Text(strconv.FormatInt(int64(users[key].ShadeCount), 10)),
+							),
+						),
+						app.Td().Class("align-left").Body(
+							app.P().Body(
 								app.Text(strconv.FormatFloat(ratio, 'f', 2, 64)),
 							),
 						),
@@ -402,9 +441,9 @@ func (c *statsContent) Render() app.UI {
 
 		app.H5().Text("system stats"),
 		app.P().Text("pop in to see how much this instance lit nocap"),
-		app.P().Body(
-			app.A().Class("deep-orange-text bold").Href("https://umami.gscloud.cz/share/NAA3vF0M8uBpeARj/LITTER").Text("web analytics (external link)"),
-		),
+		//app.P().Body(
+		//app.A().Class("deep-orange-text bold").Href("https://umami.gscloud.cz/share/NAA3vF0M8uBpeARj/LITTER").Text("web analytics (external link)"),
+		//),
 		app.Div().Class("space"),
 
 		app.Table().Class("border left-align").ID("table-stats-system").Body(
