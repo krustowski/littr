@@ -114,7 +114,6 @@ http://localhost:8093/flow
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + check for double posting same content
-+ Ctrl+Enter to submit posts like YouTube
 + custom colour theme per user
 + deep code refactoring
 + fix NaN% when loading
@@ -123,7 +122,6 @@ http://localhost:8093/flow
 + implement loading of new posts
 + implement sessions (SessionsCache)
 + OAuth2
-+ send verification e-mail
 + show offline mode notification
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
@@ -131,9 +129,17 @@ http://localhost:8093/flow
 ### known bugs
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
 
+### roadmap to v0.21
++ Ctrl+Enter to submit posts like YouTube
++ implement simple notification service
+
+### roadmap to v0.20
++ implement forgotten password recovery
++ implement mailing (verification mails)
+
 ### roadmap to v0.19
 + fix local JS and CSS deps
-+ implement custom logger (~~goroutine?~~)
++ ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
 + implement shadow function (acc blocking)
 
 ### roadmap to v0.18

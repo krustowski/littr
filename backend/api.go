@@ -86,8 +86,9 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the Logger instance
 	l := Logger{
-		CallerID:   "system",
-		IPAddress:  r.RemoteAddr,
+		CallerID: "system",
+		//IPAddress:  r.RemoteAddr,
+		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
 		WorkerName: "dump",
 	}
@@ -148,8 +149,9 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the Logger instance
 	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.RemoteAddr,
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
 		WorkerName: "flow",
 	}
@@ -314,8 +316,9 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the Logger instance
 	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.RemoteAddr,
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
 		WorkerName: "polls",
 	}
@@ -471,8 +474,9 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the Logger instance
 	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.RemoteAddr,
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
 		Method:     r.Method,
 		WorkerName: "users",
 	}
