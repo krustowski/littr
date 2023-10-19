@@ -4,21 +4,14 @@
 package main
 
 import (
-	//"encoding/json"
-	//"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	//"strconv"
 	"syscall"
-	//"regexp"
-	//"time"
 
 	"go.savla.dev/littr/backend"
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/frontend"
-	//"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"go.savla.dev/swis/v5/pkg/core"
@@ -42,24 +35,14 @@ func initClient() {
 }
 
 func initServer() {
+	// prepare the Logger instance
+	l := backend.Logger{
+		CallerID:   "system",
+		WorkerName: "initServer",
+	}
+
 	// parse ENV contants from .env file (should be loaded using Makefile and docker-compose.yml file)
 	config.ParseEnv()
-
-	// create a channel for logging engine
-	//models.LogsChan = make(chan models.Log, 1)
-
-	// logging goroutine
-	/*go func() {
-		lg := <- models.LogsChan
-
-		jsonData, err := json.Marshal(lg)
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-
-		fmt.Println(string(jsonData))
-	}()*/
 
 	// initialize caches
 	backend.FlowCache = &core.Cache{}
@@ -67,17 +50,16 @@ func initServer() {
 	backend.SessionCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
-	log.Println("caches initialized")
+	l.Println("caches initialized", http.StatusOK)
 
 	// load up data from local dumps (/opt/data/)
+	// TODO: catch an error there!
 	backend.LoadData()
 
-	log.Println("dumped data loaded")
+	l.Println("dumped data loaded", http.StatusOK)
 
 	// run migrations
-	ok := backend.RunMigrations()
-
-	log.Println("migrations result:", ok)
+	backend.RunMigrations()
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
@@ -86,7 +68,7 @@ func initServer() {
 	// signals goroutine
 	go func() {
 		sig := <-sigs
-		log.Printf("caught signal '%s', dumping data...", sig)
+		l.Println("caught signal '"+sig.String()+"', dumping data...", http.StatusCreated)
 
 		backend.DumpData()
 	}()
@@ -96,10 +78,10 @@ func initServer() {
 	http.HandleFunc("/api/dump", backend.DumpHandler)
 	http.HandleFunc("/api/flow", backend.FlowHandler)
 	http.HandleFunc("/api/polls", backend.PollsHandler)
-	http.HandleFunc("/api/stats", backend.StatsHandler)
+	//http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
 
-	log.Println("API routes loaded")
+	l.Println("API routes loaded", http.StatusOK)
 
 	// root route with custom CSS and JS definitions
 	http.Handle("/", &app.Handler{
@@ -125,7 +107,7 @@ func initServer() {
 		},
 	})
 
-	log.Println("starting the server...")
+	l.Println("starting the server...", http.StatusOK)
 
 	// run a HTTP server
 	if err := http.ListenAndServe(":8080", nil); err != nil {

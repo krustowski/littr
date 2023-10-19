@@ -3,7 +3,6 @@ package backend
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,15 +12,34 @@ import (
 )
 
 func RunMigrations() bool {
-	log.Println("migrateAvatarURL():", migrateAvatarURL())
-	log.Println("migrateUsersDeletion():", migrateUsersDeletion())
-	log.Println("migrateUserRegisteredTime():", migrateUserRegisteredTime())
+
+	migrations := map[string](func() bool){
+		"migrateAvatarURL()":          migrateAvatarURL,
+		"migrateUserDeletion()":       migrateUserDeletion,
+		"migrateUserRegisteredTime()": migrateUserRegisteredTime,
+	}
+
+	l := Logger{
+		CallerID:   "system",
+		WorkerName: "migration",
+	}
+
+	for migName, migFunc := range migrations {
+		code := http.StatusOK
+
+		if ok := migFunc(); !ok {
+			code = http.StatusInternalServerError
+		}
+
+		l.Println(migName, code)
+	}
 
 	return true
 }
 
 var defaultAvatarImage = "/web/android-chrome-192x192.png"
 
+// migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 func migrateAvatarURL() bool {
 	users, _ := getAll(UserCache, models.User{})
 
@@ -39,25 +57,43 @@ func migrateAvatarURL() bool {
 	return true
 }
 
-func migrateUsersDeletion() bool {
+// migrateUserDeletion function takes care of default users deletion from the database. Function returns bool based on the process result.
+func migrateUserDeletion() bool {
+	bank := []string{
+		"fred",
+		"fred2",
+		"admin",
+		"alternative",
+		"Lmao",
+		"lma0",
+	}
+
 	users, _ := getAll(UserCache, models.User{})
-	posts, _ := getAll(FlowCache, models.Post{})
 
 	for key, user := range users {
-		if user.Nickname == "fred" || user.Nickname == "fred2" || user.Nickname == "admin" || user.Nickname == "alternative" {
-			deleteOne(UserCache, key)
+		if contains(bank, user.Nickname) {
+			if deleted := deleteOne(UserCache, key); !deleted {
+				//return false
+				continue
+			}
 		}
 	}
 
+	posts, _ := getAll(FlowCache, models.Post{})
+
 	for key, post := range posts {
-		if post.Nickname == "fred" || post.Nickname == "fred2" || post.Nickname == "admin" || post.Nickname == "alternative" {
-			deleteOne(FlowCache, key)
+		if contains(bank, post.Nickname) {
+			if deleted := deleteOne(FlowCache, key); !deleted {
+				//return false
+				continue
+			}
 		}
 	}
 
 	return true
 }
 
+// migrateUserRegisteredTime function fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
 func migrateUserRegisteredTime() bool {
 	users, _ := getAll(UserCache, models.User{})
 
@@ -77,12 +113,25 @@ func migrateUserRegisteredTime() bool {
  *  helpers
  */
 
+// contains checks if a string is present in a slice.
+// https://freshman.tech/snippets/go/check-if-slice-contains-element/
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+// GetGravatarURL fucntion returns the avatar image location/URL, or it defaults to a app logo.
 func GetGravatarURL(emailInput string) string {
 	// TODO: do not hardcode this
 	baseURL := "https://littr.n0p.cz/"
 	email := strings.ToLower(emailInput)
 	size := 150
 
+	// hash the emailInput
 	byteEmail := []byte(email)
 	hashEmail := md5.Sum(byteEmail)
 	hashedStringEmail := hex.EncodeToString(hashEmail[:])

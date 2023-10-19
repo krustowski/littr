@@ -120,7 +120,6 @@ http://localhost:8093/flow
 + fix NaN% when loading
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
-+ implement custom logger goroutine
 + implement loading of new posts
 + implement sessions (SessionsCache)
 + OAuth2
@@ -134,7 +133,8 @@ http://localhost:8093/flow
 
 ### roadmap to v0.19
 + fix local JS and CSS deps
-+ implement shadow function (acc disabling)
++ implement custom logger (~~goroutine?~~)
++ implement shadow function (acc blocking)
 
 ### roadmap to v0.18
 + ~~add links to a single flow post~~

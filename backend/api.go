@@ -3,7 +3,6 @@ package backend
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,9 +15,12 @@ import (
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 
-	//lg := models.NewLog(r.RemoteAddr)
-	//lg.Caller = "[auth] new connection"
-	log.Println("[auth] new connection from: " + r.RemoteAddr)
+	// prepare the Logger instance
+	l := Logger{
+		IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		WorkerName: "auth",
+	}
 
 	resp.AuthGranted = false
 
@@ -28,7 +30,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("[auth] " + err.Error())
+			l.Println(err.Error(), http.StatusInternalServerError)
 
 			resp.Message = "backend error: cannot read input stream"
 			resp.Code = http.StatusInternalServerError
@@ -38,17 +40,19 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err = json.Unmarshal(data, &user); err != nil {
-			log.Println("[auth] " + err.Error())
+			l.Println(err.Error(), http.StatusInternalServerError)
 
 			resp.Message = "backend error: cannot unmarshall request data"
 			resp.Code = http.StatusInternalServerError
 			break
 		}
 
+		l.CallerID = user.Nickname
+
 		// try to authenticate given user
 		u, ok := authUser(user)
 		if !ok {
-			log.Println("[auth] wrong login")
+			l.Println("wrong login", http.StatusBadRequest)
 
 			resp.Message = "user not found, or wrong passphrase entered"
 			resp.Code = http.StatusBadRequest
@@ -59,12 +63,14 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Users[u.Nickname] = *u
 		resp.AuthGranted = ok
 		resp.Code = http.StatusOK
-		//resp.FlowList = u.FlowList
+		//resp.FlowList = u.FlowListdd
 		break
 
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
 		break
 	}
 
@@ -73,7 +79,13 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 func DumpHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[dump] new connection from: " + r.RemoteAddr)
+
+	// prepare the Logger instance
+	l := Logger{
+		IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		WorkerName: "dump",
+	}
 
 	// check the incoming API token
 	token := r.Header.Get("X-App-Token")
@@ -81,14 +93,16 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 	if token == "" {
 		resp.Message = "empty token"
 		resp.Code = http.StatusUnauthorized
-		log.Println(resp.Message)
+
+		l.Println(resp.Message, resp.Code)
 		return
 	}
 
 	if token != os.Getenv("API_TOKEN") {
-		resp.Message = "wrong token"
+		resp.Message = "invalid token"
 		resp.Code = http.StatusForbidden
-		log.Println(resp.Message)
+
+		l.Println(resp.Message, resp.Code)
 		return
 	}
 
@@ -98,24 +112,26 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 
 		resp.Code = http.StatusOK
 		resp.Message = "data dumped successfully"
-		log.Println(resp.Message)
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
-		log.Println(resp.Message)
+
+		l.Println(resp.Message, resp.Code)
 		break
 	}
 
 	// dynamic encryption bypass hack --- we need unecrypted JSON for curl (healthcheck)
 	if config.EncryptionEnabled {
-		log.Printf("[dump] disabling encryption (was %t)", config.EncryptionEnabled)
+		//log.Printf("[dump] disabling encryption (was %t)", config.EncryptionEnabled)
 		config.EncryptionEnabled = !config.EncryptionEnabled
 
 		resp.Write(w)
 
-		log.Printf("[dump] enabling encryption (was %t)", config.EncryptionEnabled)
+		//log.Printf("[dump] enabling encryption (was %t)", config.EncryptionEnabled)
 		config.EncryptionEnabled = !config.EncryptionEnabled
 	} else {
 		resp.Write(w)
@@ -124,7 +140,15 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 
 func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[flow] new connection from: " + r.RemoteAddr)
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		WorkerName: "flow",
+	}
+
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
@@ -134,18 +158,20 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -153,15 +179,17 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		key := post.ID
 
 		if deleted := deleteOne(FlowCache, key); !deleted {
-			log.Println("cannot delete the post")
 			resp.Message = "cannot delete the post"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, post removed")
 		resp.Message = "ok, post removed"
 		resp.Code = http.StatusOK
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "GET":
@@ -173,6 +201,8 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusOK
 		resp.Posts = posts
 		resp.Count = count
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "POST":
@@ -181,18 +211,20 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -200,15 +232,17 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		post.ID = key
 
 		if saved := setOne(FlowCache, key, post); !saved {
-			log.Println("backend error: cannot save new post (cache error)")
 			resp.Message = "backend error: cannot save new post (cache error)"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, adding new post")
 		resp.Message = "ok, adding new post"
 		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "PUT":
@@ -217,45 +251,53 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &post); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 		key := post.ID
 
-		/*if _, found := getOne(FlowCache, key, models.User{}); !found {
-			log.Println("unknown post update requested")
+		if _, found := getOne(FlowCache, key, models.User{}); !found {
 			resp.Message = "unknown post update requested"
 			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
 			break
-		}*/
+		}
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "cannot update post"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, post updated")
 		resp.Message = "ok, post updated"
 		resp.Code = http.StatusOK
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
 		break
 	}
 
@@ -264,7 +306,15 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 func PollsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[poll] new connection from: " + r.RemoteAddr)
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		WorkerName: "polls",
+	}
+
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
@@ -273,33 +323,37 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &poll); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		key := poll.ID
 
 		if deleted := deleteOne(PollCache, key); !deleted {
-			log.Println("cannot delete the poll")
 			resp.Message = "cannot delete the poll"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, poll removed")
 		resp.Message = "ok, poll removed"
 		resp.Code = http.StatusOK
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "GET":
@@ -308,6 +362,8 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "ok, dumping polls"
 		resp.Code = http.StatusOK
 		resp.Polls = polls
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "POST":
@@ -315,33 +371,37 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &poll); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		key := poll.ID
 
 		if saved := setOne(PollCache, key, poll); !saved {
-			log.Println("backend error: cannot save new poll (cache error)")
 			resp.Message = "backend error: cannot save new poll (cache error)"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, adding new poll")
 		resp.Message = "ok, adding new poll"
 		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "PUT":
@@ -349,61 +409,52 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Println("backend error: cannot read input stream: " + err.Error())
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
 		if err := json.Unmarshal(data, &poll); err != nil {
-			log.Println("backend error: cannot unmarshall fetched data: " + err.Error())
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 		key := poll.ID
 
 		if _, found := getOne(PollCache, key, models.Poll{}); !found {
-			log.Println("unknown poll update requested")
 			resp.Message = "unknown poll update requested"
 			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		if saved := setOne(PollCache, key, poll); !saved {
 			resp.Message = "cannot update post"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		log.Println("ok, poll updated")
 		resp.Message = "ok, poll updated"
 		resp.Code = http.StatusOK
-		break
-	default:
-		resp.Message = "disallowed method"
-		resp.Code = http.StatusBadRequest
-		break
-	}
 
-	resp.Write(w)
-}
-
-func StatsHandler(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	log.Println("[stats] new connection from: " + r.RemoteAddr)
-
-	switch r.Method {
-	case "GET":
+		l.Println(resp.Message, resp.Code)
 		break
 
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
 		break
 	}
 
@@ -412,7 +463,15 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	log.Println("[user] new connection from: " + r.RemoteAddr)
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		WorkerName: "users",
+	}
+
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	switch r.Method {
@@ -423,12 +482,16 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if _, found := getOne(UserCache, key, models.User{}); !found {
 			resp.Message = "user nout found: " + key
 			resp.Code = http.StatusNotFound
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		if deleted := deleteOne(UserCache, key); !deleted {
 			resp.Message = "error deleting: " + key
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -450,6 +513,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 		resp.Message = "ok, deleting user: " + key
 		resp.Code = http.StatusOK
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "GET":
@@ -459,6 +524,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "ok, dumping users"
 		resp.Code = http.StatusOK
 		resp.Users = users
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "POST":
@@ -469,6 +536,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -478,12 +547,16 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		if _, found := getOne(UserCache, user.Nickname, models.User{}); found {
 			resp.Message = "user already exists"
 			resp.Code = http.StatusConflict
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -492,6 +565,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if saved := setOne(UserCache, user.Nickname, user); !saved {
 			resp.Message = "backend error: cannot save new user"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -499,6 +574,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 		resp.Message = "ok, adding user"
 		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	case "PUT":
@@ -509,6 +586,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			resp.Message = "backend error: cannot read input stream: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
@@ -518,31 +597,39 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		if _, found := getOne(UserCache, user.Nickname, models.User{}); !found {
 			resp.Message = "user not found"
 			resp.Code = http.StatusNotFound
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
 		if saved := setOne(UserCache, user.Nickname, user); !saved {
 			resp.Message = "backend error: cannot update the user"
 			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		//resp.Users[user.Nickname] = user
-
 		resp.Message = "ok, user updated"
 		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
 		break
 
 	default:
 		resp.Message = "disallowed method"
 		resp.Code = http.StatusBadRequest
 
+		l.Println(resp.Message, resp.Code)
+		break
 	}
 
 	resp.Write(w)
