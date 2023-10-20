@@ -467,6 +467,12 @@ func (c *flowContent) Render() app.UI {
 		pagedPosts = sortedPosts[start:end]
 	}
 
+	// compose a summary of a long post to be replied to
+	replySummary := ""
+	if c.modalReplyActive {
+		replySummary = c.posts[c.interactedPostKey].Content[:config.MaxPostLength/10] + "- [...]"
+	}
+
 	return app.Main().Class("responsive").Body(
 		// page heading
 		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
@@ -489,7 +495,15 @@ func (c *flowContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Article().Class("post").Style("max-width", "100%").Body(
-					app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+					app.If(replySummary != "",
+						app.Details().Body(
+							app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+							app.Div().Class("space"),
+							app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+						),
+					).Else(
+						app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+					),
 				),
 
 				app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
