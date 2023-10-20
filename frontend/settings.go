@@ -48,7 +48,6 @@ type settingsContent struct {
 
 func (p *SettingsPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class(p.mode),
 		&header{},
 		&footer{},
 		&settingsContent{},

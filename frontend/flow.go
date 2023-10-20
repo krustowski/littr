@@ -56,7 +56,6 @@ func (p *FlowPage) OnNav(ctx app.Context) {
 
 func (p *FlowPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&flowContent{},

@@ -48,7 +48,6 @@ func (p *LoginPage) OnNav(ctx app.Context) {
 
 func (p *LoginPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&loginContent{},

@@ -85,15 +85,25 @@ func initServer() {
 
 	// root route with custom CSS and JS definitions
 	http.Handle("/", &app.Handler{
-		Name:        "litter-go",
-		Description: "litter-go PWA",
-		Author:      "krusty",
+		Name:         "litter-go",
+		ShortName:    "littr",
+		Description:  "litter-go PWA",
+		Author:       "krusty",
+		LoadingLabel: "loading...",
+		Lang:         "en",
 		Icon: app.Icon{
 			Default:    "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
+		Body: func() app.HTMLBody {
+			return app.Body().Class("dark")
+		},
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
+		Version:         os.Getenv("APP_VERSION"),
+		/*Preconnect: []string{
+			"https://cdn.gscloud.cz/",
+		},*/
 		Styles: []string{
 			"https://cdn.gscloud.cz/css/beer.min.css",
 			"https://cdn.gscloud.cz/css//sortable.min.css",

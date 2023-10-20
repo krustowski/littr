@@ -23,7 +23,6 @@ func (p *ToSPage) OnNav(ctx app.Context) {
 
 func (p *ToSPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&tosContent{},

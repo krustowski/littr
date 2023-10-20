@@ -40,7 +40,6 @@ func (p *RegisterPage) OnNav(ctx app.Context) {
 
 func (p *RegisterPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&registerContent{},

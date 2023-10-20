@@ -64,7 +64,6 @@ func (p *StatsPage) OnNav(ctx app.Context) {
 
 func (p *StatsPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&statsContent{},
