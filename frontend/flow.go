@@ -469,7 +469,7 @@ func (c *flowContent) Render() app.UI {
 
 	// compose a summary of a long post to be replied to
 	replySummary := ""
-	if c.modalReplyActive {
+	if c.modalReplyActive && len(c.posts[c.interactedPostKey].Content) > config.MaxPostLength {
 		replySummary = c.posts[c.interactedPostKey].Content[:config.MaxPostLength/10] + "- [...]"
 	}
 
