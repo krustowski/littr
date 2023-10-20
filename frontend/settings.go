@@ -493,12 +493,9 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Div().Class("large-divider"),
 		app.H5().Text("account deletion"),
+		app.P().Text("down here, you can delete your account; please note that this action is irreversible!"),
 		app.Div().Class("space"),
 
-		// acc deletion
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.P().Text("down here, you can delete your account; please note that this action is irreversible!"),
-		),
 		app.Button().Class("responsive red9 white-text bold").Text("delete account").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
 
 		app.Div().Class("large-space"),

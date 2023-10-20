@@ -119,6 +119,7 @@ http://localhost:8093/flow
 + fix NaN% when loading
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
++ implement customizable navbar items order
 + implement loading of new posts
 + implement sessions (SessionsCache)
 + OAuth2
