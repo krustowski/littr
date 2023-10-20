@@ -5,6 +5,7 @@ var (
 	HeaderTopPadding string = "25px"
 
 	NicknameLengthMax int = 12
+	MaxPostLength     int = 500
 )
 
 func initFrontendConfig() {
