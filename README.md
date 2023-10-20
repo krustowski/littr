@@ -140,8 +140,9 @@ http://localhost:8093/flow
 + implement mailing (verification mails)
 
 ### roadmap to v0.19
-+ fix local JS and CSS deps
++ ~~fix local JS and CSS deps (hotfix via remote CDN)~~
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
++ ~~implement `<details>` tag for posts longer than `MaxPostLength)~~~
 + implement shadow function (acc blocking)
 
 ### roadmap to v0.18

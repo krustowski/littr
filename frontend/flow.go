@@ -524,6 +524,7 @@ func (c *flowContent) Render() app.UI {
 
 					previousContent := ""
 
+					// prepare reply parameters to render
 					if post.ReplyToID != "" {
 						if previous, found := c.posts[post.ReplyToID]; found {
 							previousContent = previous.Nickname + " posted: " + previous.Content
@@ -532,6 +533,7 @@ func (c *flowContent) Render() app.UI {
 						}
 					}
 
+					// filter out not-single-post items
 					if c.singlePostID != "" {
 						if post.ID != c.singlePostID && c.singlePostID != post.ReplyToID {
 							return nil
@@ -543,8 +545,22 @@ func (c *flowContent) Render() app.UI {
 						return nil
 					}
 
+					// check the post's lenght, on threshold use <details> tag
+					postDetailsSummary := ""
+					if len(post.Content) > config.MaxPostLength {
+						postDetailsSummary = post.Content[:config.MaxPostLength/10] + "- [...]"
+					}
+
+					// the same as above with the previous post's length for reply render
+					previousDetailsSummary := ""
+					if len(previousContent) > config.MaxPostLength {
+						previousDetailsSummary = previousContent[:config.MaxPostLength/10] + "- [...]"
+					}
+
 					return app.Tr().Class().Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+
+							// post header (author avatar + name + link button)
 							app.Div().Class("row").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
@@ -567,12 +583,22 @@ func (c *flowContent) Render() app.UI {
 									),
 									app.Img().Class("no-padding absolute center middle lazy").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 								),
-							// reply
+
+							// reply + post
 							).Else(
 								app.If(post.ReplyToID != "",
 									app.Article().Class("post black-text yellow10").Style("max-width", "100%").Body(
 										app.Div().Class("row max").Body(
-											app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+											app.If(previousDetailsSummary != "",
+												app.Details().Class("max").Body(
+													app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+													app.Div().Class("space"),
+													app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+												),
+											).Else(
+												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+											),
+
 											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
 												app.I().Text("history"),
 											),
@@ -580,10 +606,19 @@ func (c *flowContent) Render() app.UI {
 									),
 								),
 								app.Article().Class("post").Style("max-width", "100%").Body(
-									app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+									app.If(postDetailsSummary != "",
+										app.Details().Body(
+											app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+											app.Div().Class("space"),
+											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+										),
+									).Else(
+										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+									),
 								),
 							),
 
+							// post footer (timestamp + reply buttom + star/delete button)
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
 									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
