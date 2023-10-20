@@ -8,7 +8,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.5.3 âť¤ď¸Ź'
+  window.LIT.version = 'LittrJS v0.5.4'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -324,6 +324,13 @@
     }
   }
 
+  // 
+  addEventListener('keydown', (event) => {
+    if(event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.target.form?.submit();
+    }
+  });
+
   // onload event listener
   addEventListener('load', event => {
     console.log(LIT.version)
@@ -336,7 +343,7 @@
     }
 
     // Sortable tables - https://www.cssscript.com/fast-html-table-sorting/
-    $('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.gscloud.cz/css//sortable.min.css">')
+    //$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.gscloud.cz/css//sortable.min.css">')
 
     // set fix UI action interval
     setInterval(LIT.fixUI, 250)
