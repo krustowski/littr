@@ -110,13 +110,12 @@ http://localhost:8093/flow
 ### nice-to-have(s)
 + ~~account deletion (`settings` page)~~
 + add timestamps on server, render them on client side
-+ automatic links for known TLDs
++ ~~automatic links for known TLDs~~
 + autosubmit on password manager autofill (when username and password get filled quite quickly)
 + break lines on \n in posts
 + check for double posting same content
 + custom colour theme per user
 + deep code refactoring
-+ fix NaN% when loading
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
@@ -143,6 +142,7 @@ http://localhost:8093/flow
 
 ### roadmap to v0.19
 + ~~fix local JS and CSS deps (hotfix via remote CDN)~~
++ ~~fix NaN% when loading~~
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
 + ~~implement `<details>` tag for posts longer than `MaxPostLength)~~
 + implement shadow function (acc blocking)
