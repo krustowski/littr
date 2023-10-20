@@ -428,7 +428,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("light/dark mode switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("dark-mode-switch").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch),
+					app.Input().Type("checkbox").ID("dark-mode-switch").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch).Disabled(c.settingsButtonDisabled),
 					app.Span().Body(
 						app.I().Text("dark_mode"),
 					),
@@ -446,6 +446,21 @@ func (c *settingsContent) Render() app.UI {
 					app.Input().Type("checkbox").ID("left-hand-switch").Checked(false).Disabled(true).OnChange(nil),
 					app.Span().Body(
 						app.I().Text("front_hand"),
+					),
+				),
+			),
+		),
+
+		// reply notification switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("reply notification switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Span().Body(
+						app.I().Text("notifications"),
 					),
 				),
 			),

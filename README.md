@@ -121,7 +121,7 @@ http://localhost:8093/flow
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
 + implement loading of new posts
-+ implement sessions (SessionsCache)
++ implement sessions (SessionCache)
 + OAuth2
 + show offline mode notification
 + swagger docs
@@ -132,17 +132,19 @@ http://localhost:8093/flow
 + [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
 
 ### roadmap to v0.21
-+ Ctrl+Enter to submit posts like YouTube
 + implement simple notification service
++ implement subscriptions (SubscriptionCache)
 
 ### roadmap to v0.20
++ fix flow reorganize glitch (single page, after post deletion etc)
++ implement Ctrl+Enter to submit posts like YouTube
 + implement forgotten password recovery
 + implement mailing (verification mails)
 
 ### roadmap to v0.19
 + ~~fix local JS and CSS deps (hotfix via remote CDN)~~
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
-+ ~~implement `<details>` tag for posts longer than `MaxPostLength)~~~
++ ~~implement `<details>` tag for posts longer than `MaxPostLength)~~
 + implement shadow function (acc blocking)
 
 ### roadmap to v0.18
