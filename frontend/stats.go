@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -384,7 +385,19 @@ func (c *statsContent) Render() app.UI {
 							return 0
 						}
 
-						return float64(users[key].ReactionCount) / float64(users[key].PostCount)
+						stars := float64(users[key].ReactionCount)
+						posts := float64(users[key].PostCount)
+						shades := float64(users[key].ShadeCount)
+						users := float64(flowStats["users"])
+
+						baseRatio := stars / posts
+						shadeCoeff := 1.0
+
+						if users > 1 && shades > 1 {
+							shadeCoeff = 1 - math.Log(shades)/math.Log(users)
+						}
+
+						return baseRatio * shadeCoeff
 					}()
 
 					// filter out unmatched keys
