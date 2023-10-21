@@ -217,7 +217,8 @@ func (f *footer) Render() app.UI {
 			),
 			app.A().Href("/flow").Text("flow").Class("max").Body(
 				app.I().Class("large").Body(
-					app.Text("trending_up")),
+					//app.Text("trending_up")),
+					app.Text("tsunami")),
 				app.Span().Body(
 					app.Text("flow")),
 			),
