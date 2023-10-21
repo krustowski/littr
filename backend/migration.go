@@ -11,14 +11,18 @@ import (
 	"go.savla.dev/littr/models"
 )
 
+type migration func() bool
+
+var migrations = map[string]migration{
+	"migrateAvatarURL()":          migrateAvatarURL,
+	"migrateUserDeletion()":       migrateUserDeletion,
+	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
+}
+
+const defaultAvatarImage = "/web/android-chrome-192x192.png"
+
+// RunMigrations is a "wrapper" function for the migration registration and execution
 func RunMigrations() bool {
-
-	migrations := map[string](func() bool){
-		"migrateAvatarURL()":          migrateAvatarURL,
-		"migrateUserDeletion()":       migrateUserDeletion,
-		"migrateUserRegisteredTime()": migrateUserRegisteredTime,
-	}
-
 	l := Logger{
 		CallerID:   "system",
 		WorkerName: "migration",
@@ -36,8 +40,6 @@ func RunMigrations() bool {
 
 	return true
 }
-
-var defaultAvatarImage = "/web/android-chrome-192x192.png"
 
 // migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 func migrateAvatarURL() bool {
