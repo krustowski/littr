@@ -45,7 +45,6 @@ func (p *UsersPage) OnNav(ctx app.Context) {
 
 func (p *UsersPage) Render() app.UI {
 	return app.Div().Body(
-		app.Body().Class("dark"),
 		&header{},
 		&footer{},
 		&usersContent{},
@@ -449,11 +448,10 @@ func (c *usersContent) Render() app.UI {
 		),
 
 		// users table
-		app.Table().Class("border left-align").ID("table-users").Style("max-width", "100%").Body(
+		app.Table().Class("border").ID("table-users").Style("width", "100%").Body(
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Text("nick, about"),
-					app.Th().Text("flow list"),
+					app.Th().Text("nick, about, flow list, more"),
 				),
 			),
 			app.TBody().Body(
@@ -461,10 +459,18 @@ func (c *usersContent) Render() app.UI {
 					user := pagedUsers[idx]
 
 					var inFlow bool = false
+					var shaded bool = false
 
 					for key, val := range c.user.FlowList {
 						if user.Nickname == key {
 							inFlow = val
+							break
+						}
+					}
+
+					for key, val := range c.user.ShadeList {
+						if user.Nickname == key {
+							shaded = val
 							break
 						}
 					}
@@ -474,42 +480,64 @@ func (c *usersContent) Render() app.UI {
 					}
 
 					return app.Tr().Body(
-						app.Td().Style("max-width", "0").Style("text-overflow", "-").Style("overflow", "clip").Style("word-break", "break-all").Style("hyphens", "auto").Body(
-							app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser),
-							app.Div().Class("space"),
-							app.P().Style("word-break", "break-word").Style("hyphens", "auto").Text(user.About),
-						),
+						app.Td().Class("left-align").Body(
+							// cell's header
+							app.Div().Class("row medium").Body(
+								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+								app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
 
-						// make button inactive for logged user
-						app.If(user.Nickname == c.user.Nickname,
-							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").Disabled(true).Body(
-									app.Text("that's you"),
-								),
-							),
-						).ElseIf(user.Nickname == "system",
-							app.Td().Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").Disabled(true).Body(
-									app.Text("system acc"),
-								),
-							),
-
-						// toggle off
-						).ElseIf(inFlow,
-							app.Td().Style("max-width", "50%").Body(
-								//app.Button().Class("responsive black white-border white-text bold left-shadow").ID(user.Nickname).OnClick(c.onClick).Body(
-								app.Button().Class("border responsive black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
-									//app.I().Text("done"),
-									app.Text("remove from flow"),
+								// shade/block button
+								app.If(shaded,
+									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+										//app.Text("unshade"),
+										app.I().Text("more_horiz"),
+									),
+								).ElseIf(user.Nickname == c.user.Nickname,
+									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
+										app.I().Text("more_horiz"),
+									),
+								).Else(
+									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+										//app.Text("shade"),
+										app.I().Text("more_horiz"),
+									),
 								),
 							),
 
-						// toggle on
-						).Else(
-							app.Td().Style("max-width", "50%").Body(
-								app.Button().Class("responsive deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
-									//app.I().Text("done"),
-									app.Text("add to flow"),
+							// cell's body
+							app.Div().Class("row middle-align bottom-padding").Body(
+
+								app.Article().Class("post max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+									app.Span().Text(user.About),
+								),
+
+								// flow list button
+
+								// make button inactive for logged user
+								app.If(user.Nickname == c.user.Nickname,
+									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "30%").Body(
+										app.Text("that's you"),
+									),
+								// if system acc
+								).ElseIf(user.Nickname == "system",
+									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "40%").Body(
+										app.Text("system acc"),
+									),
+								// if shaded
+								).ElseIf(shaded,
+									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "30%").Body(
+										app.Text("shaded"),
+									),
+								// toggle off
+								).ElseIf(inFlow,
+									app.Button().Class("border black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("width", "40%").Body(
+										app.Text("remove from flow"),
+									),
+								// toggle on
+								).Else(
+									app.Button().Class("deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("width", "30%").Body(
+										app.Text("add to flow"),
+									),
 								),
 							),
 						),

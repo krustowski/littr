@@ -125,6 +125,7 @@ http://localhost:8093/flow
 + show offline mode notification
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
++ use a router (Gorilla Mux, Go-Chi)
 
 ### known bugs
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
