@@ -147,6 +147,7 @@ http://localhost:8093/flow
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
 + ~~implement `<details>` tag for posts longer than `MaxPostLength)~~
 + implement shadow function (acc blocking)
++ implement some user's stats on users page
 
 ### roadmap to v0.18
 + ~~add links to a single flow post~~

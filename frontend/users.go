@@ -21,10 +21,17 @@ type usersContent struct {
 
 	eventListener func()
 
+	polls map[string]models.Poll `json:"polls"`
+	posts map[string]models.Post `json:"posts"`
 	users map[string]models.User `json:"users"`
 
 	user        models.User
 	userInModal models.User
+
+	flowStats map[string]int
+	userStats map[string]userStat
+
+	postCount int
 
 	loaderShow bool
 
@@ -78,6 +85,10 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			Users map[string]models.User `json:"users"`
 		}{}
 
+		postsPre := struct {
+			Posts map[string]models.Post `json:"posts"`
+		}{}
+
 		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
@@ -101,6 +112,29 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			return
 		}
 
+		if data, ok := litterAPI("GET", "/api/flow", nil, user.Nickname); ok {
+			err := json.Unmarshal(*data, &postsPre)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parse error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+		} else {
+			toastText = "cannot fetch posts list"
+			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		// delet dis
 		for k, u := range usersPre.Users {
 			u.Searched = true
@@ -114,8 +148,12 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			c.user = updatedUser
 			c.users = usersPre.Users
 
+			c.posts = postsPre.Posts
+
 			c.pagination = 20
 			c.pageNo = 1
+
+			c.flowStats, c.userStats = c.calculateStats()
 
 			c.loaderShow = false
 		})
@@ -133,6 +171,9 @@ func (c *usersContent) OnMount(ctx app.Context) {
 	c.pageNo = 1
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+
+	// hotfix to catch panic
+	c.polls = make(map[string]models.Poll)
 }
 
 func (c *usersContent) onScroll(ctx app.Context, e app.Event) {
@@ -303,6 +344,77 @@ func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastShow = (c.toastText != "")
 	c.usersButtonDisabled = false
 	c.showUserPreviewModal = false
+}
+
+func (c *usersContent) calculateStats() (map[string]int, map[string]userStat) {
+	flowStats := make(map[string]int)
+	userStats := make(map[string]userStat)
+
+	flowers := make(map[string]int)
+	shades := make(map[string]int)
+
+	flowStats["posts"] = c.postCount
+	//flowStats["users"] = c.userCount
+	flowStats["users"] = -1
+	flowStats["stars"] = 0
+
+	// iterate over all posts, compose stats results
+	for _, val := range c.posts {
+		// increment user's stats
+		stat, ok := userStats[val.Nickname]
+		if !ok {
+			// create a blank stat
+			stat = userStat{}
+			stat.Searched = true
+		}
+
+		stat.PostCount++
+		stat.ReactionCount += val.ReactionCount
+		userStats[val.Nickname] = stat
+		flowStats["stars"] += val.ReactionCount
+	}
+
+	// iterate over all users, compose global flower and shade count
+	for _, user := range c.users {
+		for key, enabled := range user.FlowList {
+			if enabled && key != user.Nickname {
+				flowers[key]++
+			}
+		}
+
+		for key, shaded := range user.ShadeList {
+			if shaded && key != user.Nickname {
+				shades[key]++
+			}
+		}
+
+		flowStats["users"]++
+	}
+
+	// iterate over composed flowers, assign the count to an user
+	for key, count := range flowers {
+		stat := userStats[key]
+
+		// FlowList also contains the user itself
+		stat.FlowerCount = count
+		userStats[key] = stat
+	}
+
+	// iterate over compose shades, assign the count to an user
+	for key, count := range shades {
+		stat := userStats[key]
+
+		// FlowList also contains the user itself
+		stat.ShadeCount = count
+		userStats[key] = stat
+	}
+
+	// iterate over all polls, count them good
+	for range c.polls {
+		flowStats["polls"]++
+	}
+
+	return flowStats, userStats
 }
 
 func (c *usersContent) Render() app.UI {
@@ -486,6 +598,18 @@ func (c *usersContent) Render() app.UI {
 								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
 
+								// user's stats --- flower count
+								app.B().Text(c.userStats[user.Nickname].FlowerCount),
+								app.Span().Class("white-text bold").Body(
+									app.I().Text("filter_vintage"),
+								),
+
+								// user's stats --- post count
+								app.B().Text(c.userStats[user.Nickname].PostCount),
+								app.Span().Class("white-text bold").Body(
+									app.I().Text("news"),
+								),
+
 								// shade/block button
 								app.If(shaded,
 									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
@@ -505,7 +629,7 @@ func (c *usersContent) Render() app.UI {
 							),
 
 							// cell's body
-							app.Div().Class("row middle-align bottom-padding").Body(
+							app.Div().Class("row middle-align bottom-padding top-padding").Body(
 
 								app.Article().Class("post max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 									app.Span().Text(user.About),
