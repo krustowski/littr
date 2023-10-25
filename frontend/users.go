@@ -326,6 +326,13 @@ func (c *usersContent) handleUserPreview(ctx app.Context, a app.Action) {
 	return
 }
 
+func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	c.usersButtonDisabled = true
+
+	ctx.Navigate("/flow/" + key)
+}
+
 func (c *usersContent) onClickUser(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("preview", key)
@@ -607,22 +614,22 @@ func (c *usersContent) Render() app.UI {
 
 								// user's stats --- post count
 								app.B().Text(c.userStats[user.Nickname].PostCount),
-								app.Span().Class("white-text bold").Body(
+								app.Span().Class("white-text bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
 									app.I().Text("news"),
 								),
 
 								// shade/block button
 								app.If(shaded,
-									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
 										//app.Text("unshade"),
 										app.I().Text("more_horiz"),
 									),
 								).ElseIf(user.Nickname == c.user.Nickname,
-									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
+									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
 										app.I().Text("more_horiz"),
 									),
 								).Else(
-									app.Button().Class("transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
 										//app.Text("shade"),
 										app.I().Text("more_horiz"),
 									),

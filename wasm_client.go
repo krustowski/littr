@@ -13,6 +13,7 @@ func initClient() {
 	app.Route("/", &frontend.LoginPage{})
 	app.Route("/flow", &frontend.FlowPage{})
 	app.RouteWithRegexp("/flow/\\d+", &frontend.FlowPage{})
+	app.RouteWithRegexp("/flow/\\w+", &frontend.FlowPage{})
 	app.Route("/login", &frontend.LoginPage{})
 	app.Route("/logout", &frontend.LoginPage{})
 	app.Route("/polls", &frontend.PollsPage{})

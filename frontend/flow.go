@@ -39,6 +39,7 @@ type flowContent struct {
 
 	interactedPostKey string
 	singlePostID      string
+	isPost            bool
 
 	paginationEnd bool
 	pagination    int
@@ -280,13 +281,23 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	toastText := ""
 
 	singlePostID := ""
+	isPost := true
 	url := strings.Split(ctx.Page().URL().Path, "/")
+
 	if len(url) > 2 && url[2] != "" {
 		singlePostID = url[2]
 	}
-	log.Println(singlePostID)
 
 	ctx.Async(func() {
+		if _, err := strconv.Atoi(singlePostID); singlePostID != "" && err != nil {
+			// prolly not a post ID, but an user's nickname
+			isPost = false
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.isPost = isPost
+		})
+
 		var enUser string
 		var user models.User
 
@@ -362,10 +373,17 @@ func (c *flowContent) OnNav(ctx app.Context) {
 		// try the singlePostID var if present
 		if singlePostID != "" {
 			_, found := postsRaw.Posts[singlePostID]
-			if !found {
+			if isPost && !found {
 				toastText = "post not found"
 			}
 
+			if !isPost {
+				toastText = ""
+
+				if _, found = usersRaw.Users[singlePostID]; !found {
+					toastText = "user not found"
+				}
+			}
 		}
 
 		// Storing HTTP response in component field:
@@ -548,7 +566,11 @@ func (c *flowContent) Render() app.UI {
 
 					// filter out not-single-post items
 					if c.singlePostID != "" {
-						if post.ID != c.singlePostID && c.singlePostID != post.ReplyToID {
+						if c.isPost && post.ID != c.singlePostID && c.singlePostID != post.ReplyToID {
+							return nil
+						}
+
+						if _, found := c.users[c.singlePostID]; (!c.isPost && !found) || (found && post.Nickname != c.singlePostID) {
 							return nil
 						}
 					}

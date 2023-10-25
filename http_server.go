@@ -21,6 +21,7 @@ func initClient() {
 	app.Route("/", &frontend.LoginPage{})
 	app.Route("/flow", &frontend.FlowPage{})
 	app.RouteWithRegexp("/flow/\\d+", &frontend.FlowPage{})
+	app.RouteWithRegexp("/flow/\\w+", &frontend.FlowPage{})
 	app.Route("/login", &frontend.LoginPage{})
 	app.Route("/logout", &frontend.LoginPage{})
 	app.Route("/polls", &frontend.PollsPage{})
@@ -47,7 +48,7 @@ func initServer() {
 	// initialize caches
 	backend.FlowCache = &core.Cache{}
 	backend.PollCache = &core.Cache{}
-	backend.SessionCache = &core.Cache{}
+	backend.SubscriptionCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
 	l.Println("caches initialized", http.StatusOK)
