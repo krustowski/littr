@@ -116,6 +116,7 @@ http://localhost:8093/flow
 + check for double posting same content
 + custom colour theme per user
 + deep code refactoring
++ dismiss any modal by clicking anywhere on the screen
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
@@ -123,6 +124,7 @@ http://localhost:8093/flow
 + implement sessions (SessionCache)
 + OAuth2
 + show offline mode notification
++ show user's details on the top of /flow/<username> page
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 + use a router (Gorilla Mux, Go-Chi)
