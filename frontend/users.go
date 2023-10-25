@@ -513,7 +513,8 @@ func (c *usersContent) Render() app.UI {
 		app.If(c.showUserPreviewModal && userInModalInfo != nil,
 			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
 
-				app.Img().Class("small-width small-heigh").Src(c.userInModal.AvatarURL),
+				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
+				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 
 				app.Nav().Class("center-align").Body(
 					app.H5().Text(c.userInModal.Nickname),

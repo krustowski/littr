@@ -417,7 +417,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		app.Div().Class("large-divider"),
-		app.H5().Text("switches"),
+		app.H6().Text("switches"),
 		app.Div().Class("space"),
 
 		// darkmode switch
@@ -465,11 +465,34 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// user avatar change
 		app.Div().Class("large-divider"),
-		app.H5().Text("password change"),
+		app.H6().Text("change user's avatar"),
 		app.Div().Class("space"),
 
+		app.Div().Class("").Body(
+			app.P().Body(
+				app.Text("one's avatar is linked to one's e-mail address, which has to be regitered with "),
+				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com"),
+			),
+			app.P().Text("current avatar:"),
+		),
+
+		app.Div().Class("transparent middle-align center-align bottom").Body(
+			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
+		),
+
+		app.Div().Class("field").Body(
+			app.P().Body(
+				app.Text("if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
+			),
+		),
+
 		// password change
+		app.Div().Class("large-divider"),
+		app.H6().Text("password change"),
+		app.Div().Class("space"),
+
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
 			app.Label().Text("passphrase").Class("active"),
@@ -482,11 +505,11 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 
+		// about textarea
 		app.Div().Class("large-divider"),
 		app.H6().Text("about text change"),
 		app.Div().Class("space"),
 
-		// about textarea
 		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about").Class("active"),
@@ -494,19 +517,20 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
 
+		// website link
 		app.Div().Class("large-divider"),
-		app.H5().Text("website link change"),
+		app.H6().Text("website link change"),
 		app.Div().Class("space"),
 
-		// website link
 		app.Div().Class("field label border invalid deep-orange-text").Body(
 			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 			app.Label().Text("website URL").Class("active"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 
+		// user deletion
 		app.Div().Class("large-divider"),
-		app.H5().Text("account deletion"),
+		app.H6().Text("account deletion"),
 		app.P().Text("down here, you can delete your account; please note that this action is irreversible!"),
 		app.Div().Class("space"),
 
