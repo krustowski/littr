@@ -475,6 +475,10 @@ func (c *settingsContent) Render() app.UI {
 				app.Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
 				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
 			),
+			app.P().Text("your e-mail address:"),
+			app.Article().Body(
+				app.Text(c.user.Email),
+			),
 			app.P().Text("current avatar:"),
 		),
 

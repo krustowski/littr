@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"go.savla.dev/littr/backend"
 	"go.savla.dev/littr/config"
@@ -101,7 +102,7 @@ func initServer() {
 		},
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
-		Version:         os.Getenv("APP_VERSION"),
+		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
 		/*Preconnect: []string{
 			"https://cdn.gscloud.cz/",
 		},*/
