@@ -142,15 +142,17 @@ http://localhost:8093/flow
 + implement Ctrl+Enter to submit posts like YouTube
 + implement forgotten password recovery
 + implement mailing (verification mails)
-+ show selected user's posts only --- button on users page
++ improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.19
++ ~~add avatar preview to settings page~~
 + ~~fix local JS and CSS deps (hotfix via remote CDN)~~
 + ~~fix NaN% when loading~~
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
 + ~~implement `<details>` tag for posts longer than `MaxPostLength)~~
 + implement shadow function (acc blocking)
 + ~~implement some user's stats on users page~~
++ ~~show selected user's posts only --- button/link on users page~~
 
 ### roadmap to v0.18
 + ~~add links to a single flow post~~
