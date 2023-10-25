@@ -33,6 +33,8 @@ type usersContent struct {
 
 	postCount int
 
+	userButtonDisabled bool
+
 	loaderShow bool
 
 	paginationEnd bool
@@ -206,6 +208,10 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 
 	flowList := c.user.FlowList
 
+	if c.user.ShadeList[key] {
+		return
+	}
+
 	if flowList == nil {
 		flowList = make(map[string]bool)
 		flowList[c.user.Nickname] = true
@@ -326,9 +332,105 @@ func (c *usersContent) handleUserPreview(ctx app.Context, a app.Action) {
 	return
 }
 
+func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	c.usersButtonDisabled = true
+
+	// do not shade yourself
+	if c.user.Nickname == key {
+		c.usersButtonDisabled = false
+		return
+	}
+
+	// fetch the to-be-shaded user
+	userShaded, found := c.users[key]
+	if !found {
+		c.usersButtonDisabled = false
+		return
+	}
+
+	// disable any following of such user
+	userShaded.FlowList[key] = false
+	c.user.FlowList[key] = false
+
+	// negate the previous state
+	shadeListItem := c.user.ShadeList[key]
+
+	if c.user.ShadeList == nil {
+		c.user.ShadeList = make(map[string]bool)
+	}
+
+	c.user.ShadeList[key] = !shadeListItem
+
+	toastText := ""
+
+	ctx.Async(func() {
+		// update shaded user
+		respRaw, ok := litterAPI("PUT", "/api/users", userShaded, c.user.Nickname)
+		if !ok {
+			toastText = "generic backend error"
+			return
+		}
+
+		response := struct {
+			Message string `json:"message"`
+			Code    int    `json:"code"`
+		}{}
+
+		if err := json.Unmarshal(*respRaw, &response); err != nil {
+			toastText = "user update failed: " + err.Error()
+			return
+		}
+
+		if response.Code != 200 && response.Code != 201 {
+			toastText = "user update failed: " + response.Message
+			log.Println(response.Message)
+			return
+		}
+
+		var stream []byte
+		if err := reload(c.user, &stream); err != nil {
+			toastText = "local storage reload failed: " + err.Error()
+			return
+		}
+
+		// update user
+		respRaw, ok = litterAPI("PUT", "/api/users", c.user, c.user.Nickname)
+		if !ok {
+			toastText = "generic backend error"
+			return
+		}
+
+		if err := json.Unmarshal(*respRaw, &response); err != nil {
+			toastText = "user update failed: " + err.Error()
+			return
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			ctx.LocalStorage().Set("user", stream)
+
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.usersButtonDisabled = false
+
+			log.Println("dispatch ends")
+		})
+	})
+
+	c.userButtonDisabled = false
+	return
+
+}
+
 func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	c.usersButtonDisabled = true
+
+	// isn't the use blocked?
+	if c.user.ShadeList[key] {
+		c.usersButtonDisabled = false
+		return
+	}
 
 	if c.userStats[key].PostCount == 0 {
 		c.usersButtonDisabled = false
@@ -662,7 +764,7 @@ func (c *usersContent) Render() app.UI {
 										app.Text("system acc"),
 									),
 								// if shaded
-								).ElseIf(shaded,
+								).ElseIf(shaded || c.users[user.Nickname].ShadeList[c.user.Nickname],
 									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "30%").Body(
 										app.Text("shaded"),
 									),
@@ -675,6 +777,16 @@ func (c *usersContent) Render() app.UI {
 								).Else(
 									app.Button().Class("deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("width", "30%").Body(
 										app.Text("add to flow"),
+									),
+								),
+
+								app.If(shaded,
+									app.Button().Class("no-padding transparent circular black white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
+										app.I().Text("block"),
+									),
+								).Else(
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
+										app.I().Text("block"),
 									),
 								),
 							),

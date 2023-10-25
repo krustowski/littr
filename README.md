@@ -150,7 +150,7 @@ http://localhost:8093/flow
 + ~~fix NaN% when loading~~
 + ~~implement custom JSON log wrapper~~ (~~goroutine?~~)
 + ~~implement `<details>` tag for posts longer than `MaxPostLength)~~
-+ implement shadow function (acc blocking)
++ ~~implement shadow function (acc blocking)~~
 + ~~implement some user's stats on users page~~
 + ~~show selected user's posts only --- button/link on users page~~
 
