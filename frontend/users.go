@@ -330,6 +330,11 @@ func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	c.usersButtonDisabled = true
 
+	if c.userStats[key].PostCount == 0 {
+		c.usersButtonDisabled = false
+		return
+	}
+
 	ctx.Navigate("/flow/" + key)
 }
 
