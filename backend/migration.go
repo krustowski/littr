@@ -17,6 +17,7 @@ var migrations = map[string]migration{
 	"migrateAvatarURL()":          migrateAvatarURL,
 	"migrateUserDeletion()":       migrateUserDeletion,
 	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
+	"migrateUserShadeList()":      migrateUserShadeList,
 }
 
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
@@ -104,6 +105,25 @@ func migrateUserRegisteredTime() bool {
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 			if ok := setOne(UserCache, key, user); !ok {
 				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// migrateUserShadeList fucntion lists ShadeList items and ensures user shaded (no mutual following, no replying).
+func migrateUserShadeList() bool {
+	users, _ := getAll(UserCache, models.User{})
+
+	for _, user := range users {
+		shadeList := user.ShadeList
+		flowList := user.FlowList
+
+		// ShadeList map[string]bool `json:"shade_list"`
+		for name, state := range shadeList {
+			if state && name != user.Nickname {
+				flowList[name] = false
 			}
 		}
 	}
