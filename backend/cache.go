@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	FlowCache    *core.Cache
-	PollCache    *core.Cache
-	SessionCache *core.Cache
-	UserCache    *core.Cache
+	FlowCache         *core.Cache
+	PollCache         *core.Cache
+	SubscriptionCache *core.Cache
+	UserCache         *core.Cache
 )
 
 func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
