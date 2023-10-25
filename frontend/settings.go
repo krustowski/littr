@@ -472,8 +472,8 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Div().Class("").Body(
 			app.P().Body(
-				app.Text("one's avatar is linked to one's e-mail address, which has to be regitered with "),
-				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com"),
+				app.Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
+				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
 			),
 			app.P().Text("current avatar:"),
 		),
@@ -482,9 +482,9 @@ func (c *settingsContent) Render() app.UI {
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 		),
 
-		app.Div().Class("field").Body(
+		app.Div().Class("italic field").Body(
 			app.P().Body(
-				app.Text("if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
+				app.Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
 		),
 
