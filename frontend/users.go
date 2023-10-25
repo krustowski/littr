@@ -601,7 +601,8 @@ func (c *usersContent) Render() app.UI {
 								// user's stats --- flower count
 								app.B().Text(c.userStats[user.Nickname].FlowerCount),
 								app.Span().Class("white-text bold").Body(
-									app.I().Text("filter_vintage"),
+									//app.I().Text("filter_vintage"),
+									app.I().Text("group"),
 								),
 
 								// user's stats --- post count
