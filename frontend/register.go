@@ -26,6 +26,8 @@ type registerContent struct {
 	toastShow bool
 	toastText string
 
+	users map[string]models.User
+
 	nickname        string
 	passphrase      string
 	passphraseAgain string
@@ -51,7 +53,8 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 	toastText := ""
 
 	response := struct {
-		Code int `json:"code"`
+		Code  int                    `json:"code"`
+		Users map[string]models.User `json:"users"`
 	}{}
 
 	ctx.Async(func() {
@@ -61,6 +64,42 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		passphrase := strings.TrimSpace(c.passphrase)
 		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
 		email := strings.TrimSpace(c.email)
+
+		// fetch the users list to compare to
+		resp, ok := litterAPI("GET", "/api/users", nil, nickname)
+		if !ok {
+			toastText = "cannot send API request (backend error)"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if err := json.Unmarshal(*resp, &response); err != nil {
+			toastText = "cannot unmarshal response"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		for _, user := range response.Users {
+			if email != user.Email {
+				continue
+			}
+
+			toastText = "this email has been already used"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
 
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
 			toastText = "all fields need to be filled"
@@ -121,7 +160,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok := litterAPI("POST", "/api/users", user, user.Nickname)
+		resp, ok = litterAPI("POST", "/api/users", user, user.Nickname)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 
