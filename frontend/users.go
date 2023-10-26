@@ -432,6 +432,13 @@ func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
 		return
 	}
 
+	// is the user followed?
+	if !c.user.FlowList[key] {
+		c.usersButtonDisabled = false
+		return
+	}
+
+	// show only 1+ posts
 	if c.userStats[key].PostCount == 0 {
 		c.usersButtonDisabled = false
 		return
