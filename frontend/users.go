@@ -784,6 +784,10 @@ func (c *usersContent) Render() app.UI {
 									app.Button().Class("no-padding transparent circular black white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
 										app.I().Text("block"),
 									),
+								).ElseIf(user.Nickname == c.user.Nickname,
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(nil).Disabled(true).ID(user.Nickname).Body(
+										app.I().Text("block"),
+									),
 								).Else(
 									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
 										app.I().Text("block"),
