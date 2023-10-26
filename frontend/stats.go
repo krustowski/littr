@@ -318,8 +318,12 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 	}
 
 	// iterate over all polls, count them good
-	for range c.polls {
+	for _, poll := range c.polls {
 		flowStats["polls"]++
+
+		flowStats["votes"] += poll.OptionOne.Counter
+		flowStats["votes"] += poll.OptionTwo.Counter
+		flowStats["votes"] += poll.OptionThree.Counter
 	}
 
 	return flowStats, userStats

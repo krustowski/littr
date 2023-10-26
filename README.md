@@ -47,10 +47,11 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 ## features
 
 + switchable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker) 
-+ in-memory runtime cache
++ in-memory runtime cache(s)
 + data persistence on container restart (on `SIGINT`)
 + flow posts filtering using the FlowList --- simply choose who to follow
 + can run offline (using the cache)
++ shade function to block other accounts from following and reading their posts
 
 ## REST API service
 + the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
