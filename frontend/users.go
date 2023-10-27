@@ -715,6 +715,7 @@ func (c *usersContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Class("left-align").Body(
+
 							// cell's header
 							app.Div().Class("row medium").Body(
 								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),

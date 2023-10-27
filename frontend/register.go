@@ -87,20 +87,6 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			return
 		}
 
-		for _, user := range response.Users {
-			if email != user.Email {
-				continue
-			}
-
-			toastText = "this email has been already used"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
 			toastText = "all fields need to be filled"
 
@@ -138,6 +124,21 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		if _, err := mail.ParseAddress(email); err != nil {
 			log.Println(err)
 			toastText = "wrong e-mail format entered"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// check if the e-mail address has been used already
+		for _, user := range response.Users {
+			if email != user.Email {
+				continue
+			}
+
+			toastText = "this email has been already used"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -220,23 +221,62 @@ func (c *registerContent) Render() app.UI {
 			),
 		),
 
-		// register credentials fields
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50),
+		// nickname field
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("nickname "),
+				app.Span().Text("is your unique identifier for the system operations; "),
+				app.Span().Text("please double-check your nickname before registering (nickname is case-sensitive)"),
+			),
+		),
+		app.Div().Class("field label border deep-orange-text").Body(
+			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "nickname"),
 			app.Label().Text("nickname").Class("active"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+
+		// password fields
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("passphrase "),
+				app.Span().Text("is your secret key to the littr account"),
+			),
+		),
+		app.Div().Class("field label border deep-orange-text").Body(
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
 			app.Label().Text("passphrase").Class("active"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).AutoComplete(true),
+		app.Div().Class("field label border deep-orange-text").Body(
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
 			app.Label().Text("passphrase again").Class("active"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60),
+
+		// e-mail field
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("e-mail "),
+				app.Span().Text("address is used for user's avatar fetching from Gravatar.com, and (not yet implemented) for the account verification, please enter a valid e-mail address"),
+			),
+		),
+		app.Div().Class("field label border deep-orange-text").Body(
+			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email"),
 			app.Label().Text("e-mail").Class("active"),
 		),
+
+		// GDPR warning
+		app.Article().Class("row border").Style("word-break", "break-word").Body(
+			app.I().Text("warning"),
+			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(
+					app.Span().Text("by clicking on the register button you are giving us a GDPR consent (a permission to store your account information in the database)"),
+				),
+				app.P().Text("you can flush your account data and published posts simply on the settings page after a log-in"),
+			),
+		),
+
+		app.Div().Class("space"),
 
 		// register button
 		app.Button().Class("responsive deep-orange7 white-text bold").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(

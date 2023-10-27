@@ -181,12 +181,12 @@ func (c *loginContent) Render() app.UI {
 
 		// login credentials fields
 		app.Div().Class("field border label invalid deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active"),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "nickname"),
 			app.Label().Text("nickname").Class("active"),
 		),
 
 		app.Div().Class("field border label invalid deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").AutoComplete(true),
+			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active"),
 		),
 
