@@ -470,11 +470,14 @@ func (c *settingsContent) Render() app.UI {
 		app.H6().Text("change user's avatar"),
 		app.Div().Class("space"),
 
-		app.Div().Class("").Body(
-			app.P().Body(
-				app.Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
 				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
 			),
+		),
+		app.Div().Class("").Body(
 			app.P().Text("your e-mail address:"),
 			app.Article().Body(
 				app.Text(c.user.Email),
@@ -486,9 +489,10 @@ func (c *settingsContent) Render() app.UI {
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 		),
 
-		app.Div().Class("italic field").Body(
-			app.P().Body(
-				app.Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
 		),
 
@@ -535,7 +539,11 @@ func (c *settingsContent) Render() app.UI {
 		// user deletion
 		app.Div().Class("large-divider"),
 		app.H6().Text("account deletion"),
-		app.P().Text("down here, you can delete your account; please note that this action is irreversible!"),
+
+		app.Article().Class("row border").Body(
+			app.I().Text("warning"),
+			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
+		),
 		app.Div().Class("space"),
 
 		app.Button().Class("responsive red9 white-text bold").Text("delete account").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
