@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -120,8 +119,8 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
-		newPostID := time.Now()
-		stringID := strconv.FormatInt(newPostID.UnixNano(), 10)
+		//newPostID := time.Now()
+		//stringID := strconv.FormatInt(newPostID.UnixNano(), 10)
 
 		path := "/api/flow"
 
@@ -129,19 +128,35 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		// migrate Post.ReplyID (int) to Post.ReplyID (string)
 		// ReplyID is to be string key to easily refer to other post
 		payload := models.Post{
-			ID:        stringID,
-			Nickname:  c.user.Nickname,
-			Type:      postType,
-			Content:   replyPost,
-			Timestamp: newPostID,
+			//ID:        stringID,
+			Nickname: c.user.Nickname,
+			Type:     postType,
+			Content:  replyPost,
+			//Timestamp: newPostID,
 			//ReplyTo: replyID, <--- is type int
 			ReplyToID: c.interactedPostKey,
 		}
 
+		postsRaw := struct {
+			Posts map[string]models.Post `posts`
+		}{}
+
 		// add new post/poll to backend struct
-		if _, ok := litterAPI("POST", path, payload, c.user.Nickname); !ok {
-			toastText = "backend error: cannot add new content"
-			log.Println("cannot post new content (reply) to API!")
+		if resp, _ := litterAPI("POST", path, payload, c.user.Nickname); resp != nil {
+			err := json.Unmarshal(*resp, &postsRaw)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+		} else {
+			log.Println("cannot fetch post flow list")
+			toastText = "API error: cannot fetch the post list"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -152,7 +167,8 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 
 		ctx.Dispatch(func(ctx app.Context) {
 			// add new post to post list on frontend side to render
-			c.posts[stringID] = payload
+			//c.posts[stringID] = payload
+			c.posts = postsRaw.Posts
 
 			c.modalReplyActive = false
 			c.postButtonsDisabled = false

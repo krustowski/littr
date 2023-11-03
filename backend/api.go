@@ -238,8 +238,11 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		key := strconv.FormatInt(time.Now().UnixNano(), 10)
+		timestamp := time.Now()
+		key := strconv.FormatInt(timestamp.UnixNano(), 10)
+
 		post.ID = key
+		post.Timestamp = timestamp
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "backend error: cannot save new post (cache error)"
@@ -249,8 +252,11 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		posts, _ := getAll(FlowCache, models.Post{})
+
 		resp.Message = "ok, adding new post"
 		resp.Code = http.StatusCreated
+		resp.Posts = posts
 
 		l.Println(resp.Message, resp.Code)
 		break
