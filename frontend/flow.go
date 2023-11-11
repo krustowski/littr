@@ -290,6 +290,83 @@ func (c *flowContent) OnDismount() {
 	//c.eventListener()
 }
 
+func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
+	c.fetchPosts(ctx)
+	c.fetchUsers(ctx)
+}
+
+func (c *flowContent) fetchPosts(ctx app.Context) {
+	var toastText string
+
+	postsRaw := struct {
+		Posts map[string]models.Post `json:"posts"`
+	}{}
+
+	// call the flow API endpoint to fetch all posts
+	if byteData, _ := litterAPI("GET", "/api/flow", nil, c.user.Nickname); byteData != nil {
+		err := json.Unmarshal(*byteData, &postsRaw)
+		if err != nil {
+			log.Println(err.Error())
+			toastText = "JSON parsing error: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+	} else {
+		log.Println("cannot fetch post flow list")
+		toastText = "API error: cannot fetch the post list"
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.posts = postsRaw.Posts
+	})
+}
+
+func (c *flowContent) fetchUsers(ctx app.Context) {
+	var toastText string
+
+	usersRaw := struct {
+		Users map[string]models.User `json:"users"`
+	}{}
+
+	// call the flow API endpoint to fetch all users
+	if byteData, _ := litterAPI("GET", "/api/users", nil, c.user.Nickname); byteData != nil {
+		err := json.Unmarshal(*byteData, &usersRaw)
+		if err != nil {
+			log.Println(err.Error())
+			toastText = "JSON parsing error: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+	} else {
+		log.Println("cannot fetch users list")
+		toastText = "API error: cannot fetch the users list"
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.users = usersRaw.Users
+	})
+}
+
 func (c *flowContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 	c.loaderShowImage = true
@@ -508,8 +585,13 @@ func (c *flowContent) Render() app.UI {
 
 	return app.Main().Class("responsive").Body(
 		// page heading
-		app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("exclusive content incoming frfr"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max").Body(
+				app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
+				app.P().Text("exclusive content incoming frfr"),
+			),
+			app.Button().Class("border deep-orange7 white-text bold").Text("refresh").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled),
+		),
 		app.Div().Class("space"),
 
 		// snackbar
