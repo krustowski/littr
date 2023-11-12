@@ -149,7 +149,8 @@ http://localhost:8093/flow
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.20
-+ implement image uploading directly from browser
++ fix thumbnail multiple-loading on scroll
++ ~~implement image uploading directly from browser~~
 
 ### roadmap to v0.19
 + ~~add avatar preview to settings page~~
