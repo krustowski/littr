@@ -146,7 +146,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		// save enrypted user data to their Local browser storage
-		ctx.LocalStorage().Set("user", config.Encrypt(config.Pepper, string(user)))
+		ctx.LocalStorage().Set("user", config.Encrypt([]byte(config.Pepper), user))
 
 		if response.AuthGranted {
 			ctx.Navigate("/flow")

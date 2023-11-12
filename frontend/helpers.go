@@ -26,7 +26,7 @@ func litterAPI(method, url string, data interface{}, caller string) (*[]byte, bo
 			return nil, false
 		}
 
-		payload := config.Encrypt(config.Pepper, string(jsonData))
+		payload := config.Encrypt([]byte(config.Pepper), jsonData)
 
 		bodyReader = bytes.NewReader([]byte(payload))
 
@@ -110,8 +110,8 @@ func reload[T any](model T, stream *[]byte) error {
 	}
 
 	encryptedStream := config.Encrypt(
-		config.Pepper,
-		string(preStream),
+		[]byte(config.Pepper),
+		preStream,
 	)
 
 	*stream = encryptedStream
