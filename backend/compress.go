@@ -1,15 +1,12 @@
 package backend
 
 import (
-	"bytes"
-	"errors"
-	"image"
 	"os"
 
 	// impoerted for init purposes
 	_ "image/gif"
 	_ "image/jpeg"
-	"image/png"
+	_ "image/png"
 
 	thumb "github.com/prplecake/go-thumbnail"
 )
