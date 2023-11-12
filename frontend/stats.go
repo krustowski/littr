@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -294,6 +295,12 @@ func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
 			if shaded && key != user.Nickname {
 				shades[key]++
 			}
+		}
+
+		// check the online status
+		diff := time.Since(user.LastActiveTime)
+		if diff < 15*time.Minute {
+			flowStats["online"]++
 		}
 
 		flowStats["users"]++
