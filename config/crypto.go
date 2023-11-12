@@ -12,10 +12,7 @@ var (
 	EncryptionEnabled bool = true
 )
 
-func Encrypt(stringKey, stringText string) []byte {
-	key := []byte(stringKey)
-	text := []byte(stringText)
-
+func Encrypt(key, text []byte) []byte {
 	if !EncryptionEnabled {
 		return text
 	}

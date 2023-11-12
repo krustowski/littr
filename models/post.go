@@ -29,4 +29,7 @@ type Post struct {
 
 	// ReactionCount counts the number of item's reactions.
 	ReactionCount int `json:"reaction_count"`
+
+	// Data is a helper field for the actual figure upload.
+	Data []byte `json:"data"`
 }
