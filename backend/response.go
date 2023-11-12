@@ -22,6 +22,7 @@ type response struct {
 	Polls       map[string]models.Poll `json:"polls"`
 	Posts       map[string]models.Post `json:"posts"`
 	Users       map[string]models.User `json:"users"`
+	Data        []byte                 `json:"data"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {
@@ -38,8 +39,15 @@ func (r *response) Write(w http.ResponseWriter) error {
 	}
 	w.WriteHeader(r.Code)
 
-	enData := config.Encrypt(os.Getenv("APP_PEPPER"), string(jsonData))
+	enData := config.Encrypt([]byte(os.Getenv("APP_PEPPER")), jsonData)
 	io.WriteString(w, fmt.Sprintf("%s", enData))
+
+	return nil
+}
+
+func (r *response) WritePix(w http.ResponseWriter) error {
+	enData := config.Encrypt([]byte(os.Getenv("APP_PEPPER")), r.Data)
+	w.Write(enData)
 
 	return nil
 }

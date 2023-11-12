@@ -1,11 +1,13 @@
 package backend
 
 import (
+	//b64 "encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -243,6 +245,35 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		post.ID = key
 		post.Timestamp = timestamp
+
+		// uploadedFigure handling
+		if post.Data != nil && post.Content != "" {
+			fileExplode := strings.Split(post.Content, ".")
+			extension := fileExplode[len(fileExplode)-1]
+
+			content := key + "." + extension
+
+			// upload to local storage
+			if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+				resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+				resp.Code = http.StatusInternalServerError
+
+				l.Println(resp.Message, resp.Code)
+				break
+			}
+
+			// upload to GSC Storage
+			/*if err := gscAPICall(content, post.Data); err != nil {
+				resp.Message = "backend error: couldn't save a figure to GSC Storage: " + err.Error()
+				resp.Code = http.StatusInternalServerError
+
+				l.Println(resp.Message, resp.Code)
+				break
+			}*/
+
+			post.Content = content
+			post.Data = []byte{}
+		}
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "backend error: cannot save new post (cache error)"
@@ -666,4 +697,62 @@ func noteUsersActivity(caller string) bool {
 	callerUser.LastActiveTime = time.Now()
 
 	return setOne(UserCache, caller, callerUser)
+}
+
+func PixHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.Header.Get("X-Real-IP"),
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "pix",
+	}
+
+	request := struct {
+		PostID  string `json:"post_id"`
+		Content string `json:"content"`
+	}{}
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	err = json.Unmarshal(data, &request)
+	if err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	postContent := "/opt/pix/" + request.Content
+
+	var buffer []byte
+
+	if buffer, err = os.ReadFile(postContent); err != nil {
+		resp.Message = err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Data = buffer
+	resp.WritePix(w)
+
+	return
 }
