@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 	"strconv"
@@ -45,6 +46,93 @@ func (p *PostPage) Render() app.UI {
 		&footer{},
 		&postContent{},
 	)
+}
+
+// https://github.com/maxence-charriere/go-app/issues/882
+func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
+	var toastText string
+
+	file := e.Get("target").Get("files").Index(0)
+
+	//log.Println("name", file.Get("name").String())
+	//log.Println("size", file.Get("size").Int())
+	//log.Println("type", file.Get("type").String())
+
+	c.postButtonsDisabled = true
+
+	ctx.Async(func() {
+		if data, err := readFile(file); err != nil {
+			toastText = err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+
+		} else {
+			//fmt.Println(string(data))
+
+			var enUser string
+			var user models.User
+
+			ctx.LocalStorage().Get("user", &enUser)
+
+			// decode, decrypt and unmarshal the local storage user data
+			if err := prepare(enUser, &user); err != nil {
+				toastText = "frontend decoding/decryption failed: " + err.Error()
+			}
+
+			author := user.Nickname
+			path := "/api/flow"
+
+			payload := models.Post{
+				Nickname:  author,
+				Type:      "fig",
+				Content:   file.Get("name").String(),
+				Timestamp: time.Now(),
+				Data:      data,
+			}
+
+			// add new post/poll to backend struct
+			if _, ok := litterAPI("POST", path, payload, user.Nickname); !ok {
+				toastText = "backend error: cannot add new content"
+				log.Println("cannot post new content to API!")
+			} else {
+				ctx.Navigate("/flow")
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+
+		}
+	})
+}
+
+func readFile(file app.Value) (data []byte, err error) {
+	done := make(chan bool)
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+	reader := app.Window().Get("FileReader").New()
+	reader.Set("onloadend", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		done <- true
+		return nil
+	}))
+	reader.Call("readAsArrayBuffer", file)
+	<-done
+
+	readerError := reader.Get("error")
+	if !readerError.IsNull() {
+		err = fmt.Errorf("file reader error : %s", readerError.Get("message").String())
+	} else {
+		uint8Array := app.Window().Get("Uint8Array").New(reader.Get("result"))
+		data = make([]byte, uint8Array.Length())
+		app.CopyBytesToGo(data, uint8Array)
+	}
+	return data, err
 }
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
@@ -209,8 +297,8 @@ func (c *postContent) Render() app.UI {
 
 		// new fig input
 		app.Div().Class("field label border invalid extra deep-orange-text").Body(
-			app.Input().Class("active").Type("text").OnChange(c.ValueTo(&c.newFigLink)),
-			//app.Input().Class("active").Type("file"),
+			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+			app.Input().Class("active").Type("text"),
 			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
 		),

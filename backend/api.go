@@ -254,6 +254,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			content := key + "." + extension
 
 			// upload to local storage
+			//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
 			if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
 				resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 				resp.Code = http.StatusInternalServerError
@@ -261,6 +262,9 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 				l.Println(resp.Message, resp.Code)
 				break
 			}
+
+			// generate thumbanils
+			genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content)
 
 			// upload to GSC Storage
 			/*if err := gscAPICall(content, post.Data); err != nil {
@@ -738,7 +742,7 @@ func PixHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postContent := "/opt/pix/" + request.Content
+	postContent := "/opt/pix/thumb_" + request.Content
 
 	var buffer []byte
 
@@ -751,6 +755,9 @@ func PixHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//compBuff, _ := compressImage(buffer)
+
+	//resp.Data = compBuff
 	resp.Data = buffer
 	resp.WritePix(w)
 

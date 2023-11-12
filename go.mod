@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/maxence-charriere/go-app/v9 v9.6.7
+	github.com/prplecake/go-thumbnail v0.1.6
 	go.savla.dev/swis/v5 v5.6.1
 )
 
@@ -28,6 +29,7 @@ require (
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/image v0.0.0-20220302094943-723b81ca9867 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
