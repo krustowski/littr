@@ -1,8 +1,10 @@
 package frontend
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"log"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -690,6 +692,34 @@ func (c *flowContent) Render() app.UI {
 						previousDetailsSummary = previousContent[:config.MaxPostLength/10] + "- [...]"
 					}
 
+					// fetch the image
+					var imgSrc string
+
+					// check the URL/URI format
+					if _, err := url.ParseRequestURI(post.Content); err == nil {
+						imgSrc = post.Content
+					}
+
+					if post.Type == "fig" && imgSrc == "" {
+						payload := struct {
+							PostID  string `json:"post_id"`
+							Content string `json:"content"`
+						}{
+							PostID:  post.ID,
+							Content: post.Content,
+						}
+
+						var resp *[]byte
+						var ok bool
+
+						if resp, ok = litterAPI("POST", "/api/pix", payload, c.user.Nickname); !ok {
+							log.Println("api failed")
+							imgSrc = "/web/android-chrome-512x512.png"
+						} else {
+							imgSrc = "data:image/*;base64," + b64.StdEncoding.EncodeToString(*resp)
+						}
+					}
+
 					return app.Tr().Class().Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
 
@@ -714,7 +744,8 @@ func (c *flowContent) Render() app.UI {
 										app.Div().Class("small-space"),
 										app.Div().Class("loader center large deep-orange active"),
 									),
-									app.Img().Class("no-padding absolute center middle lazy").Src(post.Content).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+									//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+									app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 								),
 
 							// reply + post
