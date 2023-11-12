@@ -134,19 +134,22 @@ http://localhost:8093/flow
 + post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
 + [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
 
-### roadmap to v0.22
+### roadmap to v0.23
 + implement simple notification service
 + implement subscriptions (SubscriptionCache)
 
-### roadmap to v0.21
+### roadmap to v0.22
 + implement searching for flow using hashtags
 
-### roadmap to v0.20
+### roadmap to v0.21
 + fix flow reorganize glitch (single page, after post deletion etc)
 + implement Ctrl+Enter to submit posts like YouTube
 + implement forgotten password recovery
 + implement mailing (verification mails)
 + improve the UI (review issues related to UI on Github)
+
+### roadmap to v0.20
++ implement image uploading directly from browser
 
 ### roadmap to v0.19
 + ~~add avatar preview to settings page~~

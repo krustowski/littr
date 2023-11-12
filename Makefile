@@ -95,6 +95,8 @@ stop:
 version: 
 	@[ -f "./.env" ] && cat .env | \
 		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(GSC_TOKEN\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
 
 .PHONY: push
