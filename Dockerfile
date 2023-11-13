@@ -68,6 +68,8 @@ COPY --chown=1000:1000 --chmod=750 data/.gitkeep /opt/pix/
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
+# workaround for pix
+RUN cd /opt/web && ln -s ../pix .
 RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /opt/
 
 WORKDIR /opt

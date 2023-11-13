@@ -1,7 +1,7 @@
 package frontend
 
 import (
-	b64 "encoding/base64"
+	//b64 "encoding/base64"
 	"encoding/json"
 	"log"
 	"net/url"
@@ -698,9 +698,12 @@ func (c *flowContent) Render() app.UI {
 					// check the URL/URI format
 					if _, err := url.ParseRequestURI(post.Content); err == nil {
 						imgSrc = post.Content
+					} else {
+						imgSrc = "/web/pix/" + post.Content
 					}
 
-					if post.Type == "fig" && imgSrc == "" {
+					// fetch binary image data
+					/*if post.Type == "fig" && imgSrc == "" {
 						payload := struct {
 							PostID  string `json:"post_id"`
 							Content string `json:"content"`
@@ -718,10 +721,11 @@ func (c *flowContent) Render() app.UI {
 						} else {
 							imgSrc = "data:image/*;base64," + b64.StdEncoding.EncodeToString(*resp)
 						}
-					}
+					}*/
 
 					return app.Tr().Class().Body(
-						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
 
 							// post header (author avatar + name + link button)
 							app.Div().Class("row").Body(
