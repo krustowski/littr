@@ -13,9 +13,9 @@ import (
 	"go.savla.dev/littr/backend"
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/frontend"
+	"go.savla.dev/swis/v5/pkg/core"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
-	"go.savla.dev/swis/v5/pkg/core"
 )
 
 func initClient() {
@@ -81,6 +81,7 @@ func initServer() {
 	http.HandleFunc("/api/flow", backend.FlowHandler)
 	http.HandleFunc("/api/pix", backend.PixHandler)
 	http.HandleFunc("/api/polls", backend.PollsHandler)
+	http.HandleFunc("/api/push", backend.PushNotifHandler)
 	//http.HandleFunc("/api/stats", backend.StatsHandler)
 	http.HandleFunc("/api/users", backend.UsersHandler)
 

@@ -1,9 +1,11 @@
 package frontend
 
 import (
+	"bytes"
 	"crypto/sha512"
 	"encoding/json"
 	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -12,6 +14,7 @@ import (
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/SherClockHolmes/webpush-go"
 )
 
 type SettingsPage struct {
@@ -43,6 +46,7 @@ type settingsContent struct {
 	replyNotifOn bool
 
 	notificationPermission app.NotificationPermission
+	subscribed bool
 
 	settingsButtonDisabled bool
 
@@ -123,8 +127,8 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
 
-			//c.replyNotifOn = user.ReplyNotificationOn
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
+			//c.replyNotifOn = user.ReplyNotificationOn
 		})
 		return
 	})
@@ -374,14 +378,100 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 	c.replyNotifOn = !c.replyNotifOn
 
 	// request the permission on default when switch is toggled
-	if c.notificationPermission == app.NotificationDefault && checked {
+	if (c.notificationPermission == app.NotificationDefault && checked) || 
+		(c.notificationPermission == app.NotificationDenied) {
 		c.notificationPermission = ctx.Notifications().RequestPermission()
+
+		// if the permission is granted, generate keys and register a subscription
+		if c.notificationPermission == app.NotificationGranted {
+			ctx.Async(func() {
+				priv, pub, err := webpush.GenerateVAPIDKeys()
+				if err != nil {
+					toastText := "cannot generate new VAPID keys"
+
+					ctx.Dispatch(func(ctx app.Context) {
+						c.toastText = toastText
+						c.toastShow = (toastText != "")
+					})
+					return	
+				}
+
+				log.Println(pub)
+	
+				updatedUser := c.user
+				updatedUser.VapidPubKey = pub
+				updatedUser.VapidPrivKey = priv
+
+				// update user on backend via API
+				if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+					toastText := "cannot reach backend!"
+
+					ctx.Dispatch(func(ctx app.Context) {
+						c.toastText = toastText
+						c.toastShow = (toastText != "")
+					})
+					return	
+				}
+
+				// update user in page content
+				ctx.Dispatch(func(ctx app.Context) {
+					c.user = updatedUser
+				})
+
+				// register a subscription
+				c.registerSubscription(ctx)
+			})
+
+		}
+
 		return
 	}
 
 	if !checked {
 		c.notificationPermission = app.NotificationDenied
 	}
+}
+
+func (c *settingsContent) registerSubscription(ctx app.Context) {
+	vapKey := c.user.VapidPubKey
+
+	ctx.Async(func() {
+		sub, err := ctx.Notifications().Subscribe(vapKey)
+		if err != nil {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = "subscription failed: " + err.Error()
+				c.toastShow = c.toastText != ""
+
+				c.subscribed = false
+			})
+			return
+		}
+
+		var body bytes.Buffer
+		if err := json.NewEncoder(&body).Encode(sub); err != nil {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = "encoding notification subscription failed:" + err.Error()
+				c.toastShow = c.toastText != ""
+
+				c.subscribed = false
+			})
+			return
+		}
+
+		pushServerEndpoint := "/api/push"
+		res, err := http.Post(pushServerEndpoint, "application/json", &body)
+		if err != nil {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = "registering notification subscription failed:" + err.Error()
+				c.toastShow = c.toastText != ""
+
+				c.subscribed = false
+			})
+			return
+		}
+
+		defer res.Body.Close()
+	})
 }
 
 func (c *settingsContent) enableNotifications(ctx app.Context, e app.Event) {

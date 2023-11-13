@@ -12,6 +12,9 @@ import (
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/SherClockHolmes/webpush-go"
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
@@ -701,6 +704,79 @@ func noteUsersActivity(caller string) bool {
 	callerUser.LastActiveTime = time.Now()
 
 	return setOne(UserCache, caller, callerUser)
+}
+
+func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.Header.Get("X-Real-IP"),
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "push",
+	}
+
+	switch r.Method {
+	case "POST":
+		// fetch callerID!
+		var sub webpush.Subscription
+		if err := json.NewDecoder(r.Body).Decode(&sub); err != nil {
+			resp.Code = http.StatusBadRequest
+			resp.Message = "cannot decode received body"
+			break
+		}
+
+		if saved := setOne(SubscriptionCache, "krusty", sub); !saved {
+			resp.Code = http.StatusInternalServerError
+			resp.Message = "cannot save new subscription"
+			break
+		}
+
+		resp.Message = "ok, subscription added"
+		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
+		break
+
+	case "PUT":
+		// fetch callerID!
+		sub, _ := getOne(SubscriptionCache, "krusty", webpush.Subscription{})
+
+		// prepare and send new notification
+		go func(sub webpush.Subscription) {
+			body, _ := json.Marshal(app.Notification{
+				Title: "Push notif from littr",
+				Body: "littr push notification",
+				Path: "/flow",
+			})
+
+			// fire a notification
+			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
+				VAPIDPrivateKey: "",
+				VAPIDPublicKey: "",
+				TTL: 30,
+			})
+			if err != nil {
+				resp.Code = http.StatusInternalServerError
+				resp.Message = "cannot send a notification: " + err.Error()
+			}
+
+			defer res.Body.Close()
+		}(sub)
+		break
+
+
+	default:
+		resp.Message = "disallowed method"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	resp.Write(w)
 }
 
 func PixHandler(w http.ResponseWriter, r *http.Request) {

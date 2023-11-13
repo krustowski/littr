@@ -56,8 +56,9 @@ type User struct {
 	// searched is a bool indicating a status for the search engine.
 	Searched bool `json:"-" default:true`
 
-	// GDPR
-	GDPR bool `json:"gdpr" default:false`
+	// GDPR consent, set to true because it is noted on the registration page so. No user data should
+	// be saved if the boolean is false.
+	GDPR bool `json:"gdpr" default:true`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
 	AppBgMode string `json:"app_bg_mode" default:"dark"`
@@ -65,4 +66,10 @@ type User struct {
 	// ReplyNotificationOn is a bool, that indicates the state of notification permission made by user. 
 	// Is set to false (off) on default.
 	ReplyNotificationOn bool `json:"reply_notification_on" default:false`
+
+	// VapidPubKey is a string containing VAPID public key for notification subscription.
+	VapidPubKey string `json:"vapid_pubkey"`
+
+	// VapidPrivKey is a string containing VAPID private key for notification subscription.
+	VapidPrivKey string `json:"vapid_privkey"`
 }
