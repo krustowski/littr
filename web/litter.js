@@ -154,7 +154,7 @@
   }
 
   // fix image zoom
-  window.LIT.imageZoom = function () {
+  /*window.LIT.imageZoom = function () {
     $('#table-flow img:not(.ff)')
       .on('click', function () {
         if ($(this).css('max-height') !== '100%') {
@@ -167,7 +167,7 @@
       .addClass('ff')
       .css('cursor', 'pointer')
     $('nav').css('z-index', '99999')
-  }
+  }*/
 
   // login autosubmit
   window.LIT.checkPassword = function () {
@@ -248,7 +248,7 @@
   // fix UI glitches
   window.LIT.fixUI = function () {
     // fix image zoom
-    LIT.imageZoom()
+    //LIT.imageZoom()
     // fix colors
     LIT.fixColors()
     // fix links and images
@@ -309,7 +309,7 @@
     if ($('#table-flow') && $('#table-flow').length) {
       $('#nav-bottom > a:nth-child(5)').click(function () {
         //LIT.scrollTop()
-        location.href("/flow")
+        location("/flow")
       })
     }
 

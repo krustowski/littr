@@ -83,6 +83,28 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.buttonDisabled = false
 }
 
+func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	src := ctx.JSSrc().Get("src").String()
+	
+	split := strings.Split(src, ".")
+	ext := split[len(split) - 1]
+
+	// image preview (thumbnail) to the actual image logic
+	if strings.Contains(src, "thumb") {
+		ctx.JSSrc().Set("src", "/web/pix/" + key + "." + ext)
+          	//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
+          	ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position")
+	} else {
+		ctx.JSSrc().Set("src", "/web/pix/thumb_" + key + "." + ext)
+		ctx.JSSrc().Set("style", "z-index: 0; max-height: 100%; max-width: 100%")
+	}
+}
+
+func (c *flowContent) handleImage(ctx app.Context, a app.Action) {
+	ctx.JSSrc().Set("src", "")
+}
+
 func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
 	c.interactedPostKey = ctx.JSSrc().Get("id").String()
 
@@ -276,6 +298,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 
 func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("image", c.handleImage)
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
@@ -699,7 +722,7 @@ func (c *flowContent) Render() app.UI {
 					if _, err := url.ParseRequestURI(post.Content); err == nil {
 						imgSrc = post.Content
 					} else {
-						imgSrc = "/web/pix/" + post.Content
+						imgSrc = "/web/pix/thumb_" + post.Content
 					}
 
 					// fetch binary image data
@@ -749,7 +772,7 @@ func (c *flowContent) Render() app.UI {
 										app.Div().Class("loader center large deep-orange active"),
 									),
 									//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
-									app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+									app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
 								),
 
 							// reply + post
