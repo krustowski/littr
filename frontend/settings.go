@@ -40,6 +40,9 @@ type settingsContent struct {
 	toastText string
 
 	darkModeOn bool
+	replyNotifOn bool
+
+	notificationPermission app.NotificationPermission
 
 	settingsButtonDisabled bool
 
@@ -56,7 +59,12 @@ func (p *SettingsPage) Render() app.UI {
 
 func (p *SettingsPage) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
+
 	ctx.LocalStorage().Get("mode", &p.mode)
+}
+
+func (c *settingsContent) OnMount(ctx app.Context) {
+	c.notificationPermission = ctx.Notifications().Permission()
 }
 
 func (c *settingsContent) OnNav(ctx app.Context) {
@@ -106,13 +114,17 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		// get the mode
 		var mode string
 		ctx.LocalStorage().Get("mode", &mode)
+		//ctx.LocalStorage().Set("mode", user.AppBgMode)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = updatedUser
 			c.loggedUser = user.Nickname
-			c.darkModeOn = mode == "dark"
 
+			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
+
+			//c.replyNotifOn = user.ReplyNotificationOn
+			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 		})
 		return
 	})
@@ -337,7 +349,6 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 	//ctx.LocalStorage().Set("userLogged", false)
 	ctx.LocalStorage().Set("user", "")
-	//h.userLogged = false
 
 	ctx.Async(func() {
 		if _, ok := litterAPI("DELETE", "/api/users", c.user, c.user.Nickname); !ok {
@@ -357,9 +368,43 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	return
 }
 
-func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
+func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
+	checked := ctx.JSSrc().Get("checked").Bool()
+	
+	c.replyNotifOn = !c.replyNotifOn
 
-	m := ctx.JSSrc().Get("value").String()
+	// request the permission on default when switch is toggled
+	if c.notificationPermission == app.NotificationDefault && checked {
+		c.notificationPermission = ctx.Notifications().RequestPermission()
+		return
+	}
+
+	if !checked {
+		c.notificationPermission = app.NotificationDenied
+	}
+}
+
+func (c *settingsContent) enableNotifications(ctx app.Context, e app.Event) {
+}
+
+func (c *settingsContent) testNotification(ctx app.Context, e app.Event) {
+
+	if c.notificationPermission == app.NotificationDefault || c.notificationPermission == app.NotificationDenied {
+		c.notificationPermission = ctx.Notifications().RequestPermission()
+	}
+
+	// test notification
+	if c.notificationPermission == app.NotificationGranted {
+		ctx.Notifications().New(app.Notification{
+			Title: "test",
+			Body:  "lmaoooooooooooooo",
+			Path:  "/flow",
+		})
+	}
+}
+
+func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
+	m := ctx.JSSrc().Get("checked").Bool()
 	log.Println(m)
 
 	c.darkModeOn = !c.darkModeOn
@@ -450,6 +495,15 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// reply notification infobox
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("reply notifications "),
+				app.Span().Text("are fired when someone posts a reply to your post; you will be notified in your browser as this is the so-called web app"),
+			),
+		),
+
 		// reply notification switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
@@ -457,7 +511,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("reply notification switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.replyNotifOn).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
 					app.Span().Body(
 						app.I().Text("notifications"),
 					),

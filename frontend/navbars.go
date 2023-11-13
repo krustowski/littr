@@ -108,6 +108,7 @@ func (h *header) Render() app.UI {
 					app.Text("settings")),
 			),
 
+			// show intallation button if available
 			app.If(h.appInstallable,
 				app.A().Text("install").OnClick(h.onInstallButtonClicked).Body(
 					app.I().Class("large").Body(
