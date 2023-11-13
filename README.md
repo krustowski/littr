@@ -131,7 +131,7 @@ http://localhost:8093/flow
 + use a router (Gorilla Mux, Go-Chi)
 
 ### known bugs
-+ post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order
++ ~~post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order~~
 + [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
 
 ### roadmap to v0.23
