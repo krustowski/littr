@@ -112,7 +112,7 @@ func migrateUserRegisteredTime() bool {
 	return true
 }
 
-// migrateUserShadeList fucntion lists ShadeList items and ensures user shaded (no mutual following, no replying).
+// migrateUserShadeList function lists ShadeList items and ensures user shaded (no mutual following, no replying).
 func migrateUserShadeList() bool {
 	users, _ := getAll(UserCache, models.User{})
 
@@ -146,7 +146,7 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-// GetGravatarURL fucntion returns the avatar image location/URL, or it defaults to a app logo.
+// GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
 func GetGravatarURL(emailInput string) string {
 	// TODO: do not hardcode this
 	baseURL := "https://littr.n0p.cz/"
