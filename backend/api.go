@@ -4,6 +4,7 @@ import (
 	//b64 "encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,8 +14,8 @@ import (
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/SherClockHolmes/webpush-go"
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
@@ -720,19 +721,40 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
-		// fetch callerID!
 		var sub webpush.Subscription
-		if err := json.NewDecoder(r.Body).Decode(&sub); err != nil {
-			resp.Code = http.StatusBadRequest
-			resp.Message = "cannot decode received body"
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
 
-		if saved := setOne(SubscriptionCache, "krusty", sub); !saved {
-			resp.Code = http.StatusInternalServerError
-			resp.Message = "cannot save new subscription"
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		log.Println(data)
+
+		if err := json.Unmarshal(data, &sub); err != nil {
+			resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
 			break
 		}
+
+		l.CallerID = r.Header.Get("X-API-Caller-ID")
+
+		if saved := setOne(SubscriptionCache, l.CallerID, sub); !saved {
+			resp.Code = http.StatusInternalServerError
+			resp.Message = "cannot save new subscription"
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		log.Println(sub)
 
 		resp.Message = "ok, subscription added"
 		resp.Code = http.StatusCreated
@@ -742,31 +764,41 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "PUT":
 		// fetch callerID!
-		sub, _ := getOne(SubscriptionCache, "krusty", webpush.Subscription{})
+		caller := r.Header.Get("X-API-Caller-ID")
+
+		sub, _ := getOne(SubscriptionCache, caller, webpush.Subscription{})
+		user, _ := getOne(UserCache, caller, models.User{})
 
 		// prepare and send new notification
 		go func(sub webpush.Subscription) {
 			body, _ := json.Marshal(app.Notification{
 				Title: "Push notif from littr",
-				Body: "littr push notification",
-				Path: "/flow",
+				Body:  "littr push notification",
+				Path:  "/flow",
 			})
 
 			// fire a notification
 			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
-				VAPIDPrivateKey: "",
-				VAPIDPublicKey: "",
-				TTL: 30,
+				VAPIDPublicKey:  user.VapidPubKey,
+				VAPIDPrivateKey: user.VapidPrivKey,
+				TTL:             300,
 			})
 			if err != nil {
 				resp.Code = http.StatusInternalServerError
 				resp.Message = "cannot send a notification: " + err.Error()
+
+				l.Println(resp.Message, resp.Code)
+				return
 			}
 
 			defer res.Body.Close()
 		}(sub)
-		break
 
+		resp.Message = "ok, notification(s) fired"
+		resp.Code = http.StatusCreated
+
+		l.Println(resp.Message, resp.Code)
+		break
 
 	default:
 		resp.Message = "disallowed method"

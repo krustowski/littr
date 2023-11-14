@@ -63,7 +63,7 @@ type User struct {
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
 	AppBgMode string `json:"app_bg_mode" default:"dark"`
 
-	// ReplyNotificationOn is a bool, that indicates the state of notification permission made by user. 
+	// ReplyNotificationOn is a bool, that indicates the state of notification permission made by user.
 	// Is set to false (off) on default.
 	ReplyNotificationOn bool `json:"reply_notification_on" default:false`
 
