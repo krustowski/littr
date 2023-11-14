@@ -4,7 +4,7 @@ import (
 	//b64 "encoding/base64"
 	"encoding/json"
 	"io"
-	"log"
+	//"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -734,8 +734,6 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 
 		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
 
-		log.Println(data)
-
 		if err := json.Unmarshal(data, &sub); err != nil {
 			resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
 			resp.Code = http.StatusBadRequest
@@ -754,8 +752,6 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Println(sub)
-
 		resp.Message = "ok, subscription added"
 		resp.Code = http.StatusCreated
 
@@ -763,18 +759,62 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 		break
 
 	case "PUT":
-		// fetch callerID!
+		// this user ID points to the replier
 		caller := r.Header.Get("X-API-Caller-ID")
 
-		sub, _ := getOne(SubscriptionCache, caller, webpush.Subscription{})
-		user, _ := getOne(UserCache, caller, models.User{})
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			resp.Message = "backend error: cannot read input stream: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+		original := struct {
+			ID string `json:"original_post"`
+		}{}
+
+		if err := json.Unmarshal(data, &original); err != nil {
+			resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		// fetch related data from cachces
+		post, _ := getOne(FlowCache, original.ID, models.Post{})
+		sub, _ := getOne(SubscriptionCache, post.Nickname, webpush.Subscription{})
+		user, _ := getOne(UserCache, post.Nickname, models.User{})
+
+		// do not notify the same person --- OK condition
+		if post.Nickname == caller {
+			resp.Message = "do not send notifs to oneself"
+			resp.Code = http.StatusOK
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		// do not notify user --- notifications disabled --- OK condition
+		if &sub == nil {
+			resp.Message = "notifications disabled for such user"
+			resp.Code = http.StatusOK
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
 
 		// prepare and send new notification
 		go func(sub webpush.Subscription) {
 			body, _ := json.Marshal(app.Notification{
-				Title: "Push notif from littr",
-				Body:  "littr push notification",
-				Path:  "/flow",
+				Title: "littr reply",
+				Icon:  "/web/apple-touch-icon.png",
+				Body:  caller + " replied to your post",
+				Path:  "/flow/" + post.ID,
 			})
 
 			// fire a notification
@@ -794,7 +834,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			defer res.Body.Close()
 		}(sub)
 
-		resp.Message = "ok, notification(s) fired"
+		resp.Message = "ok, notification fired"
 		resp.Code = http.StatusCreated
 
 		l.Println(resp.Message, resp.Code)

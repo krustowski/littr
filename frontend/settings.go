@@ -1,11 +1,9 @@
 package frontend
 
 import (
-	"bytes"
 	"crypto/sha512"
 	"encoding/json"
 	"log"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -13,8 +11,8 @@ import (
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/SherClockHolmes/webpush-go"
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 type SettingsPage struct {
@@ -42,11 +40,11 @@ type settingsContent struct {
 	toastShow bool
 	toastText string
 
-	darkModeOn bool
+	darkModeOn   bool
 	replyNotifOn bool
 
 	notificationPermission app.NotificationPermission
-	subscribed bool
+	subscribed             bool
 
 	settingsButtonDisabled bool
 
@@ -374,69 +372,83 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 	checked := ctx.JSSrc().Get("checked").Bool()
-	
+
 	c.replyNotifOn = !c.replyNotifOn
 
-	// request the permission on default when switch is toggled
-	if (c.notificationPermission == app.NotificationDefault && checked) || 
-		(c.notificationPermission == app.NotificationDenied) {
-		c.notificationPermission = ctx.Notifications().RequestPermission()
-
-		// if the permission is granted, generate keys and register a subscription
-		if c.notificationPermission == app.NotificationGranted {
-			ctx.Async(func() {
-				priv, pub, err := webpush.GenerateVAPIDKeys()
-				if err != nil {
-					toastText := "cannot generate new VAPID keys"
-
-					ctx.Dispatch(func(ctx app.Context) {
-						c.toastText = toastText
-						c.toastShow = (toastText != "")
-					})
-					return	
-				}
-
-				log.Println(pub)
-	
-				updatedUser := c.user
-				updatedUser.VapidPubKey = pub
-				updatedUser.VapidPrivKey = priv
-
-				// update user on backend via API
-				if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
-					toastText := "cannot reach backend!"
-
-					ctx.Dispatch(func(ctx app.Context) {
-						c.toastText = toastText
-						c.toastShow = (toastText != "")
-					})
-					return	
-				}
-
-				// update user in page content
-				ctx.Dispatch(func(ctx app.Context) {
-					c.user = updatedUser
-				})
-
-				// register a subscription
-				c.registerSubscription(ctx)
-			})
-
-		}
-
+	// do nothing (for now) on switch unchecking
+	if !checked {
 		return
 	}
 
-	if !checked {
-		c.notificationPermission = app.NotificationDenied
-	}
-}
-
-func (c *settingsContent) registerSubscription(ctx app.Context) {
-	vapKey := c.user.VapidPubKey
-
 	ctx.Async(func() {
-		sub, err := ctx.Notifications().Subscribe(vapKey)
+		// notify user that their browser does not support notifications and therefore they cannot
+		// use notifications service
+		if c.notificationPermission == app.NotificationNotSupported && checked {
+			toastText := "notifications are not supported in this browser"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+
+				c.replyNotifOn = false
+			})
+			return
+		}
+
+		// request the permission on default when switch is toggled
+		if (c.notificationPermission == app.NotificationDefault && checked) ||
+			(c.notificationPermission == app.NotificationDenied) {
+			c.notificationPermission = ctx.Notifications().RequestPermission()
+		}
+
+		// fail on denied permission
+		if c.notificationPermission != app.NotificationGranted {
+			toastText := "notification permission denied by user"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+
+				c.replyNotifOn = false
+			})
+			return
+		}
+
+		// generate the VAPID key pair
+		// TODO: move this to backend!
+		privKey, pubKey, err := webpush.GenerateVAPIDKeys()
+		if err != nil {
+			toastText := "cannot generate new VAPID keys"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = toastText != ""
+			})
+			return
+		}
+
+		updatedUser := c.user
+		updatedUser.VapidPubKey = pubKey
+		updatedUser.VapidPrivKey = privKey
+
+		// update user on backend via API
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+			toastText := "cannot reach backend!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = toastText != ""
+			})
+			return
+		}
+
+		// update user in page content
+		ctx.Dispatch(func(ctx app.Context) {
+			c.user = updatedUser
+		})
+
+		// register the subscription
+		sub, err := ctx.Notifications().Subscribe(pubKey)
 		if err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "subscription failed: " + err.Error()
@@ -447,7 +459,8 @@ func (c *settingsContent) registerSubscription(ctx app.Context) {
 			return
 		}
 
-		var body bytes.Buffer
+		// encode subscription into a HTTP request body
+		/*var body bytes.Buffer
 		if err := json.NewEncoder(&body).Encode(sub); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "encoding notification subscription failed:" + err.Error()
@@ -456,30 +469,34 @@ func (c *settingsContent) registerSubscription(ctx app.Context) {
 				c.subscribed = false
 			})
 			return
-		}
+		}*/
 
-		pushServerEndpoint := "/api/push"
-		res, err := http.Post(pushServerEndpoint, "application/json", &body)
-		if err != nil {
+		// send the registeration to backend
+		if _, ok := litterAPI("POST", "/api/push", sub, c.user.Nickname); !ok {
+			toastText := "cannot reach backend!"
+
 			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
 				c.toastText = "registering notification subscription failed:" + err.Error()
-				c.toastShow = c.toastText != ""
+				c.toastShow = toastText != ""
 
 				c.subscribed = false
 			})
 			return
 		}
 
-		defer res.Body.Close()
+		ctx.Notifications().New(app.Notification{
+			Title: "littr",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  "successfully subscribed to notifications",
+			Path:  "/flow",
+		})
 	})
 }
 
-func (c *settingsContent) enableNotifications(ctx app.Context, e app.Event) {
-}
-
 func (c *settingsContent) testNotification(ctx app.Context, e app.Event) {
-
-	if c.notificationPermission == app.NotificationDefault || c.notificationPermission == app.NotificationDenied {
+	if c.notificationPermission == app.NotificationDefault ||
+		c.notificationPermission == app.NotificationDenied {
 		c.notificationPermission = ctx.Notifications().RequestPermission()
 	}
 
@@ -494,8 +511,7 @@ func (c *settingsContent) testNotification(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
-	m := ctx.JSSrc().Get("checked").Bool()
-	log.Println(m)
+	//m := ctx.JSSrc().Get("checked").Bool()
 
 	c.darkModeOn = !c.darkModeOn
 
@@ -590,7 +606,7 @@ func (c *settingsContent) Render() app.UI {
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
-				app.Span().Text("are fired when someone posts a reply to your post; you will be notified in your browser as this is the so-called web app"),
+				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
 			),
 		),
 
@@ -601,7 +617,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("reply notification switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.replyNotifOn).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
+					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.replyNotifOn).Disabled(c.replyNotifOn).OnChange(c.onReplyNotifSwitch),
 					app.Span().Body(
 						app.I().Text("notifications"),
 					),

@@ -86,17 +86,17 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	src := ctx.JSSrc().Get("src").String()
-	
+
 	split := strings.Split(src, ".")
-	ext := split[len(split) - 1]
+	ext := split[len(split)-1]
 
 	// image preview (thumbnail) to the actual image logic
 	if strings.Contains(src, "thumb") {
-		ctx.JSSrc().Set("src", "/web/pix/" + key + "." + ext)
-          	//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
-          	ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position")
+		ctx.JSSrc().Set("src", "/web/pix/"+key+"."+ext)
+		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
+		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position")
 	} else {
-		ctx.JSSrc().Set("src", "/web/pix/thumb_" + key + "." + ext)
+		ctx.JSSrc().Set("src", "/web/pix/thumb_"+key+"."+ext)
 		ctx.JSSrc().Set("style", "z-index: 0; max-height: 100%; max-width: 100%")
 	}
 }
@@ -181,6 +181,23 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		} else {
 			log.Println("cannot fetch post flow list")
 			toastText = "API error: cannot fetch the post list"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		payloadNotif := struct {
+			OriginalPost string `json:"original_post"`
+		}{
+			OriginalPost: c.interactedPostKey,
+		}
+
+		// create a notification
+		if _, ok := litterAPI("PUT", "/api/push", payloadNotif, c.user.Nickname); !ok {
+			toastText = "cannot PUT new notification"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
