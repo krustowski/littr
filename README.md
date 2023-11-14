@@ -72,6 +72,10 @@ GET    /api/polls
 PUT    /api/polls
 DELETE /api/polls/:key
 
+POST   /api/push
+PUT    /api/push
+
+# users management
 POST   /api/users
 GET    /api/users
 PUT    /api/users
@@ -141,11 +145,11 @@ http://localhost:8093/flow
 + fix flow reorganize glitch (single page, after post deletion etc)
 + implement Ctrl+Enter to submit posts like YouTube
 + implement forgotten password recovery
-+ implement mailing (verification mails)
++ implement mailing (verification mails) on backend
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.21
-+ implement simple notification service (wip)
++ ~~implement simple notification service (wip)~~
 + ~~implement subscriptions (SubscriptionCache)~~
 
 ### roadmap to v0.20
