@@ -129,6 +129,7 @@ fetch_running_dump:
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ./run_data/
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json ./run_data/
 	
 .PHONY: backup
 backup: fetch_running_dump

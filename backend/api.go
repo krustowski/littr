@@ -742,9 +742,13 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		l.CallerID = r.Header.Get("X-API-Caller-ID")
+		caller := r.Header.Get("X-API-Caller-ID")
 
-		if saved := setOne(SubscriptionCache, l.CallerID, sub); !saved {
+		// fetch existing (or blank) subscription array for such caller, and add new sub.
+		subs, _ := getOne(SubscriptionCache, caller, []webpush.Subscription{})
+		subs = append(subs, sub)
+
+		if saved := setOne(SubscriptionCache, caller, subs); !saved {
 			resp.Code = http.StatusInternalServerError
 			resp.Message = "cannot save new subscription"
 
@@ -787,7 +791,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 
 		// fetch related data from cachces
 		post, _ := getOne(FlowCache, original.ID, models.Post{})
-		sub, _ := getOne(SubscriptionCache, post.Nickname, webpush.Subscription{})
+		subs, _ := getOne(SubscriptionCache, post.Nickname, []webpush.Subscription{})
 		user, _ := getOne(UserCache, post.Nickname, models.User{})
 
 		// do not notify the same person --- OK condition
@@ -800,7 +804,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// do not notify user --- notifications disabled --- OK condition
-		if &sub == nil {
+		if &subs == nil {
 			resp.Message = "notifications disabled for such user"
 			resp.Code = http.StatusOK
 
@@ -808,33 +812,33 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		//for _, sub := range user.Subscriptions {
-		// prepare and send new notification
-		go func(sub webpush.Subscription) {
-			body, _ := json.Marshal(app.Notification{
-				Title: "littr reply",
-				Icon:  "/web/apple-touch-icon.png",
-				Body:  caller + " replied to your post",
-				Path:  "/flow/" + post.ID,
-			})
+		for _, sub := range subs {
+			// prepare and send new notification
+			go func(sub webpush.Subscription) {
+				body, _ := json.Marshal(app.Notification{
+					Title: "littr reply",
+					Icon:  "/web/apple-touch-icon.png",
+					Body:  caller + " replied to your post",
+					Path:  "/flow/" + post.ID,
+				})
 
-			// fire a notification
-			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
-				VAPIDPublicKey:  user.VapidPubKey,
-				VAPIDPrivateKey: user.VapidPrivKey,
-				TTL:             300,
-			})
-			if err != nil {
-				resp.Code = http.StatusInternalServerError
-				resp.Message = "cannot send a notification: " + err.Error()
+				// fire a notification
+				res, err := webpush.SendNotification(body, &sub, &webpush.Options{
+					VAPIDPublicKey:  user.VapidPubKey,
+					VAPIDPrivateKey: user.VapidPrivKey,
+					TTL:             300,
+				})
+				if err != nil {
+					resp.Code = http.StatusInternalServerError
+					resp.Message = "cannot send a notification: " + err.Error()
 
-				l.Println(resp.Message, resp.Code)
-				return
-			}
+					l.Println(resp.Message, resp.Code)
+					return
+				}
 
-			defer res.Body.Close()
-		}(sub)
-		//}
+				defer res.Body.Close()
+			}(sub)
+		}
 
 		resp.Message = "ok, notification fired"
 		resp.Code = http.StatusCreated
