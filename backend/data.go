@@ -2,153 +2,92 @@ package backend
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
+	"fmt"
 	"os"
 
 	"go.savla.dev/littr/models"
+	"go.savla.dev/swis/v5/pkg/core"
+
+	"github.com/SherClockHolmes/webpush-go"
 )
 
 const (
-	pollsFile = "/opt/data/polls.json"
-	postsFile = "/opt/data/posts.json"
-	usersFile = "/opt/data/users.json"
+	pollsFile         = "/opt/data/polls.json"
+	postsFile         = "/opt/data/posts.json"
+	subscriptionsFile = "/opt/data/subscriptions.json"
+	usersFile         = "/opt/data/users.json"
 )
 
-var (
-	polls = struct {
-		Polls map[string]models.Poll `json:"polls"`
-	}{}
-
-	posts = struct {
-		Posts map[string]models.Post `json:"posts"`
-	}{}
-
-	users = struct {
-		Users map[string]models.User `json:"users"`
-	}{}
-)
-
-func LoadData() {
-	rawPollsData, err := os.ReadFile(pollsFile)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	if string(rawPollsData) == "" {
-		return
-	}
-
-	err = json.Unmarshal(rawPollsData, &polls)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	for key, val := range polls.Polls {
-		if key == "" || &val == nil {
-			continue
-		}
-
-		if saved := setOne(PollCache, key, val); !saved {
-			log.Printf("cannot load poll from file (key: %s)", key)
-			continue
-		}
-	}
-
-	rawPostsData, err := os.ReadFile(postsFile)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	if string(rawPostsData) == "" {
-		return
-	}
-
-	err = json.Unmarshal(rawPostsData, &posts)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	for key, val := range posts.Posts {
-		if key == "" || &val == nil {
-			continue
-		}
-
-		if saved := setOne(FlowCache, key, val); !saved {
-			log.Printf("cannot load post from file (key: %s)", key)
-			continue
-		}
-	}
-
-	rawUsersData, err := os.ReadFile(usersFile)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	if string(rawUsersData) == "" {
-		return
-	}
-
-	err = json.Unmarshal(rawUsersData, &users)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	for key, val := range users.Users {
-		if key == "" || &val == nil {
-			continue
-		}
-
-		if saved := setOne(UserCache, key, val); !saved {
-			log.Printf("cannot load user from file (key: %s)", key)
-			continue
-		}
-	}
+func LoadAll() {
+	// TODO: catch errors!
+	loadOne(PollCache, pollsFile, models.Poll{})
+	loadOne(FlowCache, postsFile, models.Post{})
+	loadOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	loadOne(UserCache, usersFile, models.User{})
 }
 
-func DumpData() {
-	posts.Posts, _ = getAll(FlowCache, models.Post{})
-	polls.Polls, _ = getAll(PollCache, models.Poll{})
-	users.Users, _ = getAll(UserCache, models.User{})
+func DumpAll() {
+	// TODO: catch errors!
+	dumpOne(PollCache, pollsFile, models.Poll{})
+	dumpOne(FlowCache, postsFile, models.Post{})
+	dumpOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	dumpOne(UserCache, usersFile, models.User{})
+}
 
-	postsJsonData, err := json.Marshal(posts)
+func loadOne[T any](cache *core.Cache, filepath string, model T) error {
+	rawData, err := os.ReadFile(filepath)
 	if err != nil {
-		log.Println(err.Error())
-		return
+		return err
 	}
 
-	pollsJsonData, err := json.Marshal(polls)
-	if err != nil {
-		log.Println(err.Error())
-		return
+	if string(rawData) == "" {
+		return errors.New("empty data on input")
 	}
 
-	usersJsonData, err := json.Marshal(users)
+	matrix := struct {
+		Items map[string]T `json:"items"`
+	}{}
+
+	err = json.Unmarshal(rawData, &matrix)
 	if err != nil {
-		log.Println(err.Error())
-		return
+		return err
 	}
 
-	err = os.WriteFile(pollsFile, pollsJsonData, 0644)
-	if err != nil {
-		log.Println(err.Error())
-		return
+	for key, val := range matrix.Items {
+		if key == "" || &val == nil {
+			continue
+		}
+
+		if saved := setOne(cache, key, val); !saved {
+			return fmt.Errorf("cannot load item from file '%s' (key: %s)", filepath, key)
+			//continue
+		}
 	}
 
-	err = os.WriteFile(postsFile, postsJsonData, 0644)
-	if err != nil {
-		log.Println(err.Error())
-		return
+	return nil
+}
+
+func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
+	if &model == nil {
+		return errors.New("nil pointer on input!")
 	}
 
-	err = os.WriteFile(usersFile, usersJsonData, 0644)
+	matrix := struct {
+		Items map[string]T `json:"items"`
+	}{}
+
+	matrix.Items, _ = getAll(cache, model)
+
+	jsonData, err := json.Marshal(matrix)
 	if err != nil {
-		log.Println(err.Error())
-		return
+		return err
 	}
+
+	err = os.WriteFile(filepath, jsonData, 0660)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -56,7 +56,7 @@ func initServer() {
 
 	// load up data from local dumps (/opt/data/)
 	// TODO: catch an error there!
-	backend.LoadData()
+	backend.LoadAll()
 
 	l.Println("dumped data loaded", http.StatusOK)
 
@@ -72,7 +72,7 @@ func initServer() {
 		sig := <-sigs
 		l.Println("caught signal '"+sig.String()+"', dumping data...", http.StatusCreated)
 
-		backend.DumpData()
+		backend.DumpAll()
 	}()
 
 	// API routes

@@ -122,7 +122,7 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		DumpData()
+		DumpAll()
 
 		resp.Code = http.StatusOK
 		resp.Message = "data dumped successfully"
@@ -808,6 +808,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		//for _, sub := range user.Subscriptions {
 		// prepare and send new notification
 		go func(sub webpush.Subscription) {
 			body, _ := json.Marshal(app.Notification{
@@ -833,6 +834,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 
 			defer res.Body.Close()
 		}(sub)
+		//}
 
 		resp.Message = "ok, notification fired"
 		resp.Code = http.StatusCreated
