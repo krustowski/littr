@@ -149,6 +149,8 @@ http://localhost:8093/flow
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.21
++ add periodic subscription checker (older than a week will be deleted on no activity)
++ add timestamp to a subscription
 + ~~implement simple notification service (wip)~~
 + ~~implement subscriptions (SubscriptionCache)~~
 
