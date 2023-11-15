@@ -816,10 +816,11 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 			// prepare and send new notification
 			go func(sub webpush.Subscription) {
 				body, _ := json.Marshal(app.Notification{
-					Title: "littr reply",
-					Icon:  "/web/apple-touch-icon.png",
-					Body:  caller + " replied to your post",
-					Path:  "/flow/" + post.ID,
+					Title:   "littr reply",
+					Icon:    "/web/apple-touch-icon.png",
+					Body:    caller + " replied to your post",
+					Path:    "/flow/" + post.ID,
+					Urgency: "high",
 				})
 
 				// fire a notification

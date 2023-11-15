@@ -480,34 +480,19 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 				c.toastText = "registering notification subscription failed:" + err.Error()
 				c.toastShow = toastText != ""
 
-				c.subscribed = false
+				c.subscribed = true
 			})
 			return
 		}
 
 		ctx.Notifications().New(app.Notification{
-			Title: "littr",
-			Icon:  "/web/apple-touch-icon.png",
-			Body:  "successfully subscribed to notifications",
-			Path:  "/flow",
+			Title:   "littr",
+			Icon:    "/web/apple-touch-icon.png",
+			Body:    "successfully subscribed to notifications",
+			Path:    "/flow",
+			Urgency: "high",
 		})
 	})
-}
-
-func (c *settingsContent) testNotification(ctx app.Context, e app.Event) {
-	if c.notificationPermission == app.NotificationDefault ||
-		c.notificationPermission == app.NotificationDenied {
-		c.notificationPermission = ctx.Notifications().RequestPermission()
-	}
-
-	// test notification
-	if c.notificationPermission == app.NotificationGranted {
-		ctx.Notifications().New(app.Notification{
-			Title: "test",
-			Body:  "lmaoooooooooooooo",
-			Path:  "/flow",
-		})
-	}
 }
 
 func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
@@ -607,6 +592,13 @@ func (c *settingsContent) Render() app.UI {
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
 				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
+			),
+		),
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				//app.Span().Class("deep-orange-text").Text("reply notifications "),
+				app.Span().Text("enabling the notifications will trigger a request for your browser to allow notifications from littr, and will be enabled until you remove the permission in your browser only"),
 			),
 		),
 
