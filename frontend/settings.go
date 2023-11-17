@@ -486,11 +486,10 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		ctx.Notifications().New(app.Notification{
-			Title:   "littr",
-			Icon:    "/web/apple-touch-icon.png",
-			Body:    "successfully subscribed to notifications",
-			Path:    "/flow",
-			Urgency: "high",
+			Title: "littr",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  "successfully subscribed to notifications",
+			Path:  "/flow",
 		})
 	})
 }

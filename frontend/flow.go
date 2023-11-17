@@ -50,6 +50,8 @@ type flowContent struct {
 	posts       map[string]models.Post
 	users       map[string]models.User
 	sortedPosts []models.Post
+
+	refreshClicked bool
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -333,8 +335,9 @@ func (c *flowContent) OnDismount() {
 }
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
-	c.fetchPosts(ctx)
+	c.refreshClicked = true
 	c.fetchUsers(ctx)
+	c.fetchPosts(ctx)
 }
 
 func (c *flowContent) fetchPosts(ctx app.Context) {
@@ -370,6 +373,7 @@ func (c *flowContent) fetchPosts(ctx app.Context) {
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.posts = postsRaw.Posts
+		c.refreshClicked = false
 	})
 }
 
@@ -632,7 +636,12 @@ func (c *flowContent) Render() app.UI {
 				app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
 				app.P().Text("exclusive content incoming frfr"),
 			),
-			app.Button().Class("border deep-orange7 white-text bold").Text("refresh").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled),
+			app.Button().Class("border black white-text bold").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+				app.If(c.refreshClicked,
+					app.Progress().Class("circle deep-orange-border small"),
+				),
+				app.Text("refresh"),
+			),
 		),
 		app.Div().Class("space"),
 
