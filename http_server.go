@@ -91,12 +91,14 @@ func initServer() {
 	http.Handle("/", &app.Handler{
 		Name:         "litter-go",
 		ShortName:    "littr",
+		Title:        "littr",
 		Description:  "litter-go PWA",
 		Author:       "krusty",
 		LoadingLabel: "loading...",
 		Lang:         "en",
 		Icon: app.Icon{
-			Default:    "/web/android-chrome-512x512.png",
+			Large:      "/web/android-chrome-512x512.png",
+			Default:    "/web/android-chrome-192x192.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
 		Body: func() app.HTMLBody {
