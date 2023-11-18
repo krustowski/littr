@@ -687,13 +687,6 @@ func (c *flowContent) Render() app.UI {
 
 		// flow posts/articles
 		app.Table().Class("border left-align").ID("table-flow").Body(
-			// table header
-			app.THead().Body(
-				app.Tr().Body(
-					app.Th().Class("align-left").Text("nickname, content, timestamp"),
-				),
-			),
-
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
