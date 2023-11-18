@@ -712,7 +712,7 @@ func (c *usersContent) Render() app.UI {
 						app.Td().Class("left-align").Body(
 
 							// cell's header
-							app.Div().Class("row medium").Body(
+							app.Div().Class("row medium top-padding").Body(
 								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
 
