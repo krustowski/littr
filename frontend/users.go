@@ -722,14 +722,14 @@ func (c *usersContent) Render() app.UI {
 
 								// user's stats --- flower count
 								app.B().Text(c.userStats[user.Nickname].FlowerCount),
-								app.Span().Class("white-text bold").Body(
+								app.Span().Class("bold").Body(
 									//app.I().Text("filter_vintage"),
 									app.I().Text("group"),
 								),
 
 								// user's stats --- post count
 								app.B().Text(c.userStats[user.Nickname].PostCount),
-								app.Span().Class("white-text bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
+								app.Span().Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
 									app.I().Text("news"),
 								),
 
