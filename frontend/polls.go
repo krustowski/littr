@@ -324,11 +324,6 @@ func (c *pollsContent) Render() app.UI {
 		),
 
 		app.Table().Class("border left-align").ID("table-poll").Body(
-			app.THead().Body(
-				app.Tr().Body(
-					app.Th().Class("align-left").Text("poll question, options, timestamp"),
-				),
-			),
 			app.TBody().Body(
 				app.Range(pagedPolls).Slice(func(idx int) app.UI {
 					poll := pagedPolls[idx]
