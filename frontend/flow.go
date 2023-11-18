@@ -770,7 +770,7 @@ func (c *flowContent) Render() app.UI {
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
 
 							// post header (author avatar + name + link button)
-							app.Div().Class("row").Body(
+							app.Div().Class("row top-padding").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
 									app.B().Text(post.Nickname).Class("deep-orange-text"),
