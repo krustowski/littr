@@ -683,11 +683,6 @@ func (c *usersContent) Render() app.UI {
 
 		// users table
 		app.Table().Class("border").ID("table-users").Style("width", "100%").Body(
-			app.THead().Body(
-				app.Tr().Body(
-					app.Th().Text("nick, about, flow list, more"),
-				),
-			),
 			app.TBody().Body(
 				app.Range(pagedUsers).Slice(func(idx int) app.UI {
 					user := pagedUsers[idx]
