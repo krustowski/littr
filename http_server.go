@@ -89,13 +89,14 @@ func initServer() {
 
 	// root route with custom CSS and JS definitions
 	http.Handle("/", &app.Handler{
-		Name:         "litter-go",
-		ShortName:    "littr",
-		Title:        "littr",
-		Description:  "litter-go PWA",
-		Author:       "krusty",
-		LoadingLabel: "loading...",
-		Lang:         "en",
+		Name:               "litter-go",
+		ShortName:          "littr",
+		Title:              "littr",
+		Description:        "litter-go PWA",
+		Author:             "krusty",
+		LoadingLabel:       "loading...",
+		Lang:               "en",
+		AutoUpdateInterval: time.Minute * 5,
 		Icon: app.Icon{
 			Large:      "/web/android-chrome-512x512.png",
 			Default:    "/web/android-chrome-192x192.png",
