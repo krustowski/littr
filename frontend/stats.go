@@ -103,8 +103,11 @@ func (c *statsContent) handleSearch(ctx app.Context, a app.Action) {
 			//user := users[key]
 			user.Searched = false
 
-			if strings.Contains(key, val) {
-				log.Println(key)
+			// use lowecase to search across UNICODE letters
+			lval := strings.ToLower(val)
+			lkey := strings.ToLower(key)
+
+			if strings.Contains(lkey, lval) {
 				user.Searched = true
 
 				//matchedList = append(matchedList, key)

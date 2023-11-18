@@ -298,7 +298,11 @@ func (c *usersContent) handleSearch(ctx app.Context, a app.Action) {
 			//user := users[key]
 			user.Searched = false
 
-			if strings.Contains(key, val) {
+			// use lowecase to search across UNICODE letters
+			lval := strings.ToLower(val)
+			lkey := strings.ToLower(key)
+
+			if strings.Contains(lkey, lval) {
 				log.Println(key)
 				user.Searched = true
 			}
