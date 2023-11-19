@@ -98,29 +98,30 @@ func (h *header) Render() app.UI {
 	}
 
 	// top navbar
-	return app.Nav().ID("nav-top").Class("top fixed-top center-align deep-orange").
+	//return app.Nav().ID("nav-top").Class("top fixed-top center-align deep-orange").
+	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
 			app.A().Href("/settings").Text("settings").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large").Class("deep-orange-text").Body(
 					app.Text("build")),
-				app.Span().Body(
-					app.Text("settings")),
+				//app.Span().Body(
+				//app.Text("settings")),
 			),
 
 			// show intallation button if available
 			app.If(h.appInstallable,
 				app.A().Text("install").OnClick(h.onInstallButtonClicked).Body(
-					app.I().Class("large").Body(
+					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("download"),
 					),
-					app.Span().Body(
-						app.Text("install"),
-					),
+					//app.Span().Body(
+					//app.Text("install"),
+					//),
 				),
 			),
 
-			app.H4().Text(headerString).Class("large-padding").OnClick(h.onClickHeadline),
+			app.H4().Text(headerString).Class("large-padding deep-orange-text").OnClick(h.onClickHeadline),
 
 			// app info modal
 			app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
@@ -159,17 +160,17 @@ func (h *header) Render() app.UI {
 
 			app.If(h.userLogged,
 				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Body(
-					app.I().Class("large").Body(
+					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("logout")),
-					app.Span().Body(
-						app.Text("logout")),
+					//app.Span().Body(
+					//app.Text("logout")),
 				),
 			).Else(
 				app.A().Href("/login").Text("login").Class("max").Body(
-					app.I().Class("large").Body(
+					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("login")),
-					app.Span().Body(
-						app.Text("login")),
+					//app.Span().Body(
+					//app.Text("login")),
 				),
 			),
 
@@ -189,39 +190,39 @@ func (h *header) Render() app.UI {
 
 // bottom navbar
 func (f *footer) Render() app.UI {
-	return app.Nav().ID("nav-bottom").Class("bottom fixed-bottom center-align deep-orange8").
-		//Style("background-color", navbarColor).
+	//return app.Nav().ID("nav-bottom").Class("bottom fixed-bottom center-align deep-orange8").
+	return app.Nav().ID("nav-top").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 		Body(
 			app.A().Href("/stats").Text("stats").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large deep-orange-text").Body(
 					app.Text("query_stats")),
-				app.Span().Body(
-					app.Text("stats")),
+				//app.Span().Body(
+				//app.Text("stats")),
 			),
 			app.A().Href("/users").Text("users").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large deep-orange-text").Body(
 					app.Text("group")),
-				app.Span().Class("large").Body(
-					app.Text("users")),
+				//app.Span().Class("large").Body(
+				//app.Text("users")),
 			),
 			app.A().Href("/post").Text("post").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large deep-orange-text").Body(
 					app.Text("add")),
-				app.Span().Body(
-					app.Text("post")),
+				//app.Span().Body(
+				//app.Text("post")),
 			),
 			app.A().Href("/polls").Text("polls").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large deep-orange-text").Body(
 					app.Text("equalizer")),
-				app.Span().Body(
-					app.Text("polls")),
+				//app.Span().Body(
+				//app.Text("polls")),
 			),
 			app.A().Href("/flow").Text("flow").Class("max").Body(
-				app.I().Class("large").Body(
+				app.I().Class("large deep-orange-text").Body(
 					//app.Text("trending_up")),
 					app.Text("tsunami")),
-				app.Span().Body(
-					app.Text("flow")),
+				//app.Span().Body(
+				//app.Text("flow")),
 			),
 		)
 }
