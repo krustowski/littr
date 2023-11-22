@@ -722,7 +722,7 @@ func (c *flowContent) Render() app.UI {
 						return nil
 					}
 
-					// check the post's lenght, on threshold use <details> tag
+					// check the post's length, on threshold use <details> tag
 					postDetailsSummary := ""
 					if len(post.Content) > config.MaxPostLength {
 						postDetailsSummary = post.Content[:config.MaxPostLength/10] + "- [...]"
