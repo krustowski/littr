@@ -354,7 +354,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 	}
 
 	// disable any following of such user
-	userShaded.FlowList[key] = false
+	userShaded.FlowList[c.user.Nickname] = false
 	c.user.FlowList[key] = false
 
 	// negate the previous state
@@ -364,7 +364,9 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 		c.user.ShadeList = make(map[string]bool)
 	}
 
-	c.user.ShadeList[key] = !shadeListItem
+	if key != c.user.Nickname {
+		c.user.ShadeList[key] = !shadeListItem
+	}
 
 	toastText := ""
 
