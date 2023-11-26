@@ -124,6 +124,11 @@ func migrateUserShadeList() bool {
 		for name, state := range shadeList {
 			if state && name != user.Nickname {
 				flowList[name] = false
+			} 
+
+			// ensure that users can see themselves
+			if name == user.Nickname {
+				flowList[name] = true
 			}
 		}
 	}
