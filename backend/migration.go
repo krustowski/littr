@@ -116,20 +116,29 @@ func migrateUserRegisteredTime() bool {
 func migrateUserShadeList() bool {
 	users, _ := getAll(UserCache, models.User{})
 
-	for _, user := range users {
+	for key, user := range users {
 		shadeList := user.ShadeList
 		flowList := user.FlowList
+
+		if flowList == nil {
+			flowList = make(map[string]bool)
+		}
 
 		// ShadeList map[string]bool `json:"shade_list"`
 		for name, state := range shadeList {
 			if state && name != user.Nickname {
 				flowList[name] = false
-			} 
-
-			// ensure that users can see themselves
-			if name == user.Nickname {
-				flowList[name] = true
+				user.FlowList = flowList
+				//setOne(UserCache, key, user)
 			}
+
+		}
+
+		// ensure that users can see themselves
+		flowList[key] = true
+		user.FlowList = flowList
+		if ok := setOne(UserCache, key, user); !ok {
+			return false
 		}
 	}
 
