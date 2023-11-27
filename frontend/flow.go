@@ -107,6 +107,12 @@ func (c *flowContent) handleImage(ctx app.Context, a app.Action) {
 	ctx.JSSrc().Set("src", "")
 }
 
+func (c *flowContent) onClickUserFlow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	//c.buttonDisabled = true
+
+	ctx.Navigate("/flow/" + key)
+}
 func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
 	c.interactedPostKey = ctx.JSSrc().Get("id").String()
 
@@ -773,7 +779,8 @@ func (c *flowContent) Render() app.UI {
 							app.Div().Class("row top-padding").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
-									app.B().Text(post.Nickname).Class("deep-orange-text"),
+									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+									//app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
 
 								app.If(post.Nickname != "system",
