@@ -342,8 +342,9 @@ func (c *flowContent) OnDismount() {
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 	c.refreshClicked = true
-	c.fetchUsers(ctx)
+	
 	c.fetchPosts(ctx)
+	c.fetchUsers(ctx)
 }
 
 func (c *flowContent) fetchPosts(ctx app.Context) {
