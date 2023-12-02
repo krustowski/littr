@@ -854,7 +854,7 @@ func (c *flowContent) Render() app.UI {
 								).Else(
 									app.B().Text(post.ReactionCount),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
-										app.I().Text("star"),
+										app.I().Text("ac_unit"),
 									),
 								),
 							),
