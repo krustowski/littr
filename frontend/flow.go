@@ -342,7 +342,7 @@ func (c *flowContent) OnDismount() {
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 	c.refreshClicked = true
-	
+
 	c.fetchPosts(ctx)
 	c.fetchUsers(ctx)
 }
@@ -811,10 +811,10 @@ func (c *flowContent) Render() app.UI {
 												app.Details().Class("max").Body(
 													app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 													app.Div().Class("space"),
-													app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+													app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre"),
 												),
 											).Else(
-												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto"),
+												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre"),
 											),
 
 											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
@@ -828,10 +828,10 @@ func (c *flowContent) Render() app.UI {
 										app.Details().Body(
 											app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
 											app.Div().Class("space"),
-											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre"),
 										),
 									).Else(
-										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto"),
+										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre"),
 									),
 								),
 							),
