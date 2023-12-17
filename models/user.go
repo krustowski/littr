@@ -72,4 +72,7 @@ type User struct {
 
 	// VapidPrivKey is a string containing VAPID private key for notification subscription.
 	VapidPrivKey string `json:"vapid_privkey"`
+
+	// Tags is an array of possible roles and other various attributes assigned to such user.
+	Tags []string `json:"tags"`
 }
