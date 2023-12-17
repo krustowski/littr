@@ -107,17 +107,50 @@ make flush kill run
 `litter-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime)
 
 ```
-make fmt build run
+make dev
 
 http://localhost:8093/flow
 ```
 
+### investigating the runtime data
+
+```
+make sh
+
+ls -laR data/
+```
+
+```
+data/:
+total 44
+drwxr-xr-x    1 littr    littr           96 Nov 14 22:21 .
+drwxr-sr-x    1 littr    littr           24 Dec 17 20:58 ..
+-rw-r--r--    1 littr    littr         2562 Dec 17 22:02 polls.json
+-rw-r--r--    1 littr    littr        24309 Dec 17 22:02 posts.json
+-rw-r-----    1 littr    littr         1154 Dec 17 22:02 subscriptions.json
+-rw-r--r--    1 littr    littr        11923 Dec 17 22:02 users.json
+```
+
+In the listing above we can see freshly dumped data from littr runtime. We can fetch it outside the container using `make fetch_run_data`.
+
+```
+make fetch_running_dump
+
+ Copying dumped data from the container...
+
+Successfully copied 13.8kB to /home/user/litter-go/run_data/
+Successfully copied 4.61kB to /home/user/litter-go/run_data/
+Successfully copied 26.1kB to /home/user/litter-go/run_data/
+Successfully copied 3.07kB to /home/user/litter-go/run_data/
+```
+
 ### nice-to-have(s)
+
 + ~~account deletion (`settings` page)~~
-+ add timestamps on server, render them on client side
++ ~~add timestamps on server, render them on client side~~
 + ~~automatic links for known TLDs~~
-+ autosubmit on password manager autofill (when username and password get filled quite quickly)
-+ break lines on \n in posts
++ ~~autosubmit on password manager autofill (when username and password get filled quite quickly)~~
++ ~~break lines on \n in posts~~
 + check for double posting same content
 + custom colour theme per user
 + deep code refactoring
@@ -127,7 +160,6 @@ http://localhost:8093/flow
 + implement customizable navbar items order
 + implement loading of new posts
 + implement sessions (SessionCache)
-+ OAuth2
 + show offline mode notification
 + show user's details on the top of /flow/<username> page
 + swagger docs
