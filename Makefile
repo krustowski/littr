@@ -64,6 +64,9 @@ info:
 .PHONY: dev
 dev: fmt build run logs
 
+.PHONY: prod
+prod: build run logs
+
 .PHONY: fmt
 fmt: version
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
