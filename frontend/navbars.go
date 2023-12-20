@@ -121,7 +121,12 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			app.H4().Text(headerString).Class("large-padding deep-orange-text").OnClick(h.onClickHeadline),
+			app.Div().Class("row").Body(
+				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
+					app.Text(headerString),
+					app.Sup().Text("~beta"),
+				),
+			),
 
 			// app info modal
 			app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
