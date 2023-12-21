@@ -560,6 +560,10 @@ func (c *usersContent) Render() app.UI {
 		var sorted []models.User
 
 		for _, key := range keys {
+			if !c.users[key].Searched {
+				continue
+			}
+
 			sorted = append(sorted, c.users[key])
 		}
 
