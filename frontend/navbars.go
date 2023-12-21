@@ -130,15 +130,22 @@ func (h *header) Render() app.UI {
 
 			// app info modal
 			app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
-				app.Img().Src("/web/android-chrome-192x192.png"),
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("litter-go (littr) PWA"),
+				app.Div().Class("row").Body(
+					app.Img().Src("/web/android-chrome-192x192.png"),
+					app.H4().Text("littr (beta)"),
 				),
 				app.Nav().Class("center-align large-text").Body(
 					app.P().Body(
-						app.A().Class("deep-orange-text bold").Href("/tos").Text("ToS"),
+						app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 					),
 				),
+				app.Nav().Class("center-align large-text").Body(
+					app.P().Body(
+						app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
+					),
+				),
+				app.Div().Class("small-space"),
+
 				app.Nav().Class("center-align").Body(
 					app.P().Body(
 						app.Text("version "),
