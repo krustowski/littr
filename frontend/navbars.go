@@ -124,7 +124,7 @@ func (h *header) Render() app.UI {
 			app.Div().Class("row").Body(
 				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
-					app.Sup().Text("~beta"),
+					app.Span().Class("small-text middle top-align").Text(" (beta)"),
 				),
 			),
 
