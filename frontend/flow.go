@@ -783,12 +783,6 @@ func (c *flowContent) Render() app.UI {
 									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
 									//app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
-
-								app.If(post.Nickname != "system",
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-										app.I().Text("link"),
-									),
-								),
 							),
 
 							// pic post
@@ -839,20 +833,23 @@ func (c *flowContent) Render() app.UI {
 							// post footer (timestamp + reply buttom + star/delete button)
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
-									app.Text(post.Timestamp.Format("Jan 02, 2006; 15:04:05 -0700")),
+									app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
 								),
 								app.If(post.Nickname != "system",
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 										app.I().Text("reply"),
 									),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+										app.I().Text("link"),
+									),
 								),
 								app.If(c.user.Nickname == post.Nickname,
-									app.B().Text(post.ReactionCount),
+									app.B().Text(post.ReactionCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
-									app.B().Text(post.ReactionCount),
+									app.B().Text(post.ReactionCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
 										app.I().Text("ac_unit"),
 									),

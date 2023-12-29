@@ -727,14 +727,14 @@ func (c *usersContent) Render() app.UI {
 								app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
 
 								// user's stats --- flower count
-								app.B().Text(c.userStats[user.Nickname].FlowerCount),
+								app.B().Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
 								app.Span().Class("bold").Body(
 									//app.I().Text("filter_vintage"),
 									app.I().Text("group"),
 								),
 
 								// user's stats --- post count
-								app.B().Text(c.userStats[user.Nickname].PostCount),
+								app.B().Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
 								app.Span().Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
 									app.I().Text("news"),
 								),
