@@ -18,6 +18,7 @@ var migrations = map[string]migration{
 	"migrateUserDeletion()":       migrateUserDeletion,
 	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
 	"migrateUserShadeList()":      migrateUserShadeList,
+	"migrateUserUnshade()":	       migrateUserUnshade,
 }
 
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
@@ -137,6 +138,37 @@ func migrateUserShadeList() bool {
 		// ensure that users can see themselves
 		flowList[key] = true
 		user.FlowList = flowList
+		if ok := setOne(UserCache, key, user); !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+// migrateUserUnshade function lists all users and unshades manually some explicitly list users
+func migrateUserUnshade() bool {
+	users, _ := getAll(UserCache, models.User{})
+
+	usersToUnshade := []string{
+		"amdulka",
+		"nestolecek",
+	}
+
+	for key, user := range users {
+		if !contains(usersToShade, key) {
+			continue
+		}
+
+		shadeList := user.ShadeList
+
+		for name, state := range shadeList {
+			if contains(usersToShade, name) {
+				shadeList[name] = false
+			}
+		}
+
+		user.ShadeList = shadeList
 		if ok := setOne(UserCache, key, user); !ok {
 			return false
 		}
