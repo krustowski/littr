@@ -156,14 +156,14 @@ func migrateUserUnshade() bool {
 	}
 
 	for key, user := range users {
-		if !contains(usersToShade, key) {
+		if !contains(usersToUnshade, key) {
 			continue
 		}
 
 		shadeList := user.ShadeList
 
-		for name, state := range shadeList {
-			if contains(usersToShade, name) {
+		for name, _ := range shadeList {
+			if contains(usersToUnshade, name) {
 				shadeList[name] = false
 			}
 		}
