@@ -72,6 +72,13 @@ func (p *StatsPage) Render() app.UI {
 	)
 }
 
+func (c *statsContent) onClickUserFlow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	//c.buttonDisabled = true
+
+	ctx.Navigate("/flow/" + key)
+}
+
 func (c *statsContent) onSearch(ctx app.Context, e app.Event) {
 	val := ctx.JSSrc().Get("value").String()
 
@@ -425,7 +432,8 @@ func (c *statsContent) Render() app.UI {
 						app.Td().Class("align-left").Body(
 							app.P().Body(
 								app.P().Body(
-									app.B().Text(key).Class("deep-orange-text"),
+									//app.B().Text(key).Class("deep-orange-text"),
+									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
 								),
 							),
 						),

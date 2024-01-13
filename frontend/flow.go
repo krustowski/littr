@@ -113,6 +113,7 @@ func (c *flowContent) onClickUserFlow(ctx app.Context, e app.Event) {
 
 	ctx.Navigate("/flow/" + key)
 }
+
 func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
 	c.interactedPostKey = ctx.JSSrc().Get("id").String()
 

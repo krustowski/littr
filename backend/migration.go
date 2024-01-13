@@ -18,7 +18,7 @@ var migrations = map[string]migration{
 	"migrateUserDeletion()":       migrateUserDeletion,
 	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
 	"migrateUserShadeList()":      migrateUserShadeList,
-	"migrateUserUnshade()":	       migrateUserUnshade,
+	"migrateUserUnshade()":        migrateUserUnshade,
 }
 
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
@@ -162,7 +162,7 @@ func migrateUserUnshade() bool {
 
 		shadeList := user.ShadeList
 
-		for name, _ := range shadeList {
+		for name := range shadeList {
 			if contains(usersToUnshade, name) {
 				shadeList[name] = false
 			}
