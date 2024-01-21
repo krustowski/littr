@@ -41,6 +41,7 @@ func initServer() {
 	l := backend.Logger{
 		CallerID:   "system",
 		WorkerName: "initServer",
+		Version:    "system",
 	}
 
 	// parse ENV contants from .env file (should be loaded using Makefile and docker-compose.yml file)
