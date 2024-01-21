@@ -27,6 +27,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "auth",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	resp.AuthGranted = false
@@ -163,6 +164,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "flow",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
@@ -370,6 +372,7 @@ func PollsHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "polls",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
@@ -529,6 +532,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "users",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
@@ -717,6 +721,7 @@ func PushNotifHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "push",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	switch r.Method {
@@ -867,6 +872,7 @@ func PixHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "pix",
+		Version:    r.Header.Get("X-App-Version"),
 	}
 
 	request := struct {

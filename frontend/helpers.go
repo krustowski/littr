@@ -50,6 +50,7 @@ func litterAPI(method, url string, data interface{}, caller string) (*[]byte, bo
 	}
 
 	req.Header.Set("X-API-Caller-ID", caller)
+	req.Header.Set("X-App-Version", config.Version)
 
 	client := http.Client{}
 

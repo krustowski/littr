@@ -179,6 +179,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement mailing (verification mails) on backend
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
++ ~~send frontend's tagged version to backend (improve user debugging)~~
 
 ### roadmap to v0.21
 + ~~implement simple notification service (wip)~~

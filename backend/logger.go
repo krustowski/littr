@@ -28,6 +28,9 @@ type Logger struct {
 	// Time property hold the actual time of the request processing.
 	Time time.Time `json:"time" validation:"required"`
 
+	// Version is the tagged version of the client's SW (compiled in).
+	Version string `json:"version"`
+
 	// WorkerName string is the name of a worker processing such request.
 	WorkerName string `json:"worker_name" validation:"required"`
 }
