@@ -641,8 +641,26 @@ func (c *flowContent) Render() app.UI {
 		// page heading
 		app.Div().Class("row").Body(
 			app.Div().Class("max").Body(
-				app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
-				app.P().Text("exclusive content incoming frfr"),
+				app.If(c.singlePostID != "" && !c.isPost,
+					app.H5().Text(c.singlePostID+"'s flow").Style("padding-top", config.HeaderTopPadding),
+					//app.P().Text("exclusive content incoming frfr"),
+
+					// post header (author avatar + name + link button)
+					app.Div().Class("row top-padding").Body(
+						app.Img().Class("responsive max left").Src(c.users[c.singlePostID].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+						app.P().Class("max").Body(
+							app.A().Class("vold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
+							//app.B().Text(post.Nickname).Class("deep-orange-text"),
+						),
+
+						app.If(c.users[c.singlePostID].About != "",
+							app.Article().Class("max center-align").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.singlePostID].About),
+						),
+					),
+				).Else(
+					app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
+					app.P().Text("exclusive content incoming frfr"),
+				),
 			),
 			app.Button().Class("border black white-text bold").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 				app.If(c.refreshClicked,
