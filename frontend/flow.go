@@ -647,16 +647,18 @@ func (c *flowContent) Render() app.UI {
 
 					// post header (author avatar + name + link button)
 					app.Div().Class("row top-padding").Body(
-						app.Img().Class("responsive max left").Src(c.users[c.singlePostID].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
-						app.P().Class("max").Body(
+						app.Img().Class("responsive max left").Src(c.users[c.singlePostID].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
+						/*;app.P().Class("max").Body(
 							app.A().Class("vold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
 							//app.B().Text(post.Nickname).Class("deep-orange-text"),
-						),
+						),*/
 
 						app.If(c.users[c.singlePostID].About != "",
-							app.Article().Class("max center-align").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.singlePostID].About),
+							app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.singlePostID].About),
 						),
 					),
+				).ElseIf(c.singlePostID != "" && c.isPost,
+					app.H5().Text("single post and its interactions").Style("padding-top", config.HeaderTopPadding),
 				).Else(
 					app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
 					app.P().Text("exclusive content incoming frfr"),
