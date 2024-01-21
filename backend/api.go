@@ -100,6 +100,7 @@ func DumpHandler(w http.ResponseWriter, r *http.Request) {
 		Method:     r.Method,
 		Route:      r.URL.String(),
 		WorkerName: "dump",
+		Version:    "system",
 	}
 
 	// check the incoming API token
