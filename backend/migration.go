@@ -28,6 +28,7 @@ func RunMigrations() bool {
 	l := Logger{
 		CallerID:   "system",
 		WorkerName: "migration",
+		Version:    "system",
 	}
 
 	for migName, migFunc := range migrations {
