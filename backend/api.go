@@ -205,6 +205,17 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		timestamp := time.Now()
+		key = strconv.FormatInt(timestamp.UnixNano(), 10)
+
+		if saved := setOne(TimestampCache, "flow", key); !saved {
+			resp.Message = "backend error: cannot update flow cache timestamp"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
 		resp.Message = "ok, post removed"
 		resp.Code = http.StatusOK
 
@@ -214,7 +225,7 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		// fetch the flow, ergo post list
 		posts, count := getAll(FlowCache, models.Post{})
-		//posts, count := getMany(FlowCache, models.Post{}, "", 5, true)
+		//posts, count := getMany(FlowCache, models.Post{}, 50, 1, true)
 
 		resp.Message = "ok, dumping posts"
 		resp.Code = http.StatusOK
@@ -288,6 +299,14 @@ func FlowHandler(w http.ResponseWriter, r *http.Request) {
 
 		if saved := setOne(FlowCache, key, post); !saved {
 			resp.Message = "backend error: cannot save new post (cache error)"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		if saved := setOne(TimestampCache, "flow", key); !saved {
+			resp.Message = "backend error: cannot update flow cache timestamp"
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)
