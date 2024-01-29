@@ -555,6 +555,15 @@ func (c *settingsContent) Render() app.UI {
 		app.H6().Text("switches"),
 		app.Div().Class("space"),
 
+		// darkmode infobox
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("the UI mode "),
+				app.Span().Text("can be adjusted according to the user's input (option) --- experimental, the mode may differ on other browsers (when logged-in on multiple devices)"),
+			),
+		),
+
 		// darkmode switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
@@ -570,6 +579,15 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// left-hand infobox
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("left-hand switch "),
+				app.Span().Text("is a theoretical feature which would enable an user to flip the UI for left-handed folks to browse more smoothly"),
+			),
+		),
+
 		// left-hand switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
@@ -580,6 +598,30 @@ func (c *settingsContent) Render() app.UI {
 					app.Input().Type("checkbox").ID("left-hand-switch").Checked(false).Disabled(true).OnChange(nil),
 					app.Span().Body(
 						app.I().Text("front_hand"),
+					),
+				),
+			),
+		),
+
+		// live infobox
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("live mode "),
+				app.Span().Text("is a theoretical feature for the live flow preview experience --- one would see other posts incoming as they reach the backend (new posts rendered in live)"),
+			),
+		),
+
+		// live switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("live switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").ID("live-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Span().Body(
+						app.I().Text("stream"),
 					),
 				),
 			),
