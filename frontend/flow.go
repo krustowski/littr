@@ -347,6 +347,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.loaderShow = true
 			c.loaderShowImage = true
 			c.refreshClicked = true
+			c.postButtonsDisabled = true
 
 			c.toastText = ""
 
@@ -356,6 +357,14 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 
 		c.fetchPosts(ctx)
 		c.fetchUsers(ctx)
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.loaderShow = false
+			c.loaderShowImage = false
+			c.refreshClicked = false
+			c.postButtonsDisabled = false
+		})
+
 	})
 }
 
