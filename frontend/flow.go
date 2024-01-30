@@ -342,10 +342,21 @@ func (c *flowContent) OnDismount() {
 }
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
-	c.refreshClicked = true
+	ctx.Async(func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.loaderShow = true
+			c.loaderShowImage = true
+			c.refreshClicked = true
 
-	c.fetchPosts(ctx)
-	c.fetchUsers(ctx)
+			c.toastText = ""
+
+			c.posts = nil
+			c.users = nil
+		})
+
+		c.fetchPosts(ctx)
+		c.fetchUsers(ctx)
+	})
 }
 
 func (c *flowContent) fetchPosts(ctx app.Context) {
@@ -530,6 +541,18 @@ func (c *flowContent) OnNav(ctx app.Context) {
 				if _, found = usersRaw.Users[singlePostID]; !found {
 					toastText = "user not found"
 				}
+			}
+		}
+
+		// timestamp compating station
+		rts, _ := FlowCache.Get("timestamp")
+		ts, _ := rts.(string)
+
+		log.Printf("rts: %s, ts: %s\n", rts, ts)
+
+		if postsRaw.Posts["timestamp"].ID != ts {
+			for key, post := range postsRaw.Posts {
+				FlowCache.Set(key, post)
 			}
 		}
 

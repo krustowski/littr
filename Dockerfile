@@ -2,7 +2,7 @@
 #
 # litter-go / Dockerfile
 #
-
+ 
 
 #
 # stage 0 -- build
@@ -43,7 +43,7 @@ RUN go build -o littr
 # stage 1 -- release
 #
 
-FROM alpine:3.18 AS litter-release
+FROM alpine:3.19 AS litter-release
 
 ARG APP_FLAGS
 ARG APP_PEPPER

@@ -8,9 +8,11 @@ var (
 	FlowCache         *core.Cache
 	PollCache         *core.Cache
 	SubscriptionCache *core.Cache
+	TimestampCache    *core.Cache
 	UserCache         *core.Cache
 )
 
+// getAll
 func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	itemsInterface, count := cache.GetAll()
 
@@ -32,13 +34,12 @@ func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 // mark being the ID/key, stop/start the export there in the cache map
 // export the 'count' number of records in map with IDs/keys
 // the 'count' number passthrough to the 2nd return value
-// 'reverse' bool can be used to
-func getMany[T any](cache *core.Cache, model T, mark string, countMany int, reverse bool) (map[string]T, int) {
+func getMany[T any](cache *core.Cache, model T, pagination int, page int) (map[string]T, int) {
 	items := make(map[string]T)
 
 	// keys (and models) array acts like a helper array for the further proper item cut and export
 	keys := []string{}
-	models := []T{}
+	//models := []T{}
 
 	// let us fetch the data
 	itemsInterface, _ := cache.GetAll()
@@ -54,43 +55,23 @@ func getMany[T any](cache *core.Cache, model T, mark string, countMany int, reve
 			continue
 		}
 
+		items[key] = item
 		keys = append(keys, key)
-		models = append(models, item)
-
-		// check if we hit the marked position in the map
-		if key == mark {
-			break
-		}
+		//models = append(models, item)
 	}
 
 	// reverse the order if requested
 	// https://stackoverflow.com/a/19239850
-	if reverse {
-		for i, j := 0, len(models)-1; i < j; i, j = i+1, j-1 {
-			keys[i], keys[j] = keys[j], keys[i]
-			models[i], models[j] = models[j], models[i]
-		}
+	reverse(keys)
+
+	// return one page of items
+	var toExport map[string]T = make(map[string]T)
+	//for i := len(keys) - 1 - (pagination * (page - 1)); i > len(keys)-(pagination*page) && i > 0; i-- {
+	for i := pagination * (page - 1); i < pagination*page; i++ {
+		toExport[keys[i]] = items[keys[i]]
 	}
 
-	// compose the range for scissors
-	start := 0
-	stop := countMany - 1
-
-	// cut off the requested number of items
-	if stop < len(keys) {
-		keysCut := keys[start:stop]
-		modelsCut := models[start:stop]
-
-		keys = keysCut
-		models = modelsCut
-	}
-
-	// reassemble a map to return
-	for idx, key := range keys {
-		items[key] = models[idx]
-	}
-
-	return items, len(keys)
+	return toExport, pagination
 }
 
 func getOne[T any](cache *core.Cache, key string, model T) (T, bool) {
