@@ -62,7 +62,7 @@ func getMany[T any](cache *core.Cache, model T, pagination int, page int) (map[s
 
 	// reverse the order if requested
 	// https://stackoverflow.com/a/19239850
-	reverse(keys)
+	//reverse(keys)
 
 	// return one page of items
 	var toExport map[string]T = make(map[string]T)

@@ -544,18 +544,6 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			}
 		}
 
-		// timestamp compating station
-		rts, _ := FlowCache.Get("timestamp")
-		ts, _ := rts.(string)
-
-		log.Printf("rts: %s, ts: %s\n", rts, ts)
-
-		if postsRaw.Posts["timestamp"].ID != ts {
-			for key, post := range postsRaw.Posts {
-				FlowCache.Set(key, post)
-			}
-		}
-
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
 			c.loggedUser = user.Nickname
