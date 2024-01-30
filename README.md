@@ -170,15 +170,20 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order~~
 + [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
 
-### roadmap to v0.22/v0.23/v0.24
+### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + add timestamp to a subscription
-+ fix flow reorganize glitch (single page, after post deletion etc)
 + implement Ctrl+Enter to submit posts like YouTube
 + implement forgotten password recovery
 + implement mailing (verification mails) on backend
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
+
+### roadmap to v0.23
++ implement combined picture-with-text (PwT) posting
+
+### roadmap to v0.22
++ fix flow reorganize glitch (single page, after post deletion etc) (wip)
 + ~~send frontend's tagged version to backend (improve user debugging)~~
 
 ### roadmap to v0.21
