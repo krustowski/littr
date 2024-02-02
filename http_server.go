@@ -15,6 +15,7 @@ import (
 	"go.savla.dev/littr/frontend"
 	"go.savla.dev/swis/v5/pkg/core"
 
+	//"github.com/go-chi/chi/v5"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -51,7 +52,6 @@ func initServer() {
 	backend.FlowCache = &core.Cache{}
 	backend.PollCache = &core.Cache{}
 	backend.SubscriptionCache = &core.Cache{}
-	backend.TimestampCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
 	l.Println("caches initialized", http.StatusOK)
