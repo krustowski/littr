@@ -164,7 +164,6 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + show user's details on the top of /flow/<username> page
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
-+ use a router (Gorilla Mux, Go-Chi)
 
 ### known bugs
 + ~~post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order~~
@@ -179,8 +178,11 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
 
-### roadmap to v0.23
+### roadmap to v0.24
 + implement combined picture-with-text (PwT) posting
+
+### roadmap to v0.23
++ use a router (Gorilla Mux, Go-Chi)
 
 ### roadmap to v0.22
 + fix flow reorganize glitch (single page, after post deletion etc) (wip)
