@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
+	github.com/go-chi/chi/v5 v5.0.11
 	github.com/maxence-charriere/go-app/v9 v9.8.0
 	github.com/prplecake/go-thumbnail v0.1.6
 	go.savla.dev/swis/v5 v5.6.3

@@ -4,6 +4,8 @@
 package main
 
 import (
+	"compress/flate"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +17,8 @@ import (
 	"go.savla.dev/littr/frontend"
 	"go.savla.dev/swis/v5/pkg/core"
 
-	//"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -38,6 +41,28 @@ func initClient() {
 }
 
 func initServer() {
+	r := chi.NewRouter()
+
+	r.Use(middleware.CleanPath)
+	//r.Use(middleware.Logger)
+	compressor := middleware.NewCompressor(flate.DefaultCompression,
+		"application/wasm", "text/css", "image/svg+xml")
+	r.Use(compressor.Handler)
+	r.Use(middleware.Recoverer)
+
+	// custom listener
+	// https://github.com/oderwat/go-nats-app/blob/master/back/back.go
+	listener, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		panic(err)
+	}
+
+	// custom server
+	// https://github.com/oderwat/go-nats-app/blob/master/back/back.go
+	server := &http.Server{
+		Addr: listener.Addr().String(),
+	}
+
 	// prepare the Logger instance
 	l := backend.Logger{
 		CallerID:   "system",
@@ -77,20 +102,12 @@ func initServer() {
 		backend.DumpAll()
 	}()
 
-	// API routes
-	http.HandleFunc("/api/auth", backend.AuthHandler)
-	http.HandleFunc("/api/dump", backend.DumpHandler)
-	http.HandleFunc("/api/flow", backend.FlowHandler)
-	http.HandleFunc("/api/pix", backend.PixHandler)
-	http.HandleFunc("/api/polls", backend.PollsHandler)
-	http.HandleFunc("/api/push", backend.PushNotifHandler)
-	//http.HandleFunc("/api/stats", backend.StatsHandler)
-	http.HandleFunc("/api/users", backend.UsersHandler)
+	// API router
+	r.Mount("/api", backend.LoadAPIRouter)
 
 	l.Println("API routes loaded", http.StatusOK)
 
-	// root route with custom CSS and JS definitions
-	http.Handle("/", &app.Handler{
+	appHandler := &app.Handler{
 		Name:               "litter-go",
 		ShortName:          "littr",
 		Title:              "littr",
@@ -125,15 +142,15 @@ func initServer() {
 			"https://cdn.gscloud.cz/js/sortable.min.js",
 			"/web/litter.js",
 		},
-	})
+	}
+
+	r.Handle("/*", appHandler)
+	server.Handler = r
 
 	l.Println("starting the server...", http.StatusOK)
 
-	// run a HTTP server
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		// https://github.com/maxence-charriere/go-app-demo/blob/V7/hello-docker/main.go
-		//log.Fatal(err)
+	// TODO use http.ErrServerClosed for graceful shutdown
+	if err := server.Serve(listener); err != nil {
 		panic(err)
 	}
-
 }
