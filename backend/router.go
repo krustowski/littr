@@ -8,6 +8,7 @@ import (
 func LoadAPIRouter() chi.Router {
 	r := chi.NewRouter()
 
+	//r.Get("/", rootHandler)
 	r.Post("/auth", authHandler)
 	r.Get("/dump", dumpHandler)
 
@@ -16,7 +17,7 @@ func LoadAPIRouter() chi.Router {
 		r.Post("/", postNewPost)
 		r.Delete("/", deletePost)
 	})
-	r.Route("/polls", func(r chi.Router) {
+	/*r.Route("/polls", func(r chi.Router) {
 		r.Get("/{pageNo}", getPolls)
 		r.Post("/", postNewPoll)
 		r.Delete("/", deletePoll)
@@ -30,7 +31,7 @@ func LoadAPIRouter() chi.Router {
 		r.Post("/", addNewUser)
 		r.Put("/", updateUser)
 		r.Delete("/", deleteUser)
-	})
+	})*/
 
 	return r
 }
