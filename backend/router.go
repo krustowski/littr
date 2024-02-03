@@ -20,13 +20,13 @@ func LoadAPIRouter() chi.Router {
 
 	r.Route("/flow", func(r chi.Router) {
 		r.Get("/{pageNo}", getPosts)
-		r.Post("/", postNewPost)
+		r.Post("/", addNewPost)
 		r.Put("/", updatePost)
 		r.Delete("/", deletePost)
 	})
 	r.Route("/polls", func(r chi.Router) {
 		r.Get("/{pageNo}", getPolls)
-		r.Post("/", postNewPoll)
+		r.Post("/", addNewPoll)
 		r.Put("/", updatePoll)
 		r.Delete("/", deletePoll)
 	})

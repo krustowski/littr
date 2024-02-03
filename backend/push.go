@@ -32,7 +32,8 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -42,7 +43,8 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	caller := r.Header.Get("X-API-Caller-ID")
@@ -56,7 +58,8 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "cannot save new subscription"
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, subscription added"
@@ -86,7 +89,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -100,7 +104,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	// fetch related data from cachces
@@ -114,7 +119,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusOK
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	// do not notify user --- notifications disabled --- OK condition
@@ -123,7 +129,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusOK
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	for _, sub := range subs {
@@ -147,6 +154,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 				resp.Message = "cannot send a notification: " + err.Error()
 
 				l.Println(resp.Message, resp.Code)
+				resp.Write(w)
 				return
 			}
 

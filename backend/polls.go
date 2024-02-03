@@ -54,7 +54,8 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -64,7 +65,8 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	key := poll.ID
@@ -74,7 +76,8 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, adding new poll"
@@ -105,7 +108,8 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -115,7 +119,8 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	key := poll.ID
@@ -125,7 +130,8 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if saved := setOne(PollCache, key, poll); !saved {
@@ -133,7 +139,8 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, poll updated"
@@ -164,7 +171,8 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -174,7 +182,8 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	key := poll.ID
@@ -184,7 +193,8 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, poll removed"

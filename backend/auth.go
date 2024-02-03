@@ -1,6 +1,12 @@
 package backend
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"os"
+
+	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 )
 
@@ -31,7 +37,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message+err.Error(), resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -41,7 +48,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message+err.Error(), resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	l.CallerID = user.Nickname
@@ -53,7 +61,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Users = make(map[string]models.User)

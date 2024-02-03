@@ -103,9 +103,7 @@ func initServer() {
 	}()
 
 	// API router
-	r.Mount("/api", backend.LoadAPIRouter)
-
-	l.Println("API routes loaded", http.StatusOK)
+	r.Mount("/api", backend.LoadAPIRouter())
 
 	appHandler := &app.Handler{
 		Name:               "litter-go",

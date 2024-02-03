@@ -1,9 +1,11 @@
 package backend
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -52,7 +54,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -63,7 +66,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if _, found := getOne(UserCache, user.Nickname, models.User{}); found {
@@ -71,7 +75,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusConflict
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	user.LastActiveTime = time.Now()
@@ -81,7 +86,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	//resp.Users[user.Nickname] = user
@@ -113,7 +119,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -124,7 +131,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if _, found := getOne(UserCache, user.Nickname, models.User{}); !found {
@@ -132,7 +140,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusNotFound
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if saved := setOne(UserCache, user.Nickname, user); !saved {
@@ -140,7 +149,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, user updated"
@@ -169,7 +179,8 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusNotFound
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if deleted := deleteOne(UserCache, key); !deleted {
@@ -177,7 +188,8 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	// delete all user's posts and polls

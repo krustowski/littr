@@ -1,5 +1,18 @@
 package backend
 
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
+)
+
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := Logger{
@@ -26,7 +39,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-func postNewPost(w http.ResponseWriter, r *http.Request) {
+func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := Logger{
 		CallerID:  r.Header.Get("X-API-Caller-ID"),
@@ -48,7 +61,8 @@ func postNewPost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -58,7 +72,8 @@ func postNewPost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	timestamp := time.Now()
@@ -81,20 +96,12 @@ func postNewPost(w http.ResponseWriter, r *http.Request) {
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)
-			break
+			resp.Write(w)
+			return
 		}
 
 		// generate thumbanils
 		genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content)
-
-		// upload to GSC Storage
-		/*if err := gscAPICall(content, post.Data); err != nil {
-			resp.Message = "backend error: couldn't save a figure to GSC Storage: " + err.Error()
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			break
-		}*/
 
 		post.Content = content
 		post.Data = []byte{}
@@ -105,7 +112,8 @@ func postNewPost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	posts, _ := getAll(FlowCache, models.Post{})
@@ -139,7 +147,8 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -149,7 +158,8 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
@@ -160,7 +170,8 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	if saved := setOne(FlowCache, key, post); !saved {
@@ -168,7 +179,8 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	resp.Message = "ok, post updated"
@@ -201,7 +213,8 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
@@ -211,7 +224,8 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
@@ -222,7 +236,8 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
-		break
+		resp.Write(w)
+		return
 	}
 
 	timestamp := time.Now()
