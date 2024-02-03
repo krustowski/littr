@@ -3,7 +3,7 @@ package backend
 import (
 	"os"
 
-	// impoerted for init purposes
+	// imported for init purposes
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -18,22 +18,21 @@ func genThumbnails(src, dest string) error {
 		Scaler:            "CatmullRom",
 	}
 
-	//buff := bytes.NewReader(buffer)
-
-	//imagePath := "/image.jpg"
-	//dest := "path/to/thumb_image.jpg"
 	gen := thumb.NewGenerator(config)
 
-	i, err := gen.NewImageFromFile(src)
+	// load the image from the source stream
+	img, err := gen.NewImageFromFile(src)
 	if err != nil {
 		return err
 	}
 
-	thumbBytes, err := gen.CreateThumbnail(i)
+	// generate a thumbnail
+	thumbBytes, err := gen.CreateThumbnail(img)
 	if err != nil {
 		return err
 	}
 
+	// write the thumbnail to a file
 	err = os.WriteFile(dest, thumbBytes, 0644)
 	if err != nil {
 		return err

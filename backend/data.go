@@ -35,6 +35,62 @@ func DumpAll() {
 	dumpOne(UserCache, usersFile, models.User{})
 }
 
+func dumpHandler(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+
+	// prepare the Logger instance
+	l := Logger{
+		CallerID: "system",
+		//IPAddress:  r.RemoteAddr,
+		IPAddress:  r.Header.Get("X-Real-IP"),
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "dump",
+		Version:    "system",
+	}
+
+	// check the incoming API token
+	token := r.Header.Get("X-App-Token")
+
+	if token == "" {
+		resp.Message = "empty token"
+		resp.Code = http.StatusUnauthorized
+
+		l.Println(resp.Message, resp.Code)
+		return
+	}
+
+	if token != os.Getenv("API_TOKEN") {
+		resp.Message = "invalid token"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		return
+	}
+
+	DumpAll()
+
+	resp.Code = http.StatusOK
+	resp.Message = "data dumped successfully"
+
+	l.Println(resp.Message, resp.Code)
+
+	// dynamic encryption bypass hack --- we need unecrypted JSON for curl (healthcheck)
+	if config.EncryptionEnabled {
+		//log.Printf("[dump] disabling encryption (was %t)", config.EncryptionEnabled)
+		config.EncryptionEnabled = !config.EncryptionEnabled
+
+		resp.Write(w)
+
+		//log.Printf("[dump] enabling encryption (was %t)", config.EncryptionEnabled)
+		config.EncryptionEnabled = !config.EncryptionEnabled
+	} else {
+		resp.Write(w)
+	}
+
+	return
+}
+
 func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 	rawData, err := os.ReadFile(filepath)
 	if err != nil {

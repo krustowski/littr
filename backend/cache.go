@@ -17,6 +17,7 @@ func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 
 	items := make(map[string]T)
 
+	// loop over all key'd interfaces and assert type T to every of them, compose a map
 	for key, rawItem := range itemsInterface {
 		item, ok := rawItem.(T)
 		if !ok {
