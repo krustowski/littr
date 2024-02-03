@@ -6,7 +6,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -21,26 +20,18 @@ type StatsPage struct {
 type statsContent struct {
 	app.Compo
 
-	pollCount int
-	postCount int
-	userCount int
-
-	polls map[string]models.Poll
-	posts map[string]models.Post
-	stats map[string]int
-	users map[string]models.User
-
 	flowStats map[string]int
 	userStats map[string]userStat
 
 	nicknames []string
 
-	loaderShow bool
+	users map[string]models.User
 
 	searchString string
 
-	toastShow bool
-	toastText string
+	loaderShow bool
+	toastShow  bool
+	toastText  string
 }
 
 type userStat struct {
@@ -165,24 +156,15 @@ func (c *statsContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		postsRaw := struct {
-			Posts map[string]models.Post `json:"posts"`
-			Count int                    `json:"count"`
+		respRaw := struct {
+			FlowStats map[string]int         `json:"flow_stats"`
+			UserStats map[string]userStat    `json:"user_stats"`
+			Users     map[string]models.User `json:"users"`
 		}{}
 
-		usersRaw := struct {
-			Users map[string]models.User `json:"users"`
-			Count int                    `json:"count"`
-		}{}
-
-		pollsRaw := struct {
-			Polls map[string]models.Poll `json:"polls"`
-			Count int                    `json:"count"`
-		}{}
-
-		// fetch posts
-		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
-			err := json.Unmarshal(*byteData, &postsRaw)
+		// fetch the stats
+		if byteData, _ := litterAPI("GET", "/api/stats", nil, user.Nickname); byteData != nil {
+			err := json.Unmarshal(*byteData, &respRaw)
 			if err != nil {
 				log.Println(err.Error())
 
@@ -193,157 +175,25 @@ func (c *statsContent) OnNav(ctx app.Context) {
 				return
 			}
 		} else {
-			log.Println("cannot fetch post flow list")
+			log.Println("cannot fetch stats")
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "cannot fetch post flow list"
-				c.toastShow = (c.toastText != "")
-			})
-			return
-		}
-
-		// fetch users
-		if byteData, _ := litterAPI("GET", "/api/users", nil, user.Nickname); byteData != nil {
-			err := json.Unmarshal(*byteData, &usersRaw)
-			if err != nil {
-				log.Println(err.Error())
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = "backend error: " + err.Error()
-					c.toastShow = (c.toastText != "")
-				})
-				return
-			}
-		} else {
-			log.Println("cannot fetch users list")
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "cannot fetch user list"
-				c.toastShow = (c.toastText != "")
-			})
-			return
-		}
-
-		// fetch polls
-		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname); byteData != nil {
-			err := json.Unmarshal(*byteData, &pollsRaw)
-			if err != nil {
-				log.Println(err.Error())
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = "backend error: " + err.Error()
-					c.toastShow = (c.toastText != "")
-				})
-				return
-			}
-		} else {
-			log.Println("cannot fetch polls list")
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "cannot fetch user list"
+				c.toastText = "cannot fetch stats"
 				c.toastShow = (c.toastText != "")
 			})
 			return
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts = postsRaw.Posts
-			c.postCount = postsRaw.Count
-
-			c.users = usersRaw.Users
-			c.userCount = usersRaw.Count
-
-			c.polls = pollsRaw.Polls
-			c.pollCount = pollsRaw.Count
-
-			c.flowStats, c.userStats = c.calculateStats()
+			c.users = respRaw.Users
+			c.flowStats = respRaw.FlowStats
+			c.userStats = respRaw.UserStats
 
 			c.loaderShow = false
 			log.Println("dispatch ends")
 		})
 		return
 	})
-}
-
-func (c *statsContent) calculateStats() (map[string]int, map[string]userStat) {
-	flowStats := make(map[string]int)
-	userStats := make(map[string]userStat)
-
-	flowers := make(map[string]int)
-	shades := make(map[string]int)
-
-	flowStats["posts"] = c.postCount
-	//flowStats["users"] = c.userCount
-	flowStats["users"] = -1
-	flowStats["stars"] = 0
-
-	// iterate over all posts, compose stats results
-	for _, val := range c.posts {
-		// increment user's stats
-		stat, ok := userStats[val.Nickname]
-		if !ok {
-			// create a blank stat
-			stat = userStat{}
-			stat.Searched = true
-		}
-
-		stat.PostCount++
-		stat.ReactionCount += val.ReactionCount
-		userStats[val.Nickname] = stat
-		flowStats["stars"] += val.ReactionCount
-	}
-
-	// iterate over all users, compose global flower and shade count
-	for _, user := range c.users {
-		for key, enabled := range user.FlowList {
-			if enabled && key != user.Nickname {
-				flowers[key]++
-			}
-		}
-
-		for key, shaded := range user.ShadeList {
-			if shaded && key != user.Nickname {
-				shades[key]++
-			}
-		}
-
-		// check the online status
-		diff := time.Since(user.LastActiveTime)
-		if diff < 15*time.Minute {
-			flowStats["online"]++
-		}
-
-		flowStats["users"]++
-	}
-
-	// iterate over composed flowers, assign the count to an user
-	for key, count := range flowers {
-		stat := userStats[key]
-
-		// FlowList also contains the user itself
-		stat.FlowerCount = count
-		userStats[key] = stat
-	}
-
-	// iterate over compose shades, assign the count to an user
-	for key, count := range shades {
-		stat := userStats[key]
-
-		// FlowList also contains the user itself
-		stat.ShadeCount = count
-		userStats[key] = stat
-	}
-
-	// iterate over all polls, count them good
-	for _, poll := range c.polls {
-		flowStats["polls"]++
-
-		flowStats["votes"] += poll.OptionOne.Counter
-		flowStats["votes"] += poll.OptionTwo.Counter
-		flowStats["votes"] += poll.OptionThree.Counter
-	}
-
-	return flowStats, userStats
 }
 
 func (c *statsContent) Render() app.UI {

@@ -180,9 +180,10 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 
 ### roadmap to v0.24/v0.25
 + implement combined picture-with-text (PwT) posting
-+ preprocess and paginate posts on backend
++ preprocess and paginate posts on backend (wip)
 
 ### roadmap to v0.23
++ ~~reintroduce `/api/stats` route to simplify the stats page~~
 + ~~use a router (Gorilla Mux, Go-Chi)~~
 
 ### roadmap to v0.22

@@ -35,6 +35,9 @@ func convertMapToArray[T any](m map[string]T, reverseOutput bool) ([]string, []T
 	return keys, vals
 }
 
+func getPostsPaged(w http.ResponseWriter, r *http.Request) {
+}
+
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")

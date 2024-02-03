@@ -17,9 +17,11 @@ func LoadAPIRouter() chi.Router {
 	r.Get("/", rootHandler)
 	r.Post("/auth", authHandler)
 	r.Get("/dump", dumpHandler)
+	r.Get("/stats", statsHandler)
 
 	r.Route("/flow", func(r chi.Router) {
 		r.Get("/", getPosts)
+		r.Get("/{page}", getPostsPaged)
 		r.Post("/", addNewPost)
 		r.Put("/", updatePost)
 		r.Delete("/", deletePost)

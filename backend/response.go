@@ -23,6 +23,10 @@ type response struct {
 	Posts       map[string]models.Post `json:"posts"`
 	Users       map[string]models.User `json:"users"`
 	Data        []byte                 `json:"data"`
+
+	// very stats properties
+	FlowStats map[string]int      `json:"flow_stats"`
+	UserStats map[string]userStat `json:"user_stats"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {
