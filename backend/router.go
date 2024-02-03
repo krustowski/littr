@@ -19,13 +19,13 @@ func LoadAPIRouter() chi.Router {
 	r.Get("/dump", dumpHandler)
 
 	r.Route("/flow", func(r chi.Router) {
-		r.Get("/{pageNo}", getPosts)
+		r.Get("/", getPosts)
 		r.Post("/", addNewPost)
 		r.Put("/", updatePost)
 		r.Delete("/", deletePost)
 	})
 	r.Route("/polls", func(r chi.Router) {
-		r.Get("/{pageNo}", getPolls)
+		r.Get("/", getPolls)
 		r.Post("/", addNewPoll)
 		r.Put("/", updatePoll)
 		r.Delete("/", deletePoll)
@@ -35,7 +35,7 @@ func LoadAPIRouter() chi.Router {
 		r.Put("/", sendNotif)
 	})
 	r.Route("/users", func(r chi.Router) {
-		r.Get("/{pageNo}", getUsers)
+		r.Get("/", getUsers)
 		r.Post("/", addNewUser)
 		r.Put("/", updateUser)
 		r.Delete("/", deleteUser)

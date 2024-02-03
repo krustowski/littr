@@ -17,8 +17,6 @@ type UserAuth struct {
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-
-	// prepare the Logger instance
 	l := Logger{
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
@@ -71,7 +69,6 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp.Message = "auth granted"
 	resp.Code = http.StatusOK
-	//resp.FlowList = u.FlowListdd
 
 	l.Println(resp.Message, resp.Code)
 
