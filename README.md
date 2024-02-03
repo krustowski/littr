@@ -178,11 +178,12 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
 
-### roadmap to v0.24
+### roadmap to v0.24/v0.25
 + implement combined picture-with-text (PwT) posting
++ preprocess and paginate posts on backend
 
 ### roadmap to v0.23
-+ use a router (Gorilla Mux, Go-Chi)
++ ~~use a router (Gorilla Mux, Go-Chi)~~
 
 ### roadmap to v0.22
 + fix flow reorganize glitch (single page, after post deletion etc) (wip)
