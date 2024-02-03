@@ -1,70 +1,236 @@
 package backend
 
-import (
-	"encoding/json"
-	"log"
-	"os"
-	//"sort"
-	//"strconv"
-	//"time"
+func getPosts(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := Logger{
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "flow",
+		Version:    r.Header.Get("X-App-Version"),
+	}
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
-	"go.savla.dev/littr/models"
-)
+	// fetch the flow, ergo post list
+	posts, count := getAll(FlowCache, models.Post{})
+	//posts, count := getMany(FlowCache, models.Post{}, 50, 1, true)
 
-type Posts struct {
-	Posts map[string]models.Post `json:"posts"`
+	resp.Message = "ok, dumping posts"
+	resp.Code = http.StatusOK
+	resp.Posts = posts
+	resp.Count = count
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
 }
 
-func getPosts() *map[string]models.Post {
-	var posts Posts
+func postNewPost(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := Logger{
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "flow",
+		Version:    r.Header.Get("X-App-Version"),
+	}
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
-	dat, err := os.ReadFile("/opt/data/posts.json")
+	// post a new post
+	var post models.Post
+
+	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err.Error())
-		return nil
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
 	}
 
-	err = json.Unmarshal(dat, &posts)
-	if err != nil {
-		log.Println(err.Error())
-		return nil
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err := json.Unmarshal(data, &post); err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
 	}
 
-	// order posts by timestamp DESC
-	/*sort.SliceStable(posts.Posts, func(i, j int) bool {
-		return posts.Posts[i].Timestamp.After(posts.Posts[j].Timestamp)
-	})*/
+	timestamp := time.Now()
+	key := strconv.FormatInt(timestamp.UnixNano(), 10)
 
-	return &posts.Posts
+	post.ID = key
+	post.Timestamp = timestamp
+
+	// uploadedFigure handling
+	if post.Data != nil && post.Content != "" {
+		fileExplode := strings.Split(post.Content, ".")
+		extension := fileExplode[len(fileExplode)-1]
+
+		content := key + "." + extension
+
+		// upload to local storage
+		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}
+
+		// generate thumbanils
+		genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content)
+
+		// upload to GSC Storage
+		/*if err := gscAPICall(content, post.Data); err != nil {
+			resp.Message = "backend error: couldn't save a figure to GSC Storage: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			break
+		}*/
+
+		post.Content = content
+		post.Data = []byte{}
+	}
+
+	if saved := setOne(FlowCache, key, post); !saved {
+		resp.Message = "backend error: cannot save new post (cache error)"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	posts, _ := getAll(FlowCache, models.Post{})
+
+	resp.Message = "ok, adding new post"
+	resp.Code = http.StatusCreated
+	resp.Posts = posts
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
 }
 
-func addPost(post models.Post) bool {
-	var posts *map[string]models.Post = getPosts()
-
-	/*var newPost models.Post = models.Post{
-		Nickname:  post.Nickname,
-		Content:   post.Content,
-		Timestamp: time.Now(),
-	}*/
-
-	//timestamp := strconv.FormatInt(newPost.Timestamp.Unix(), 10)
-	//*posts[timestamp] = newPost
-
-	postsToWrite := &Posts{
-		Posts: *posts,
+func updatePost(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := Logger{
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "flow",
+		Version:    r.Header.Get("X-App-Version"),
 	}
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
-	jsonData, err := json.Marshal(postsToWrite)
+	var post models.Post
+
+	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err.Error())
-		return false
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
 	}
 
-	err = os.WriteFile("/opt/data/posts.json", jsonData, 0644)
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err := json.Unmarshal(data, &post); err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+	key := post.ID
+
+	if _, found := getOne(FlowCache, key, models.Post{}); !found {
+		resp.Message = "unknown post update requested"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	if saved := setOne(FlowCache, key, post); !saved {
+		resp.Message = "cannot update post"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	resp.Message = "ok, post updated"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+
+	resp.Write(w)
+}
+
+func deletePost(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := Logger{
+		CallerID:  r.Header.Get("X-API-Caller-ID"),
+		IPAddress: r.Header.Get("X-Real-IP"),
+		//IPAddress:  r.RemoteAddr,
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: "flow",
+		Version:    r.Header.Get("X-App-Version"),
+	}
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
+
+	// remove a post
+	var post models.Post
+
+	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err.Error())
-		return false
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
 	}
 
-	return true
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err := json.Unmarshal(data, &post); err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+	key := post.ID
+
+	if deleted := deleteOne(FlowCache, key); !deleted {
+		resp.Message = "cannot delete the post"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		break
+	}
+
+	timestamp := time.Now()
+	key = strconv.FormatInt(timestamp.UnixNano(), 10)
+
+	resp.Message = "ok, post removed"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
 }
