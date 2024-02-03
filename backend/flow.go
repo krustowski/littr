@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -13,27 +14,116 @@ import (
 	"go.savla.dev/littr/models"
 )
 
+const (
+	pagination int = 50
+)
+
+func convertMapToArray[T any](m map[string]T, reverseOutput bool) ([]string, []T) {
+	var keys = []string{}
+	var vals = []T{}
+
+	for key, val := range m {
+		keys = append(keys, key)
+		vals = append(vals, val)
+	}
+
+	if reverseOutput {
+		reverse(keys)
+		//reverse(vals)
+	}
+
+	return keys, vals
+}
+
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "flow",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "flow")
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
-	// fetch the flow, ergo post list
-	posts, count := getAll(FlowCache, models.Post{})
-	//posts, count := getMany(FlowCache, models.Post{}, 50, 1, true)
+	user, ok := getOne(UserCache, r.Header.Get("X-API-Caller-ID"), models.User{})
+	if !ok {
+		// cache error, or caller does not exist...
+		// TODO handle response and log
+		return
+	}
+
+	// fetch the flow + users and combine them into one response
+	// those variables are both of type map[string]T
+	allPosts, _ := getAll(FlowCache, models.Post{})
+	allUsers, _ := getAll(UserCache, models.User{})
+
+	// pagination draft
+	// + only select N latest posts for such user according to their FlowList
+	// + include previous posts to a reply
+	// + only include users mentioned
+
+	// prepare a reversed array of post keys
+	// reverse it to get them ordered by time DESC
+	//keys, _ := convertMapToArray(posts, true)
+	//keys := []string{}
+	posts := []models.Post{}
+	num := 0
+
+	for _, post := range allPosts {
+		// check the caller's flow list, skip on unfollowed, or unknown user
+		if value, found := user.FlowList[post.Nickname]; !found || !value {
+			continue
+		}
+
+		num++
+		//keys = append(keys, key)
+		posts = append(posts, post)
+	}
+
+	// order posts by timestamp DESC
+	sort.SliceStable(posts, func(i, j int) bool {
+		return posts[i].Timestamp.After(posts[j].Timestamp)
+	})
+
+	// cut the <pagination>*2 number of keys only
+	var part []models.Post
+
+	if len(posts) > pagination*2 {
+		part = posts[0:(pagination * 2)]
+	} else {
+		part = posts
+	}
+
+	// loop through the array and manually include other posts too
+	// watch for users as well
+	pExport := make(map[string]models.Post)
+	uExport := make(map[string]models.User)
+
+	num = 0
+	for _, post := range part {
+		// increase the count of posts
+		num++
+
+		// export one (1) post
+		pExport[post.ID] = post
+		uExport[post.Nickname] = allUsers[post.Nickname]
+
+		// we can have multiple keys from a single post -> its interractions
+		repKey := post.ReplyToID
+		if repKey != "" {
+			num++
+			pExport[repKey] = allPosts[repKey]
+
+			// export previous user too
+			nick := allPosts[repKey].Nickname
+			uExport[nick] = allUsers[nick]
+		}
+
+		if num > pagination {
+			break
+		}
+	}
 
 	resp.Message = "ok, dumping posts"
 	resp.Code = http.StatusOK
-	resp.Posts = posts
-	resp.Count = count
+	resp.Posts = pExport
+	resp.Users = uExport
+	resp.Count = pagination
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
@@ -41,15 +131,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "flow",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "flow")
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// post a new post

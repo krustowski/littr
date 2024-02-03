@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -33,6 +34,21 @@ type Logger struct {
 
 	// WorkerName string is the name of a worker processing such request.
 	WorkerName string `json:"worker_name" validation:"required"`
+}
+
+func NewLogger(r *http.Request, worker string) *Logger {
+	if r == nil || worker == "" {
+		return nil
+	}
+
+	return &Logger{
+		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		IPAddress:  r.Header.Get("X-Real-IP"),
+		Method:     r.Method,
+		Route:      r.URL.String(),
+		WorkerName: worker,
+		Version:    r.Header.Get("X-App-Version"),
+	}
 }
 
 // encode works as a simple macro returning JSON-encoded string of the Logger struct.
