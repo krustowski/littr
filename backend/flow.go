@@ -5,131 +5,58 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const (
 	pagination int = 50
 )
 
-func convertMapToArray[T any](m map[string]T, reverseOutput bool) ([]string, []T) {
-	var keys = []string{}
-	var vals = []T{}
-
-	for key, val := range m {
-		keys = append(keys, key)
-		vals = append(vals, val)
-	}
-
-	if reverseOutput {
-		reverse(keys)
-		//reverse(vals)
-	}
-
-	return keys, vals
-}
-
-func getPostsPaged(w http.ResponseWriter, r *http.Request) {
-}
-
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
-	user, ok := getOne(UserCache, r.Header.Get("X-API-Caller-ID"), models.User{})
-	if !ok {
-		// cache error, or caller does not exist...
-		// TODO handle response and log
+	pageNo := 0
+
+	// check if diff page has been requested
+	page := chi.URLParam(r, "pageNo")
+	if page != "" {
+		num, err := strconv.Atoi(page)
+		if err == nil {
+			pageNo = num
+		}
+	}
+
+	// fetch page according to the logged user
+	pExport, uExport := getOnePage(pageNo, r.Header.Get("X-API-Caller-ID"))
+	if pExport == nil || uExport == nil {
+		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
 		return
-	}
-
-	// fetch the flow + users and combine them into one response
-	// those variables are both of type map[string]T
-	allPosts, _ := getAll(FlowCache, models.Post{})
-	allUsers, _ := getAll(UserCache, models.User{})
-
-	// pagination draft
-	// + only select N latest posts for such user according to their FlowList
-	// + include previous posts to a reply
-	// + only include users mentioned
-
-	// prepare a reversed array of post keys
-	// reverse it to get them ordered by time DESC
-	//keys, _ := convertMapToArray(posts, true)
-	//keys := []string{}
-	posts := []models.Post{}
-	num := 0
-
-	for _, post := range allPosts {
-		// check the caller's flow list, skip on unfollowed, or unknown user
-		if value, found := user.FlowList[post.Nickname]; !found || !value {
-			continue
-		}
-
-		num++
-		//keys = append(keys, key)
-		posts = append(posts, post)
-	}
-
-	// order posts by timestamp DESC
-	sort.SliceStable(posts, func(i, j int) bool {
-		return posts[i].Timestamp.After(posts[j].Timestamp)
-	})
-
-	// cut the <pagination>*2 number of keys only
-	var part []models.Post
-
-	if len(posts) > pagination*2 {
-		part = posts[0:(pagination * 2)]
-	} else {
-		part = posts
-	}
-
-	// loop through the array and manually include other posts too
-	// watch for users as well
-	pExport := make(map[string]models.Post)
-	uExport := make(map[string]models.User)
-
-	num = 0
-	for _, post := range part {
-		// increase the count of posts
-		num++
-
-		// export one (1) post
-		pExport[post.ID] = post
-		uExport[post.Nickname] = allUsers[post.Nickname]
-
-		// we can have multiple keys from a single post -> its interractions
-		repKey := post.ReplyToID
-		if repKey != "" {
-			num++
-			pExport[repKey] = allPosts[repKey]
-
-			// export previous user too
-			nick := allPosts[repKey].Nickname
-			uExport[nick] = allUsers[nick]
-		}
-
-		if num > pagination {
-			break
-		}
 	}
 
 	resp.Message = "ok, dumping posts"
 	resp.Code = http.StatusOK
+
 	resp.Posts = pExport
 	resp.Users = uExport
-	resp.Count = pagination
+	resp.Count = pageSize
 
+	// write response and logs
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
+	return
 }
 
 func addNewPost(w http.ResponseWriter, r *http.Request) {

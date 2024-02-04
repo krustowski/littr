@@ -46,7 +46,7 @@ func initServer() {
 	r.Use(middleware.CleanPath)
 	//r.Use(middleware.Logger)
 	compressor := middleware.NewCompressor(flate.DefaultCompression,
-		"application/wasm", "text/css", "image/svg+xml")
+		"application/wasm", "text/css", "image/svg+xml", "application/json")
 	r.Use(compressor.Handler)
 	r.Use(middleware.Recoverer)
 

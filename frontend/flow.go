@@ -1,13 +1,13 @@
 package frontend
 
 import (
-	//b64 "encoding/base64"
 	"encoding/json"
 	"log"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -42,9 +42,14 @@ type flowContent struct {
 	singlePostID      string
 	isPost            bool
 
-	paginationEnd bool
-	pagination    int
-	pageNo        int
+	paginationEnd  bool
+	pagination     int
+	pageNo         int
+	pageNoToFetch  int
+	lastFire       int64
+	processingFire bool
+
+	lastPageFetched bool
 
 	postKey     string
 	posts       map[string]models.Post
@@ -239,9 +244,66 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 		_, height := app.Window().Size()
 
-		if bottom-height < 0 && !c.paginationEnd {
+		// limit the fire rate to 1/5 Hz
+		now := time.Now().Unix()
+		if now-c.lastFire < 5 {
+			return
+		}
+
+		if bottom-height < 0 && !c.paginationEnd && !c.processingFire {
 			ctx.Dispatch(func(ctx app.Context) {
-				c.pageNo++
+				c.loaderShow = true
+				c.processingFire = true
+			})
+
+			var newPosts map[string]models.Post
+			var newUsers map[string]models.User
+
+			posts := c.posts
+			users := c.users
+
+			updated := false
+			lastPageFetched := c.lastPageFetched
+
+			// fetch more posts
+			if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !c.lastPageFetched {
+				newPosts, newUsers = c.fetchFlowPage(ctx, c.user.Nickname)
+
+				postControlCount := len(posts)
+
+				for key, post := range newPosts {
+					posts[key] = post
+				}
+				for key, user := range newUsers {
+					users[key] = user
+				}
+
+				updated = true
+
+				// no more posts, fetching another page does not make sense
+				if len(posts) == postControlCount {
+					updated = false
+					lastPageFetched = true
+
+				}
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.lastFire = now
+
+				if updated {
+					c.pageNo++
+
+					c.pageNoToFetch++
+
+					c.posts = posts
+					c.users = users
+				}
+
+				c.processingFire = false
+				c.loaderShow = false
+				c.lastPageFetched = lastPageFetched
+
 				log.Println("new content page request fired")
 			})
 			return
@@ -332,6 +394,8 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
+	c.pageNoToFetch = 0
+	c.lastPageFetched = false
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 }
@@ -355,10 +419,12 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.users = nil
 		})
 
-		c.fetchPosts(ctx)
-		c.fetchUsers(ctx)
+		posts, users := c.fetchFlowPage(ctx, c.user.Nickname)
 
 		ctx.Dispatch(func(ctx app.Context) {
+			c.posts = posts
+			c.users = users
+
 			c.loaderShow = false
 			c.loaderShowImage = false
 			c.refreshClicked = false
@@ -368,53 +434,17 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *flowContent) fetchPosts(ctx app.Context) {
+func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[string]models.Post, map[string]models.User) {
 	var toastText string
 
-	postsRaw := struct {
+	resp := struct {
 		Posts map[string]models.Post `json:"posts"`
-	}{}
-
-	// call the flow API endpoint to fetch all posts
-	if byteData, _ := litterAPI("GET", "/api/flow", nil, c.user.Nickname); byteData != nil {
-		err := json.Unmarshal(*byteData, &postsRaw)
-		if err != nil {
-			log.Println(err.Error())
-			toastText = "JSON parsing error: " + err.Error()
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-	} else {
-		log.Println("cannot fetch post flow list")
-		toastText = "API error: cannot fetch the post list"
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-		})
-		return
-	}
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.posts = postsRaw.Posts
-		c.refreshClicked = false
-	})
-}
-
-func (c *flowContent) fetchUsers(ctx app.Context) {
-	var toastText string
-
-	usersRaw := struct {
 		Users map[string]models.User `json:"users"`
 	}{}
 
-	// call the flow API endpoint to fetch all users
-	if byteData, _ := litterAPI("GET", "/api/users", nil, c.user.Nickname); byteData != nil {
-		err := json.Unmarshal(*byteData, &usersRaw)
+	pageNo := strconv.FormatInt(int64(c.pageNoToFetch), 10)
+	if byteData, _ := litterAPI("GET", "/api/flow/"+pageNo, nil, callerID); byteData != nil {
+		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())
 			toastText = "JSON parsing error: " + err.Error()
@@ -423,22 +453,24 @@ func (c *flowContent) fetchUsers(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
-			return
+			return nil, nil
 		}
 	} else {
-		log.Println("cannot fetch users list")
-		toastText = "API error: cannot fetch the users list"
+		log.Println("cannot fetch the flow page")
+		toastText = "API error: cannot fetch the flow page"
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 		})
-		return
+		return nil, nil
 	}
 
 	ctx.Dispatch(func(ctx app.Context) {
-		c.users = usersRaw.Users
+		c.refreshClicked = false
 	})
+
+	return resp.Posts, resp.Users
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {
@@ -481,65 +513,11 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		postsRaw := struct {
-			Posts map[string]models.Post `json:"posts"`
-		}{}
-
-		usersRaw := struct {
-			Users map[string]models.User `json:"users"`
-		}{}
-
-		// call the flow API endpoint to fetch all posts
-		if byteData, _ := litterAPI("GET", "/api/flow", nil, user.Nickname); byteData != nil {
-			err := json.Unmarshal(*byteData, &postsRaw)
-			if err != nil {
-				log.Println(err.Error())
-				toastText = "JSON parsing error: " + err.Error()
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
-				})
-				return
-			}
-		} else {
-			log.Println("cannot fetch post flow list")
-			toastText = "API error: cannot fetch the post list"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		// call the flow API endpoint to fetch all users
-		if byteData, _ := litterAPI("GET", "/api/users", nil, user.Nickname); byteData != nil {
-			err := json.Unmarshal(*byteData, &usersRaw)
-			if err != nil {
-				log.Println(err.Error())
-				toastText = "JSON parsing error: " + err.Error()
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
-				})
-				return
-			}
-		} else {
-			log.Println("cannot fetch users list")
-			toastText = "API error: cannot fetch the users list"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
+		posts, users := c.fetchFlowPage(ctx, user.Nickname)
 
 		// try the singlePostID var if present
 		if singlePostID != "" {
-			_, found := postsRaw.Posts[singlePostID]
+			_, found := posts[singlePostID]
 			if isPost && !found {
 				toastText = "post not found"
 			}
@@ -547,7 +525,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			if !isPost {
 				toastText = ""
 
-				if _, found = usersRaw.Users[singlePostID]; !found {
+				if _, found = users[singlePostID]; !found {
 					toastText = "user not found"
 				}
 			}
@@ -558,11 +536,12 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.loggedUser = user.Nickname
 			c.user = user
 
-			c.pagination = 10
+			c.pagination = 25
 			c.pageNo = 1
+			c.pageNoToFetch = 1
 
-			c.users = usersRaw.Users
-			c.posts = postsRaw.Posts
+			c.users = users
+			c.posts = posts
 			c.singlePostID = singlePostID
 
 			c.toastText = toastText
@@ -614,9 +593,9 @@ func (c *flowContent) Render() app.UI {
 	})
 
 	// prepare posts according to the actual pagination and pageNo
-	pagedPosts := []models.Post{}
+	//pagedPosts := []models.Post{}
 
-	end := len(sortedPosts)
+	/*end := len(sortedPosts)
 	start := 0
 
 	stop := func(c *flowContent) int {
@@ -628,11 +607,14 @@ func (c *flowContent) Render() app.UI {
 		}
 
 		if pos > end {
-			// kill the eventListener (observers scrolling)
-			c.eventListener()
-			c.paginationEnd = true
 
-			return (end)
+			if c.lastPageFetched {
+				// kill the eventListener (observers scrolling)
+				c.eventListener()
+				c.paginationEnd = true
+			}
+
+			return end
 		}
 
 		if pos < 0 {
@@ -640,16 +622,16 @@ func (c *flowContent) Render() app.UI {
 		}
 
 		return pos
-	}(c)
+	}(c)*/
 
-	if end > 0 && stop > 0 {
+	/*if end > 0 && stop > 0 {
 		pagedPosts = sortedPosts[start:stop]
 	}
 
 	// disable pagination for single posts (resource distress???)
 	if c.singlePostID != "" {
 		pagedPosts = sortedPosts[start:end]
-	}
+	}*/
 
 	// compose a summary of a long post to be replied to
 	replySummary := ""
@@ -738,7 +720,8 @@ func (c *flowContent) Render() app.UI {
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
-				app.Range(pagedPosts).Slice(func(idx int) app.UI {
+				//app.Range(pagedPosts).Slice(func(idx int) app.UI {
+				app.Range(sortedPosts).Slice(func(idx int) app.UI {
 					//post := c.sortedPosts[idx]
 					post := sortedPosts[idx]
 					key := post.ID
