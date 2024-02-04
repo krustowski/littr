@@ -29,7 +29,7 @@ type response struct {
 	UserStats map[string]userStat `json:"user_stats"`
 
 	// auth tokens (JWT)
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 

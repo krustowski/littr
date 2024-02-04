@@ -601,6 +601,8 @@ func (c *flowContent) sortPosts() []models.Post {
 }
 
 func (c *flowContent) Render() app.UI {
+	counter := 0
+
 	sortedPosts := c.sortPosts()
 
 	// order posts by timestamp DESC
@@ -738,6 +740,11 @@ func (c *flowContent) Render() app.UI {
 				//app.Range(c.posts).Map(func(key string) app.UI {
 				//app.Range(pagedPosts).Slice(func(idx int) app.UI {
 				app.Range(sortedPosts).Slice(func(idx int) app.UI {
+					counter++
+					if counter > c.pagination*c.pageNo {
+						return nil
+					}
+
 					//post := c.sortedPosts[idx]
 					post := sortedPosts[idx]
 					key := post.ID

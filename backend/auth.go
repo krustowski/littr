@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -62,16 +63,16 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	// let us generate a JWT
 	// https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
 	userClaims := UserClaims{
-		Nickname: u.Nickname,
+		Nickname:  u.Nickname,
 		AppBgMode: u.AppBgMode,
 		StandardClaims: jwt.StandardClaims{
-			IssuedAt: time.Now().Unix(),
+			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		},
 	}
 
 	signedAccessToken, err := NewAccessToken(userClaims)
-	if err := nil {
+	if err != nil {
 		resp.Message = "error when generating the access token occured"
 		resp.Code = http.StatusInternalServerError
 
@@ -81,7 +82,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	refreshClaims := jwt.StandardClaims{
-		IssuedAt: time.Now().Unix(),
+		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
 	}
 
@@ -97,10 +98,10 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	// save tokens as HTTP-only cookie
 	accessCookie := &http.Cookie{
-		Name: "access-token",
-		Value: signedAccessToken,
+		Name:    "access-token",
+		Value:   signedAccessToken,
 		Expires: time.Now().Add(time.Hour * 168),
-		Path: "/",
+		Path:    "/",
 	}
 	http.SetCookie(w, accessCookie)
 
