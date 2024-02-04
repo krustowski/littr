@@ -420,7 +420,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.loaderShowImage = true
 			c.refreshClicked = true
 			c.postButtonsDisabled = true
-			c.pageNoToFetch = 0
+			//c.pageNoToFetch = 0
 
 			c.toastText = ""
 
@@ -428,6 +428,8 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.users = nil
 		})
 
+		// nasty hotfix, TODO
+		c.pageNoToFetch = 0
 		posts, users := c.fetchFlowPage(ctx, c.user.Nickname)
 
 		ctx.Dispatch(func(ctx app.Context) {
