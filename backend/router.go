@@ -18,6 +18,7 @@ func LoadAPIRouter() chi.Router {
 	r.Post("/auth", authHandler)
 	r.Get("/dump", dumpHandler)
 	r.Get("/stats", statsHandler)
+	r.Get("/token", handleTokenRefresh)
 
 	r.Route("/flow", func(r chi.Router) {
 		r.Get("/", getPosts)

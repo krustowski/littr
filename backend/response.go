@@ -27,6 +27,10 @@ type response struct {
 	// very stats properties
 	FlowStats map[string]int      `json:"flow_stats"`
 	UserStats map[string]userStat `json:"user_stats"`
+
+	// auth tokens (JWT)
+	AccessToken string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {

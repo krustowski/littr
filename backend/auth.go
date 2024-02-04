@@ -8,6 +8,8 @@ import (
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
+
+	"github.com/golang-jwt/jwt"
 )
 
 type UserAuth struct {
@@ -17,14 +19,7 @@ type UserAuth struct {
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "auth",
-		Version:    r.Header.Get("X-App-Version"),
-	}
-
+	l := NewLogger(r, "auth")
 	resp.AuthGranted = false
 
 	var user models.User
@@ -63,9 +58,58 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ok, auth granted so far
+	// let us generate a JWT
+	// https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
+	userClaims := UserClaims{
+		Nickname: u.Nickname,
+		AppBgMode: u.AppBgMode,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt: time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
+	}
+
+	signedAccessToken, err := NewAccessToken(userClaims)
+	if err := nil {
+		resp.Message = "error when generating the access token occured"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	refreshClaims := jwt.StandardClaims{
+		IssuedAt: time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
+	}
+
+	signedRefreshToken, err := NewRefreshToken(refreshClaims)
+	if err != nil {
+		resp.Message = "error when generating the refresh token occured"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// save tokens as HTTP-only cookie
+	accessCookie := &http.Cookie{
+		Name: "access-token",
+		Value: signedAccessToken,
+		Expires: time.Now().Add(time.Hour * 168),
+		Path: "/",
+	}
+	http.SetCookie(w, accessCookie)
+
 	resp.Users = make(map[string]models.User)
 	resp.Users[u.Nickname] = *u
 	resp.AuthGranted = ok
+
+	resp.AccessToken = signedAccessToken
+	resp.RefreshToken = signedRefreshToken
 
 	resp.Message = "auth granted"
 	resp.Code = http.StatusOK
@@ -73,6 +117,10 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	l.Println(resp.Message, resp.Code)
 
 	resp.Write(w)
+}
+
+func handleTokenRefresh(w http.ResponseWriter, r *http.Request) {
+	return
 }
 
 func authUser(aUser models.User) (*models.User, bool) {
