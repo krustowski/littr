@@ -15,14 +15,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const (
-	pagination int = 50
-)
-
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
+	callerID = r.Header.Get("X-API-Caller-ID")
+	noteUsersActivity(callerID)
 
 	pageNo := 0
 
@@ -35,11 +32,20 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if callerID == "" {
+		resp.Message = "callerID header cannot be blank!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	// fetch page according to the logged user
-	pExport, uExport := getOnePage(pageNo, r.Header.Get("X-API-Caller-ID"))
+	pExport, uExport := getOnePage(pageNo, callerID)
 	if pExport == nil || uExport == nil {
 		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -51,6 +57,8 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	resp.Posts = pExport
 	resp.Users = uExport
+
+	// pageSize is a constant -> see backend/pagination.go
 	resp.Count = pageSize
 
 	// write response and logs
@@ -141,15 +149,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "flow",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "flow")
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var post models.Post
@@ -200,21 +200,12 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)
-
 	resp.Write(w)
 }
 
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "flow",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "flow")
 	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// remove a post
@@ -252,9 +243,6 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
-
-	timestamp := time.Now()
-	key = strconv.FormatInt(timestamp.UnixNano(), 10)
 
 	resp.Message = "ok, post removed"
 	resp.Code = http.StatusOK
