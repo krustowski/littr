@@ -804,7 +804,8 @@ func (c *flowContent) Render() app.UI {
 							app.Div().Class("row top-padding").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
-									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+									//app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+									app.A().Class("vold deep-orange-text").OnClick(nil).Text(post.Nickname).ID(post.Nickname),
 									//app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
 							),
@@ -835,7 +836,8 @@ func (c *flowContent) Render() app.UI {
 												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 											),
 
-											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+											//app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(nil).Disabled(true).Body(
 												app.I().Text("history"),
 											),
 										),
@@ -863,7 +865,8 @@ func (c *flowContent) Render() app.UI {
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 										app.I().Text("reply"),
 									),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+									//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(nil).Disabled(true).Body(
 										app.I().Text("link"),
 									),
 								),

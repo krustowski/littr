@@ -283,7 +283,8 @@ func (c *statsContent) Render() app.UI {
 							app.P().Body(
 								app.P().Body(
 									//app.B().Text(key).Class("deep-orange-text"),
-									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
+									//app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
+									app.A().Class("vold deep-orange-text").OnClick(nil).Text(key).ID(key),
 								),
 							),
 						),
