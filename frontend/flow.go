@@ -220,10 +220,18 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
+		posts := c.posts
+
+		// we do not know the ID, as it is assigned in the BE logic,
+		// so we need to loop over the list of posts (1)...
+		for k, p := range postsRaw.Posts {
+			posts[k] = p
+		}
+
 		ctx.Dispatch(func(ctx app.Context) {
 			// add new post to post list on frontend side to render
 			//c.posts[stringID] = payload
-			c.posts = postsRaw.Posts
+			c.posts = posts
 
 			c.modalReplyActive = false
 			c.postButtonsDisabled = false
@@ -412,6 +420,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.loaderShowImage = true
 			c.refreshClicked = true
 			c.postButtonsDisabled = true
+			c.pageNoToFetch = 0
 
 			c.toastText = ""
 
@@ -442,8 +451,13 @@ func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[strin
 		Users map[string]models.User `json:"users"`
 	}{}
 
-	pageNo := strconv.FormatInt(int64(c.pageNoToFetch), 10)
-	if byteData, _ := litterAPI("GET", "/api/flow/"+pageNo, nil, callerID); byteData != nil {
+	pageNo := c.pageNoToFetch
+	if c.refreshClicked {
+		pageNo = 0
+	}
+	pageNoString := strconv.FormatInt(int64(pageNo), 10)
+
+	if byteData, _ := litterAPI("GET", "/api/flow/"+pageNoString, nil, callerID); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())

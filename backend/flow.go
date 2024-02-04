@@ -128,7 +128,8 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, _ := getAll(FlowCache, models.Post{})
+	posts := make(map[string]models.Post)
+	posts[key] = post
 
 	resp.Message = "ok, adding new post"
 	resp.Code = http.StatusCreated
