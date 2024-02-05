@@ -909,7 +909,7 @@ func (c *flowContent) Render() app.UI {
 									app.B().Text(post.ReactionCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
 										//app.I().Text("ac_unit"),
-										app.I().Text("pills"),
+										app.I().Text("pill"),
 									),
 								),
 							),
