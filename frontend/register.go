@@ -66,7 +66,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		email := strings.TrimSpace(c.email)
 
 		// fetch the users list to compare to
-		resp, ok := litterAPI("GET", "/api/users", nil, nickname)
+		resp, ok := litterAPI("GET", "/api/users", nil, nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 
@@ -161,7 +161,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok = litterAPI("POST", "/api/users", user, user.Nickname)
+		resp, ok = litterAPI("POST", "/api/users", user, user.Nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 

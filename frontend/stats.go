@@ -163,7 +163,7 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}{}
 
 		// fetch the stats
-		if byteData, _ := litterAPI("GET", "/api/stats", nil, user.Nickname); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/stats", nil, user.Nickname, 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &respRaw)
 			if err != nil {
 				log.Println(err.Error())

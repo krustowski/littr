@@ -81,7 +81,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 			Polls map[string]models.Poll `json:"polls"`
 		}{}
 
-		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname, 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -194,7 +194,7 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		//var toastText string
 
-		if _, ok := litterAPI("PUT", "/api/polls", poll, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/polls", poll, c.user.Nickname, 0); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 
@@ -226,7 +226,7 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 
 		interactedPoll := c.polls[key]
 
-		if _, ok := litterAPI("DELETE", "/api/polls", interactedPoll, c.user.Nickname); !ok {
+		if _, ok := litterAPI("DELETE", "/api/polls", interactedPoll, c.user.Nickname, 0); !ok {
 			toastText = "backend error: cannot delete a poll"
 		}
 

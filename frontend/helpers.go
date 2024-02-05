@@ -8,12 +8,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 )
 
-func litterAPI(method, url string, data interface{}, caller string) (*[]byte, bool) {
+func litterAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
 	var err error
@@ -49,8 +50,11 @@ func litterAPI(method, url string, data interface{}, caller string) (*[]byte, bo
 		req.Header.Set("Content-Type", "application/json")
 	}
 
+	pageNoString := strconv.FormatInt(int64(pageNo), 10)
+
 	req.Header.Set("X-API-Caller-ID", caller)
 	req.Header.Set("X-App-Version", config.Version)
+	req.Header.Set("X-Page-No", pageNoString)
 
 	client := http.Client{}
 

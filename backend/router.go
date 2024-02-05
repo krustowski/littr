@@ -7,7 +7,11 @@ import (
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("litter-go API root"))
+	resp := response{
+		Message: "litter-go API service",
+		Code:    http.StatusOK,
+	}
+	resp.Write(w)
 }
 
 // the very main API router
@@ -22,7 +26,15 @@ func LoadAPIRouter() chi.Router {
 
 	r.Route("/flow", func(r chi.Router) {
 		r.Get("/", getPosts)
-		r.Get("/{pageNo}", getPosts)
+		//r.Get("/{pageNo}", getPosts)
+		// user flow page request
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/{nick}", getUserPosts)
+		})
+		// single-post view request
+		r.Route("/post", func(r chi.Router) {
+			r.Get("/{postNo}", getSinglePost)
+		})
 		r.Post("/", addNewPost)
 		r.Put("/", updatePost)
 		r.Delete("/", deletePost)

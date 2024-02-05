@@ -180,7 +180,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}{}
 
 		// add new post/poll to backend struct
-		if resp, _ := litterAPI("POST", path, payload, c.user.Nickname); resp != nil {
+		if resp, _ := litterAPI("POST", path, payload, c.user.Nickname, c.pageNo); resp != nil {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -210,7 +210,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		// create a notification
-		if _, ok := litterAPI("PUT", "/api/push", payloadNotif, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/push", payloadNotif, c.user.Nickname, c.pageNo); !ok {
 			toastText = "cannot PUT new notification"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -274,7 +274,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 			lastPageFetched := c.lastPageFetched
 
 			// fetch more posts
-			if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !c.lastPageFetched {
+			if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !lastPageFetched {
 				newPosts, newUsers = c.fetchFlowPage(ctx, c.user.Nickname)
 
 				postControlCount := len(posts)
@@ -290,8 +290,8 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 				// no more posts, fetching another page does not make sense
 				if len(posts) == postControlCount {
-					updated = false
-					lastPageFetched = true
+					//updated = false
+					//lastPageFetched = true
 
 				}
 			}
@@ -338,7 +338,7 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 		key := c.postKey
 		interactedPost := c.posts[key]
 
-		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost, c.user.Nickname); !ok {
+		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
 
@@ -380,7 +380,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		//interactedPost.ReactionCount++
 
 		// add new post to backend struct
-		if _, ok := litterAPI("PUT", "/api/flow", interactedPost, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/flow", interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot rate a post"
 		}
 
@@ -457,9 +457,16 @@ func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[strin
 	if c.refreshClicked {
 		pageNo = 0
 	}
-	pageNoString := strconv.FormatInt(int64(pageNo), 10)
+	//pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
-	if byteData, _ := litterAPI("GET", "/api/flow/"+pageNoString, nil, callerID); byteData != nil {
+	url := "/api/flow"
+	/*data := struct {
+		PageNo int `json:"page_no"`
+	}{
+		PageNo: pageNo,
+	}*/
+
+	if byteData, _ := litterAPI("GET", url, nil, callerID, pageNo); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())
@@ -901,7 +908,8 @@ func (c *flowContent) Render() app.UI {
 								).Else(
 									app.B().Text(post.ReactionCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
-										app.I().Text("ac_unit"),
+										//app.I().Text("ac_unit"),
+										app.I().Text("pills"),
 									),
 								),
 							),

@@ -91,7 +91,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			Posts map[string]models.Post `json:"posts"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname); ok {
+		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname, 0); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -114,7 +114,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		if data, ok := litterAPI("GET", "/api/flow", nil, user.Nickname); ok {
+		if data, ok := litterAPI("GET", "/api/flow", nil, user.Nickname, 0); ok {
 			err := json.Unmarshal(*data, &postsPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -233,7 +233,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		updatedData := c.user
 		updatedData.FlowList = flowList
 
-		respRaw, ok := litterAPI("PUT", "/api/users", updatedData, c.user.Nickname)
+		respRaw, ok := litterAPI("PUT", "/api/users", updatedData, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -372,7 +372,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		// update shaded user
-		respRaw, ok := litterAPI("PUT", "/api/users", userShaded, c.user.Nickname)
+		respRaw, ok := litterAPI("PUT", "/api/users", userShaded, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -401,7 +401,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 		}
 
 		// update user
-		respRaw, ok = litterAPI("PUT", "/api/users", c.user, c.user.Nickname)
+		respRaw, ok = litterAPI("PUT", "/api/users", c.user, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return

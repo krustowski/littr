@@ -11,8 +11,7 @@ import (
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
-
-	"github.com/go-chi/chi/v5"
+	//"github.com/go-chi/chi/v5"
 )
 
 func getPosts(w http.ResponseWriter, r *http.Request) {
@@ -24,13 +23,40 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	pageNo := 0
 
 	// check if diff page has been requested
-	page := chi.URLParam(r, "pageNo")
+	/*page := chi.URLParam(r, "pageNo")
 	if page != "" {
 		num, err := strconv.Atoi(page)
 		if err == nil {
 			pageNo = num
 		}
+	}*/
+
+	page := struct {
+		PageNo int `json:"page_no"`
+	}{}
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
 	}
+
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err := json.Unmarshal(data, &page); err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	pageNo = page.PageNo
 
 	if callerID == "" {
 		resp.Message = "callerID header cannot be blank!"
@@ -245,6 +271,32 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.Message = "ok, post removed"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
+func getUserPosts(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "flow")
+	callerID := r.Header.Get("X-API-Caller-ID")
+	noteUsersActivity(callerID)
+
+	resp.Message = "ok, dumping user's flow posts"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
+func getSinglePost(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "flow")
+	callerID := r.Header.Get("X-API-Caller-ID")
+	noteUsersActivity(callerID)
+
+	resp.Message = "ok, dumping single post and its interactions"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)

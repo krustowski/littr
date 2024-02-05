@@ -88,7 +88,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Users map[string]models.User `json:"users"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname); ok {
+		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname, 0); ok {
 			err := json.Unmarshal(*data, &usersPre)
 			if err != nil {
 				log.Println(err.Error())
@@ -174,7 +174,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+		if data, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 			}
@@ -237,7 +237,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.About = aboutText
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -316,7 +316,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.Web = website
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -353,7 +353,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/users", c.user, c.user.Nickname); !ok {
+		if _, ok := litterAPI("DELETE", "/api/users", c.user, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -432,7 +432,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		updatedUser.VapidPrivKey = privKey
 
 		// update user on backend via API
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname); !ok {
+		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
 			toastText := "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -472,7 +472,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		}*/
 
 		// send the registeration to backend
-		if _, ok := litterAPI("POST", "/api/push", sub, c.user.Nickname); !ok {
+		if _, ok := litterAPI("POST", "/api/push", sub, c.user.Nickname, 0); !ok {
 			toastText := "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
