@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,32 +32,19 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		}
 	}*/
 
-	page := struct {
-		PageNo int `json:"page_no"`
-	}{}
-
-	reqBody, err := io.ReadAll(r.Body)
+	pageNoString := r.Header.Get("X-Flow-Page-No")
+	log.Println(pageNoString)
+	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &page); err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	pageNo = page.PageNo
+	pageNo = page
 
 	if callerID == "" {
 		resp.Message = "callerID header cannot be blank!"
