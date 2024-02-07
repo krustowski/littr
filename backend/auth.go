@@ -96,14 +96,23 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// save tokens as HTTP-only cookie
+	// compose cookies
 	accessCookie := &http.Cookie{
 		Name:    "access-token",
 		Value:   signedAccessToken,
-		Expires: time.Now().Add(time.Hour * 168),
+		Expires: time.Now().Add(time.Minute * 15),
 		Path:    "/",
 	}
+	refreshCookie := &http.Cookie{
+		Name:    "refresh-token",
+		Value:   signedRefreshToken,
+		Expires: time.Now().Add(time.Hour * 168 * 4),
+		Path:    "/",
+	}
+
+	// save tokens as HTTP-only cookie
 	http.SetCookie(w, accessCookie)
+	http.SetCookie(w, refreshCookie)
 
 	resp.Users = make(map[string]models.User)
 	resp.Users[u.Nickname] = *u
@@ -118,9 +127,84 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	l.Println(resp.Message, resp.Code)
 
 	resp.Write(w)
+	return
 }
 
 func handleTokenRefresh(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "auth")
+	resp.AuthGranted = false
+
+	req := struct{
+		AccessToken string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}{}
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		resp.Message = "backend error: cannot read input stream"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err = json.Unmarshal(data, &req); err != nil {
+		resp.Message = "backend error: cannot unmarshall request data"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	userClaims := ParseAccessToken(req.AccessToken)
+	refreshClaims := ParseRefreshToken(req.RefreshToken)
+
+	// refresh token is expired => user should relogin
+	if refreshClaims.Valid() != nil {
+		req.RefreshToken, err = NewRefreshToken(*refreshClaims)
+		if err != nil {
+			log.Fatal("error creating refresh token")
+		}
+	}
+
+	// access token is expired
+	if userClaims.StandardClaims.Valid() != nil && refreshClaims.Valid() == nil {
+		req.AccessToken, err = NewAccessToken(*userClaims)
+		if err != nil {
+			log.Fatal("error creating access token")
+		}
+	}
+
+	// compose cookies
+	accessCookie := &http.Cookie{
+		Name:    "access-token",
+		Value:   req.AccessToken,
+		Expires: time.Now().Add(time.Minute * 15),
+		Path:    "/",
+		HttpOnly: true,
+	}
+	refreshCookie := &http.Cookie{
+		Name:    "refresh-token",
+		Value:   req.RefreshToken,
+		Expires: time.Now().Add(time.Hour * 168 * 4),
+		Path:    "/",
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, accessCookie)
+	http.SetCookie(w, refreshCookie)
+
+	resp.Message = "ok, tokens refreshed"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+
+	resp.Write(w)
 	return
 }
 
