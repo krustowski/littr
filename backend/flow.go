@@ -3,16 +3,16 @@ package backend
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
-	//"github.com/go-chi/chi/v5"
 )
 
 func getPosts(w http.ResponseWriter, r *http.Request) {
@@ -23,17 +23,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	// check if diff page has been requested
-	/*page := chi.URLParam(r, "pageNo")
-	if page != "" {
-		num, err := strconv.Atoi(page)
-		if err == nil {
-			pageNo = num
-		}
-	}*/
-
 	pageNoString := r.Header.Get("X-Flow-Page-No")
-	log.Println(pageNoString)
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		resp.Message = "page No has to be specified as integer/number"
@@ -55,8 +45,14 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	opts := pageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+	}
+
 	// fetch page according to the logged user
-	pExport, uExport := getOnePage(pageNo, callerID)
+	pExport, uExport := getOnePage(opts)
 	if pExport == nil || uExport == nil {
 		resp.Message = "error while requesting more page, one exported map is nil!"
 		resp.Code = http.StatusBadRequest
@@ -271,6 +267,34 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	callerID := r.Header.Get("X-API-Caller-ID")
 	noteUsersActivity(callerID)
 
+	// parse the URI's path
+	// check if diff page has been requested
+	nick := chi.URLParam(r, "nick")
+
+	pageNo := 0
+
+	// mock the flowlist (nasty hack)
+	flowList := make(map[string]bool)
+	flowList[callerID] = true
+
+	opts := pageOptions{
+		UserFlow:     true,
+		UserFlowNick: nick,
+		CallerID:     callerID,
+		PageNo:       pageNo,
+	}
+
+	// fetch page according to the logged user
+	pExport, uExport := getOnePage(opts)
+	if pExport == nil || uExport == nil {
+		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	resp.Message = "ok, dumping user's flow posts"
 	resp.Code = http.StatusOK
 
@@ -283,6 +307,30 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	l := NewLogger(r, "flow")
 	callerID := r.Header.Get("X-API-Caller-ID")
 	noteUsersActivity(callerID)
+
+	pageNo := 0
+
+	// mock the flowlist (nasty hack)
+	flowList := make(map[string]bool)
+	flowList[callerID] = true
+
+	opts := pageOptions{
+		SinglePost: true,
+		CallerID:   callerID,
+		PageNo:     pageNo,
+		FlowList:   flowList,
+	}
+
+	// fetch page according to the logged user
+	pExport, uExport := getOnePage(opts)
+	if pExport == nil || uExport == nil {
+		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 
 	resp.Message = "ok, dumping single post and its interactions"
 	resp.Code = http.StatusOK

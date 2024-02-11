@@ -8,9 +8,20 @@ import (
 
 const pageSize int = 25
 
+type pageOptions struct {
+	CallerID     string          `json:"caller_id"`
+	PageNo       int             `json:"page_no"`
+	FlowList     map[string]bool `json:"folow_list"`
+	UserFlowNick string          `json:"user_Flow_nick"`
+
+	// flow subroutes booleans
+	SinglePost bool `json:"single_post" default:false`
+	UserFlow   bool `json:"user_flow" default:false`
+}
+
 // for now, let us use it for posts/flow exclusively only
-func getOnePage(pageNo int, callerID string) (map[string]models.Post, map[string]models.User) {
-	user, ok := getOne(UserCache, callerID, models.User{})
+func getOnePage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
+	user, ok := getOne(UserCache, opts.CallerID, models.User{})
 	if !ok {
 		return nil, nil
 	}
@@ -28,10 +39,16 @@ func getOnePage(pageNo int, callerID string) (map[string]models.Post, map[string
 	posts := []models.Post{}
 	num := 0
 
+	// overload flowList
+	flowList := user.FlowList
+	if opts.FlowList != nil {
+		flowList = opts.FlowList
+	}
+
 	// filter out all posts for such callerID
 	for _, post := range allPosts {
 		// check the caller's flow list, skip on unfollowed, or unknown user
-		if value, found := user.FlowList[post.Nickname]; !found || !value {
+		if value, found := flowList[post.Nickname]; !found || !value {
 			continue
 		}
 
@@ -46,6 +63,7 @@ func getOnePage(pageNo int, callerID string) (map[string]models.Post, map[string
 	// cut the <pageSize>*2 number of posts only
 	var part []models.Post
 
+	pageNo := opts.PageNo
 	start := (pageSize * 2) * pageNo
 	end := (pageSize * 2) * (pageNo + 1)
 
@@ -83,11 +101,15 @@ func getOnePage(pageNo int, callerID string) (map[string]models.Post, map[string
 		repKey := post.ReplyToID
 		if repKey != "" {
 			num++
-			pExport[repKey] = allPosts[repKey]
+			prePost := allPosts[repKey]
 
 			// export previous user too
-			nick := allPosts[repKey].Nickname
+			nick := prePost.Nickname
 			uExport[nick] = allUsers[nick]
+
+			// increase the reply count
+			prePost.ReplyCount++
+			pExport[repKey] = prePost
 		}
 
 		// this makes sure only N posts are returned, but it cuts off the tail posts

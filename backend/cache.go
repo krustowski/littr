@@ -8,6 +8,7 @@ var (
 	FlowCache         *core.Cache
 	PollCache         *core.Cache
 	SubscriptionCache *core.Cache
+	TokenCache        *core.Cache
 	UserCache         *core.Cache
 )
 

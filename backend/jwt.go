@@ -2,39 +2,40 @@
 package backend
 
 import (
+	"go.savla.dev/littr/models"
+
 	"github.com/golang-jwt/jwt"
-	"os"
 )
 
 type UserClaims struct {
-	Nickname  string `json:"nickname"`
-	AppBgMode string `json:"app_bg_mode"`
+	Nickname string      `json:"nickname"`
+	User     models.User `json:"user"`
 	jwt.StandardClaims
 }
 
-func NewAccessToken(claims UserClaims) (string, error) {
+func NewAccessToken(claims UserClaims, secret string) (string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return accessToken.SignedString([]byte(os.Getenv("TOKEN_SECRET")))
+	return accessToken.SignedString([]byte(secret))
 }
 
-func NewRefreshToken(claims jwt.StandardClaims) (string, error) {
+func NewRefreshToken(claims jwt.StandardClaims, secret string) (string, error) {
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return refreshToken.SignedString([]byte(os.Getenv("TOKEN_SECRET")))
+	return refreshToken.SignedString([]byte(secret))
 }
 
-func ParseAccessToken(accessToken string) *UserClaims {
+func ParseAccessToken(accessToken string, secret string) *UserClaims {
 	parsedAccessToken, _ := jwt.ParseWithClaims(accessToken, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("TOKEN_SECRET")), nil
+		return []byte(secret), nil
 	})
 
 	return parsedAccessToken.Claims.(*UserClaims)
 }
 
-func ParseRefreshToken(refreshToken string) *jwt.StandardClaims {
+func ParseRefreshToken(refreshToken string, secret string) *jwt.StandardClaims {
 	parsedRefreshToken, _ := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("TOKEN_SECRET")), nil
+		return []byte(secret), nil
 	})
 
 	return parsedRefreshToken.Claims.(*jwt.StandardClaims)

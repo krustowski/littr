@@ -18,7 +18,9 @@ const (
 	pollsFile         = "/opt/data/polls.json"
 	postsFile         = "/opt/data/posts.json"
 	subscriptionsFile = "/opt/data/subscriptions.json"
+	tokensFile        = "/opt/data/tokens.json"
 	usersFile         = "/opt/data/users.json"
+	void              = ""
 )
 
 func LoadAll() {
@@ -26,6 +28,7 @@ func LoadAll() {
 	loadOne(PollCache, pollsFile, models.Poll{})
 	loadOne(FlowCache, postsFile, models.Post{})
 	loadOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	loadOne(TokenCache, tokensFile, void)
 	loadOne(UserCache, usersFile, models.User{})
 }
 
@@ -34,6 +37,7 @@ func DumpAll() {
 	dumpOne(PollCache, pollsFile, models.Poll{})
 	dumpOne(FlowCache, postsFile, models.Post{})
 	dumpOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	dumpOne(TokenCache, tokensFile, void)
 	dumpOne(UserCache, usersFile, models.User{})
 }
 
