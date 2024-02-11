@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/url"
@@ -79,8 +80,8 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 	host := url.Host
 
 	// write the link to browsers's clipboard
-	app.Window().Get("navigator").Get("clipboard").Call("writeText", scheme+"://"+host+"/flow/"+key)
-	ctx.Navigate("/flow/" + key)
+	app.Window().Get("navigator").Get("clipboard").Call("writeText", scheme+"://"+host+"/flow/post/"+key)
+	ctx.Navigate("/flow/post/" + key)
 }
 
 func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
@@ -116,7 +117,7 @@ func (c *flowContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	//c.buttonDisabled = true
 
-	ctx.Navigate("/flow/" + key)
+	ctx.Navigate("/flow/user/" + key)
 }
 
 func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
@@ -254,7 +255,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 		// limit the fire rate to 1/5 Hz
 		now := time.Now().Unix()
-		if now-c.lastFire < 5 {
+		if now-c.lastFire < 2 {
 			return
 		}
 
@@ -275,10 +276,23 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 			// fetch more posts
 			if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !lastPageFetched {
-				newPosts, newUsers = c.fetchFlowPage(ctx, c.user.Nickname)
+				opts := pageOptions{
+					Context:  ctx,
+					CallerID: c.user.Nickname,
+				}
 
+				newPosts, newUsers = c.fetchFlowPage(opts)
 				postControlCount := len(posts)
 
+				// patch single-post and user flow atypical scenarios
+				if posts == nil {
+					posts = make(map[string]models.Post)
+				}
+				if users == nil {
+					users = make(map[string]models.User)
+				}
+
+				// append/insert more posts/users
 				for key, post := range newPosts {
 					posts[key] = post
 				}
@@ -291,7 +305,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 				// no more posts, fetching another page does not make sense
 				if len(posts) == postControlCount {
 					//updated = false
-					//lastPageFetched = true
+					lastPageFetched = true
 
 				}
 			}
@@ -301,11 +315,12 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 				if updated {
 					c.pageNo++
-
 					c.pageNoToFetch++
 
 					c.posts = posts
 					c.users = users
+
+					log.Println("updated")
 				}
 
 				c.processingFire = false
@@ -405,6 +420,15 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.pageNoToFetch = 0
 	c.lastPageFetched = false
 
+	var user string
+	ctx.LocalStorage().Get("user", &user)
+	juser, _ := base64.StdEncoding.DecodeString(user)
+	err := json.Unmarshal(juser, &c.user)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	log.Println(c.user.Nickname)
+
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 }
 
@@ -430,7 +454,12 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 
 		// nasty hotfix, TODO
 		c.pageNoToFetch = 0
-		posts, users := c.fetchFlowPage(ctx, c.user.Nickname)
+		opts := pageOptions{
+			PageNo:  c.pageNoToFetch,
+			Context: ctx,
+			//CallerID: c.user.Nickname,
+		}
+		posts, users := c.fetchFlowPage(opts)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.posts = posts
@@ -445,7 +474,19 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[string]models.Post, map[string]models.User) {
+type pageOptions struct {
+	PageNo   int `default:0`
+	Context  app.Context
+	CallerID string
+
+	SinglePost bool `default:false`
+	UserFlow   bool `default:false`
+
+	SinglePostID string `default:""`
+	UserFlowNick string `default:""`
+}
+
+func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
 	var toastText string
 
 	resp := struct {
@@ -453,20 +494,46 @@ func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[strin
 		Users map[string]models.User `json:"users"`
 	}{}
 
-	pageNo := c.pageNoToFetch
+	ctx := opts.Context
+	pageNo := opts.PageNo
+
+	if opts.Context == nil {
+		toastText = "app context pointer cannot be nil"
+		log.Println(toastText)
+
+		return nil, nil
+	}
+
+	//pageNo := c.pageNoToFetch
 	if c.refreshClicked {
 		pageNo = 0
 	}
 	//pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
 	url := "/api/flow"
-	/*data := struct {
-		PageNo int `json:"page_no"`
-	}{
-		PageNo: pageNo,
-	}*/
+	if opts.UserFlow || opts.SinglePost {
+		if opts.SinglePostID != "" {
+			url += "/post/" + opts.SinglePostID
+		}
 
-	if byteData, _ := litterAPI("GET", url, nil, callerID, pageNo); byteData != nil {
+		if opts.UserFlowNick != "" {
+			url += "/user/" + opts.UserFlowNick
+		}
+
+		if opts.SinglePostID == "" && opts.UserFlowNick == "" {
+			toastText = "single post/user flow parameters cannot be blank"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.refreshClicked = false
+			})
+			return nil, nil
+		}
+
+	}
+
+	if byteData, _ := litterAPI("GET", url, nil, c.user.Nickname, pageNo); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())
@@ -475,6 +542,7 @@ func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[strin
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.refreshClicked = false
 			})
 			return nil, nil
 		}
@@ -485,6 +553,7 @@ func (c *flowContent) fetchFlowPage(ctx app.Context, callerID string) (map[strin
 		ctx.Dispatch(func(ctx app.Context) {
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
+			c.refreshClicked = false
 		})
 		return nil, nil
 	}
@@ -502,15 +571,29 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 	toastText := ""
 
+	singlePost := false
 	singlePostID := ""
-	isPost := true
-	url := strings.Split(ctx.Page().URL().Path, "/")
+	userFlow := false
+	userFlowNick := ""
 
-	if len(url) > 2 && url[2] != "" {
-		singlePostID = url[2]
-	}
+	isPost := true
 
 	ctx.Async(func() {
+		url := strings.Split(ctx.Page().URL().Path, "/")
+
+		if len(url) > 3 && url[3] != "" {
+			switch url[2] {
+			case "post":
+				singlePost = true
+				singlePostID = url[3]
+				break
+			case "user":
+				userFlow = true
+				userFlowNick = url[3]
+				break
+			}
+		}
+
 		if _, err := strconv.Atoi(singlePostID); singlePostID != "" && err != nil {
 			// prolly not a post ID, but an user's nickname
 			isPost = false
@@ -520,37 +603,32 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.isPost = isPost
 		})
 
-		var enUser string
 		var user models.User
 
-		ctx.LocalStorage().Get("user", &enUser)
+		ctx.GetState("user", &user)
 
-		// decode, decrypt and unmarshal the local storage string
-		if err := prepare(enUser, &user); err != nil {
-			toastText = "frontend decoding/decryption failed: " + err.Error()
+		opts := pageOptions{
+			PageNo:   0,
+			Context:  ctx,
+			CallerID: user.Nickname,
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
+			SinglePost:   singlePost,
+			SinglePostID: singlePostID,
+			UserFlow:     userFlow,
+			UserFlowNick: userFlowNick,
 		}
 
-		posts, users := c.fetchFlowPage(ctx, user.Nickname)
+		posts, users := c.fetchFlowPage(opts)
 
-		// try the singlePostID var if present
-		if singlePostID != "" {
-			_, found := posts[singlePostID]
-			if isPost && !found {
+		// try the singlePostID/userFlowNick var if present
+		if singlePostID != "" && singlePost {
+			if _, found := posts[singlePostID]; !found {
 				toastText = "post not found"
 			}
-
-			if !isPost {
-				toastText = ""
-
-				if _, found = users[singlePostID]; !found {
-					toastText = "user not found"
-				}
+		}
+		if userFlowNick != "" && userFlow {
+			if _, found := users[userFlowNick]; !found {
+				toastText = "user not found"
 			}
 		}
 
@@ -834,8 +912,7 @@ func (c *flowContent) Render() app.UI {
 							app.Div().Class("row top-padding").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
-									//app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
-									app.A().Class("vold deep-orange-text").OnClick(nil).Text(post.Nickname).ID(post.Nickname),
+									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
 									//app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
 							),
@@ -866,8 +943,7 @@ func (c *flowContent) Render() app.UI {
 												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 											),
 
-											//app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(nil).Disabled(true).Body(
+											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
 												app.I().Text("history"),
 											),
 										),
@@ -892,11 +968,11 @@ func (c *flowContent) Render() app.UI {
 									app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
 								),
 								app.If(post.Nickname != "system",
+									app.B().Text(post.ReplyCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 										app.I().Text("reply"),
 									),
-									//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-									app.Button().ID(key).Class("transparent circle").OnClick(nil).Disabled(true).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
 										app.I().Text("link"),
 									),
 								),

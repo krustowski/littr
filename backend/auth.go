@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -334,6 +335,43 @@ func authMiddleware(next http.Handler) http.Handler {
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return*/
+
+		refreshSum := sha256.New()
+		refreshSum.Write([]byte(refreshCookie.Value))
+		sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+
+		rawNick, found := TokenCache.Get(sum)
+		if !found {
+			voidCookie := &http.Cookie{
+				Name:     "refresh-token",
+				Value:    "",
+				Expires:  time.Now().Add(time.Second * 1),
+				Path:     "/",
+				HttpOnly: true,
+			}
+
+			http.SetCookie(w, voidCookie)
+
+			resp.Message = "the refresh token has been invalidated"
+			resp.Code = http.StatusUnauthorized
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		nickname, ok := rawNick.(string)
+		if !ok {
+			resp.Message = "cannot assert data type for nickname"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "nickname", nickname)
+		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})

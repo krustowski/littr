@@ -1,7 +1,10 @@
 package frontend
 
 import (
+	"encoding/json"
+
 	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -12,7 +15,8 @@ type header struct {
 	updateAvailable bool
 	appInstallable  bool
 
-	userLogged bool
+	authGranted bool
+	user        models.User
 
 	modalInfoShow   bool
 	modalLogoutShow bool
@@ -34,23 +38,56 @@ func (h *header) OnAppUpdate(ctx app.Context) {
 	ctx.Reload()
 }
 
+func (h *header) tryCookies(ctx app.Context) bool {
+	resp := struct {
+		Users map[string]models.User `json:"users" binding:"required"`
+	}{}
+
+	if data, ok := litterAPI("POST", "/api/token", nil, "ghost", 0); ok {
+		if err := json.Unmarshal(*data, &resp); err != nil {
+			return false
+		}
+
+		if resp.Users == nil {
+			return false
+		}
+
+		var user models.User
+		for _, user = range resp.Users {
+		}
+
+		ctx.SetState("user", user)
+		return true
+	}
+
+	return false
+}
+
 func (h *header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
 
-	var encodedUser string
-	ctx.LocalStorage().Get("user", &encodedUser)
+	//authGranted := h.tryCookies(ctx)
+	var authGranted bool
+	ctx.LocalStorage().Get("authGranted", &authGranted)
 
-	h.userLogged = verifyUser(encodedUser)
-
-	if !h.userLogged && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
+	// redirect client to the unauthorized zone
+	if !authGranted && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
 		ctx.Navigate("/login")
 		return
 	}
 
-	if h.userLogged && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
+	// redirect auth'd client from the unauthorized zone
+	if authGranted && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
 		ctx.Navigate("/flow")
 		return
 	}
+
+	if authGranted {
+		ctx.SetState("user", h.user)
+	}
+
+	ctx.SetState("authGranted", authGranted)
+	h.authGranted = authGranted
 }
 
 func (h *header) OnAppInstallChange(ctx app.Context) {
@@ -79,9 +116,9 @@ func (h *header) onClickReload(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickLogout(ctx app.Context, e app.Event) {
-	//ctx.LocalStorage().Set("userLogged", false)
+	//ctx.LocalStorage().Set("authGranted", false)
 	ctx.LocalStorage().Set("user", "")
-	h.userLogged = false
+	h.authGranted = false
 
 	ctx.Navigate("/logout")
 }
@@ -170,7 +207,7 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			app.If(h.userLogged,
+			app.If(h.authGranted,
 				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Body(
 					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("logout")),

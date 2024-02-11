@@ -34,7 +34,8 @@ func (p *LoginPage) OnMount(ctx app.Context) {
 		//ctx.LocalStorage().Set("userLogged", false)
 		//ctx.LocalStorage().Set("userName", "")
 		//ctx.LocalStorage().Set("flowRecords", nil)
-		ctx.LocalStorage().Set("user", "")
+		ctx.SetState("user", "")
+		ctx.SetState("authGranted", false)
 
 		p.userLogged = false
 
@@ -146,7 +147,8 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		// save enrypted user data to their Local browser storage
-		ctx.LocalStorage().Set("user", config.Encrypt([]byte(config.Pepper), user))
+		ctx.LocalStorage().Set("user", user)
+		ctx.LocalStorage().Set("authGranted", true)
 
 		if response.AuthGranted {
 			ctx.Navigate("/flow")
@@ -188,6 +190,13 @@ func (c *loginContent) Render() app.UI {
 		app.Div().Class("field border label invalid deep-orange-text").Body(
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active"),
+		),
+		app.Article().Class("row border").Body(
+			app.I().Text("lightbulb"),
+			app.P().Class("max").Body(
+				//app.Span().Class("deep-orange-text").Text(" "),
+				app.Span().Text("log-in for 30 days"),
+			),
 		),
 
 		// login button

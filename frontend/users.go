@@ -450,7 +450,7 @@ func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
 		return
 	}
 
-	ctx.Navigate("/flow/" + key)
+	ctx.Navigate("/flow/user/" + key)
 }
 
 func (c *usersContent) onClickUser(ctx app.Context, e app.Event) {

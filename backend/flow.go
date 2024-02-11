@@ -18,7 +18,7 @@ import (
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	callerID := r.Header.Get("X-API-Caller-ID")
+	callerID, _ := r.Context().Value("nickname").(string)
 	noteUsersActivity(callerID)
 
 	pageNo := 0
