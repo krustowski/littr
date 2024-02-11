@@ -17,12 +17,14 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 // the very main API router
 func LoadAPIRouter() chi.Router {
 	r := chi.NewRouter()
+	r.Use(authMiddleware)
 
+	// unauth zone (skipped at auth)
 	r.Get("/", rootHandler)
 	r.Post("/auth", authHandler)
 	r.Get("/dump", dumpHandler)
+
 	r.Get("/stats", statsHandler)
-	r.Get("/token", handleTokenRefresh)
 
 	r.Route("/flow", func(r chi.Router) {
 		r.Get("/", getPosts)
