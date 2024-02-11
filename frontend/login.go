@@ -198,6 +198,7 @@ func (c *loginContent) Render() app.UI {
 				app.Span().Text("log-in for 30 days"),
 			),
 		),
+		app.Div().Class("small-space"),
 
 		// login button
 		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
