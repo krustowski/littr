@@ -616,8 +616,6 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 		posts, users := c.fetchFlowPage(opts)
 
-		log.Println(len(posts))
-
 		// try the singlePostID/userFlowNick var if present
 		if singlePostID != "" && singlePost {
 			if _, found := posts[singlePostID]; !found {
@@ -678,8 +676,6 @@ func (c *flowContent) Render() app.UI {
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
-
-	log.Println(len(sortedPosts))
 
 	// compose a summary of a long post to be replied to
 	replySummary := ""
@@ -783,6 +779,7 @@ func (c *flowContent) Render() app.UI {
 
 					// prepare reply parameters to render
 					if post.ReplyToID != "" {
+						//c.posts[post.ReplyToID].ReplyCount++
 						if previous, found := c.posts[post.ReplyToID]; found {
 							previousContent = previous.Nickname + " posted: " + previous.Content
 						} else {
@@ -913,7 +910,7 @@ func (c *flowContent) Render() app.UI {
 									app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
 								),
 								app.If(post.Nickname != "system",
-									app.B().Text(post.ReplyCount).Class("left-padding"),
+									//app.B().Text(post.ReplyCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 										app.I().Text("reply"),
 									),
