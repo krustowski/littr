@@ -172,15 +172,17 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 ### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + add timestamp to a subscription
++ implement combined picture-with-text (PwT) posting
 + implement Ctrl+Enter to submit posts like YouTube
-+ implement forgotten password recovery
-+ implement mailing (verification mails) on backend
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
 
-### roadmap to v0.24/v0.25
-+ implement JWT for auth (wip)
-+ implement combined picture-with-text (PwT) posting
+### roadmap to v0.25
++ implement mailing (verification mails) on backend
++ implement forgotten password recovery
+
+### roadmap to v0.24
++ ~~implement JWT for auth (wip)~~
 + ~~preprocess and paginate posts on backend (wip)~~
 
 ### roadmap to v0.23
