@@ -179,6 +179,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.24/v0.25
++ implement JWT for auth (wip)
 + implement combined picture-with-text (PwT) posting
 + ~~preprocess and paginate posts on backend (wip)~~
 

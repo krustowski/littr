@@ -77,6 +77,7 @@ func initServer() {
 	backend.FlowCache = &core.Cache{}
 	backend.PollCache = &core.Cache{}
 	backend.SubscriptionCache = &core.Cache{}
+	backend.TokenCache = &core.Cache{}
 	backend.UserCache = &core.Cache{}
 
 	l.Println("caches initialized", http.StatusOK)
