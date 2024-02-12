@@ -142,3 +142,6 @@ fetch_running_dump:
 backup: fetch_running_dump
 	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
 	@tar czvf /mnt/backup/litter-go/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ./run_data/
+
+test_mail:
+	@go run backend/mail.go

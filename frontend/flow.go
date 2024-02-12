@@ -305,7 +305,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 				// no more posts, fetching another page does not make sense
 				if len(posts) == postControlCount {
 					//updated = false
-					lastPageFetched = true
+					//lastPageFetched = true
 
 				}
 			}

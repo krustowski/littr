@@ -318,12 +318,12 @@ func authMiddleware(next http.Handler) http.Handler {
 			resp.Users = make(map[string]models.User)
 			resp.Users[nickname] = user
 
-			resp.Message = "ok, new access token issued"
+			/*resp.Message = "ok, new access token issued"
 			resp.Code = http.StatusOK
 
 			l.Println(resp.Message, resp.Code)
 			resp.Write(w)
-			return
+			return*/
 		}
 
 		/*resp.Users = make(map[string]models.User)
