@@ -275,8 +275,10 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 			lastPageFetched := c.lastPageFetched
 
 			// fetch more posts
-			if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !lastPageFetched {
+			//if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !lastPageFetched {
+			if !lastPageFetched {
 				opts := pageOptions{
+					PageNo:   c.pageNoToFetch,
 					Context:  ctx,
 					CallerID: c.user.Nickname,
 				}
@@ -304,19 +306,18 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 				// no more posts, fetching another page does not make sense
 				if len(posts) == postControlCount {
-					//updated = false
-					//lastPageFetched = true
+					updated = false
+					lastPageFetched = true
 
 				}
 			}
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.lastFire = now
+				c.pageNoToFetch++
+				c.pageNo++
 
 				if updated {
-					c.pageNo++
-					c.pageNoToFetch++
-
 					c.posts = posts
 					c.users = users
 
