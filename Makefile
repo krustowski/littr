@@ -123,6 +123,8 @@ flush:
 	@docker cp data/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
 	@docker cp data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
 	@docker cp data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
+	@docker cp data/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
+	@docker cp data/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
 
 .PHONY: kill
 kill:
@@ -136,6 +138,7 @@ fetch_running_dump:
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ./run_data/
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json ./run_data/
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json ./run_data/
 	
 .PHONY: backup
