@@ -143,7 +143,7 @@ fetch_running_dump:
 	
 .PHONY: backup
 backup: fetch_running_dump
-	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
+	@echo -e "\n${YELLOW} Making the backup archive... ${RESET}\n"
 	@tar czvf /mnt/backup/litter-go/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ./run_data/
 
 test_mail:
