@@ -73,6 +73,8 @@ func migrateFlowPurge() bool {
 			deleteOne(FlowCache, key)
 		}
 	}
+
+	return true
 }
 
 // migrateUserDeletion function takes care of default users deletion from the database. Function returns bool based on the process result.
