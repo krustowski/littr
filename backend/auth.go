@@ -371,6 +371,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), "nickname", nickname)
+		noteUserActivity(nickname)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

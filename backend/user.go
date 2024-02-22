@@ -21,7 +21,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "users",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// get user list
 	users, _ := getAll(UserCache, models.User{})
@@ -44,7 +43,6 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "users",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var user models.User
 
@@ -109,7 +107,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "users",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var user models.User
 
@@ -170,7 +167,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "users",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	key := r.Header.Get("X-API-Caller-ID")
 

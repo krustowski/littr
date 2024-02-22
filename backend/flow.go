@@ -19,7 +19,6 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
 	callerID, _ := r.Context().Value("nickname").(string)
-	noteUsersActivity(callerID)
 
 	pageNo := 0
 
@@ -80,7 +79,6 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// post a new post
 	var post models.Post
@@ -160,7 +158,6 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var post models.Post
 
@@ -221,7 +218,6 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var post models.Post
 
@@ -277,7 +273,6 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// remove a post
 	var post models.Post
@@ -326,7 +321,6 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
 	callerID := r.Header.Get("X-API-Caller-ID")
-	noteUsersActivity(callerID)
 
 	// parse the URI's path
 	// check if diff page has been requested
@@ -367,7 +361,6 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
 	callerID := r.Header.Get("X-API-Caller-ID")
-	noteUsersActivity(callerID)
 
 	pageNo := 0
 

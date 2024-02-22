@@ -21,7 +21,6 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "polls",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	polls, _ := getAll(PollCache, models.Poll{})
 
@@ -44,7 +43,6 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "polls",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var poll models.Poll
 
@@ -98,7 +96,6 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "polls",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var poll models.Poll
 
@@ -161,7 +158,6 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 		WorkerName: "polls",
 		Version:    r.Header.Get("X-App-Version"),
 	}
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	var poll models.Poll
 

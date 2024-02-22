@@ -27,7 +27,6 @@ type userStat struct {
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "stats")
-	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
 
 	// fetch the data
 	polls, _ := getAll(PollCache, models.Poll{})
