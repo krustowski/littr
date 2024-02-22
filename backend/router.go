@@ -38,7 +38,8 @@ func LoadAPIRouter() chi.Router {
 			r.Get("/{postNo}", getSinglePost)
 		})
 		r.Post("/", addNewPost)
-		r.Put("/", updatePost)
+		//r.Put("/", updatePost)
+		r.Put("/star", updatePostStarCount)
 		r.Delete("/", deletePost)
 	})
 	r.Route("/polls", func(r chi.Router) {

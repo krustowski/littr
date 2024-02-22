@@ -396,7 +396,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		//interactedPost.ReactionCount++
 
 		// add new post to backend struct
-		if _, ok := litterAPI("PUT", "/api/flow", interactedPost, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := litterAPI("PUT", "/api/flow/star", interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot rate a post"
 		}
 

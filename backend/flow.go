@@ -157,6 +157,65 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "flow")
+	noteUsersActivity(r.Header.Get("X-API-Caller-ID"))
+
+	var post models.Post
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	if err := json.Unmarshal(data, &post); err != nil {
+		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
+	key := post.ID
+
+	if post, found := getOne(FlowCache, key, models.Post{}); !found {
+		resp.Message = "unknown post update requested"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// increment the star count by 1
+	post.ReactionCount++
+
+	if saved := setOne(FlowCache, key, post); !saved {
+		resp.Message = "cannot update post"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, post updated"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
