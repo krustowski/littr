@@ -13,14 +13,7 @@ import (
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "users",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "users")
 
 	// get user list
 	users, _ := getAll(UserCache, models.User{})
@@ -35,14 +28,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "users",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "users")
 
 	var user models.User
 
@@ -99,14 +85,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "users",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "users")
 
 	var user models.User
 
@@ -159,16 +138,9 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "users",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "users")
 
-	key := r.Header.Get("X-API-Caller-ID")
+	key, _ := r.Context().Value("nickname").(string)
 
 	if _, found := getOne(UserCache, key, models.User{}); !found {
 		resp.Message = "user nout found: " + key

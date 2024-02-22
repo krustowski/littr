@@ -41,8 +41,10 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		return nil
 	}
 
+	callerID, _ := r.Context().Value("nickname").(string)
+
 	return &Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
+		CallerID:   callerID,
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
 		Route:      r.URL.String(),

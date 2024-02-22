@@ -15,14 +15,7 @@ import (
 
 func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "push",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "push")
 
 	var sub webpush.Subscription
 
@@ -47,7 +40,7 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	caller := r.Header.Get("X-API-Caller-ID")
+	caller, _ := r.Context().Value("nickname").(string)
 
 	// fetch existing (or blank) subscription array for such caller, and add new sub.
 	subs, _ := getOne(SubscriptionCache, caller, []webpush.Subscription{})
@@ -71,17 +64,10 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 
 func sendNotif(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:   r.Header.Get("X-API-Caller-ID"),
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "push",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "push")
 
 	// this user ID points to the replier
-	caller := r.Header.Get("X-API-Caller-ID")
+	caller, _ := r.Context().Value("nickname").(string)
 
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {

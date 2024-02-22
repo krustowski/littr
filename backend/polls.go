@@ -12,15 +12,7 @@ import (
 
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "polls",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "polls")
 
 	polls, _ := getAll(PollCache, models.Poll{})
 
@@ -87,15 +79,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 
 func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "polls",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "polls")
 
 	var poll models.Poll
 
@@ -149,15 +133,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "polls",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "polls")
 
 	var poll models.Poll
 

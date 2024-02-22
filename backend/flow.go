@@ -158,6 +158,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	var post models.Post
 
@@ -190,6 +191,15 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	if post, found = getOne(FlowCache, key, models.Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if post.Nickname == callerID {
+		resp.Message = "one cannot rate ther own post(s)"
+		resp.Code = http.StatusForbidden
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
