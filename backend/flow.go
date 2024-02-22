@@ -188,7 +188,9 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 	key := post.ID
 
-	if post, found := getOne(FlowCache, key, models.Post{}); !found {
+	var found bool
+
+	if post, found = getOne(FlowCache, key, models.Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
