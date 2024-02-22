@@ -9,14 +9,15 @@ import (
 const pageSize int = 25
 
 type pageOptions struct {
-	CallerID     string          `json:"caller_id"`
-	PageNo       int             `json:"page_no"`
-	FlowList     map[string]bool `json:"folow_list"`
-	UserFlowNick string          `json:"user_Flow_nick"`
+	CallerID string          `json:"caller_id"`
+	PageNo   int             `json:"page_no"`
+	FlowList map[string]bool `json:"folow_list"`
 
-	// flow subroutes booleans
-	SinglePost bool `json:"single_post" default:false`
-	UserFlow   bool `json:"user_flow" default:false`
+	// flow subroutes booleans and vars
+	SinglePost   bool   `json:"single_post" default:false`
+	UserFlow     bool   `json:"user_flow" default:false`
+	SinglePostID string `json:"single_post_id"`
+	UserFlowNick string `json:"user_Flow_nick"`
 }
 
 // for now, let us use it for posts/flow exclusively only
@@ -39,6 +40,13 @@ func getOnePage(opts pageOptions) (map[string]models.Post, map[string]models.Use
 	posts := []models.Post{}
 	num := 0
 
+	// extract requested post
+	/*if opts.SinglePost && opts.SinglePostID != "" {
+		if single, found := posts[opts.SinglePostID]; found {
+			posts = append(posts, single)
+		}
+	}*/
+
 	// overload flowList
 	flowList := user.FlowList
 	if opts.FlowList != nil {
@@ -47,6 +55,14 @@ func getOnePage(opts pageOptions) (map[string]models.Post, map[string]models.Use
 
 	// filter out all posts for such callerID
 	for _, post := range allPosts {
+		// exctract replies to the single post
+		if opts.SinglePost && opts.SinglePostID != "" {
+			if post.ReplyToID == opts.SinglePostID {
+				posts = append(posts, post)
+			}
+			continue
+		}
+
 		// check the caller's flow list, skip on unfollowed, or unknown user
 		if value, found := flowList[post.Nickname]; !found || !value {
 			continue
@@ -100,16 +116,17 @@ func getOnePage(opts pageOptions) (map[string]models.Post, map[string]models.Use
 		// we can have multiple keys from a single post -> its interractions
 		repKey := post.ReplyToID
 		if repKey != "" {
-			num++
-			prePost := allPosts[repKey]
+			if prePost, found := allPosts[repKey]; found {
+				num++
 
-			// export previous user too
-			nick := prePost.Nickname
-			uExport[nick] = allUsers[nick]
+				// export previous user too
+				nick := prePost.Nickname
+				uExport[nick] = allUsers[nick]
 
-			// increase the reply count
-			prePost.ReplyCount++
-			pExport[repKey] = prePost
+				// increase the reply count
+				prePost.ReplyCount++
+				pExport[repKey] = prePost
+			}
 		}
 
 		// this makes sure only N posts are returned, but it cuts off the tail posts
