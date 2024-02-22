@@ -754,7 +754,12 @@ func (c *flowContent) Render() app.UI {
 
 				app.Nav().Class("center-align").Body(
 					app.Button().Class("border deep-orange7 white-text bold").Text("cancel").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
-					app.Button().ID("").Class("border deep-orange7 white-text bold").Text("reply").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled),
+					app.Button().ID("").Class("border deep-orange7 white-text bold").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+						app.If(c.postButtonsDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("reply"),
+					),
 				),
 				app.Div().Class("space"),
 			),
