@@ -15,6 +15,7 @@ type migration func() bool
 
 var migrations = map[string]migration{
 	"migrateAvatarURL()":          migrateAvatarURL,
+	"migrateFlowPurge()":          migrateFlowPurge,
 	"migrateUserDeletion()":       migrateUserDeletion,
 	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
 	"migrateUserShadeList()":      migrateUserShadeList,
@@ -60,6 +61,18 @@ func migrateAvatarURL() bool {
 	}
 
 	return true
+}
+
+// migrateFlowPurge function deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
+func migrateFlowPurge() bool {
+	users, _ := getAll(UserCache, models.User{})
+	posts, _ := getAll(FlowCache, models.Post{})
+
+	for key, post := range posts {
+		if _, found := users[post.Nickname]; !found {
+			deleteOne(FlowCache, key)
+		}
+	}
 }
 
 // migrateUserDeletion function takes care of default users deletion from the database. Function returns bool based on the process result.
