@@ -34,10 +34,12 @@ type flowContent struct {
 	toastShow bool
 	toastText string
 
-	buttonDisabled      bool
-	postButtonsDisabled bool
-	modalReplyActive    bool
-	replyPostContent    string
+	buttonDisabled             bool
+	postButtonsDisabled        bool
+	modalReplyActive           bool
+	replyPostContent           string
+	deletePostModalShow        bool
+	deleteModalButtonsDisabled bool
 
 	interactedPostKey string
 	singlePostID      string
@@ -90,6 +92,7 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.modalReplyActive = false
 	c.buttonDisabled = false
 	c.postButtonsDisabled = false
+	c.deletePostModalShow = false
 }
 
 func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
@@ -336,9 +339,19 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
+func (c *flowContent) onClickDeleteButton(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
+
+	c.interactedPostKey = key
+	c.deleteModalButtonsDisabled = false
+	c.deletePostModalShow = true
+}
+
+func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
+	key := c.interactedPostKey
 	ctx.NewActionWithValue("delete", key)
+
+	c.deleteModalButtonsDisabled = true
 }
 
 func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
@@ -355,6 +368,17 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 		key := c.postKey
 		interactedPost := c.posts[key]
 
+		if interactedPost.Nickname != c.user.Nickname {
+			toastText = "you only can delete your own posts!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.deletePostModalShow = false
+				c.deleteModalButtonsDisabled = false
+			})
+		}
+
 		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
@@ -364,6 +388,8 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
+			c.deletePostModalShow = false
+			c.deleteModalButtonsDisabled = false
 		})
 	})
 }
@@ -437,6 +463,9 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.pageNo = 1
 	c.pageNoToFetch = 0
 	c.lastPageFetched = false
+
+	c.deletePostModalShow = false
+	c.deleteModalButtonsDisabled = false
 
 	var user string
 	ctx.LocalStorage().Get("user", &user)
@@ -747,6 +776,26 @@ func (c *flowContent) Render() app.UI {
 			),
 		),
 
+		// post deletion modal
+		app.If(c.deletePostModalShow,
+			app.Dialog().Class("grey9 white-text active").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("post deletion"),
+				),
+				app.P().Text("are you sure you want to delete your post?"),
+				app.Div().Class("space"),
+				app.Nav().Class("center-align").Body(
+					app.Button().Class("border deep-orange7 white-text").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+						app.If(c.deleteModalButtonsDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("yeah"),
+					),
+					app.Button().Class("border deep-orange7 white-text").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
+				),
+			),
+		),
+
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
 			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
@@ -943,7 +992,8 @@ func (c *flowContent) Render() app.UI {
 								),
 								app.If(c.user.Nickname == post.Nickname,
 									app.B().Text(post.ReactionCount).Class("left-padding"),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
+									//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
 										app.I().Text("delete"),
 									),
 								).Else(

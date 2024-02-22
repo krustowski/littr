@@ -159,14 +159,12 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
 + implement loading of new posts
-+ implement sessions (SessionCache)
 + show offline mode notification
-+ show user's details on the top of /flow/<username> page
++ ~~show user's details on the top of /flow/<username> page~~
 + swagger docs
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### known bugs
-+ ~~post's timestamp is assigned on the client's side, therefore allowing the client to manipulate the flow order~~
 + [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
 
 ### backlog
@@ -182,6 +180,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement forgotten password recovery
 
 ### roadmap to v0.24
++ ~~add modal for post deletion confirmation~~
 + ~~implement JWT for auth (wip)~~
 + ~~preprocess and paginate posts on backend (wip)~~
 
