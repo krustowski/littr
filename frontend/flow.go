@@ -89,6 +89,7 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.modalReplyActive = false
 	c.buttonDisabled = false
+	c.postButtonsDisabled = false
 }
 
 func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
