@@ -396,13 +396,29 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		interactedPost := c.posts[key]
 		//interactedPost.ReactionCount++
 
+		postsRaw := struct {
+			Posts map[string]models.Post `json:"posts"`
+		}{}
+
 		// add new post to backend struct
-		if _, ok := litterAPI("PUT", "/api/flow/star", interactedPost, c.user.Nickname, c.pageNo); !ok {
+		if resp, ok := litterAPI("PUT", "/api/flow/star", interactedPost, c.user.Nickname, c.pageNo); ok {
+			err := json.Unmarshal(*resp, &postsRaw)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+		} else {
 			toastText = "backend error: cannot rate a post"
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts[key] = interactedPost
+			c.posts[key] = postsRaw.Posts[key]
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 		})

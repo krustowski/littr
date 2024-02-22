@@ -218,8 +218,11 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Message = "ok, post updated"
+	resp.Message = "ok, star count incremented"
 	resp.Code = http.StatusOK
+
+	resp.Posts = make(map[string]models.Post)
+	resp.Posts[key] = post
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)

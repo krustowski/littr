@@ -286,7 +286,12 @@ func (c *postContent) Render() app.UI {
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
 			app.Label().Text("post content").Class("active"),
 		),
-		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").Text("post text").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
+		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+			app.If(c.postButtonsDisabled,
+				app.Progress().Class("circle white-border small"),
+			),
+			app.Text("post text"),
+		),
 
 		app.Div().Class("large-divider"),
 
@@ -302,7 +307,12 @@ func (c *postContent) Render() app.UI {
 			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
 		),
-		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").Text("post fig").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
+		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+			app.If(c.postButtonsDisabled,
+				app.Progress().Class("circle white-border small"),
+			),
+			app.Text("post fig"),
+		),
 
 		app.Div().Class("large-divider"),
 
@@ -328,7 +338,12 @@ func (c *postContent) Render() app.UI {
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60),
 			app.Label().Text("option three (optional)").Class("active"),
 		),
-		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").Text("post poll").OnClick(c.onClick).Disabled(c.postButtonsDisabled),
+		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+			app.If(c.postButtonsDisabled,
+				app.Progress().Class("circle white-border small"),
+			),
+			app.Text("post poll"),
+		),
 		app.Div().Class("space"),
 	)
 }
