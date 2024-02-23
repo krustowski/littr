@@ -933,7 +933,7 @@ func (c *flowContent) Render() app.UI {
 
 							// pic post
 							app.If(post.Type == "fig",
-								app.Article().Class("medium no-padding transparent").Body(
+								app.Article().Style("z-index", "5").Class("medium no-padding transparent").Body(
 									app.If(c.loaderShowImage,
 										app.Div().Class("small-space"),
 										app.Div().Class("loader center large deep-orange active"),
