@@ -53,7 +53,7 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + can run offline (using the cache)
 + shade function to block other accounts from following and reading their posts
 
-## REST API service
+## REST API service (outdated)
 + the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
 + there are six main endpoints: 
 
