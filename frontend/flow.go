@@ -766,7 +766,7 @@ func (c *flowContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		// snackbar
+		// snackbar error
 		app.A().OnClick(c.onClickDismiss).Body(
 			app.If(c.toastText != "",
 				app.Div().Class("snackbar red10 white-text top active").Body(
@@ -1000,7 +1000,7 @@ func (c *flowContent) Render() app.UI {
 									app.B().Text(post.ReactionCount).Class("left-padding"),
 									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
 										//app.I().Text("ac_unit"),
-										app.I().Text("pill"),
+										app.I().Text("bomb"),
 									),
 								),
 							),
