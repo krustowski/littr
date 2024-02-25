@@ -4,11 +4,12 @@
 
   // LIT object
   window.LIT = {}
+  window.LIT.event = null
   window.LIT.offline = null
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.5.4'
+  window.LIT.version = 'LittrJS v0.6.0'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -101,7 +102,7 @@
         document.getElementsByTagName('html')[0].setAttribute('offline', true)
         document.getElementsByTagName('html')[0].setAttribute('online', false)
         $('body > div > main').prepend(
-          '<span id=offline style="font-size:2.5rem;position:fixed;left:1px;bottom:5rem;z-index:999999">đź“µ</span>'
+          '<span id=offline style="font-size:2.5rem;position:fixed;left:1px;bottom:5rem;z-index:999999">offline</span>'
         )
         if (window.LIT) {
           window.LIT.offline = true
@@ -111,6 +112,44 @@
     }
   }
   checkNetwork()
+
+  const subscribeToSSE = () => {
+    return new EventSourcePolyfill('/api/flow/live', {
+      withCredentials: true,
+      headers: {
+        'X-Auth-Token': SWAPI_TOKEN
+      }
+    })
+  }
+
+  const es = new EventSource("/api/flow/live");
+
+  const listener = function (event) {	
+    var event; // The custom event that will be created
+
+    if(document.createEvent){
+      event = document.createEvent("HTMLEvents");
+      event.initEvent("message", true, true);
+      event.eventName = "message";
+
+      console.log("emitting an event (createEvent)");
+      window.LIT.event = event
+      document.dispatchEvent(event);
+
+    } else {
+      event = document.createEventObject();
+      event.eventName = "message";
+      event.eventType = "message";
+    
+      console.log("emitting an event (dispatchEvent)")
+      document.fireEvent("on" + event.eventType, event);
+    }
+  }
+
+  es.addEventListener("open", listener);
+  es.addEventListener("message", listener);
+  es.addEventListener("error", listener);
+
 
   // deregister the service worker
   window.LIT.clearCache = function () {
@@ -283,7 +322,7 @@
       // $('body > div > main').prepend(
       //   '<span class="sun" onclick="LIT.toggleMode();" style="background-color:#000;font-size:1.5rem;cursor:pointer;position:fixed;right:1px;z-index:999999;padding:0.5rem">đźŚž</span>'
       // )
-      $('body > div > main').prepend('<br>' + LIT.version)
+      //$('body > div > main').prepend('<br>' + LIT.version)
     }
 
     // STATS tab
@@ -307,8 +346,8 @@
     // FLOW tab
     if ($('#table-flow') && $('#table-flow').length) {
       $('#nav-bottom > a:nth-child(5)').click(function () {
-        //LIT.scrollTop()
-        location("/flow")
+        LIT.scrollTop()
+        //location("/flow")
       })
     }
 
@@ -363,3 +402,6 @@
   x.setAttribute('src', 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js')
   document.body.appendChild(x)
 })()
+
+
+

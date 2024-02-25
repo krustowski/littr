@@ -92,6 +92,7 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.toastShow = false
 	c.toastText = ""
+	c.toastTextNewPost = ""
 	c.modalReplyActive = false
 	c.buttonDisabled = false
 	c.postButtonsDisabled = false
@@ -485,10 +486,10 @@ func (c *flowContent) OnMount(ctx app.Context) {
 }
 
 func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
-	log.Println("msg event: type:" + e.JSValue().Get("type").String())
+	//log.Println("msg event: type:" + e.JSValue().Get("type").String())
 
 	ctx.Dispatch(func(ctx app.Context) {
-		c.toastTextNewPost = "new post"
+		c.toastTextNewPost = "new post added"
 	})
 }
 
