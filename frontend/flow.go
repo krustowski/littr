@@ -60,6 +60,9 @@ type flowContent struct {
 	sortedPosts []models.Post
 
 	refreshClicked bool
+
+	toastTextNewPost string
+	eventListenerMsg func()
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -457,6 +460,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
+	ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
 	c.pagination = 0
@@ -477,6 +481,19 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	log.Println(c.user.Nickname)
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
+}
+
+func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
+	log.Println("msg event: type:" + e.JSValue().Get("type").String())
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastTextNewPost = "new post"
+	})
+}
+
+func (c *flowContent) handleNewPost(ctx app.Context, a app.Action) {
+	log.Println("msg event lmaooooooooooooo")
 }
 
 func (c *flowContent) OnDismount() {
@@ -775,6 +792,19 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
+
+		// snackbar new post
+		app.A().OnClick(c.onClickDismiss).Body(
+			app.If(c.toastTextNewPost != "",
+				app.Div().Class("snackbar blue10 white-text top active").Body(
+					app.I().Text("info"),
+					app.Span().Text(c.toastTextNewPost),
+				),
+			),
+		),
+		//app.Div().Class("snackbar blue10 white-text top"+snackbarNewPostActiveClass).OnClick(c.onClickDismiss).Body(
+		//	app.Span().Text(c.toastTextNewPost),
+		//),
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
