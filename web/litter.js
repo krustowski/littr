@@ -113,27 +113,36 @@
   }
   checkNetwork()
 
-  const subscribeToSSE = () => {
-    return new EventSourcePolyfill('/api/flow/live', {
-      withCredentials: true,
-      headers: {
-        'X-Auth-Token': SWAPI_TOKEN
-      }
-    })
-  }
+  //const subscribeToSSE = () => {
+  //  return new EventSourcePolyfill('/api/flow/live', {
+  //    withCredentials: true,
+  //    headers: {
+  //      'X-Auth-Token': SWAPI_TOKEN
+  //    }
+  //  })
+  //}
 
   const es = new EventSource("/api/flow/live");
 
   const listener = function (event) {	
+    console.log(event.type)
+    console.log(event.data)
+
+    if (event.data === "heartbeat") {
+      return
+    }
+
+    let data = event.data;
     var event; // The custom event that will be created
 
     if(document.createEvent){
       event = document.createEvent("HTMLEvents");
       event.initEvent("message", true, true);
       event.eventName = "message";
+      event.data = data
 
       console.log("emitting an event (createEvent)");
-      window.LIT.event = event
+      //window.LIT.event = event
       document.dispatchEvent(event);
 
     } else {
@@ -146,9 +155,9 @@
     }
   }
 
-  es.addEventListener("open", listener);
+  //es.addEventListener("open", listener);
   es.addEventListener("message", listener);
-  es.addEventListener("error", listener);
+  //es.addEventListener("error", listener);
 
 
   // deregister the service worker
