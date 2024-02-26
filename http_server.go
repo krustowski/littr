@@ -116,8 +116,9 @@ func initServer() {
 		Lang:               "en",
 		AutoUpdateInterval: time.Minute * 5,
 		Icon: app.Icon{
-			Large:      "/web/android-chrome-512x512.png",
 			Default:    "/web/android-chrome-192x192.png",
+			SVG:        "/web/android-chrome-512x512.svg",
+			Large:      "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
 		Body: func() app.HTMLBody {
@@ -130,17 +131,16 @@ func initServer() {
 			"https://cdn.savla.dev/",
 		},*/
 		Styles: []string{
-			"https://cdn.gscloud.cz/css/beer.min.css",
-			"https://cdn.gscloud.cz/css/sortable.min.css",
-			//"/web/sortable.min.css",
+			"https://cdn.savla.dev/css/beercss.min.css",
+			"https://cdn.savla.dev/css/sortable.min.css",
 		},
 		Scripts: []string{
-			"https://cdn.gscloud.cz/js/jquery.min.js",
-			"https://cdn.gscloud.cz/js/beer.nomodule.min.js",
-			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
-			"https://cdn.gscloud.cz/js/sortable.min.js",
-			"/web/litter.js",
-			"/web/eventsource.min.js",
+			"https://cdn.savla.dev/js/jquery.min.js",
+			"https://cdn.savla.dev/js/beer.nomodule.min.js",
+			"https://cdn.savla.dev/js/material-dynamic-colors.nomodule.min.js",
+			"https://cdn.savla.dev/js/sortable.min.js",
+			"https://cdn.savla.dev/js/litter.js",
+			"https://cdn.savla.dev/js/eventsource.min.js",
 		},
 	}
 
