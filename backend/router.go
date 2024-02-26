@@ -23,7 +23,9 @@ func LoadAPIRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Use(authMiddleware)
 
-	streamer = sse.NewServer(nil)
+	streamer = sse.NewServer(&sse.Options{
+		Logger: nil,
+	})
 	//defer streamer.Shutdown()
 
 	// unauth zone (skipped at auth)
