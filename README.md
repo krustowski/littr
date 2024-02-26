@@ -158,7 +158,6 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
-+ implement loading of new posts
 + show offline mode notification
 + ~~show user's details on the top of /flow/<username> page~~
 + swagger docs
@@ -176,6 +175,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.25
++ implement loading/broadcasting of new posts (wip)
 + implement mailing (verification mails) on backend
 + implement forgotten password recovery
 
