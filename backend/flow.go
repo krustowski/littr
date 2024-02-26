@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	sse "github.com/alexandrevicenzi/go-sse"
+	chi "github.com/go-chi/chi/v5"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -143,6 +144,9 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	// broadcast a new post to live subscribers
+	streamer.SendMessage("/api/flow/live", sse.SimpleMessage(post.Nickname))
 
 	posts := make(map[string]models.Post)
 	posts[key] = post

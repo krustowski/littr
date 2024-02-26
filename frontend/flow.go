@@ -486,7 +486,16 @@ func (c *flowContent) OnMount(ctx app.Context) {
 }
 
 func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
-	//log.Println("msg event: type:" + e.JSValue().Get("type").String())
+	data := e.JSValue().Get("data").String()
+	log.Println("msg event: data:" + data)
+
+	if data == "heartbeat" || data == c.user.Nickname {
+		return
+	}
+
+	if _, flowed := c.user.FlowList[data]; !flowed {
+		return
+	}
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.toastTextNewPost = "new post added"

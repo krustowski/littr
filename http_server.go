@@ -127,11 +127,11 @@ func initServer() {
 		ThemeColor:      "#000000",
 		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
 		/*Preconnect: []string{
-			"https://cdn.gscloud.cz/",
+			"https://cdn.savla.dev/",
 		},*/
 		Styles: []string{
 			"https://cdn.gscloud.cz/css/beer.min.css",
-			"https://cdn.gscloud.cz/css//sortable.min.css",
+			"https://cdn.gscloud.cz/css/sortable.min.css",
 			//"/web/sortable.min.css",
 		},
 		Scripts: []string{
@@ -140,6 +140,7 @@ func initServer() {
 			"https://cdn.gscloud.cz/js/material-dynamic-colors.nomodule.min.js",
 			"https://cdn.gscloud.cz/js/sortable.min.js",
 			"/web/litter.js",
+			"/web/eventsource.min.js",
 		},
 	}
 

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
+	github.com/alexandrevicenzi/go-sse v1.6.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/maxence-charriere/go-app/v9 v9.8.0
