@@ -10,7 +10,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine3.18 AS litter-build
+FROM golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
 
 ARG APP_NAME
 ARG APP_PEPPER
@@ -24,7 +24,7 @@ ENV API_TOKEN ${API_TOKEN}
 ENV CGO_ENABLED 1
 
 RUN --mount=type=cache,target=/var/cache/apk \
-	apk add git gcc
+	apk add git gcc build-base libc-dev
 
 WORKDIR /go/src/${APP_NAME}
 COPY go.mod .

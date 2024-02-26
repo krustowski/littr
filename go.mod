@@ -1,6 +1,6 @@
 module go.savla.dev/littr
 
-go 1.19
+go 1.21
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
