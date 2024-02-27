@@ -175,7 +175,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + improve the UI (review issues related to UI on Github)
 
 ### roadmap to v0.25
-+ implement loading/broadcasting of new posts (wip)
++ ~~implement simple loading/broadcasting of new posts~~ (wip)
 + implement mailing (verification mails) on backend
 + implement forgotten password recovery
 
