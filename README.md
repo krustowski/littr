@@ -156,7 +156,6 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + deep code refactoring
 + dismiss any modal by clicking anywhere on the screen
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
-+ image uploads to gspace.gscloud.cz (via REST API POST)
 + implement customizable navbar items order
 + show offline mode notification
 + ~~show user's details on the top of /flow/<username> page~~
@@ -169,16 +168,20 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 ### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + add timestamp to a subscription
-+ implement combined picture-with-text (PwT) posting
 + implement Ctrl+Enter to submit posts like YouTube
 + implement searching for flow using hashtags
 + improve the UI (review issues related to UI on Github)
 
-### roadmap to v0.25
-+ ~~implement simple loading/broadcasting of new posts~~ (wip)
+### roadmap to v0.27
 + implement mailing (verification mails) on backend
 + implement forgotten password recovery
 
+### roadmap to v0.26
++ implement combined picture-with-text (PwT) posting (wip)
+
+### roadmap to v0.25
++ ~~implement simple loading/broadcasting of new posts~~ (wip)
++ ~~fix single-post and user flow subpages on flow~~ (wip)
 ### roadmap to v0.24
 + ~~add modal for post deletion confirmation~~
 + ~~implement JWT for auth (wip)~~
