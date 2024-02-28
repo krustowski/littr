@@ -1,7 +1,6 @@
 package frontend
 
 import (
-	"fmt"
 	"log"
 	//"net/url"
 	"strconv"
@@ -104,29 +103,6 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 
 		}
 	})
-}
-
-func readFile(file app.Value) (data []byte, err error) {
-	done := make(chan bool)
-
-	// https://developer.mozilla.org/en-US/docs/Web/API/FileReader
-	reader := app.Window().Get("FileReader").New()
-	reader.Set("onloadend", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		done <- true
-		return nil
-	}))
-	reader.Call("readAsArrayBuffer", file)
-	<-done
-
-	readerError := reader.Get("error")
-	if !readerError.IsNull() {
-		err = fmt.Errorf("file reader error : %s", readerError.Get("message").String())
-	} else {
-		uint8Array := app.Window().Get("Uint8Array").New(reader.Get("result"))
-		data = make([]byte, uint8Array.Length())
-		app.CopyBytesToGo(data, uint8Array)
-	}
-	return data, err
 }
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
@@ -275,7 +251,7 @@ func (c *postContent) Render() app.UI {
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
 			app.Input().Class("active").Type("text"),
 			app.Label().Text("fig link").Class("active"),
-			app.I().Text("attach_file"),
+			app.I().Text("image"),
 		),
 		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,

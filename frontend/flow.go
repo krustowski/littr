@@ -33,11 +33,16 @@ type flowContent struct {
 
 	toastShow bool
 	toastText string
+	toastType string
 
-	buttonDisabled             bool
-	postButtonsDisabled        bool
-	modalReplyActive           bool
-	replyPostContent           string
+	buttonDisabled      bool
+	postButtonsDisabled bool
+	modalReplyActive    bool
+	replyPostContent    string
+	newFigLink          string
+	newFigFile          string
+	newFigData          []byte
+
 	deletePostModalShow        bool
 	deleteModalButtonsDisabled bool
 
@@ -98,6 +103,46 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 	c.buttonDisabled = false
 	c.postButtonsDisabled = false
 	c.deletePostModalShow = false
+}
+
+// https://github.com/maxence-charriere/go-app/issues/882
+func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
+	var toastText string
+
+	file := e.Get("target").Get("files").Index(0)
+
+	//log.Println("name", file.Get("name").String())
+	//log.Println("size", file.Get("size").Int())
+	//log.Println("type", file.Get("type").String())
+
+	c.postButtonsDisabled = true
+
+	ctx.Async(func() {
+		if data, err := readFile(file); err != nil {
+			toastText = err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+
+		} else {
+			//toastText = "figure uploaded"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastType = "success"
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
+
+				c.newFigFile = file.Get("name").String()
+				c.newFigData = data
+			})
+			return
+
+		}
+	})
 }
 
 func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
@@ -177,12 +222,14 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		// ReplyID is to be string key to easily refer to other post
 		payload := models.Post{
 			//ID:        stringID,
-			Nickname: c.user.Nickname,
-			Type:     postType,
-			Content:  replyPost,
+			Nickname:  c.user.Nickname,
+			Type:      postType,
+			Content:   replyPost,
+			ReplyToID: c.interactedPostKey,
+			Data:      c.newFigData,
+			Figure:    c.newFigFile,
 			//Timestamp: newPostID,
 			//ReplyTo: replyID, <--- is type int
-			ReplyToID: c.interactedPostKey,
 		}
 
 		postsRaw := struct {
@@ -877,6 +924,9 @@ func (c *flowContent) Render() app.UI {
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
 			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("reply"),
+				),
 				app.Div().Class("space"),
 
 				app.Article().Class("post").Style("max-width", "100%").Body(
@@ -891,9 +941,16 @@ func (c *flowContent) Render() app.UI {
 					),
 				),
 
-				app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
+				app.Div().Class("field textarea label border extra deep-orange-text").Body(
 					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true),
-					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active"),
+					//app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active"),
+					app.Label().Text("text").Class("active"),
+				),
+				app.Div().Class("field label border extra deep-orange-text").Body(
+					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+					app.Input().Class("active").Type("text"),
+					app.Label().Text("figure").Class("active"),
+					app.I().Text("image"),
 				),
 
 				app.Nav().Class("center-align").Body(
