@@ -202,7 +202,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if post.Nickname == callerID {
-		resp.Message = "one cannot rate ther own post(s)"
+		resp.Message = "one cannot rate their own post(s)"
 		resp.Code = http.StatusForbidden
 
 		l.Println(resp.Message, resp.Code)
@@ -337,7 +337,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	callerID := r.Header.Get("X-API-Caller-ID")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	// parse the URI's path
 	// check if diff page has been requested
@@ -345,15 +345,29 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
+	pageNoString := r.Header.Get("X-Flow-Page-No")
+	page, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	pageNo = page
+
 	// mock the flowlist (nasty hack)
 	flowList := make(map[string]bool)
-	flowList[callerID] = true
+	flowList[nick] = true
 
 	opts := pageOptions{
 		UserFlow:     true,
 		UserFlowNick: nick,
 		CallerID:     callerID,
 		PageNo:       pageNo,
+		FlowList:     flowList,
 	}
 
 	// fetch page according to the logged user
@@ -366,6 +380,9 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	resp.Users = uExport
+	resp.Posts = pExport
 
 	resp.Message = "ok, dumping user's flow posts"
 	resp.Code = http.StatusOK
@@ -377,19 +394,39 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
-	callerID := r.Header.Get("X-API-Caller-ID")
+	callerID, _ := r.Context().Value("nickname").(string)
+	//user, _ := getOne(UserCache, callerID, models.User{})
+
+	// parse the URI's path
+	// check if diff page has been requested
+	postID := chi.URLParam(r, "postNo")
 
 	pageNo := 0
 
-	// mock the flowlist (nasty hack)
-	flowList := make(map[string]bool)
-	flowList[callerID] = true
+	pageNoString := r.Header.Get("X-Flow-Page-No")
+	page, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	pageNo = page
+
+	/*flowList := user.FlowList
+	if flowList == nil {
+		flowList = make(map[string]bool)
+	}*/
 
 	opts := pageOptions{
-		SinglePost: true,
-		CallerID:   callerID,
-		PageNo:     pageNo,
-		FlowList:   flowList,
+		SinglePost:   true,
+		SinglePostID: postID,
+		CallerID:     callerID,
+		PageNo:       pageNo,
+		//FlowList:   flowList,
 	}
 
 	// fetch page according to the logged user
@@ -402,6 +439,9 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	resp.Users = uExport
+	resp.Posts = pExport
 
 	resp.Message = "ok, dumping single post and its interactions"
 	resp.Code = http.StatusOK

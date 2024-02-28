@@ -44,6 +44,7 @@ type flowContent struct {
 	interactedPostKey string
 	singlePostID      string
 	isPost            bool
+	userFlowNick      string
 
 	paginationEnd  bool
 	pagination     int
@@ -498,7 +499,7 @@ func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
 	}
 
 	ctx.Dispatch(func(ctx app.Context) {
-		c.toastTextNewPost = "new post added"
+		c.toastTextNewPost = "new post added above"
 	})
 }
 
@@ -512,27 +513,36 @@ func (c *flowContent) OnDismount() {
 }
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+		c.refreshClicked = true
+		c.postButtonsDisabled = true
+		//c.pageNoToFetch = 0
+
+		c.toastText = ""
+
+		c.posts = nil
+		c.users = nil
+	})
+
 	ctx.Async(func() {
-		ctx.Dispatch(func(ctx app.Context) {
-			c.loaderShow = true
-			c.loaderShowImage = true
-			c.refreshClicked = true
-			c.postButtonsDisabled = true
-			//c.pageNoToFetch = 0
-
-			c.toastText = ""
-
-			c.posts = nil
-			c.users = nil
-		})
-
 		// nasty hotfix, TODO
 		c.pageNoToFetch = 0
+
+		parts := c.parseFlowURI(ctx)
+
 		opts := pageOptions{
-			PageNo:  c.pageNoToFetch,
-			Context: ctx,
-			//CallerID: c.user.Nickname,
+			PageNo:   c.pageNoToFetch,
+			Context:  ctx,
+			CallerID: c.user.Nickname,
+
+			SinglePost:   parts.SinglePost,
+			SinglePostID: parts.SinglePostID,
+			UserFlow:     parts.UserFlow,
+			UserFlowNick: parts.UserFlowNick,
 		}
+
 		posts, users := c.fetchFlowPage(opts)
 
 		ctx.Dispatch(func(ctx app.Context) {
@@ -639,67 +649,93 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	return resp.Posts, resp.Users
 }
 
+type URIParts struct {
+	SinglePost   bool
+	SinglePostID string
+	UserFlow     bool
+	UserFlowNick string
+}
+
+func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
+	parts := URIParts{
+		SinglePost:   false,
+		SinglePostID: "",
+		UserFlow:     false,
+		UserFlowNick: "",
+	}
+
+	url := strings.Split(ctx.Page().URL().Path, "/")
+
+	if len(url) > 3 && url[3] != "" {
+		switch url[2] {
+		case "post":
+			parts.SinglePost = true
+			parts.SinglePostID = url[3]
+			break
+		case "user":
+			parts.UserFlow = true
+			parts.UserFlowNick = url[3]
+			break
+		}
+	}
+
+	isPost := true
+	if _, err := strconv.Atoi(parts.SinglePostID); parts.SinglePostID != "" && err != nil {
+		// prolly not a post ID, but an user's nickname
+		isPost = false
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.isPost = isPost
+		c.userFlowNick = parts.UserFlowNick
+		c.singlePostID = parts.SinglePostID
+	})
+
+	return parts
+}
+
 func (c *flowContent) OnNav(ctx app.Context) {
-	c.loaderShow = true
-	c.loaderShowImage = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+
+		c.toastText = ""
+
+		c.posts = nil
+		c.users = nil
+	})
 
 	toastText := ""
-
-	singlePost := false
-	singlePostID := ""
-	userFlow := false
-	userFlowNick := ""
 
 	isPost := true
 
 	ctx.Async(func() {
-		url := strings.Split(ctx.Page().URL().Path, "/")
-
-		if len(url) > 3 && url[3] != "" {
-			switch url[2] {
-			case "post":
-				singlePost = true
-				singlePostID = url[3]
-				break
-			case "user":
-				userFlow = true
-				userFlowNick = url[3]
-				break
-			}
-		}
-
-		if _, err := strconv.Atoi(singlePostID); singlePostID != "" && err != nil {
-			// prolly not a post ID, but an user's nickname
-			isPost = false
-		}
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.isPost = isPost
-		})
+		parts := c.parseFlowURI(ctx)
 
 		opts := pageOptions{
 			PageNo:   0,
 			Context:  ctx,
 			CallerID: c.user.Nickname,
 
-			SinglePost:   singlePost,
-			SinglePostID: singlePostID,
-			UserFlow:     userFlow,
-			UserFlowNick: userFlowNick,
+			SinglePost:   parts.SinglePost,
+			SinglePostID: parts.SinglePostID,
+			UserFlow:     parts.UserFlow,
+			UserFlowNick: parts.UserFlowNick,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
 
 		// try the singlePostID/userFlowNick var if present
-		if singlePostID != "" && singlePost {
-			if _, found := posts[singlePostID]; !found {
+		if parts.SinglePostID != "" && parts.SinglePost {
+			if _, found := posts[parts.SinglePostID]; !found {
 				toastText = "post not found"
 			}
 		}
-		if userFlowNick != "" && userFlow {
-			if _, found := users[userFlowNick]; !found {
+		if parts.UserFlowNick != "" && parts.UserFlow {
+			if _, found := users[parts.UserFlowNick]; !found {
 				toastText = "user not found"
 			}
+			isPost = false
 		}
 
 		// Storing HTTP response in component field:
@@ -710,7 +746,9 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 			c.users = users
 			c.posts = posts
-			c.singlePostID = singlePostID
+			c.singlePostID = parts.SinglePostID
+			c.userFlowNick = parts.UserFlowNick
+			c.isPost = isPost
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
@@ -761,20 +799,20 @@ func (c *flowContent) Render() app.UI {
 		// page heading
 		app.Div().Class("row").Body(
 			app.Div().Class("max").Body(
-				app.If(c.singlePostID != "" && !c.isPost,
-					app.H5().Text(c.singlePostID+"'s flow").Style("padding-top", config.HeaderTopPadding),
+				app.If(c.userFlowNick != "" && !c.isPost,
+					app.H5().Text(c.userFlowNick+"'s flow").Style("padding-top", config.HeaderTopPadding),
 					//app.P().Text("exclusive content incoming frfr"),
 
 					// post header (author avatar + name + link button)
 					app.Div().Class("row top-padding").Body(
-						app.Img().Class("responsive max left").Src(c.users[c.singlePostID].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
+						app.Img().Class("responsive max left").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
 						/*;app.P().Class("max").Body(
 							app.A().Class("vold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
 							//app.B().Text(post.Nickname).Class("deep-orange-text"),
 						),*/
 
-						app.If(c.users[c.singlePostID].About != "",
-							app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.singlePostID].About),
+						app.If(c.users[c.userFlowNick].About != "",
+							app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 						),
 					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
@@ -906,6 +944,12 @@ func (c *flowContent) Render() app.UI {
 						}
 
 						if _, found := c.users[c.singlePostID]; (!c.isPost && !found) || (found && post.Nickname != c.singlePostID) {
+							return nil
+						}
+					}
+
+					if c.userFlowNick != "" {
+						if post.Nickname != c.userFlowNick {
 							return nil
 						}
 					}

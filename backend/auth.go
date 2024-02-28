@@ -98,7 +98,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedAccessToken, err := NewAccessToken(userClaims, secret)
 	if err != nil {
-		resp.Message = "error when generating the access token occured"
+		resp.Message = "error when generating the access token occurred"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -113,7 +113,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedRefreshToken, err := NewRefreshToken(refreshClaims, secret)
 	if err != nil {
-		resp.Message = "error when generating the refresh token occured"
+		resp.Message = "error when generating the refresh token occurred"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)

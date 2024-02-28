@@ -49,22 +49,29 @@ func getOnePage(opts pageOptions) (map[string]models.Post, map[string]models.Use
 
 	// overload flowList
 	flowList := user.FlowList
-	if opts.FlowList != nil {
+	/*if opts.FlowList != nil {
 		flowList = opts.FlowList
-	}
+	}*/
 
 	// filter out all posts for such callerID
 	for _, post := range allPosts {
+		// check the caller's flow list, skip on unfollowed, or unknown user
+		if value, found := flowList[post.Nickname]; !found || !value {
+			continue
+		}
+
 		// exctract replies to the single post
 		if opts.SinglePost && opts.SinglePostID != "" {
-			if post.ReplyToID == opts.SinglePostID {
+			if post.ReplyToID == opts.SinglePostID || post.ID == opts.SinglePostID {
 				posts = append(posts, post)
 			}
 			continue
 		}
 
-		// check the caller's flow list, skip on unfollowed, or unknown user
-		if value, found := flowList[post.Nickname]; !found || !value {
+		if opts.UserFlow && opts.UserFlowNick != "" {
+			if post.Nickname == opts.UserFlowNick {
+				posts = append(posts, post)
+			}
 			continue
 		}
 
