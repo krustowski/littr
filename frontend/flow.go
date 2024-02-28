@@ -975,10 +975,18 @@ func (c *flowContent) Render() app.UI {
 					var imgSrc string
 
 					// check the URL/URI format
-					if _, err := url.ParseRequestURI(post.Content); err == nil {
-						imgSrc = post.Content
-					} else {
-						imgSrc = "/web/pix/thumb_" + post.Content
+					if post.Type == "fig" {
+						if _, err := url.ParseRequestURI(post.Content); err == nil {
+							imgSrc = post.Content
+						} else {
+							imgSrc = "/web/pix/thumb_" + post.Content
+						}
+					} else if post.Type == "post" {
+						if _, err := url.ParseRequestURI(post.Figure); err == nil {
+							imgSrc = post.Figure
+						} else {
+							imgSrc = "/web/pix/thumb_" + post.Figure
+						}
 					}
 
 					// fetch binary image data
@@ -1047,6 +1055,7 @@ func (c *flowContent) Render() app.UI {
 										),
 									),
 								),
+
 								app.Article().Class("post").Style("max-width", "100%").Body(
 									app.If(postDetailsSummary != "",
 										app.Details().Body(
@@ -1056,6 +1065,17 @@ func (c *flowContent) Render() app.UI {
 										),
 									).Else(
 										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+									),
+								),
+
+								app.If(post.Figure != "",
+									app.Article().Style("z-index", "5").Class("medium no-padding transparent").Body(
+										app.If(c.loaderShowImage,
+											app.Div().Class("small-space"),
+											app.Div().Class("loader center large deep-orange active"),
+										),
+										//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+										app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
 									),
 								),
 							),

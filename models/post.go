@@ -17,6 +17,9 @@ type Post struct {
 	// Content contains the very post's data to be shown as a text typed in by the author when created.
 	Content string `json:"content"`
 
+	// Figure hold the filename of the uploaded figure to post with some provided text.
+	Figure string `json:"figure"`
+
 	// Timestamp is an UNIX timestamp, indicates the creation time.
 	Timestamp time.Time `json:"timestamp"`
 

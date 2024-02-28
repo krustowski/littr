@@ -3,7 +3,7 @@ package frontend
 import (
 	"fmt"
 	"log"
-	"net/url"
+	//"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +23,8 @@ type postContent struct {
 
 	newPost    string
 	newFigLink string
+	newFigFile string
+	newFigData []byte
 
 	pollQuestion  string
 	pollOptionI   string
@@ -31,6 +33,7 @@ type postContent struct {
 
 	toastShow bool
 	toastText string
+	toastType string
 
 	postButtonsDisabled bool
 }
@@ -71,40 +74,31 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 			return
 
 		} else {
-			//fmt.Println(string(data))
-
-			var enUser string
-			var user models.User
-
-			ctx.LocalStorage().Get("user", &enUser)
-
-			// decode, decrypt and unmarshal the local storage user data
-			if err := prepare(enUser, &user); err != nil {
-				toastText = "frontend decoding/decryption failed: " + err.Error()
-			}
-
-			author := user.Nickname
-			path := "/api/flow"
-
-			payload := models.Post{
+			/*payload := models.Post{
 				Nickname:  author,
 				Type:      "fig",
 				Content:   file.Get("name").String(),
 				Timestamp: time.Now(),
 				Data:      data,
-			}
+			}*/
 
 			// add new post/poll to backend struct
-			if _, ok := litterAPI("POST", path, payload, user.Nickname, 0); !ok {
+			/*if _, ok := litterAPI("POST", path, payload, user.Nickname, 0); !ok {
 				toastText = "backend error: cannot add new content"
 				log.Println("cannot post new content to API!")
 			} else {
 				ctx.Navigate("/flow")
-			}
+			}*/
+
+			toastText = "figure uploaded"
 
 			ctx.Dispatch(func(ctx app.Context) {
+				c.toastType = "success"
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+
+				c.newFigFile = file.Get("name").String()
+				c.newFigData = data
 			})
 			return
 
@@ -148,25 +142,6 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		switch postType {
-		case "fig":
-			// trim the padding spaces on the extremities
-			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-			newFigLink := strings.TrimSpace(c.newFigLink)
-
-			if newFigLink == "" {
-				toastText = "fig link must be filled"
-				break
-			}
-
-			// check the URL/URI format
-			if _, err := url.ParseRequestURI(newFigLink); err != nil {
-				toastText = "fig link prolly not a valid URL"
-				break
-			}
-			content = newFigLink
-
-			break
-
 		case "poll":
 			// trim the padding spaces on the extremities
 			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -230,13 +205,15 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		author := user.Nickname
 		path := "/api/flow"
 
-		if postType == "post" || postType == "fig" {
+		if postType == "post" {
 			payload = models.Post{
-				Nickname:  author,
-				Type:      postType,
-				Content:   content,
-				Timestamp: time.Now(),
-				PollID:    poll.ID,
+				Nickname: author,
+				Type:     postType,
+				Content:  content,
+				PollID:   poll.ID,
+				Figure:   c.newFigFile,
+				Data:     c.newFigData,
+				//Timestamp: time.Now(),
 			}
 		} else if postType == "poll" {
 			path = "/api/polls"
@@ -286,19 +263,12 @@ func (c *postContent) Render() app.UI {
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
 			app.Label().Text("post content").Class("active"),
 		),
-		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+		/*app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,
 				app.Progress().Class("circle white-border small"),
 			),
 			app.Text("post text"),
-		),
-
-		app.Div().Class("large-divider"),
-
-		// new fig header text
-		app.H5().Text("add flow fig").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("provide me with the image URL, papi"),
-		app.Div().Class("space"),
+		),*/
 
 		// new fig input
 		app.Div().Class("field label border invalid extra deep-orange-text").Body(
@@ -307,11 +277,11 @@ func (c *postContent) Render() app.UI {
 			app.Label().Text("fig link").Class("active"),
 			app.I().Text("attach_file"),
 		),
-		app.Button().ID("fig").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,
 				app.Progress().Class("circle white-border small"),
 			),
-			app.Text("post fig"),
+			app.Text("send new post"),
 		),
 
 		app.Div().Class("large-divider"),
@@ -342,7 +312,7 @@ func (c *postContent) Render() app.UI {
 			app.If(c.postButtonsDisabled,
 				app.Progress().Class("circle white-border small"),
 			),
-			app.Text("post poll"),
+			app.Text("send new poll"),
 		),
 		app.Div().Class("space"),
 	)

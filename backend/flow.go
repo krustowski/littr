@@ -112,8 +112,8 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	post.Timestamp = timestamp
 
 	// uploadedFigure handling
-	if post.Data != nil && post.Content != "" {
-		fileExplode := strings.Split(post.Content, ".")
+	if post.Data != nil && post.Figure != "" {
+		fileExplode := strings.Split(post.Figure, ".")
 		extension := fileExplode[len(fileExplode)-1]
 
 		content := key + "." + extension
@@ -132,7 +132,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		// generate thumbanils
 		genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content)
 
-		post.Content = content
+		post.Figure = content
 		post.Data = []byte{}
 	}
 
