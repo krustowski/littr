@@ -246,6 +246,10 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 				ctx.Dispatch(func(ctx app.Context) {
 					c.toastText = toastText
 					c.toastShow = (toastText != "")
+
+					c.interactedPostKey = ""
+					c.newFigData = []byte{}
+					c.newFigFile = ""
 				})
 				return
 			}
@@ -256,6 +260,10 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+
+				c.interactedPostKey = ""
+				c.newFigData = []byte{}
+				c.newFigFile = ""
 			})
 			return
 		}
@@ -273,6 +281,10 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+
+				c.interactedPostKey = ""
+				c.newFigData = []byte{}
+				c.newFigFile = ""
 			})
 			return
 		}
@@ -293,6 +305,10 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			c.modalReplyActive = false
 			c.postButtonsDisabled = false
 			c.buttonDisabled = false
+
+			c.interactedPostKey = ""
+			c.newFigData = []byte{}
+			c.newFigFile = ""
 		})
 	})
 }
