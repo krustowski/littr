@@ -177,7 +177,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement forgotten password recovery
 
 ### roadmap to v0.26
-+ implement combined picture-with-text (PwT) posting (wip)
++ ~~implement combined picture-with-text (PwT) posting~~ (wip)
 
 ### roadmap to v0.25
 + ~~implement simple loading/broadcasting of new posts~~ (wip)
