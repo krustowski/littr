@@ -694,14 +694,14 @@ func (c *settingsContent) Render() app.UI {
 		app.H6().Text("password change"),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
-			app.Label().Text("passphrase").Class("active"),
+			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).AutoComplete(true).MaxLength(50),
-			app.Label().Text("passphrase again").Class("active"),
+			app.Label().Text("passphrase again").Class("active deep-orange-text"),
 		),
 
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
@@ -711,9 +711,9 @@ func (c *settingsContent) Render() app.UI {
 		app.H6().Text("about text change"),
 		app.Div().Class("space"),
 
-		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
+		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("about").Class("active"),
+			app.Label().Text("about").Class("active deep-orange-text"),
 		),
 
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
@@ -723,9 +723,9 @@ func (c *settingsContent) Render() app.UI {
 		app.H6().Text("website link change"),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
-			app.Label().Text("website URL").Class("active"),
+			app.Label().Text("website URL").Class("active deep-orange-text"),
 		),
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 

@@ -957,15 +957,16 @@ func (c *flowContent) Render() app.UI {
 					),
 				),
 
-				app.Div().Class("field textarea label border extra deep-orange-text").Body(
+				app.Div().Class("field label textarea border extra deep-orange-text").Body(
+					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
 					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true),
-					//app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active"),
-					app.Label().Text("text").Class("active"),
+					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
+					//app.Label().Text("text").Class("active"),
 				),
 				app.Div().Class("field label border extra deep-orange-text").Body(
 					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
 					app.Input().Class("active").Type("text"),
-					app.Label().Text("figure").Class("active"),
+					app.Label().Text("image").Class("active deep-orange-text"),
 					app.I().Text("image"),
 				),
 

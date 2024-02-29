@@ -235,9 +235,9 @@ func (c *postContent) Render() app.UI {
 		),
 
 		// new post textarea
-		app.Div().Class("field textarea label border invalid extra deep-orange-text").Body(
+		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
-			app.Label().Text("post content").Class("active"),
+			app.Label().Text("post content").Class("active deep-orange-text"),
 		),
 		/*app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,
@@ -247,10 +247,10 @@ func (c *postContent) Render() app.UI {
 		),*/
 
 		// new fig input
-		app.Div().Class("field label border invalid extra deep-orange-text").Body(
+		app.Div().Class("field border label extra deep-orange-text").Body(
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
 			app.Input().Class("active").Type("text"),
-			app.Label().Text("fig link").Class("active"),
+			app.Label().Text("image").Class("active deep-orange-text"),
 			app.I().Text("image"),
 		),
 		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
@@ -268,21 +268,21 @@ func (c *postContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// newx poll input area
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50),
-			app.Label().Text("question").Class("active"),
+			app.Label().Text("question").Class("active deep-orange-text"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionI)).Required(true).Class("active").MaxLength(50),
-			app.Label().Text("option one").Class("active"),
+			app.Label().Text("option one").Class("active deep-orange-text"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionII)).Required(true).Class("active").MaxLength(50),
-			app.Label().Text("option two").Class("active"),
+			app.Label().Text("option two").Class("active deep-orange-text"),
 		),
-		app.Div().Class("field label border invalid deep-orange-text").Body(
+		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60),
-			app.Label().Text("option three (optional)").Class("active"),
+			app.Label().Text("option three (optional)").Class("active deep-orange-text"),
 		),
 		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,
