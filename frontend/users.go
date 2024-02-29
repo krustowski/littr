@@ -643,16 +643,16 @@ func (c *usersContent) Render() app.UI {
 									app.I().Text("news"),
 								),
 
-								// shade/block button
+								// more button
 								app.If(shaded,
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+									/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
 										//app.Text("unshade"),
 										app.I().Text("more_horiz"),
-									),
+									),*/
 								).ElseIf(user.Nickname == c.user.Nickname,
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
+									/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
 										app.I().Text("more_horiz"),
-									),
+									),*/
 								).Else(
 								/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
 									//app.Text("shade"),
