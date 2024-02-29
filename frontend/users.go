@@ -644,21 +644,23 @@ func (c *usersContent) Render() app.UI {
 								),
 
 								// more button
-								app.If(shaded,
-									/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-										//app.Text("unshade"),
-										app.I().Text("more_horiz"),
-									),*/
-								).ElseIf(user.Nickname == c.user.Nickname,
-									/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
-										app.I().Text("more_horiz"),
-									),*/
-								).Else(
-								/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-									//app.Text("shade"),
-									app.I().Text("more_horiz"),
-								),*/
-								),
+								/*
+									app.If(shaded,
+										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+											//app.Text("unshade"),
+											app.I().Text("more_horiz"),
+										),
+									).ElseIf(user.Nickname == c.user.Nickname,
+										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
+											app.I().Text("more_horiz"),
+										),
+									).Else(
+										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+											//app.Text("shade"),
+											app.I().Text("more_horiz"),
+										),
+									),
+								*/
 							),
 
 							// cell's body

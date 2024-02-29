@@ -89,7 +89,7 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 				ctx.Navigate("/flow")
 			}*/
 
-			toastText = "figure uploaded"
+			toastText = "image uploaded"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastType = "success"
@@ -216,10 +216,26 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = (c.toastText != "")
+	c.toastType = ""
 	c.postButtonsDisabled = false
 }
 
 func (c *postContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("add flow post").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("drop it, drop it"),
@@ -227,7 +243,7 @@ func (c *postContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),

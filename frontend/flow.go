@@ -67,7 +67,6 @@ type flowContent struct {
 
 	refreshClicked bool
 
-	toastTextNewPost string
 	eventListenerMsg func()
 }
 
@@ -96,13 +95,18 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
-	c.toastShow = false
-	c.toastText = ""
-	c.toastTextNewPost = ""
-	c.modalReplyActive = false
-	c.buttonDisabled = false
-	c.postButtonsDisabled = false
-	c.deletePostModalShow = false
+	ctx.Dispatch(func(ctx app.Context) {
+		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
+		if c.toastText == "" {
+			c.modalReplyActive = false
+		}
+
+		c.toastShow = false
+		c.toastText = ""
+		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+		c.deletePostModalShow = false
+	})
 }
 
 // https://github.com/maxence-charriere/go-app/issues/882
@@ -128,7 +132,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 			return
 
 		} else {
-			//toastText = "figure uploaded"
+			toastText = "image uploaded"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastType = "success"
@@ -562,7 +566,8 @@ func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
 	}
 
 	ctx.Dispatch(func(ctx app.Context) {
-		c.toastTextNewPost = "new post added above"
+		c.toastText = "new post added above"
+		c.toastType = "info"
 	})
 }
 
@@ -843,6 +848,21 @@ func (c *flowContent) sortPosts() []models.Post {
 }
 
 func (c *flowContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	counter := 0
 
 	sortedPosts := c.sortPosts()
@@ -894,28 +914,15 @@ func (c *flowContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		// snackbar error
+		// snackbar
 		app.A().OnClick(c.onClickDismiss).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
 			),
 		),
-
-		// snackbar new post
-		app.A().OnClick(c.onClickDismiss).Body(
-			app.If(c.toastTextNewPost != "",
-				app.Div().Class("snackbar blue10 white-text top active").Body(
-					app.I().Text("info"),
-					app.Span().Text(c.toastTextNewPost),
-				),
-			),
-		),
-		//app.Div().Class("snackbar blue10 white-text top"+snackbarNewPostActiveClass).OnClick(c.onClickDismiss).Body(
-		//	app.Span().Text(c.toastTextNewPost),
-		//),
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
