@@ -14,13 +14,44 @@ import (
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
+	stats := make(map[string]userStat)
 
-	// get user list
+	// fetch all data for the calculations
 	users, _ := getAll(UserCache, models.User{})
+	posts, _ := getAll(FlowCache, models.Post{})
+
+	for _, post := range posts {
+		nick := post.Nickname
+
+		var stat userStat
+		var found bool
+		if stat, found = stats[nick]; !found {
+			stat = userStat{}
+		}
+
+		stat.PostCount++
+		stats[nick] = stat
+	}
+
+	for nick, user := range users {
+		flowList := user.FlowList
+		if flowList == nil {
+			continue
+		}
+
+		for key, state := range flowList {
+			if state && key != nick {
+				stat := stats[key]
+				stat.FlowerCount++
+				stats[key] = stat
+			}
+		}
+	}
 
 	resp.Message = "ok, dumping users"
 	resp.Code = http.StatusOK
 	resp.Users = users
+	resp.UserStats = stats
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)

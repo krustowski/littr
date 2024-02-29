@@ -21,8 +21,8 @@ type usersContent struct {
 
 	eventListener func()
 
-	polls map[string]models.Poll `json:"polls"`
-	posts map[string]models.Post `json:"posts"`
+	//polls map[string]models.Poll `json:"polls"`
+	//posts map[string]models.Post `json:"posts"`
 	users map[string]models.User `json:"users"`
 
 	user        models.User
@@ -84,11 +84,8 @@ func (c *usersContent) OnNav(ctx app.Context) {
 		}
 
 		usersPre := struct {
-			Users map[string]models.User `json:"users"`
-		}{}
-
-		postsPre := struct {
-			Posts map[string]models.Post `json:"posts"`
+			Users     map[string]models.User `json:"users"`
+			UserStats map[string]userStat    `json:"user_stats"`
 		}{}
 
 		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname, 0); ok {
@@ -114,29 +111,6 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		if data, ok := litterAPI("GET", "/api/flow", nil, user.Nickname, 0); ok {
-			err := json.Unmarshal(*data, &postsPre)
-			if err != nil {
-				log.Println(err.Error())
-				toastText = "JSON parse error: " + err.Error()
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
-				})
-				return
-			}
-		} else {
-			toastText = "cannot fetch posts list"
-			log.Println(toastText)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
 		// delet dis
 		for k, u := range usersPre.Users {
 			u.Searched = true
@@ -149,13 +123,14 @@ func (c *usersContent) OnNav(ctx app.Context) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = updatedUser
 			c.users = usersPre.Users
+			c.userStats = usersPre.UserStats
 
-			c.posts = postsPre.Posts
+			//c.posts = postsPre.Posts
 
 			c.pagination = 20
 			c.pageNo = 1
 
-			c.flowStats, c.userStats = c.calculateStats()
+			//c.flowStats, c.userStats = c.calculateStats()
 
 			c.loaderShow = false
 		})
@@ -175,7 +150,7 @@ func (c *usersContent) OnMount(ctx app.Context) {
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 
 	// hotfix to catch panic
-	c.polls = make(map[string]models.Poll)
+	//c.polls = make(map[string]models.Poll)
 }
 
 func (c *usersContent) onScroll(ctx app.Context, e app.Event) {
@@ -473,77 +448,6 @@ func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
 	c.showUserPreviewModal = false
 }
 
-func (c *usersContent) calculateStats() (map[string]int, map[string]userStat) {
-	flowStats := make(map[string]int)
-	userStats := make(map[string]userStat)
-
-	flowers := make(map[string]int)
-	shades := make(map[string]int)
-
-	flowStats["posts"] = c.postCount
-	//flowStats["users"] = c.userCount
-	flowStats["users"] = -1
-	flowStats["stars"] = 0
-
-	// iterate over all posts, compose stats results
-	for _, val := range c.posts {
-		// increment user's stats
-		stat, ok := userStats[val.Nickname]
-		if !ok {
-			// create a blank stat
-			stat = userStat{}
-			stat.Searched = true
-		}
-
-		stat.PostCount++
-		stat.ReactionCount += val.ReactionCount
-		userStats[val.Nickname] = stat
-		flowStats["stars"] += val.ReactionCount
-	}
-
-	// iterate over all users, compose global flower and shade count
-	for _, user := range c.users {
-		for key, enabled := range user.FlowList {
-			if enabled && key != user.Nickname {
-				flowers[key]++
-			}
-		}
-
-		for key, shaded := range user.ShadeList {
-			if shaded && key != user.Nickname {
-				shades[key]++
-			}
-		}
-
-		flowStats["users"]++
-	}
-
-	// iterate over composed flowers, assign the count to an user
-	for key, count := range flowers {
-		stat := userStats[key]
-
-		// FlowList also contains the user itself
-		stat.FlowerCount = count
-		userStats[key] = stat
-	}
-
-	// iterate over compose shades, assign the count to an user
-	for key, count := range shades {
-		stat := userStats[key]
-
-		// FlowList also contains the user itself
-		stat.ShadeCount = count
-		userStats[key] = stat
-	}
-
-	// iterate over all polls, count them good
-	for range c.polls {
-		flowStats["polls"]++
-	}
-
-	return flowStats, userStats
-}
-
 func (c *usersContent) Render() app.UI {
 	keys := []string{}
 
@@ -750,10 +654,10 @@ func (c *usersContent) Render() app.UI {
 										app.I().Text("more_horiz"),
 									),
 								).Else(
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-										//app.Text("shade"),
-										app.I().Text("more_horiz"),
-									),
+								/*app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
+									//app.Text("shade"),
+									app.I().Text("more_horiz"),
+								),*/
 								),
 							),
 
