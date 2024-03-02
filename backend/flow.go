@@ -130,7 +130,14 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbanils
-		genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content)
+		if err := genThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content); err != nil {
+			resp.Message = "backend error: cannot generate the image thumbnail"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
 
 		post.Figure = content
 		post.Data = []byte{}

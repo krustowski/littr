@@ -159,13 +159,16 @@ func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
 	ext := split[len(split)-1]
 
 	// image preview (thumbnail) to the actual image logic
-	if strings.Contains(src, "thumb") {
+	if (ext != "gif" && strings.Contains(src, "thumb")) || (ext == "gif" && strings.Contains(src, "click")) {
 		ctx.JSSrc().Set("src", "/web/pix/"+key+"."+ext)
 		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
-		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position")
+		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position")
+	} else if ext == "gif" && !strings.Contains(src, "thumb") {
+		ctx.JSSrc().Set("src", "/web/click-to-see.gif")
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
 	} else {
 		ctx.JSSrc().Set("src", "/web/pix/thumb_"+key+"."+ext)
-		ctx.JSSrc().Set("style", "z-index: 0; max-height: 100%; max-width: 100%")
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
 	}
 }
 
@@ -1063,13 +1066,25 @@ func (c *flowContent) Render() app.UI {
 						if _, err := url.ParseRequestURI(post.Content); err == nil {
 							imgSrc = post.Content
 						} else {
+							fileExplode := strings.Split(post.Content, ".")
+							extension := fileExplode[len(fileExplode)-1]
+
 							imgSrc = "/web/pix/thumb_" + post.Content
+							if extension == "gif" {
+								imgSrc = "/web/click-to-see-gif.jpg"
+							}
 						}
 					} else if post.Type == "post" {
 						if _, err := url.ParseRequestURI(post.Figure); err == nil {
 							imgSrc = post.Figure
 						} else {
+							fileExplode := strings.Split(post.Figure, ".")
+							extension := fileExplode[len(fileExplode)-1]
+
 							imgSrc = "/web/pix/thumb_" + post.Figure
+							if extension == "gif" {
+								imgSrc = "/web/click-to-see.gif"
+							}
 						}
 					}
 
@@ -1153,7 +1168,7 @@ func (c *flowContent) Render() app.UI {
 								),
 
 								app.If(post.Figure != "",
-									app.Article().Style("z-index", "5").Class("medium no-padding transparent").Body(
+									app.Article().Style("z-index", "4").Class("medium no-padding transparent").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),

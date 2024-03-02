@@ -11,6 +11,7 @@ import (
 	thumb "github.com/prplecake/go-thumbnail"
 )
 
+// https://github.com/prplecake/go-thumbnail/blob/master/thumbnail.go
 func genThumbnails(src, dest string) error {
 	var config = thumb.Generator{
 		DestinationPath:   "",
