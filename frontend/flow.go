@@ -103,6 +103,7 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 
 		c.toastShow = false
 		c.toastText = ""
+		c.toastType = ""
 		c.buttonDisabled = false
 		c.postButtonsDisabled = false
 		c.deletePostModalShow = false
@@ -126,6 +127,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 			toastText = err.Error()
 
 			ctx.Dispatch(func(ctx app.Context) {
+				c.postButtonsDisabled = true
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -138,7 +140,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 				c.toastType = "success"
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
-				c.postButtonsDisabled = false
+				c.postButtonsDisabled = true
 
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
@@ -210,6 +212,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			toastText = "no valid reply entered"
 
 			ctx.Dispatch(func(ctx app.Context) {
+				c.postButtonsDisabled = true
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -972,7 +975,7 @@ func (c *flowContent) Render() app.UI {
 				),
 				app.Div().Class("field label border extra deep-orange-text").Body(
 					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
-					app.Input().Class("active").Type("text"),
+					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
 					app.Label().Text("image").Class("active deep-orange-text"),
 					app.I().Text("image"),
 				),

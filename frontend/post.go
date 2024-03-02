@@ -265,7 +265,7 @@ func (c *postContent) Render() app.UI {
 		// new fig input
 		app.Div().Class("field border label extra deep-orange-text").Body(
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
-			app.Input().Class("active").Type("text"),
+			app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
 			app.Label().Text("image").Class("active deep-orange-text"),
 			app.I().Text("image"),
 		),
