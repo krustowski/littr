@@ -232,7 +232,7 @@ func (c *registerContent) Render() app.UI {
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "nickname"),
-			app.Label().Text("nickname").Class("active"),
+			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 
 		// password fields
@@ -245,11 +245,11 @@ func (c *registerContent) Render() app.UI {
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("passphrase").Class("active"),
+			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("passphrase again").Class("active"),
+			app.Label().Text("passphrase again").Class("active deep-orange-text"),
 		),
 
 		// e-mail field
@@ -262,7 +262,7 @@ func (c *registerContent) Render() app.UI {
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email"),
-			app.Label().Text("e-mail").Class("active"),
+			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 
 		// GDPR warning
