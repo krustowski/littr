@@ -45,6 +45,7 @@ services:
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
     environment:
       API_TOKEN: ${API_TOKEN}
+      APP_PEPPER: ${APP_PEPPER}
     healthcheck:
       #test: ["CMD", "/opt/periodic-dump.sh"]
       test: ["CMD", "wget", "--header", "X-App-Token: ${API_TOKEN}", "localhost:8080/api/dump", "-O", "-", "-S" ]

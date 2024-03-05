@@ -3,6 +3,7 @@ package frontend
 import (
 	"encoding/json"
 	"log"
+	"net/mail"
 	"strconv"
 	"strings"
 
@@ -63,6 +64,19 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 
 		if email == "" {
 			toastText = "e-mail field has to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// validate e-mail struct
+		// https://stackoverflow.com/a/66624104
+		if _, err := mail.ParseAddress(email); err != nil {
+			log.Println(err)
+			toastText = "wrong e-mail format entered"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -134,7 +148,6 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 		})
 		return
 	})
-
 }
 
 func (c *resetContent) dismissToast(ctx app.Context, e app.Event) {
@@ -188,7 +201,7 @@ func (c *resetContent) Render() app.UI {
 		// pwd reset credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", ""),
-			app.Label().Text("email").Class("active deep-orange-text"),
+			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("small-space"),

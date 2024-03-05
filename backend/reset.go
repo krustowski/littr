@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"io"
+	//"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -47,7 +48,10 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 
 	rand.Seed(time.Now().UnixNano())
 	random := randSeq(16)
-	passHash := sha512.Sum512([]byte(random + os.Getenv("APP_PEPPER")))
+	pepper := os.Getenv("APP_PEPPER")
+	passHash := sha512.Sum512([]byte(random + pepper))
+
+	//log.Println(random)
 
 	users, _ := getAll(UserCache, models.User{})
 
@@ -55,9 +59,10 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	found := false
-	for _, user = range users {
-		if user.Email == fetch.Email {
+	for _, u := range users {
+		if u.Email == fetch.Email {
 			found = true
+			user = u
 			break
 		}
 	}
@@ -66,7 +71,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "backend error: matching user not found"
 		resp.Code = http.StatusNotFound
 
-		l.Println(resp.Message+err.Error(), resp.Code)
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
@@ -76,7 +81,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "backend error: cannot update user in database"
 		resp.Code = http.StatusInternalServerError
 
-		l.Println(resp.Message+err.Error(), resp.Code)
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}

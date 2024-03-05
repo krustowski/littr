@@ -60,6 +60,11 @@ func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *loginContent) onClickReset(ctx app.Context, e app.Event) {
+	ctx.Navigate("/reset")
+	return
+}
+
 func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 	response := struct {
 		Message     string `json:"message"`
@@ -189,7 +194,7 @@ func (c *loginContent) Render() app.UI {
 
 		app.Div().Class("field border label deep-orange-text").Body(
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
-			app.Label().Text("passphrase deep-orange-text").Class("active"),
+			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Article().Class("row border").Body(
 			app.I().Text("lightbulb"),
@@ -209,11 +214,17 @@ func (c *loginContent) Render() app.UI {
 		app.P().Class("center-align").Text("or"),
 		app.Div().Class("space"),
 
+		// reset button
+		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
+			app.Text("recover forgotten passphrase"),
+		),
+
+		app.Div().Class("space"),
+
 		// register button
 		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
 			app.Text("register"),
 		),
-
 		app.Div().Class("space"),
 	)
 }
