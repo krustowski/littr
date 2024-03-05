@@ -30,7 +30,11 @@ func LoadAPIRouter() chi.Router {
 
 	// unauth zone (skipped at auth)
 	r.Get("/", rootHandler)
-	r.Post("/auth", authHandler)
+	//r.Post("/auth", authHandler)
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/", authHandler)
+		r.Post("/password", resetHandler)
+	})
 	r.Get("/dump", dumpHandler)
 
 	go func() {

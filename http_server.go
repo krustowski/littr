@@ -32,6 +32,7 @@ func initClient() {
 	app.Route("/polls", &frontend.PollsPage{})
 	app.Route("/post", &frontend.PostPage{})
 	app.Route("/register", &frontend.RegisterPage{})
+	app.Route("/reset", &frontend.ResetPage{})
 	app.Route("/settings", &frontend.SettingsPage{})
 	app.Route("/stats", &frontend.StatsPage{})
 	app.Route("/tos", &frontend.ToSPage{})

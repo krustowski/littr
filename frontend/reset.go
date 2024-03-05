@@ -1,8 +1,9 @@
 package frontend
 
 import (
-	"crypto/sha512"
 	"encoding/json"
+	"log"
+	"strconv"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -19,12 +20,13 @@ type ResetPage struct {
 type resetContent struct {
 	app.Compo
 
-	email   string
+	email string
 
 	toastShow bool
 	toastText string
+	toastType string
 
-	buttonDisabled bool
+	buttonsDisabled bool
 }
 
 func (p *ResetPage) OnMount(ctx app.Context) {
@@ -44,14 +46,15 @@ func (p *ResetPage) Render() app.UI {
 
 func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 	response := struct {
-		Message     string `json:"message"`
-		AuthGranted bool   `json:"auth_granted"`
+		Message     string                 `json:"message"`
+		AuthGranted bool                   `json:"auth_granted"`
+		Users       map[string]models.User `json:"users"`
+		Code        int                    `json:"code"`
 		//FlowRecords []string `json:"flow_records"`
-		Users map[string]models.User `json:"users"`
 	}{}
 	toastText := ""
 
-	c.buttonDisabled = true
+	c.buttonsDisabled = true
 
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
@@ -68,13 +71,9 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		password :=  RandStringBytesMaskImprSrc(16)
-
-		passHash := sha512.Sum512([]byte(password + config.Pepper))
-
-		respRaw, ok := litterAPI("POST", "/api/user/password", &models.User{
+		respRaw, ok := litterAPI("POST", "/api/auth/password", &models.User{
 			Nickname:   "",
-			Passphrase: string(passHash[:]),
+			Passphrase: "",
 			Email:      email,
 		}, "", 0)
 
@@ -101,6 +100,9 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
 			toastText = "backend error: cannot unmarshal response: " + err.Error()
 
+			rr := *respRaw
+			log.Println(string(rr[:]))
+
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
@@ -109,8 +111,8 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if response.Code != 200 {
-			code := strings.Itoa(response.Code)
-			toastText = "backend error: code "+code
+			code := strconv.Itoa(response.Code)
+			toastText = "backend error: code " + code
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -123,14 +125,14 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Navigate("/login")
 		}*/
 
-			toastText = "reset e-mail sent"
+		toastText = "reset e-mail sent"
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastType = "success"
-				c.toastShow = (toastText != "")
-			})
-			return
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastType = "success"
+			c.toastShow = (toastText != "")
+		})
+		return
 	})
 
 }
@@ -138,7 +140,7 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 func (c *resetContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = false
-	c.buttonDisabled = false
+	c.buttonsDisabled = false
 }
 
 func (c *resetContent) Render() app.UI {
@@ -158,9 +160,9 @@ func (c *resetContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
+		app.H5().Text("littr passphrase reset").Style("padding-top", config.HeaderTopPadding),
 		app.P().Body(
-			app.P().Text("littr, bc even litter can be lit"),
+			app.P().Text("actual pwd is about to be yeeted"),
 		),
 		app.Div().Class("space"),
 
@@ -185,8 +187,8 @@ func (c *resetContent) Render() app.UI {
 
 		// pwd reset credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "nickname"),
-			app.Label().Text("nickname").Class("active deep-orange-text"),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", ""),
+			app.Label().Text("email").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("small-space"),

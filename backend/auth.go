@@ -181,7 +181,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		  		}*/
 
 		// skip those routes
-		if r.URL.Path == "/api" || r.URL.Path == "/api/auth" || r.URL.Path == "/api/dump" || r.URL.Path == "/api/flow/live" {
+		if r.URL.Path == "/api" || r.URL.Path == "/api/auth" || r.URL.Path == "/api/dump" || r.URL.Path == "/api/flow/live" || r.URL.Path == "/api/auth/password" {
 			next.ServeHTTP(w, r)
 			return
 		}
