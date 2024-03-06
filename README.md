@@ -174,7 +174,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 
 ### roadmap to v0.27
 + implement mailing (verification mails) on backend
-+ implement forgotten password recovery
++ ~~implement forgotten password recovery~~ (wip)
 
 ### roadmap to v0.26
 + ~~implement combined picture-with-text (PwT) posting~~ (wip)
