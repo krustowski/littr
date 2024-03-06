@@ -1,15 +1,15 @@
 package backend
 
 import (
-	"crypto/sha512"
+	//"crypto/sha512"
 	"encoding/json"
 	"io"
 	//"log"
-	"math/rand"
+	//"math/rand"
 	"net/http"
 	"os"
 	"strconv"
-	"time"
+	//"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -22,7 +22,9 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	l := NewLogger(r, "reset")
 
 	fetch := struct {
-		Email string `json:"email"`
+		Email      string   `json:"email"`
+		Passphrase string   `json:"passphrase"`
+		Tags       []string `json:"tags"`
 	}{}
 
 	reqBody, err := io.ReadAll(r.Body)
@@ -45,11 +47,6 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
-
-	rand.Seed(time.Now().UnixNano())
-	random := randSeq(16)
-	pepper := os.Getenv("APP_PEPPER")
-	passHash := sha512.Sum512([]byte(random + pepper))
 
 	//log.Println(random)
 
@@ -76,7 +73,17 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Passphrase = string(passHash[:])
+	randomEnc := fetch.Tags[0]
+	random := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), []byte(randomEnc))
+	/*rand.Seed(time.Now().UnixNano())
+	random := randSeq(16)
+	pepper := os.Getenv("APP_PEPPER")
+
+	passHash := sha512.Sum512([]byte(random + pepper))
+	user.Passphrase = string(passHash[:])*/
+
+	user.Passphrase = fetch.Passphrase
+
 	if saved := setOne(UserCache, user.Nickname, user); !saved {
 		resp.Message = "backend error: cannot update user in database"
 		resp.Code = http.StatusInternalServerError
@@ -98,6 +105,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
 	if err := m.To(email); err != nil {
 		resp.Message = "backend error: failed to set To address: " + err.Error()
 		resp.Code = http.StatusInternalServerError
@@ -106,8 +114,9 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
 	m.Subject("Lost password recovery")
-	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail.\n\n"+random)
+	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+string(random[:])+"\n\nPlease change your password as soon as possible after a new log-in.")
 
 	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
 	if err != nil {

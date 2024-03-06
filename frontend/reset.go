@@ -1,11 +1,14 @@
 package frontend
 
 import (
+	"crypto/sha512"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/mail"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -85,10 +88,19 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
+		rand.Seed(time.Now().UnixNano())
+		random := randSeq(16)
+		randomEnc := config.Encrypt([]byte(config.Pepper), []byte(random))
+		randomString := string(randomEnc[:])
+
+		passHash := sha512.Sum512([]byte(random + config.Pepper))
+		passPhrase := string(passHash[:])
+
 		respRaw, ok := litterAPI("POST", "/api/auth/password", &models.User{
 			Nickname:   "",
-			Passphrase: "",
+			Passphrase: passPhrase,
 			Email:      email,
+			Tags:       []string{randomString},
 		}, "", 0)
 
 		if !ok {
@@ -134,10 +146,6 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			})
 			return
 		}
-
-		/*if toastText == "" {
-			ctx.Navigate("/login")
-		}*/
 
 		toastText = "reset e-mail sent"
 

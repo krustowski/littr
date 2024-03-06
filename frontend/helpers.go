@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 
@@ -169,4 +170,16 @@ func readFile(file app.Value) (data []byte, err error) {
 		app.CopyBytesToGo(data, uint8Array)
 	}
 	return data, err
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// https://stackoverflow.com/a/31832326
+// https://stackoverflow.com/a/22892986
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

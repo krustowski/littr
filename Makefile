@@ -100,6 +100,8 @@ version:
 		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(MAIL_SASL_USR\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(MAIL_SASL_PWD\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(MAIL_HOST\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(MAIL_PORT\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(GSC_TOKEN\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
