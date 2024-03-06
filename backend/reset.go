@@ -1,15 +1,16 @@
 package backend
 
 import (
-	//"crypto/sha512"
+	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"io"
 	//"log"
-	//"math/rand"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
-	//"time"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -73,16 +74,12 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	randomEnc := fetch.Tags[0]
-	random := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), []byte(randomEnc))
-	/*rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 	random := randSeq(16)
 	pepper := os.Getenv("APP_PEPPER")
 
 	passHash := sha512.Sum512([]byte(random + pepper))
-	user.Passphrase = string(passHash[:])*/
-
-	user.Passphrase = fetch.Passphrase
+	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
 	if saved := setOne(UserCache, user.Nickname, user); !saved {
 		resp.Message = "backend error: cannot update user in database"
@@ -116,7 +113,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m.Subject("Lost password recovery")
-	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+string(random[:])+"\n\nPlease change your password as soon as possible after a new log-in.")
+	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+random+"\n\nPlease change your password as soon as possible after a new log-in.")
 
 	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
 	if err != nil {
