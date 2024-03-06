@@ -20,6 +20,8 @@ type header struct {
 
 	modalInfoShow   bool
 	modalLogoutShow bool
+
+	onlineState bool
 }
 
 type footer struct {
@@ -65,13 +67,14 @@ func (h *header) tryCookies(ctx app.Context) bool {
 
 func (h *header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
+	h.onlineState = true
 
 	//authGranted := h.tryCookies(ctx)
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
 	// redirect client to the unauthorized zone
-	if !authGranted && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" {
+	if !authGranted && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" && ctx.Page().URL().Path != "/reset" {
 		ctx.Navigate("/login")
 		return
 	}
@@ -88,6 +91,27 @@ func (h *header) OnMount(ctx app.Context) {
 
 	ctx.SetState("authGranted", authGranted)
 	h.authGranted = authGranted
+
+	h.onlineState = true // this is a guess
+	// this may not be implemented
+	nav := app.Window().Get("navigator")
+	if nav.Truthy() {
+		onLine := nav.Get("onLine")
+		if !onLine.IsUndefined() {
+			h.onlineState = onLine.Bool()
+		}
+	}
+	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
+		h.onlineState = true
+		//call(true)
+		return nil
+	}))
+
+	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) any {
+		h.onlineState = false
+		//call(false)
+		return nil
+	}))
 }
 
 func (h *header) OnAppInstallChange(ctx app.Context) {
@@ -120,6 +144,7 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 	h.authGranted = false
 
+	ctx.LocalStorage().Set("authGranted", false)
 	ctx.Navigate("/logout")
 }
 
@@ -162,6 +187,15 @@ func (h *header) Render() app.UI {
 				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
 					app.Span().Class("small-text middle top-align").Text(" (beta)"),
+				),
+			),
+
+			// snackbar offline mode
+			app.A().OnClick(h.onClickModalDismiss).Body(
+				app.If(!h.onlineState,
+					app.Div().Class("snackbar red5 white-text top active").Body(
+						app.Span().Text("internet connection is gone innit..."),
+					),
 				),
 			),
 
