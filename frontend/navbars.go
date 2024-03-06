@@ -173,13 +173,36 @@ func (h *header) Render() app.UI {
 
 			// show intallation button if available
 			app.If(h.appInstallable,
-				app.A().Text("install").OnClick(h.onInstallButtonClicked).Body(
+				app.A().Class("max").Text("install").OnClick(h.onInstallButtonClicked).Body(
 					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("download"),
 					),
 					//app.Span().Body(
 					//app.Text("install"),
 					//),
+				),
+			),
+
+			// app logout modal
+			app.If(modalLogoutActiveClass == " active",
+				app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Body(
+					app.Nav().Class("center-align").Body(
+						app.H5().Text("really logout?"),
+					),
+					app.Div().Class("large-space"),
+					app.Nav().Class("center-align").Body(
+						app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
+						app.Button().Class("border deep-orange7 white-text").Text("nah").OnClick(h.onClickModalDismiss),
+					),
+				),
+			),
+
+			// snackbar offline mode
+			app.If(!h.onlineState,
+				app.A().OnClick(h.onClickModalDismiss).Body(
+					app.Div().Class("snackbar red5 white-text top active").Body(
+						app.Span().Text("internet connection is gone innit..."),
+					),
 				),
 			),
 
@@ -190,54 +213,47 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			// snackbar offline mode
-			app.A().OnClick(h.onClickModalDismiss).Body(
-				app.If(!h.onlineState,
-					app.Div().Class("snackbar red5 white-text top active").Body(
-						app.Span().Text("internet connection is gone innit..."),
-					),
-				),
-			),
-
 			// app info modal
-			app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
-				app.Div().Class("row").Body(
-					app.Img().Src("/web/android-chrome-192x192.png"),
-					app.H4().Text("littr (beta)"),
-				),
-				app.Nav().Class("center-align large-text").Body(
-					app.P().Body(
-						app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
+			app.If(modalInfoActiveClass == " active",
+				app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
+					app.Div().Class("row").Body(
+						app.Img().Src("/web/android-chrome-192x192.png"),
+						app.H4().Text("littr (beta)"),
 					),
-				),
-				app.Nav().Class("center-align large-text").Body(
-					app.P().Body(
-						app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
+					app.Nav().Class("center-align large-text").Body(
+						app.P().Body(
+							app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
+						),
 					),
-				),
-				app.Div().Class("small-space"),
-
-				app.Nav().Class("center-align").Body(
-					app.P().Body(
-						app.Text("version "),
-						app.A().Text("v"+config.Version).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+					app.Nav().Class("center-align large-text").Body(
+						app.P().Body(
+							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
+						),
 					),
 					app.Div().Class("small-space"),
-				),
 
-				app.Nav().Class("center-align").Body(
-					app.P().Body(
-						app.Text("powered by "),
-						app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
-						app.Text(", "),
-						app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
-						app.Text(" & "),
-						app.A().Href("https://github.com/savla-dev/swis-api").Text("swapi").Style("font-weight", "bolder"),
+					app.Nav().Class("center-align").Body(
+						app.P().Body(
+							app.Text("version "),
+							app.A().Text("v"+config.Version).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+						),
+						app.Div().Class("small-space"),
 					),
-				),
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").Text("reload").OnClick(h.onClickReload),
-					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
+
+					app.Nav().Class("center-align").Body(
+						app.P().Body(
+							app.Text("powered by "),
+							app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
+							app.Text(", "),
+							app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
+							app.Text(" & "),
+							app.A().Href("https://github.com/savla-dev/swis-api").Text("swapi").Style("font-weight", "bolder"),
+						),
+					),
+					app.Nav().Class("center-align").Body(
+						app.Button().Class("border deep-orange7 white-text").Text("reload").OnClick(h.onClickReload),
+						app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
+					),
 				),
 			),
 
@@ -254,18 +270,6 @@ func (h *header) Render() app.UI {
 						app.Text("login")),
 					//app.Span().Body(
 					//app.Text("login")),
-				),
-			),
-
-			// app logout modal
-			app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("really logout?"),
-				),
-				app.Div().Class("large-space"),
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
-					app.Button().Class("border deep-orange7 white-text").Text("nah").OnClick(h.onClickModalDismiss),
 				),
 			),
 		)
