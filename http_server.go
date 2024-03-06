@@ -137,6 +137,7 @@ func initServer() {
 		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
 		Env: map[string]string{
 			"APP_VERSION": os.Getenv("APP_VERSION"),
+			"APP_PEPPER":  os.Getenv("APP_PEPPER"),
 		},
 		/*Preconnect: []string{
 			"https://cdn.savla.dev/",

@@ -147,7 +147,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Minute * 15),
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: true,
+		SameSite: http.SameSiteStrictMode,
 	}
 	refreshCookie := &http.Cookie{
 		Name:     "refresh-token",
@@ -155,7 +155,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 168 * 4),
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: true,
+		SameSite: http.SameSiteStrictMode,
 	}
 
 	// save tokens as HTTP-only cookie

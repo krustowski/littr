@@ -32,7 +32,7 @@ func gscAPICall(filename string, data []byte) error {
 			return err
 		}
 
-		payload := config.Encrypt([]byte(config.Pepper), jsonData)
+		payload := config.Encrypt([]byte(os.Getenv("APP_PEPPER")), jsonData)
 
 		bodyReader = bytes.NewReader([]byte(payload))
 

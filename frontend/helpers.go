@@ -31,7 +31,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 			return nil, false
 		}
 
-		payload := config.Encrypt([]byte(config.Pepper), jsonData)
+		payload := config.Encrypt([]byte(app.Getenv("APP_PEPPER")), jsonData)
 
 		bodyReader = bytes.NewReader([]byte(payload))
 
@@ -57,7 +57,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 	pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
 	req.Header.Set("X-API-Caller-ID", caller)
-	req.Header.Set("X-App-Version", config.Version)
+	req.Header.Set("X-App-Version", app.Getenv("APP_VERSION"))
 	req.Header.Set("X-Flow-Page-No", pageNoString)
 
 	client := http.Client{}
@@ -77,7 +77,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 	}
 
 	// decrypt the data
-	decrData := config.Decrypt([]byte(config.Pepper), respData)
+	decrData := config.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
 
 	return &decrData, true
 }
@@ -96,7 +96,7 @@ func prepare[T any](localStorageInput string, model *T) error {
 	// decrypt the decoded string if the encryption is enabled (config.EncryptionEnabled)
 	// returns the decodedString if the encryption is disabled
 	decryptedString := config.Decrypt(
-		[]byte(config.Pepper),
+		[]byte(app.Getenv("APP_PEPPER")),
 		[]byte(decodedString),
 	)
 
@@ -119,7 +119,7 @@ func reload[T any](model T, stream *[]byte) error {
 	}
 
 	encryptedStream := config.Encrypt(
-		[]byte(config.Pepper),
+		[]byte(app.Getenv("APP_PEPPER")),
 		preStream,
 	)
 
