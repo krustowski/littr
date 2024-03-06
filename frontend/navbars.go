@@ -3,7 +3,6 @@ package frontend
 import (
 	"encoding/json"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -235,7 +234,7 @@ func (h *header) Render() app.UI {
 					app.Nav().Class("center-align").Body(
 						app.P().Body(
 							app.Text("version "),
-							app.A().Text("v"+config.Version).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+							app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
 						),
 						app.Div().Class("small-space"),
 					),

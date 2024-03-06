@@ -108,13 +108,19 @@ func initServer() {
 	r.Mount("/api", backend.LoadAPIRouter())
 
 	appHandler := &app.Handler{
-		Name:               "litter-go",
-		ShortName:          "littr",
-		Title:              "littr",
-		Description:        "litter-go PWA",
-		Author:             "krusty",
-		LoadingLabel:       "loading...",
-		Lang:               "en",
+		Name:         "litter-go",
+		ShortName:    "littr",
+		Title:        "littr",
+		Description:  "nanoblogging platform as PWA built on go-app framework (PoC)",
+		Author:       "krusty",
+		LoadingLabel: "loading...",
+		Lang:         "en",
+		Keywords: []string{
+			"go-app",
+			"nanoblogging",
+			"microblogging",
+			"social network",
+		},
 		AutoUpdateInterval: time.Minute * 5,
 		Icon: app.Icon{
 			Default:    "/web/android-chrome-192x192.png",
@@ -122,15 +128,22 @@ func initServer() {
 			Large:      "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
+		Image: "/web/android-chrome-512x512.svg",
 		Body: func() app.HTMLBody {
 			return app.Body().Class("dark")
 		},
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
 		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
+		Env: map[string]string{
+			"APP_VERSION": os.Getenv("APP_VERSION"),
+		},
 		/*Preconnect: []string{
 			"https://cdn.savla.dev/",
 		},*/
+		Fonts: []string{
+			"https://cdn.savla.dev/webfonts/material-symbols-outlined.woff2",
+		},
 		Styles: []string{
 			"https://cdn.savla.dev/css/beercss.min.css",
 			"https://cdn.savla.dev/css/sortable.min.css",
