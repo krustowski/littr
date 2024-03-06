@@ -3,6 +3,7 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/mail"
@@ -94,13 +95,15 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 		randomString := string(randomEnc[:])
 
 		passHash := sha512.Sum512([]byte(random + config.Pepper))
-		passPhrase := string(passHash[:])
+		//passPhrase := fmt.Sprintf("%x", passHash)
+		//passPhrase := string(passHash[:])
 
 		respRaw, ok := litterAPI("POST", "/api/auth/password", &models.User{
-			Nickname:   "",
-			Passphrase: passPhrase,
-			Email:      email,
-			Tags:       []string{randomString},
+			Nickname:      "",
+			PassphraseHex: fmt.Sprintf("%x", passHash),
+			Email:         email,
+			Tags:          []string{randomString},
+			//Passphrase: string(passHash[:]),
 		}, "", 0)
 
 		if !ok {

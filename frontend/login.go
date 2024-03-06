@@ -3,6 +3,7 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"go.savla.dev/littr/config"
@@ -96,8 +97,9 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 
 		respRaw, ok := litterAPI("POST", "/api/auth", &models.User{
-			Nickname:   nickname,
-			Passphrase: string(passHash[:]),
+			Nickname:      nickname,
+			Passphrase:    string(passHash[:]),
+			PassphraseHex: fmt.Sprintf("%x", passHash),
 		}, nickname, 0)
 
 		if !ok {

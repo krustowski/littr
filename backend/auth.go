@@ -32,7 +32,13 @@ func authUser(aUser models.User) (*models.User, bool) {
 	}
 
 	// check the passhash
-	if user.Passphrase == aUser.Passphrase {
+	if user.Passphrase == aUser.Passphrase || user.PassphraseHex == aUser.PassphraseHex {
+		// update user's hexadecimal passphrase form, as the binary form is broken and cannot be used on BE
+		if user.PassphraseHex == "" && aUser.PassphraseHex != "" {
+			user.PassphraseHex = aUser.PassphraseHex
+			_ = setOne(UserCache, user.Nickname, user)
+		}
+
 		// auth granted
 		return &user, true
 	}

@@ -14,8 +14,11 @@ type User struct {
 	// FullName is the "genuine" name of such user.
 	FullName string `json:"full_name"`
 
-	// Passphrase is a hashed pass phrase string.
+	// Passphrase is a hashed pass phrase string (binary form).
 	Passphrase string `json:"passphrase"`
+
+	// PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).
+	PassphraseHex string `json:"passphrase_hex"`
 
 	// Email is a primary user's e-mail address.
 	Email string `json:"email"`

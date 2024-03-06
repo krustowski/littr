@@ -3,6 +3,7 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"regexp"
@@ -167,7 +168,8 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 
 		passHash := sha512.Sum512([]byte(passphrase + config.Pepper))
 		updatedUser := c.user
-		updatedUser.Passphrase = string(passHash[:])
+		//updatedUser.Passphrase = string(passHash[:])
+		updatedUser.PassphraseHex = fmt.Sprintf("%x", passHash)
 
 		response := struct {
 			Message string `json:"message"`

@@ -3,6 +3,7 @@ package frontend
 import (
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/mail"
 	"strconv"
@@ -151,11 +152,12 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 
 		var user models.User = models.User{
 			Nickname:       nickname,
-			Passphrase:     string(passHash[:]),
+			PassphraseHex:  fmt.Sprintf("%x", passHash),
 			Email:          email,
 			FlowList:       make(map[string]bool),
 			RegisteredTime: time.Now(),
 			AvatarURL:      backend.GetGravatarURL(email),
+			//Passphrase:     string(passHash[:]),
 		}
 
 		user.FlowList[nickname] = true
