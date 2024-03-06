@@ -837,8 +837,10 @@ func (c *flowContent) OnNav(ctx app.Context) {
 func (c *flowContent) sortPosts() []models.Post {
 	var sortedPosts []models.Post
 
-	posts := make(map[string]models.Post)
-	posts = c.posts
+	posts := c.posts
+	if posts == nil {
+		posts = make(map[string]models.Post)
+	}
 
 	// fetch posts and put them in an array
 	for _, sortedPost := range posts {
