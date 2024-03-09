@@ -10,8 +10,7 @@ import (
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 	"go.savla.dev/swis/v5/pkg/core"
-
-	"github.com/SherClockHolmes/webpush-go"
+	//"github.com/SherClockHolmes/webpush-go"
 )
 
 const (
@@ -27,7 +26,8 @@ func LoadAll() {
 	// TODO: catch errors!
 	loadOne(PollCache, pollsFile, models.Poll{})
 	loadOne(FlowCache, postsFile, models.Post{})
-	loadOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	//loadOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	loadOne(TokenCache, tokensFile, void)
 	loadOne(UserCache, usersFile, models.User{})
 }
@@ -36,7 +36,8 @@ func DumpAll() {
 	// TODO: catch errors!
 	dumpOne(PollCache, pollsFile, models.Poll{})
 	dumpOne(FlowCache, postsFile, models.Post{})
-	dumpOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	//dumpOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
+	dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	dumpOne(TokenCache, tokensFile, void)
 	dumpOne(UserCache, usersFile, models.User{})
 }

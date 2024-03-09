@@ -14,11 +14,13 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+// POST /api/push
 func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "push")
 
-	var sub webpush.Subscription
+	caller, _ := r.Context().Value("nickname").(string)
+	payload := models.Device{}
 
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -30,9 +32,7 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &sub); err != nil {
+	if err := json.Unmarshal(reqBody, &payload); err != nil {
 		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -41,13 +41,26 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	caller, _ := r.Context().Value("nickname").(string)
+	// let us check this device
+	// we are about to loop through []models.Device fetched from SubscriptionCache
+	devs, _ := getOne(SubscriptionCache, caller, []models.Device{})
 
-	// fetch existing (or blank) subscription array for such caller, and add new sub.
-	subs, _ := getOne(SubscriptionCache, caller, []webpush.Subscription{})
-	subs = append(subs, sub)
+	for _, dev := range devs {
+		if dev.UUID == payload.UUID {
+			// we have just found a match, thus request was fired twice, or someone tickles the API
+			resp.Message = "backend notice: this device has already been registered for subscription"
+			resp.Code = http.StatusConflict
 
-	if saved := setOne(SubscriptionCache, caller, subs); !saved {
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+	}
+
+	// append new device into the devices array for such user
+	devs = append(devs, payload)
+
+	if saved := setOne(SubscriptionCache, caller, devs); !saved {
 		resp.Code = http.StatusInternalServerError
 		resp.Message = "cannot save new subscription"
 
@@ -56,13 +69,14 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Message = "ok, subscription added"
+	resp.Message = "ok, device subscription added"
 	resp.Code = http.StatusCreated
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 }
 
+// PUT /api/push
 func sendNotif(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "push")
@@ -135,7 +149,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 			Subscriber:      user.Email,
 			VAPIDPublicKey:  user.VapidPubKey,
 			VAPIDPrivateKey: user.VapidPrivKey,
-			TTL:             300,
+			TTL:             30,
 			Urgency:         webpush.UrgencyNormal,
 		})
 		if err != nil {

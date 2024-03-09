@@ -75,24 +75,15 @@ func (c *settingsContent) OnMount(ctx app.Context) {
 func (c *settingsContent) OnNav(ctx app.Context) {
 	toastText := ""
 
-	var enUser string
-	var user models.User
-
 	ctx.Async(func() {
-		ctx.LocalStorage().Get("user", &enUser)
-
-		// decode, decrypt and unmarshal the local storage string
-		if err := prepare(enUser, &user); err != nil {
-			toastText = "frontend decoding/decryption failed: " + err.Error()
-			return
-		}
-
-		usersPre := struct {
-			Users map[string]models.User `json:"users"`
+		payload := struct {
+			Key        string                 `json:"key"`
+			Users      map[string]models.User `json:"users"`
+			Subscribed bool                   `json:"subscribed"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname, 0); ok {
-			err := json.Unmarshal(*data, &usersPre)
+		if data, ok := litterAPI("GET", "/api/users", nil, ctx.DeviceID(), 0); ok {
+			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())
 				toastText = "JSON parse error: " + err.Error()
@@ -114,7 +105,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		updatedUser := usersPre.Users[user.Nickname]
+		user := payload.Users[payload.Key]
 
 		// get the mode
 		var mode string
@@ -122,8 +113,10 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		//ctx.LocalStorage().Set("mode", user.AppBgMode)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = updatedUser
+			c.user = user
 			c.loggedUser = user.Nickname
+
+			c.subscribed = payload.Subscribed
 
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
@@ -415,6 +408,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			})
 			return
 		})
+		return
 	}
 
 	ctx.Async(func() {
@@ -426,6 +420,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.toastType = "error"
 
 				c.replyNotifOn = false
 				c.subscribed = false
@@ -460,10 +455,12 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		privKey := c.user.VapidPrivKey
 		pubKey := c.user.VapidPubKey
 
+		keysGenerated := false
 		// generate the VAPID key pair if missing
 		// TODO: move this to backend!
 		if privKey == "" || pubKey == "" {
 			var err error
+
 			privKey, pubKey, err = webpush.GenerateVAPIDKeys()
 			if err != nil {
 				toastText = "cannot generate new VAPID keys"
@@ -476,6 +473,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 				})
 				return
 			}
+			keysGenerated = true
 		}
 
 		// register the subscription
@@ -502,16 +500,18 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		user.VapidPubKey = pubKey
 
 		// update user on backend via API
-		if _, ok := litterAPI("PUT", "/api/users", user, c.user.Nickname, 0); !ok {
-			toastText := "cannot reach backend!"
+		if keysGenerated {
+			if _, ok := litterAPI("PUT", "/api/users", user, c.user.Nickname, 0); !ok {
+				toastText := "cannot reach backend!"
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = toastText != ""
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = toastText != ""
 
-				c.subscribed = false
-			})
-			return
+					c.subscribed = false
+				})
+				return
+			}
 		}
 
 		// send the registeration to backend
@@ -537,6 +537,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			c.toastShow = toastText != ""
 			c.toastType = "success"
 		})
+		return
 
 		/*ctx.Notifications().New(app.Notification{
 			Title: "littr",
@@ -719,7 +720,8 @@ func (c *settingsContent) Render() app.UI {
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text("reply notifications "),
-				app.Span().Text("enabling the notifications will trigger a request for your browser to allow notifications from littr, and will be enabled until you remove the permission in your browser only"),
+				//app.Span().Text("enabling the notifications will trigger a request for your browser to allow notifications from littr, and will be enabled until you remove the permission in your browser only"),
+				app.Span().Text("by switching this one you will be prompted for the notification permission, which is required to be positive if one wants to subscribe to notifications; this device's UUID will be used to identify this very blackbox --- to route notifications correctly to you"),
 			),
 		),
 
