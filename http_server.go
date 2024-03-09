@@ -139,9 +139,9 @@ func initServer() {
 			"APP_VERSION": os.Getenv("APP_VERSION"),
 			"APP_PEPPER":  os.Getenv("APP_PEPPER"),
 		},
-		/*Preconnect: []string{
+		Preconnect: []string{
 			"https://cdn.savla.dev/",
-		},*/
+		},
 		Fonts: []string{
 			"https://cdn.savla.dev/webfonts/material-symbols-outlined.woff2",
 		},
