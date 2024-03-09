@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -121,31 +122,40 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 
 	for _, sub := range subs {
 		// prepare and send new notification
-		go func(sub webpush.Subscription) {
-			body, _ := json.Marshal(app.Notification{
-				Title: "littr reply",
-				Icon:  "/web/apple-touch-icon.png",
-				Body:  caller + " replied to your post",
-				Path:  "/flow/post/" + post.ID,
-			})
+		//go func(sub webpush.Subscription) {
+		body, _ := json.Marshal(app.Notification{
+			Title: "littr reply",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  caller + " replied to your post",
+			Path:  "/flow/post/" + post.ID,
+		})
 
-			// fire a notification
-			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
-				VAPIDPublicKey:  user.VapidPubKey,
-				VAPIDPrivateKey: user.VapidPrivKey,
-				TTL:             300,
-			})
-			if err != nil {
-				resp.Code = http.StatusInternalServerError
-				resp.Message = "cannot send a notification: " + err.Error()
+		// fire a notification
+		res, err := webpush.SendNotification(body, &sub, &webpush.Options{
+			Subscriber:      user.Email,
+			VAPIDPublicKey:  user.VapidPubKey,
+			VAPIDPrivateKey: user.VapidPrivKey,
+			TTL:             300,
+			Urgency:         webpush.UrgencyNormal,
+		})
+		if err != nil {
+			resp.Code = http.StatusInternalServerError
+			resp.Message = "cannot send a notification: " + err.Error()
 
-				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
-				return
-			}
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
 
-			defer res.Body.Close()
-		}(sub)
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+		log.Println(bodyString)
+
+		defer res.Body.Close()
+		//}(sub)
 	}
 
 	resp.Message = "ok, notification fired"
