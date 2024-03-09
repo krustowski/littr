@@ -13,16 +13,21 @@ import (
 )
 
 type response struct {
-	AuthGranted bool                   `json:"auth_granted" default:false`
-	Code        int                    `json:"code"`
-	FlowList    []string               `json:"flow_records"`
-	Key         string                 `json:"key"`
-	Message     string                 `json:"message"`
-	Count       int                    `json:"count"`
-	Polls       map[string]models.Poll `json:"polls"`
-	Posts       map[string]models.Post `json:"posts"`
-	Users       map[string]models.User `json:"users"`
-	Data        []byte                 `json:"data"`
+	AuthGranted bool `json:"auth_granted" default:false`
+	Code        int  `json:"code"`
+
+	Key     string `json:"key"`
+	Message string `json:"message"`
+	Count   int    `json:"count"`
+
+	Subscribed bool `json:"subscribed"`
+
+	Polls    map[string]models.Poll `json:"polls"`
+	Posts    map[string]models.Post `json:"posts"`
+	Users    map[string]models.User `json:"users"`
+	FlowList []string               `json:"flow_records"`
+
+	Data []byte `json:"data"`
 
 	// very stats properties
 	FlowStats map[string]int      `json:"flow_stats"`

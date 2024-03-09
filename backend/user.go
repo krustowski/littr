@@ -11,14 +11,32 @@ import (
 	"go.savla.dev/littr/models"
 )
 
+func getOneUser(w http.ResponseWriter, r *http.Request) {}
+
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
 	stats := make(map[string]userStat)
 
+	caller, _ := r.Context().Value("nickname").(string)
+	uuid := r.Header.Get("X-API-Caller-ID")
+
 	// fetch all data for the calculations
 	users, _ := getAll(UserCache, models.User{})
 	posts, _ := getAll(FlowCache, models.Post{})
+	devs, _ := getOne(SubscriptionCache, caller, []models.Device{})
+
+	// check the subscription
+	devSubscribed := false
+	for _, dev := range devs {
+		if dev.UUID == uuid {
+			devSubscribed = true
+			break
+		}
+	}
+
+	// assign the result of looping through devices
+	resp.Subscribed = devSubscribed
 
 	for _, post := range posts {
 		nick := post.Nickname
@@ -52,6 +70,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp.Code = http.StatusOK
 	resp.Users = users
 	resp.UserStats = stats
+	resp.Key = caller
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
