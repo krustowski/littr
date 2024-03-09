@@ -61,17 +61,23 @@ func LoadAPIRouter() chi.Router {
 		r.Put("/star", updatePostStarCount)
 		r.Delete("/", deletePost)
 	})
+
 	r.Route("/polls", func(r chi.Router) {
 		r.Get("/", getPolls)
 		r.Post("/", addNewPoll)
 		r.Put("/", updatePoll)
 		r.Delete("/", deletePoll)
 	})
+
 	r.Route("/push", func(r chi.Router) {
 		r.Post("/", subscribeToNotifs)
 		r.Put("/", sendNotif)
+		r.Delete("/", deleteSubscription)
+		//r.Get("/vapid", generateVapidKeyPair)
 	})
+
 	r.Get("/stats", statsHandler)
+
 	r.Route("/users", func(r chi.Router) {
 		r.Get("/", getUsers)
 		r.Post("/", addNewUser)

@@ -165,3 +165,75 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 
 	resp.Write(w)
 }
+
+func deleteSubscription(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "push")
+
+	// this user ID points to the replier
+	caller, _ := r.Context().Value("nickname").(string)
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		resp.Message = "backend error: cannot read input stream: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
+
+	payload := struct {
+		UUID string `json:"device_uuid"`
+	}{}
+
+	if err := json.Unmarshal(data, &payload); err != nil {
+		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	uuid := payload.UUID
+	if uuid == "" {
+		resp.Message = "backend error: blank UUID received!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	devices, _ := getOne(SubscriptionCache, caller, []models.Device{})
+
+	var newDevices []models.Device
+
+	for _, dev := range devices {
+		if dev.UUID == uuid {
+			// do not include this device anymore
+			continue
+		}
+		newDevices = append(newDevices, dev)
+	}
+
+	if saved := setOne(SubscriptionCache, caller, newDevices); !saved {
+		resp.Message = "new subscription state of devices could not be saved"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, subscription deleted"
+	resp.Code = http.StatusCreated
+
+	l.Println(resp.Message, resp.Code)
+
+	resp.Write(w)
+	return
+}

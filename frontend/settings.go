@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
@@ -40,6 +41,7 @@ type settingsContent struct {
 	// message toast vars
 	toastShow bool
 	toastText string
+	toastType string
 
 	darkModeOn   bool
 	replyNotifOn bool
@@ -374,25 +376,59 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 	checked := ctx.JSSrc().Get("checked").Bool()
+	toastText := ""
 
-	c.replyNotifOn = !c.replyNotifOn
+	//c.replyNotifOn = !c.replyNotifOn
 
-	// do nothing (for now) on switch unchecking
+	// unsubscribe
 	if !checked {
-		return
+		uuid := ctx.DeviceID()
+
+		payload := struct {
+			UUID string `json:"device_uuid"`
+		}{
+			UUID: uuid,
+		}
+
+		ctx.Async(func() {
+			if _, ok := litterAPI("DELETE", "/api/push", payload, c.user.Nickname, 0); !ok {
+				toastText := "cannot reach backend!"
+
+				ctx.Dispatch(func(ctx app.Context) {
+					//c.toastText = toastText
+					c.toastText = "failed to unsubscribe, try again later"
+					c.toastShow = toastText != ""
+
+					c.subscribed = true
+				})
+				return
+
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
+				c.toastText = "successfully unsubscribed, notifications off"
+				c.toastShow = toastText != ""
+				c.toastType = "info"
+
+				c.subscribed = false
+			})
+			return
+		})
 	}
 
 	ctx.Async(func() {
 		// notify user that their browser does not support notifications and therefore they cannot
 		// use notifications service
 		if c.notificationPermission == app.NotificationNotSupported && checked {
-			toastText := "notifications are not supported in this browser"
+			toastText = "notifications are not supported in this browser"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 
 				c.replyNotifOn = false
+				c.subscribed = false
 			})
 			return
 		}
@@ -405,61 +441,109 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 
 		// fail on denied permission
 		if c.notificationPermission != app.NotificationGranted {
-			toastText := "notification permission denied by user"
+			toastText = "notification permission denied by user"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 
 				c.replyNotifOn = false
+				c.subscribed = false
 			})
 			return
 		}
 
-		// generate the VAPID key pair
+		// fetch the unique identificator for notifications and unsubscribe option
+		uuid := ctx.DeviceID()
+
+		// VAPID key pair
+		privKey := c.user.VapidPrivKey
+		pubKey := c.user.VapidPubKey
+
+		// generate the VAPID key pair if missing
 		// TODO: move this to backend!
-		privKey, pubKey, err := webpush.GenerateVAPIDKeys()
-		if err != nil {
-			toastText := "cannot generate new VAPID keys"
+		if privKey == "" || pubKey == "" {
+			var err error
+			privKey, pubKey, err = webpush.GenerateVAPIDKeys()
+			if err != nil {
+				toastText = "cannot generate new VAPID keys"
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = toastText != ""
-			})
-			return
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = toastText != ""
+
+					c.subscribed = false
+				})
+				return
+			}
 		}
-
-		updatedUser := c.user
-		updatedUser.VapidPubKey = pubKey
-		updatedUser.VapidPrivKey = privKey
-
-		// update user on backend via API
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
-			toastText := "cannot reach backend!"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = toastText != ""
-			})
-			return
-		}
-
-		// update user in page content
-		ctx.Dispatch(func(ctx app.Context) {
-			c.user = updatedUser
-		})
 
 		// register the subscription
 		sub, err := ctx.Notifications().Subscribe(pubKey)
 		if err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "subscription failed: " + err.Error()
+				c.toastText = "failed to subscribe to notifications: " + err.Error()
 				c.toastShow = c.toastText != ""
 
 				c.subscribed = false
 			})
 			return
 		}
+
+		// compose the Device struct to be saved to the database
+		deviceSub := models.Device{
+			UUID:         uuid,
+			TimeCreated:  time.Now(),
+			Subscription: sub,
+		}
+
+		user := c.user
+		user.VapidPrivKey = privKey
+		user.VapidPubKey = pubKey
+
+		// update user on backend via API
+		if _, ok := litterAPI("PUT", "/api/users", user, c.user.Nickname, 0); !ok {
+			toastText := "cannot reach backend!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = toastText != ""
+
+				c.subscribed = false
+			})
+			return
+		}
+
+		// send the registeration to backend
+		if _, ok := litterAPI("POST", "/api/push", deviceSub, c.user.Nickname, 0); !ok {
+			toastText := "cannot reach backend!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
+				c.toastText = "failed to subscribe to notifications"
+				c.toastShow = toastText != ""
+
+				c.subscribed = false
+			})
+			return
+		}
+
+		// dispatch the good news to client
+		ctx.Dispatch(func(ctx app.Context) {
+			c.user = user
+			c.subscribed = true
+
+			c.toastText = "successfully subscribed"
+			c.toastShow = toastText != ""
+			c.toastType = "success"
+		})
+
+		/*ctx.Notifications().New(app.Notification{
+			Title: "littr",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  "successfully subscribed to notifications",
+			Path:  "/flow",
+		})*/
 
 		// encode subscription into a HTTP request body
 		/*var body bytes.Buffer
@@ -472,27 +556,6 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			})
 			return
 		}*/
-
-		// send the registeration to backend
-		if _, ok := litterAPI("POST", "/api/push", sub, c.user.Nickname, 0); !ok {
-			toastText := "cannot reach backend!"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "registering notification subscription failed:" + err.Error()
-				c.toastShow = toastText != ""
-
-				c.subscribed = true
-			})
-			return
-		}
-
-		ctx.Notifications().New(app.Notification{
-			Title: "littr",
-			Icon:  "/web/apple-touch-icon.png",
-			Body:  "successfully subscribed to notifications",
-			Path:  "/flow",
-		})
 	})
 }
 
@@ -522,6 +585,21 @@ func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("change your passphrase, or your bottom text"),
@@ -546,7 +624,7 @@ func (c *settingsContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
@@ -629,7 +707,7 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		// reply notification infobox
+		// notification infobox
 		app.Article().Class("row border").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
@@ -645,14 +723,14 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		// reply notification switch
+		// notification switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
 				app.Div().Class("max").Body(
 					app.Span().Text("reply notification switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.replyNotifOn).Disabled(c.replyNotifOn).OnChange(c.onReplyNotifSwitch),
+					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.subscribed).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
 					app.Span().Body(
 						app.I().Text("notifications"),
 					),
