@@ -3,11 +3,8 @@ package backend
 import (
 	"encoding/json"
 	"io"
-	//"log"
 	"net/http"
-	"os"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/SherClockHolmes/webpush-go"
@@ -48,7 +45,7 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	for _, dev := range devs {
 		if dev.UUID == payload.UUID {
 			// we have just found a match, thus request was fired twice, or someone tickles the API
-			resp.Message = "backend notice: this device has already been registered for subscription"
+			resp.Message = "backend notice: this device has already been registered for a subscription"
 			resp.Code = http.StatusConflict
 
 			l.Println(resp.Message, resp.Code)
@@ -136,9 +133,15 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 
 	// range devices
 	for _, dev := range devs {
-		// run this async not to make client wait too much
-		go func(dev models.Device) {
+		if dev.UUID == "" {
+			continue
+		}
 
+		// run this async not to make client wait too much
+		//
+		// IMPORTANT NOTE: do not write headers in the goroutine --- this will crash the server on nil pointer dereference
+		// and memory segment violation
+		go func(dev models.Device) {
 			sub := dev.Subscription
 
 			// compose the body of this notification
@@ -162,7 +165,6 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 				resp.Message = "cannot send a notification: " + err.Error()
 
 				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
 				return
 			}
 
@@ -175,12 +177,13 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 			}
 
 			bodyString := string(bodyBytes)
-			//log.Println(bodyString)
+			if bodyString == "" {
+				bodyString = "(blank)"
+			}
 
 			resp.Code = res.StatusCode
-			resp.Message = "handling notification status: " + bodyString
+			resp.Message = "push gorutine: response from the counterpart: " + bodyString
 			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
 			return
 		}(dev)
 	}
@@ -210,13 +213,11 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
 	payload := struct {
 		UUID string `json:"device_uuid"`
 	}{}
 
-	if err := json.Unmarshal(data, &payload); err != nil {
+	if err := json.Unmarshal(reqBody, &payload); err != nil {
 		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -244,6 +245,11 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 			// do not include this device anymore
 			continue
 		}
+		if dev.UUID == "" {
+			// do not include blank-labeled devices
+			continue
+		}
+
 		newDevices = append(newDevices, dev)
 	}
 
