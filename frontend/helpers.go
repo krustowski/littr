@@ -18,6 +18,11 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+const (
+	// this constant is used during the build --- linker (ld) bakes the value in
+	appVersion string = "v0.0.0"
+)
+
 func litterAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
@@ -56,8 +61,13 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 
 	pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
+	version := app.Getenv("APP_VERSION")
+	if version == "" {
+		version = appVersion
+	}
+
 	req.Header.Set("X-API-Caller-ID", caller)
-	req.Header.Set("X-App-Version", app.Getenv("APP_VERSION"))
+	req.Header.Set("X-App-Version", version)
 	req.Header.Set("X-Flow-Page-No", pageNoString)
 
 	client := http.Client{}
