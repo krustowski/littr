@@ -3,7 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"io"
-	"log"
+	//"log"
 	"net/http"
 	"os"
 
@@ -94,13 +94,13 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
+	// hm, this looks kinda sketchy...
+	// TODO: make this more readable
 	original := struct {
 		ID string `json:"original_post"`
 	}{}
 
-	if err := json.Unmarshal(data, &original); err != nil {
+	if err := json.Unmarshal(reqBody, &original); err != nil {
 		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -111,7 +111,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 
 	// fetch related data from cachces
 	post, _ := getOne(FlowCache, original.ID, models.Post{})
-	subs, _ := getOne(SubscriptionCache, post.Nickname, []webpush.Subscription{})
+	devs, _ := getOne(SubscriptionCache, post.Nickname, []models.Device{})
 	user, _ := getOne(UserCache, post.Nickname, models.User{})
 
 	// do not notify the same person --- OK condition
@@ -125,7 +125,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// do not notify user --- notifications disabled --- OK condition
-	if &subs == nil {
+	if len(devs) == 0 {
 		resp.Message = "notifications disabled for such user"
 		resp.Code = http.StatusOK
 
@@ -134,50 +134,63 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, sub := range subs {
-		// prepare and send new notification
-		//go func(sub webpush.Subscription) {
-		body, _ := json.Marshal(app.Notification{
-			Title: "littr reply",
-			Icon:  "/web/apple-touch-icon.png",
-			Body:  caller + " replied to your post",
-			Path:  "/flow/post/" + post.ID,
-		})
+	// range devices
+	for _, dev := range devs {
+		// run this async not to make client wait too much
+		go func(dev models.Device) {
 
-		// fire a notification
-		res, err := webpush.SendNotification(body, &sub, &webpush.Options{
-			Subscriber:      user.Email,
-			VAPIDPublicKey:  user.VapidPubKey,
-			VAPIDPrivateKey: user.VapidPrivKey,
-			TTL:             30,
-			Urgency:         webpush.UrgencyNormal,
-		})
-		if err != nil {
-			resp.Code = http.StatusInternalServerError
-			resp.Message = "cannot send a notification: " + err.Error()
+			sub := dev.Subscription
 
+			// compose the body of this notification
+			body, _ := json.Marshal(app.Notification{
+				Title: "littr reply",
+				Icon:  "/web/apple-touch-icon.png",
+				Body:  caller + " replied to your post",
+				Path:  "/flow/post/" + post.ID,
+			})
+
+			// fire a notification
+			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
+				Subscriber:      user.Email,
+				VAPIDPublicKey:  user.VapidPubKey,
+				VAPIDPrivateKey: user.VapidPrivKey,
+				TTL:             30,
+				Urgency:         webpush.UrgencyNormal,
+			})
+			if err != nil {
+				resp.Code = http.StatusInternalServerError
+				resp.Message = "cannot send a notification: " + err.Error()
+
+				l.Println(resp.Message, resp.Code)
+				resp.Write(w)
+				return
+			}
+
+			defer res.Body.Close()
+
+			bodyBytes, err := io.ReadAll(res.Body)
+			if err != nil {
+				// TODO: handle this
+				//log.Fatal(err)
+			}
+
+			bodyString := string(bodyBytes)
+			//log.Println(bodyString)
+
+			resp.Code = res.StatusCode
+			resp.Message = "handling notification status: " + bodyString
 			l.Println(resp.Message, resp.Code)
 			resp.Write(w)
 			return
-		}
-
-		bodyBytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		bodyString := string(bodyBytes)
-		log.Println(bodyString)
-
-		defer res.Body.Close()
-		//}(sub)
+		}(dev)
 	}
 
-	resp.Message = "ok, notification fired"
+	resp.Message = "ok, notification(s) fired"
 	resp.Code = http.StatusCreated
 
 	l.Println(resp.Message, resp.Code)
-
 	resp.Write(w)
+	return
 }
 
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {

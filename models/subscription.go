@@ -3,8 +3,8 @@ package models
 import (
 	"time"
 
-	//"github.com/SherClockHolmes/webpush-go"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/SherClockHolmes/webpush-go"
+	//"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 // Helper struct to see how the data is stored in the database.
@@ -23,6 +23,6 @@ type Device struct {
 	TimeCreated time.Time `json:"time_created"`
 
 	// The very subscription struct/details.
-	Subscription app.NotificationSubscription `json:"subscription"`
-	//Subscription webpush.Subscription `json:"subscription"`
+	//Subscription app.NotificationSubscription `json:"subscription"`
+	Subscription webpush.Subscription `json:"subscription"`
 }

@@ -488,11 +488,20 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			return
 		}
 
+		// we need to convert type app.NotificationSubscription into webpush.Subscription
+		webSub := webpush.Subscription{
+			Endpoint: sub.Endpoint,
+			Keys: webpush.Keys{
+				Auth:   sub.Keys.Auth,
+				P256dh: sub.Keys.P256dh,
+			},
+		}
+
 		// compose the Device struct to be saved to the database
 		deviceSub := models.Device{
 			UUID:         uuid,
 			TimeCreated:  time.Now(),
-			Subscription: sub,
+			Subscription: webSub,
 		}
 
 		user := c.user
