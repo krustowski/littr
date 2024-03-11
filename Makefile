@@ -72,6 +72,11 @@ fmt: version
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
 	@gofmt -w -s .
 
+docs: 
+	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
+	@~/go/bin/swag init -ot json .
+	@docker compose up swagger_ui -d --force-recreate
+
 .PHONY: build
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
@@ -104,9 +109,11 @@ version:
 		sed -e 's/\(MAIL_PORT\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(GSC_TOKEN\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_PRIV_KEY\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_PUB_KEY\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
 		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
-		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=yyy/' > .env.example
+		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example
 
 .PHONY: push
 push:
