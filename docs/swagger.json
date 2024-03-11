@@ -1,0 +1,605 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth": {
+            "post": {
+                "description": "auth an user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Auth an user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/": {
+            "get": {
+                "description": "get posts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Get posts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update specified post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Update specified post",
+                "deprecated": true,
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "add new post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Add new post",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete specified post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Delete specified post",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/post/{postNo}": {
+            "get": {
+                "description": "get single post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Get single post",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/star": {
+            "put": {
+                "description": "update the star count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Update post's star count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/user/{nickname}": {
+            "get": {
+                "description": "get user posts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flow"
+                ],
+                "summary": "Get user posts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend.response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "backend.response": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "auth tokens (JWT)",
+                    "type": "string"
+                },
+                "auth_granted": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "flow_records": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "flow_stats": {
+                    "description": "very stats properties",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "key": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "polls": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Poll"
+                    }
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "subscribed": {
+                    "type": "boolean"
+                },
+                "user_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/backend.userStat"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "backend.userStat": {
+            "type": "object",
+            "properties": {
+                "flowerCount": {
+                    "description": "FlowerCount is basically a number of followers.",
+                    "type": "integer"
+                },
+                "postCount": {
+                    "description": "PostCount is a number of posts of such user.",
+                    "type": "integer"
+                },
+                "reactionCount": {
+                    "description": "ReactionCount tells the number of interactions (stars given).",
+                    "type": "integer"
+                },
+                "searched": {
+                    "description": "Searched is a special boolean used by the search engine to mark who is to be shown in search results.",
+                    "type": "boolean"
+                },
+                "shadeCount": {
+                    "description": "ShadeCount is basically a number of blockers.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Poll": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "description": "Author is the back key to the user originally posting that poll.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID is an unique poll's identifier.",
+                    "type": "string"
+                },
+                "option_one": {
+                    "description": "OptionOne is the answer numero uno.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.PollOption"
+                        }
+                    ]
+                },
+                "option_three": {
+                    "description": "OptionThree is the answer numero tres.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.PollOption"
+                        }
+                    ]
+                },
+                "option_two": {
+                    "description": "OptionTwo is the answer numero dos.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.PollOption"
+                        }
+                    ]
+                },
+                "question": {
+                    "description": "Question is to describe the main purpose of such poll.",
+                    "type": "string"
+                },
+                "reaction_count": {
+                    "description": "ReactionCount counts the number of item's reactions.",
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "description": "Timestamp is an UNIX timestamp indication the poll's creation time; should be identical to the upstream post's Timestamp.",
+                    "type": "string"
+                },
+                "voted_list": {
+                    "description": "VodeList is the list of user nicknames voted on such poll already.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.PollOption": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Content describes the very content of such poll's option/answer.",
+                    "type": "string"
+                },
+                "counter": {
+                    "description": "Counter hold a number of votes being committed to such option.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Post": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Content contains the very post's data to be shown as a text typed in by the author when created.",
+                    "type": "string"
+                },
+                "data": {
+                    "description": "Data is a helper field for the actual figure upload.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "figure": {
+                    "description": "Figure hold the filename of the uploaded figure to post with some provided text.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID is an unique post's identificator.",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "Nickname is a name of the post's author's name.",
+                    "type": "string"
+                },
+                "poll_id": {
+                    "description": "PollID is an identification of the Poll structure/object.",
+                    "type": "string"
+                },
+                "reaction_count": {
+                    "description": "ReactionCount counts the number of item's reactions.",
+                    "type": "integer"
+                },
+                "reply_count": {
+                    "description": "ReplyCount hold the count of replies for such post.",
+                    "type": "integer"
+                },
+                "reply_to": {
+                    "description": "ReplyTo is a reference key to another post, that is being replied to.",
+                    "type": "integer"
+                },
+                "reply_to_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "Timestamp is an UNIX timestamp, indicates the creation time.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type describes the post's type --- post, poll, reply, img.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "required": [
+                "id",
+                "nickname"
+            ],
+            "properties": {
+                "about": {
+                    "description": "About is a description string of such user.",
+                    "type": "string"
+                },
+                "active": {
+                    "description": "Active boolean indicates an activated user's account.",
+                    "type": "boolean"
+                },
+                "app_bg_mode": {
+                    "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
+                    "type": "string",
+                    "default": "dark"
+                },
+                "avatar_url": {
+                    "description": "AvatarURL is an URL to the user's custom profile picture.",
+                    "type": "string"
+                },
+                "color": {
+                    "description": "Color is the user's UI color scheme.",
+                    "type": "string",
+                    "default": "#000000"
+                },
+                "email": {
+                    "description": "Email is a primary user's e-mail address.",
+                    "type": "string"
+                },
+                "flow_list": {
+                    "description": "FlowList is a string map of users, which posts should be added to one's flow page.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "flow_toggle": {
+                    "description": "FlowToggle is a single implementation of FlowList.",
+                    "type": "string"
+                },
+                "full_name": {
+                    "description": "FullName is the \"genuine\" name of such user.",
+                    "type": "string"
+                },
+                "gdpr": {
+                    "description": "GDPR consent, set to true because it is noted on the registration page so. No user data should\nbe saved if the boolean is false.",
+                    "type": "boolean"
+                },
+                "id": {
+                    "description": "ID is an unique identifier.",
+                    "type": "string"
+                },
+                "last_active_time": {
+                    "description": "LastLoginTime is an UNIX timestamp of the last action performed by such user.",
+                    "type": "string"
+                },
+                "last_login_time": {
+                    "description": "LastLoginTime is an UNIX timestamp of the last user's successful log-in.",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "Nickname is a login name of such user.",
+                    "type": "string"
+                },
+                "passphrase": {
+                    "description": "Passphrase is a hashed pass phrase string (binary form).",
+                    "type": "string"
+                },
+                "passphrase_hex": {
+                    "description": "PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).",
+                    "type": "string"
+                },
+                "registered_time": {
+                    "description": "RegisteredTime is an UNIX timestamp of the user's registeration.",
+                    "type": "string"
+                },
+                "reply_notification_on": {
+                    "description": "ReplyNotificationOn is a bool, that indicates the state of notification permission made by user.\nIs set to false (off) on default.",
+                    "type": "boolean"
+                },
+                "shade_list": {
+                    "description": "ShadeList is a map of account/users to be shaded (soft-blocked) from following.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "tags": {
+                    "description": "Tags is an array of possible roles and other various attributes assigned to such user.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "web": {
+                    "description": "Web is user's personal homepage.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

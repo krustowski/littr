@@ -47,6 +47,19 @@ func authUser(aUser models.User) (*models.User, bool) {
 	return nil, false
 }
 
+
+// authHandler
+//
+// @Summary		Auth an user
+// @Description		auth an user
+// @Tags		auth
+// @Accept		json
+// @Produce		json
+// @Success		200	{object}	response
+// @Failure		400	{object}	response
+// @Failure		404	{object}	response
+// @Failure		500	{object}	response
+// @Router		/auth [post]
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "auth")
@@ -64,9 +77,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err = json.Unmarshal(data, &user); err != nil {
+	if err = json.Unmarshal(reqBody, &user); err != nil {
 		resp.Message = "backend error: cannot unmarshall request data"
 		resp.Code = http.StatusInternalServerError
 
