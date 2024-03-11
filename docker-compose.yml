@@ -53,3 +53,25 @@ services:
       timeout: 5s
       retries: 3
 
+  swagger_ui:
+    image: swaggerapi/swagger-ui
+    container_name: swis-api-swagger
+    ports: 
+      - target: 8080
+        published: 8999
+        mode: host
+        protocol: tcp
+    environment: 
+      BASE_URL: "/"
+      SWAGGER_JSON: "/tmp/swagger.json"
+    networks: 
+      - ${DOCKER_NETWORK_NAME}
+    volumes: 
+      - "./docs/swagger.json:/tmp/swagger.json"
+    labels:
+      #- "traefik.http.routers.${APP_NAME}-swagger.rule=Host(`swapi-docs.savla.su`)"
+      - "traefik.http.routers.${APP_NAME}-swagger.rule=Host(`swapi-docs.savla.su`) && PathPrefix(`/docs`)"
+      - "traefik.http.services.${APP_NAME}-swagger.loadbalancer.server.port=8080"
+      #- "traefik.http.middlewares.${APP_NAME}.stripprefix.prefixes=/docs"
+      - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
+
