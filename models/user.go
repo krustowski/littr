@@ -70,12 +70,6 @@ type User struct {
 	// Is set to false (off) on default.
 	ReplyNotificationOn bool `json:"reply_notification_on" default:false`
 
-	// VapidPubKey is a string containing VAPID public key for notification subscription.
-	VapidPubKey string `json:"vapid_pubkey"`
-
-	// VapidPrivKey is a string containing VAPID private key for notification subscription.
-	VapidPrivKey string `json:"vapid_privkey"`
-
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags"`
 }
