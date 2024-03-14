@@ -24,6 +24,15 @@ type userStat struct {
 	Searched bool `default:true`
 }
 
+// statsHandler acts like a handler for stats page
+//
+//	@Summary      Get stats
+//	@Description  get stats
+//	@Tags         stats
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {array}   response
+//	@Router       /stats [get]
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "stats")

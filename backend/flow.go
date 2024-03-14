@@ -12,10 +12,8 @@ import (
 	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 )
-
 
 // getPosts fetches posts, page spicified by a header
 //
@@ -90,15 +88,15 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 // addNewPost adds new post
 //
-//  @Summary      Add new post
-//  @Description  add new post
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      201  {object}  response
-//  @Failure      400  {object}  response
-//  @Failure      500  {object}  response
-//  @Router       /flow/ [post]
+//	@Summary      Add new post
+//	@Description  add new post
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /flow/ [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
@@ -116,9 +114,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &post); err != nil {
+	if err := json.Unmarshal(reqBody, &post); err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -190,16 +186,16 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 // updatePostStarCount increases the star count for the given post
 //
-//  @Summary      Update post's star count
-//  @Description  update the star count
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      200  {object}  response
-//  @Failure      400  {object}  response
-//  @Failure      403  {object}  response
-//  @Failure      500  {object}  response
-//  @Router       /flow/star [put]
+//	@Summary      Update post's star count
+//	@Description  update the star count
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      403  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /flow/star [put]
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
@@ -273,16 +269,16 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 
 // updatePost updates the specified post
 //
-//  @Summary      Update specified post
-//  @Description  update specified post
-//  @Deprecated
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      200  {object}  response
-//  @Failure      400  {object}  response
-//  @Failure      500  {object}  response
-//  @Router       /flow/ [put]
+//	@Summary      Update specified post
+//	@Description  update specified post
+//	@Deprecated
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /flow/ [put]
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
@@ -338,15 +334,15 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 
 // deletePost removes specified post
 //
-//  @Summary      Delete specified post
-//  @Description  delete specified post
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      200  {object}  response
-//  @Failure      400  {object}  response
-//  @Failure      500  {object}  response
-//  @Router       /flow/ [delete]
+//	@Summary      Delete specified post
+//	@Description  delete specified post
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /flow/ [delete]
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
@@ -394,14 +390,14 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 
 // getUserPosts fetches posts only from specified user
 //
-//  @Summary      Get user posts
-//  @Description  get user posts
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      200  {object}  response
-//  @Failure      400  {object}  response
-//  @Router       /flow/user/{nickname} [get]
+//	@Summary      Get user posts
+//	@Description  get user posts
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Router       /flow/user/{nickname} [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
@@ -461,14 +457,14 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 
 // getSinglePost fetch specified post and its interaction
 //
-//  @Summary      Get single post
-//  @Description  get single post
-//  @Tags         flow
-//  @Accept       json
-//  @Produce      json
-//  @Success      200  {object}  response
-//  @Failure      400  {object}  response
-//  @Router       /flow/post/{postNo} [get]
+//	@Summary      Get single post
+//	@Description  get single post
+//	@Tags         flow
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Router       /flow/post/{postNo} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")

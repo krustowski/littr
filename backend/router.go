@@ -2,7 +2,7 @@
 
 //	@title			litter-go
 //	@version		0.28.2
-//	@description	nanoblogging platform as PWA built on go-app framework (PoC) 
+//	@description	nanoblogging platform as PWA built on go-app framework (PoC)
 //	@termsOfService	https://littr.n0p.cz/tos/
 
 //	@contact.name	API Support
@@ -17,8 +17,8 @@
 
 //	@securityDefinitions.basic	BasicAuth
 
-//	@externalDocs.description	OpenAPI
-//	@externalDocs.url			https://swagger.io/resources/open-api/
+// @externalDocs.description	OpenAPI
+// @externalDocs.url			https://swagger.io/resources/open-api/
 package backend
 
 import (

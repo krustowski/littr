@@ -6,7 +6,6 @@ import (
 	"os"
 )
 
-
 func main() {
 	m := mail.NewMsg()
 	if err := m.From("littr@n0p.cz"); err != nil {

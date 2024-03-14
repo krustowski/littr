@@ -4,12 +4,19 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 )
 
+// getPolls get a list of polls
+//
+//	@Summary      Get a list of polls
+//	@Description  get a list of polls
+//	@Tags         polls
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}   response
+//	@Router       /polls/ [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "polls")
@@ -24,35 +31,36 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// addNewPoll ensures a new polls is created and saved
+//
+//	@Summary      Add new poll
+//	@Description  add new poll
+//	@Tags         polls
+//	@Accept       json
+//	@Produce      json
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /polls/ [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
-	l := Logger{
-		CallerID:  r.Header.Get("X-API-Caller-ID"),
-		IPAddress: r.Header.Get("X-Real-IP"),
-		//IPAddress:  r.RemoteAddr,
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "polls",
-		Version:    r.Header.Get("X-App-Version"),
-	}
+	l := NewLogger(r, "polls")
 
 	var poll models.Poll
 
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &poll); err != nil {
+	if err := json.Unmarshal(reqBody, &poll); err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -77,36 +85,48 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// updatePoll updates a given poll
+//
+//	@Summary      Update a poll
+//	@Description  update a poll
+//	@Tags         polls
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /polls/ [put]
 func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "polls")
 
-	var poll models.Poll
+	var payload models.Poll
 
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &poll); err != nil {
+	if err := json.Unmarshal(reqBody, &payload); err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	key := poll.ID
+	key := payload.ID
 
-	if _, found := getOne(PollCache, key, models.Poll{}); !found {
+	var poll models.Poll
+	var found bool
+
+	if poll, found = getOne(PollCache, key, models.Poll{}); !found {
 		resp.Message = "unknown poll update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -114,6 +134,8 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	poll.Voted = append(poll.Voted, l.CallerID)
 
 	if saved := setOne(PollCache, key, poll); !saved {
 		resp.Message = "cannot update post"
@@ -131,6 +153,17 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// deletePoll removes a poll
+//
+//	@Summary      Delete a poll
+//	@Description  delete a poll
+//	@Tags         polls
+//	@Accept       json
+//	@Produce      json
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /polls/ [delete]
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "polls")
@@ -140,18 +173,16 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	if err := json.Unmarshal(data, &poll); err != nil {
+	if err := json.Unmarshal(reqBody, &poll); err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)

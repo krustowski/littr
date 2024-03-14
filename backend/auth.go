@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/golang-jwt/jwt"
@@ -46,7 +45,6 @@ func authUser(aUser models.User) (*models.User, bool) {
 	// auth failed
 	return nil, false
 }
-
 
 // authHandler
 //

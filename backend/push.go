@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 
 	"go.savla.dev/littr/models"
 
@@ -155,8 +156,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 			// fire a notification
 			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
 				Subscriber:      user.Email,
-				VAPIDPublicKey:  user.VapidPubKey,
-				VAPIDPrivateKey: user.VapidPrivKey,
+				VAPIDPublicKey:  os.Getenv("VAPID_PUB_KEY"),
+				VAPIDPrivateKey: os.Getenv("VAPID_PRIV_KEY"),
 				TTL:             30,
 				Urgency:         webpush.UrgencyNormal,
 			})
