@@ -136,8 +136,9 @@ func initServer() {
 		ThemeColor:      "#000000",
 		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
 		Env: map[string]string{
-			"APP_VERSION": os.Getenv("APP_VERSION"),
-			"APP_PEPPER":  os.Getenv("APP_PEPPER"),
+			"APP_VERSION":   os.Getenv("APP_VERSION"),
+			"APP_PEPPER":    os.Getenv("APP_PEPPER"),
+			"VAPID_PUB_KEY": os.Getenv("VAPID_PUB_KEY"),
 		},
 		Preconnect: []string{
 			"https://cdn.savla.dev/",
