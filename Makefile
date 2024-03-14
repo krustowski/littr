@@ -72,6 +72,7 @@ fmt: version
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
 	@gofmt -w -s .
 
+.PHONY: docs
 docs: 
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
 	@~/go/bin/swag init -ot json .
