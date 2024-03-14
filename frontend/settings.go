@@ -76,6 +76,9 @@ func (c *settingsContent) OnMount(ctx app.Context) {
 
 func (c *settingsContent) OnNav(ctx app.Context) {
 	toastText := ""
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = true
+	})
 
 	ctx.Async(func() {
 		payload := struct {
@@ -128,6 +131,8 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 			//c.replyNotifOn = user.ReplyNotificationOn
+
+			c.settingsButtonDisabled = false
 		})
 		return
 	})
