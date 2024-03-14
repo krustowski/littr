@@ -451,11 +451,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		// fetch the unique identificator for notifications and unsubscribe option
 		uuid := ctx.DeviceID()
 
-		// VAPID key pair
-		privKey := c.user.VapidPrivKey
-		pubKey := c.user.VapidPubKey
-
-		keysGenerated := false
+		/*keysGenerated := false
 		// generate the VAPID key pair if missing
 		// TODO: move this to backend!
 		if privKey == "" || pubKey == "" {
@@ -474,10 +470,10 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 				return
 			}
 			keysGenerated = true
-		}
+		}*/
 
 		// register the subscription
-		sub, err := ctx.Notifications().Subscribe(pubKey)
+		sub, err := ctx.Notifications().Subscribe(VAPIDpublic)
 		if err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to subscribe to notifications: " + err.Error()
@@ -504,7 +500,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			Subscription: webSub,
 		}
 
-		user := c.user
+		/*user := c.user
 		user.VapidPrivKey = privKey
 		user.VapidPubKey = pubKey
 
@@ -521,7 +517,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 				})
 				return
 			}
-		}
+		}*/
 
 		// send the registeration to backend
 		if _, ok := litterAPI("POST", "/api/push", deviceSub, c.user.Nickname, 0); !ok {
@@ -539,7 +535,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
+			//c.user = user
 			c.subscribed = true
 
 			c.toastText = "successfully subscribed"

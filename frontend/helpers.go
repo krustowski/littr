@@ -20,7 +20,8 @@ import (
 
 const (
 	// this constant is used during the build --- linker (ld) bakes the value in
-	appVersion string = "v0.0.0"
+	appVersion  string = "v0.0.0"
+	VAPIDpublic string = ""
 )
 
 func litterAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
