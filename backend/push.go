@@ -12,6 +12,30 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+// GET /api/push/vapid
+func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
+	resp := response{}
+	l := NewLogger(r, "push")
+
+	caller, _ := r.Context().Value("nickname").(string)
+	if caller == "" {
+		resp.Message = "client unauthorized "
+		resp.Code = http.StatusUnauthorized
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, sending VAPID public key"
+	resp.Key = os.Getenv("VAPID_PUB_KEY")
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
+
 // POST /api/push
 func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	resp := response{}

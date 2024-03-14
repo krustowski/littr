@@ -52,6 +52,8 @@ type settingsContent struct {
 	settingsButtonDisabled bool
 
 	deleteAccountModalShow bool
+
+	VAPIDpublic string
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -78,6 +80,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 	ctx.Async(func() {
 		payload := struct {
 			Key        string                 `json:"key"`
+			PublicKey  string                 `json:"public_key"`
 			Users      map[string]models.User `json:"users"`
 			Subscribed bool                   `json:"subscribed"`
 		}{}
@@ -120,6 +123,8 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
+
+			c.VAPIDpublic = payload.PublicKey
 
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 			//c.replyNotifOn = user.ReplyNotificationOn
@@ -472,8 +477,26 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			keysGenerated = true
 		}*/
 
+		/*vapid := struct {
+			Key     string `json:"key"`
+			Message string `json:"message"`
+		}{}
+
+		if data, ok := litterAPI("GET", "/api/push/vapid", nil, "", 0); !ok {
+			if err := json.Unmarshal(*data, &vapid); err != nil {
+				toastText = "JSON parse error: " + err.Error()
+			}
+			toastText = "generic backend error: " + vapid.Message
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}*/
+
 		// register the subscription
-		sub, err := ctx.Notifications().Subscribe(VAPIDpublic)
+		sub, err := ctx.Notifications().Subscribe(c.VAPIDpublic)
 		if err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to subscribe to notifications: " + err.Error()
@@ -585,6 +608,7 @@ func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.E
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
+	c.toastType = ""
 	c.toastShow = (c.toastText != "")
 	c.settingsButtonDisabled = false
 	c.deleteAccountModalShow = false

@@ -104,7 +104,7 @@ func LoadAPIRouter() chi.Router {
 		r.Post("/", subscribeToNotifs)
 		r.Put("/", sendNotif)
 		r.Delete("/", deleteSubscription)
-		//r.Get("/vapid", generateVapidKeyPair)
+		r.Get("/vapid", fetchVAPIDKey)
 	})
 
 	r.Get("/stats", statsHandler)

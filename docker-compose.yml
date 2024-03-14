@@ -28,6 +28,7 @@ services:
         DOCKER_USER: ${DOCKER_USER}
         GOLANG_VERSION: ${GOLANG_VERSION}
         TZ: ${TZ}
+        VAPID_PUB_KEY: ${VAPID_PUB_KEY}
     restart: unless-stopped
     cpus: 0.3
     mem_limit: 128m
@@ -46,6 +47,7 @@ services:
     environment:
       API_TOKEN: ${API_TOKEN}
       APP_PEPPER: ${APP_PEPPER}
+      VAPID_PUB_KEY: ${VAPID_PUB_KEY}
     healthcheck:
       #test: ["CMD", "/opt/periodic-dump.sh"]
       test: ["CMD", "wget", "--header", "X-App-Token: ${API_TOKEN}", "localhost:8080/api/dump", "-O", "-", "-S" ]
@@ -53,9 +55,9 @@ services:
       timeout: 5s
       retries: 3
 
-  swagger_ui:
+  litter-swagger:
     image: swaggerapi/swagger-ui
-    container_name: swis-api-swagger
+    container_name: litter-swagger
     ports: 
       - target: 8080
         published: 8998

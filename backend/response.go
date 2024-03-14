@@ -16,9 +16,10 @@ type response struct {
 	AuthGranted bool `json:"auth_granted" default:false`
 	Code        int  `json:"code"`
 
-	Key     string `json:"key"`
-	Message string `json:"message"`
-	Count   int    `json:"count"`
+	PublicKey string `json:"public_key"`
+	Key       string `json:"key"`
+	Message   string `json:"message"`
+	Count     int    `json:"count"`
 
 	Subscribed bool `json:"subscribed"`
 

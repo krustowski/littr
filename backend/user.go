@@ -71,6 +71,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp.Users = users
 	resp.UserStats = stats
 	resp.Key = caller
+	resp.PublicKey = os.Getenv("VAPID_PUB_KEY")
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
