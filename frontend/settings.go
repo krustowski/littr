@@ -54,6 +54,8 @@ type settingsContent struct {
 	deleteAccountModalShow bool
 
 	VAPIDpublic string
+	devices     []models.Device
+	UUID        string
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -86,6 +88,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			PublicKey  string                 `json:"public_key"`
 			Users      map[string]models.User `json:"users"`
 			Subscribed bool                   `json:"subscribed"`
+			Devices    []models.Device        `json:"devices"`
 		}{}
 
 		if data, ok := litterAPI("GET", "/api/users", nil, ctx.DeviceID(), 0); ok {
@@ -121,6 +124,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = user
 			c.loggedUser = user.Nickname
+			c.devices = payload.Devices
 
 			c.subscribed = payload.Subscribed
 
@@ -128,6 +132,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			//c.darkModeOn = user.AppBgMode == "dark"
 
 			c.VAPIDpublic = payload.PublicKey
+			c.UUID = ctx.DeviceID()
 
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 			//c.replyNotifOn = user.ReplyNotificationOn
@@ -408,6 +413,15 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 
 			}
 
+			devs := c.devices
+			newDevs := []models.Device{}
+			for _, dev := range devs {
+				if dev.UUID == ctx.DeviceID() {
+					continue
+				}
+				newDevs = append(newDevs, dev)
+			}
+
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "successfully unsubscribed, notifications off"
@@ -415,6 +429,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 				c.toastType = "info"
 
 				c.subscribed = false
+				c.devices = newDevs
 			})
 			return
 		})
@@ -561,6 +576,9 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			return
 		}
 
+		devs := c.devices
+		devs = append(devs, deviceSub)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
 			//c.user = user
@@ -569,6 +587,8 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			c.toastText = "successfully subscribed"
 			c.toastShow = toastText != ""
 			c.toastType = "success"
+
+			c.devices = devs
 		})
 		return
 
@@ -634,6 +654,8 @@ func (c *settingsContent) Render() app.UI {
 	default:
 		toastColor = "red10"
 	}
+
+	devicesToShow := len(c.devices)
 
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
@@ -742,6 +764,11 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// notifications
+		app.Div().Class("large-divider"),
+		app.H6().Text("notifications"),
+		app.Div().Class("space"),
+
 		// notification infobox
 		app.Article().Class("row border").Body(
 			app.I().Text("lightbulb"),
@@ -771,6 +798,43 @@ func (c *settingsContent) Render() app.UI {
 						app.I().Text("notifications"),
 					),
 				),
+			),
+		),
+
+		// print list of subscribed devices
+		app.If(devicesToShow > 0,
+
+			// user avatar change
+			//app.Div().Class("large-divider"),
+			app.H6().Text("registered devices"),
+			app.Div().Class("space"),
+
+			app.Div().Class().Body(
+				app.Range(c.devices).Slice(func(i int) app.UI {
+
+					dev := c.devices[i]
+					if dev.UUID == "" {
+						return nil
+					}
+
+					deviceText := "device"
+					if dev.UUID == c.UUID {
+						deviceText = "this device"
+					}
+
+					u, err := url.Parse(dev.Subscription.Endpoint)
+					if err != nil {
+						log.Println(err.Error())
+						return nil
+					}
+					deviceText += " (" + u.Host + ")"
+
+					return app.Article().Body(
+						app.H6().Body(app.Text(deviceText)),
+						app.P().Body(app.Text("subscribed to notifs")),
+						app.P().Body(app.Text(dev.TimeCreated)),
+					)
+				}),
 			),
 		),
 
