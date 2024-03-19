@@ -54,8 +54,9 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 	toastText := ""
 
 	response := struct {
-		Code  int                    `json:"code"`
-		Users map[string]models.User `json:"users"`
+		Code    int                    `json:"code"`
+		Message string                 `json:"message"`
+		Users   map[string]models.User `json:"users"`
 	}{}
 
 	ctx.Async(func() {
@@ -67,7 +68,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		email := strings.TrimSpace(c.email)
 
 		// fetch the users list to compare to
-		resp, ok := litterAPI("GET", "/api/users", nil, nickname, 0)
+		/*resp, ok := litterAPI("GET", "/api/users", nil, nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 
@@ -86,7 +87,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 				c.toastShow = (toastText != "")
 			})
 			return
-		}
+		}*/
 
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
 			toastText = "all fields need to be filled"
@@ -134,7 +135,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// check if the e-mail address has been used already
-		for _, user := range response.Users {
+		/*for _, user := range response.Users {
 			if email != user.Email {
 				continue
 			}
@@ -146,7 +147,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 				c.toastShow = (toastText != "")
 			})
 			return
-		}
+		}*/
 
 		passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 
@@ -163,7 +164,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok = litterAPI("POST", "/api/users", user, user.Nickname, 0)
+		resp, ok := litterAPI("POST", "/api/users", user, user.Nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 
@@ -184,8 +185,9 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if response.Code == 409 {
-			toastText = "that user already exists!"
+		if response.Code != 201 {
+			//toastText = "that user already exists!"
+			toastText = response.Message
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText

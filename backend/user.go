@@ -94,9 +94,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	err = json.Unmarshal(data, &user)
+	err = json.Unmarshal(reqBody, &user)
 	if err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
 		resp.Code = http.StatusInternalServerError
