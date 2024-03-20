@@ -837,9 +837,17 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("reply notification switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("reply-notification-switch").Checked(c.subscribed).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
-					app.Span().Body(
-						app.I().Text("notifications"),
+					// nasty workaround to ensure the switch to be updated "correctly"
+					app.If(c.subscribed,
+						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
+						app.Span().Body(
+							app.I().Text("notifications"),
+						),
+					).Else(
+						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
+						app.Span().Body(
+							app.I().Text("notifications"),
+						),
 					),
 				),
 			),

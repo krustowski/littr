@@ -18,10 +18,10 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-const (
-	// this constant is used during the build --- linker (ld) bakes the value in
-	appVersion     string = "v0.0.0"
-	vapidPublicKey string = ""
+var (
+	// those vars are used during the build --- linker (ld) bakes the values in
+	appVersion     string
+	vapidPublicKey string
 )
 
 func litterAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
