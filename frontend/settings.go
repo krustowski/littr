@@ -882,7 +882,7 @@ func (c *settingsContent) Render() app.UI {
 					deviceText += " (" + u.Host + ")"
 
 					return app.Article().Body(
-						app.H6().Body(app.Text(deviceText)),
+						app.P().Class("bold").Body(app.Text(deviceText)),
 						app.P().Body(app.Text("subscribed to notifs")),
 						app.P().Body(app.Text(dev.TimeCreated)),
 					)
