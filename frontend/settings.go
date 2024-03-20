@@ -714,7 +714,7 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 		app.Div().Class("").Body(
-			app.P().Text("your login and e-mail address:"),
+			app.P().Text("your e-mail address:"),
 			app.Article().Body(
 				app.Text(c.user.Email),
 			),
