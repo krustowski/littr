@@ -515,8 +515,14 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 			return
 		}*/
 
+		vapidPubKey := c.VAPIDpublic
+		if vapidPubKey == "" {
+			// compiled into frontend/helpers.vapidPublicKey variable in wasm binary (see Dockerfile for more info)
+			vapidPubKey = vapidPublicKey
+		}
+
 		// register the subscription
-		sub, err := ctx.Notifications().Subscribe(c.VAPIDpublic)
+		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
 		if err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to subscribe to notifications: " + err.Error()
