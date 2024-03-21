@@ -75,8 +75,8 @@ fmt: version
 .PHONY: docs
 docs: 
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
-	@~/go/bin/swag init -ot json .
-	@docker compose up swagger_ui -d --force-recreate
+	@~/go/bin/swag init --parseDependency -ot json .
+	@docker compose up litter-swagger -d --force-recreate
 
 .PHONY: build
 build: 
