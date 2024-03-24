@@ -136,6 +136,9 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	poll.Voted = append(poll.Voted, l.CallerID)
+	poll.OptionOne = payload.OptionOne
+	poll.OptionTwo = payload.OptionTwo
+	poll.OptionThree = payload.OptionThree
 
 	if saved := setOne(PollCache, key, poll); !saved {
 		resp.Message = "cannot update post"
