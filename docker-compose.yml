@@ -64,7 +64,8 @@ services:
         mode: host
         protocol: tcp
     environment: 
-      BASE_URL: "/"
+      BASE_URL: "/docs/"
+      BASE_PATH: "/api"
       SWAGGER_JSON: "/tmp/swagger.json"
     networks: 
       - ${DOCKER_NETWORK_NAME}

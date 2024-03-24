@@ -1,8 +1,22 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "nanoblogging platform as PWA built on go-app framework (PoC)",
+        "title": "litter-go",
+        "termsOfService": "https://littr.n0p.cz/tos/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://littr.n0p.cz/docs",
+            "email": "littr@n0p.cz"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
+        },
+        "version": "0.29.6"
     },
+    "host": "littr.n0p.cz",
+    "basePath": "/api",
     "paths": {
         "/auth": {
             "post": {
@@ -445,6 +459,12 @@
                         "type": "integer"
                     }
                 },
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Device"
+                    }
+                },
                 "flow_records": {
                     "type": "array",
                     "items": {
@@ -475,6 +495,9 @@
                     "additionalProperties": {
                         "$ref": "#/definitions/models.Post"
                     }
+                },
+                "public_key": {
+                    "type": "string"
                 },
                 "refresh_token": {
                     "type": "string"
@@ -518,6 +541,27 @@
                 "shadeCount": {
                     "description": "ShadeCount is basically a number of blockers.",
                     "type": "integer"
+                }
+            }
+        },
+        "models.Device": {
+            "type": "object",
+            "properties": {
+                "subscription": {
+                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/webpush.Subscription"
+                        }
+                    ]
+                },
+                "time_created": {
+                    "description": "Timestamp of the subscription creation.",
+                    "type": "string"
+                },
+                "uuid": {
+                    "description": "Unique identification of the app on the current device.\nhttps://go-app.dev/reference#Context",
+                    "type": "string"
                 }
             }
         },
@@ -748,6 +792,37 @@
                     "type": "string"
                 }
             }
+        },
+        "webpush.Keys": {
+            "type": "object",
+            "properties": {
+                "auth": {
+                    "type": "string"
+                },
+                "p256dh": {
+                    "type": "string"
+                }
+            }
+        },
+        "webpush.Subscription": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "keys": {
+                    "$ref": "#/definitions/webpush.Keys"
+                }
+            }
         }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
+        }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
     }
 }
