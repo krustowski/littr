@@ -33,7 +33,11 @@ const (
 
 func (h *header) OnAppUpdate(ctx app.Context) {
 	// Reports that an app update is available.
-	h.updateAvailable = ctx.AppUpdateAvailable()
+	//h.updateAvailable = ctx.AppUpdateAvailable()
+	//
+	ctx.Dispatch(func(ctx app.Context) {
+		h.updateAvailable = true
+	})
 
 	// force reload the app on update
 	//ctx.Reload()
@@ -135,6 +139,10 @@ func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickReload(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.updateAvailable = false
+	})
+
 	ctx.Reload()
 }
 
