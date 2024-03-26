@@ -36,7 +36,7 @@ func (h *header) OnAppUpdate(ctx app.Context) {
 	h.updateAvailable = ctx.AppUpdateAvailable()
 
 	// force reload the app on update
-	ctx.Reload()
+	//ctx.Reload()
 }
 
 func (h *header) tryCookies(ctx app.Context) bool {
@@ -252,6 +252,15 @@ func (h *header) Render() app.UI {
 					app.Nav().Class("center-align").Body(
 						app.Button().Class("border deep-orange7 white-text").Text("reload").OnClick(h.onClickReload),
 						app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
+					),
+				),
+			),
+
+			// update button
+			app.If(h.updateAvailable,
+				app.A().Class("max").Text("update").OnClick(h.onClickReload).Body(
+					app.I().Class("large").Class("deep-orange-text").Body(
+						app.Text("update"),
 					),
 				),
 			),

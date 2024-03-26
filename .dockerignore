@@ -1,6 +1,8 @@
 .git/
 .github/
+docs/
 docker-compose.yml
 Dockerfile
 Makefile
-swis-api
+liiter
+littr

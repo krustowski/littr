@@ -14,8 +14,10 @@ PROJECT_NAME?=litter-go
 DOCKER_IMAGE_TAG?=${PROJECT_NAME}-image
 DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
 
+GOARCH := $(shell go env GOARCH)
 GOCACHE?=/home/${USER}/.cache/go-build
 GOMODCACHE?=/home/${USER}/go/pkg/mod
+GOOS := $(shell go env GOOS)
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9

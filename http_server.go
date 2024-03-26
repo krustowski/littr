@@ -121,7 +121,7 @@ func initServer() {
 			"microblogging",
 			"social network",
 		},
-		AutoUpdateInterval: time.Minute * 5,
+		AutoUpdateInterval: time.Minute * 1,
 		Icon: app.Icon{
 			Default:    "/web/android-chrome-192x192.png",
 			SVG:        "/web/android-chrome-512x512.svg",
