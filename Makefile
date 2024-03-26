@@ -14,6 +14,9 @@ PROJECT_NAME?=litter-go
 DOCKER_IMAGE_TAG?=${PROJECT_NAME}-image
 DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
 
+GOCACHE?=/home/${USER}/.cache/go-build
+GOMODCACHE?=/home/${USER}/go/pkg/mod
+
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
 ifneq (,$(findstring xterm,${TERM}))

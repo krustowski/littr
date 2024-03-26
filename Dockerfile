@@ -10,7 +10,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
+FROM --platform=linux/amd64 golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
 
 ARG APP_NAME
 ARG APP_PEPPER
@@ -22,7 +22,7 @@ ENV APP_NAME ${APP_NAME}
 ENV APP_PEPPER ${APP_PEPPER}
 ENV APP_VERSION ${APP_VERSION}
 ENV API_TOKEN ${API_TOKEN}
-ENV CGO_ENABLED 1
+ENV CGO_ENABLED 0
 ENV VAPID_PUB_KEY ${VAPID_PUB_KEY}
 
 RUN --mount=type=cache,target=/var/cache/apk \
@@ -30,17 +30,24 @@ RUN --mount=type=cache,target=/var/cache/apk \
 
 WORKDIR /go/src/${APP_NAME}
 COPY go.mod .
-RUN go mod download
+
+ARG GOMODCACHE GOCACHE
+RUN --mount=type=cache,target="$GOMODCACHE" go mod download
+
 COPY . .
 
 # build the client -- wasm binary
 #RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/config.APIToken=$API_TOKEN' -X 'go.savla.dev/littr/config.Version=$APP_VERSION' -X 'go.savla.dev/littr/config.Pepper=$APP_PEPPER'"
-RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/frontend.vapidPublicKey=$VAPID_PUB_KEY'"
+RUN --mount=type=cache,target="$GOMODCACHE" \
+	--mount=type=cache,target="$GOCACHE" \
+	GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/frontend.vapidPublicKey=$VAPID_PUB_KEY'"
 #RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm 
 
 # build the server
 #RUN go build -ldflags "-X 'litter-go/config.Version=$APP_VERSION'" ${APP_NAME}
-RUN go build -o littr
+RUN --mount=type=cache,target="$GOMODCACHE" \
+	--mount=type=cache,target="$GOCACHE" \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o littr
 
 
 #
