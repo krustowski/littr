@@ -186,13 +186,14 @@ func (c *resetContent) Render() app.UI {
 		),
 
 		// pwd reset lightbulb
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
 				app.Span().Text("enter your e-mail address below; after that, password of the linked account will be reset, and a confirmation mail will be sent to such address if found"),
 			),
 		),
+		app.Div().Class("space"),
 
 		// pwd reset credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
@@ -200,11 +201,13 @@ func (c *resetContent) Render() app.UI {
 			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 
-		app.Div().Class("small-space"),
+		//app.Div().Class("small-space"),
 
 		// pwd reset button
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClick).Disabled(c.buttonsDisabled).Body(
-			app.Text("reset"),
+		app.Div().Class("row").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClick).Disabled(c.buttonsDisabled).Body(
+				app.Text("reset"),
+			),
 		),
 		app.Div().Class("space"),
 	)

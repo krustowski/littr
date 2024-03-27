@@ -198,34 +198,33 @@ func (c *loginContent) Render() app.UI {
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
 				app.Span().Text("log-in for 30 days"),
 			),
 		),
-		app.Div().Class("small-space"),
+		app.Div().Class("medium-space"),
 
 		// login button
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
-			app.Text("login"),
+		app.Div().Class("row").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
+				app.Text("login"),
+			),
 		),
-		app.Div().Class("space"),
-
-		app.P().Class("center-align").Text("or"),
 		app.Div().Class("space"),
 
 		// reset button
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
-			app.Text("recover forgotten passphrase"),
-		),
+		app.Div().Class("row max").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(4).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
+				app.Text("recover forgotten passphrase"),
+			),
 
-		app.Div().Class("space"),
-
-		// register button
-		app.Button().Class("responsive deep-orange7 white-text bold").TabIndex(3).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
-			app.Text("register"),
+			// register button
+			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+				app.Text("register"),
+			),
 		),
 		app.Div().Class("space"),
 	)
