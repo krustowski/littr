@@ -913,7 +913,7 @@ func (c *flowContent) Render() app.UI {
 					app.P().Text("exclusive content incoming frfr"),
 				),
 			),
-			app.Button().Class("border black white-text bold").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+			app.Button().Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 				app.If(c.refreshClicked,
 					app.Progress().Class("circle deep-orange-border small"),
 				),
@@ -934,27 +934,34 @@ func (c *flowContent) Render() app.UI {
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
-			app.Dialog().Class("grey9 white-text active").Body(
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
-				app.P().Text("are you sure you want to delete your post?"),
+
 				app.Div().Class("space"),
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+				app.Article().Class("row").Body(
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete your post?"),
+					),
+				),
+				app.Div().Class("space"),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
 						app.Text("yeah"),
 					),
-					app.Button().Class("border deep-orange7 white-text").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
 				),
 			),
 		),
 
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
+			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),
@@ -985,9 +992,9 @@ func (c *flowContent) Render() app.UI {
 					app.I().Text("image"),
 				),
 
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text bold").Text("cancel").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
-					app.Button().ID("").Class("border deep-orange7 white-text bold").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text bold").Text("cancel").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
+					app.Button().ID("").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
 						app.If(c.postButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),

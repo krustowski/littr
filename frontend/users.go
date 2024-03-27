@@ -539,7 +539,7 @@ func (c *usersContent) Render() app.UI {
 
 		// user info modal
 		app.If(c.showUserPreviewModal && userInModalInfo != nil,
-			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Body(
+			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
 
 				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
 				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
@@ -582,8 +582,8 @@ func (c *usersContent) Render() app.UI {
 				),
 
 				//app.Div().Class("large-space"),
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(c.dismissToast),
+				app.Div().Class("row center-align").Body(
+					app.Button().Class("max border deep-orange7 white-text").Text("close").Style("border-radius", "8px").OnClick(c.dismissToast),
 				),
 			),
 		),
@@ -664,51 +664,54 @@ func (c *usersContent) Render() app.UI {
 							),
 
 							// cell's body
-							app.Div().Class("row middle-align bottom-padding top-padding").Body(
+							app.Div().Class("row middle-align top-padding").Body(
 
-								app.Article().Class("post max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+								app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 									app.Span().Text(user.About),
 								),
+							),
 
+							app.Div().Class("row bottom-padding").Body(
 								// flow list button
 
 								// make button inactive for logged user
 								app.If(user.Nickname == c.user.Nickname,
-									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "30%").Body(
+									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("that's you"),
 									),
 								// if system acc
 								).ElseIf(user.Nickname == "system",
-									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "40%").Body(
+									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("system acc"),
 									),
 								// if shaded
 								).ElseIf(shaded || c.users[user.Nickname].ShadeList[c.user.Nickname],
-									app.Button().Class("deep-orange7 white-text bold").Disabled(true).Style("width", "30%").Body(
+									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("shaded"),
 									),
 								// toggle off
 								).ElseIf(inFlow,
-									app.Button().Class("border black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("width", "40%").Body(
+									app.Button().Class("max border black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("remove from flow"),
 									),
 								// toggle on
 								).Else(
-									app.Button().Class("deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("width", "30%").Body(
+									app.Button().Class("max deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("add to flow"),
 									),
 								),
 
+								// shading
 								app.If(shaded,
-									app.Button().Class("no-padding transparent circular black white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
+									app.Button().Class("no-padding transparent circular black white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
 										app.I().Text("block"),
 									),
 								).ElseIf(user.Nickname == c.user.Nickname,
-									app.Button().Class("no-padding transparent circular grey white-text").OnClick(nil).Disabled(true).ID(user.Nickname).Body(
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(nil).Disabled(true).ID(user.Nickname).Style("border-radius", "8px").Body(
 										app.I().Text("block"),
 									),
 								).Else(
-									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Body(
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
 										app.I().Text("block"),
 									),
 								),

@@ -269,11 +269,13 @@ func (c *postContent) Render() app.UI {
 			app.Label().Text("image").Class("active deep-orange-text"),
 			app.I().Text("image"),
 		),
-		app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
-			app.If(c.postButtonsDisabled,
-				app.Progress().Class("circle white-border small"),
+		app.Div().Class("row").Body(
+			app.Button().ID("post").Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+				app.If(c.postButtonsDisabled,
+					app.Progress().Class("circle white-border small"),
+				),
+				app.Text("send new post"),
 			),
-			app.Text("send new post"),
 		),
 
 		app.Div().Class("large-divider"),
@@ -300,11 +302,13 @@ func (c *postContent) Render() app.UI {
 			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60),
 			app.Label().Text("option three (optional)").Class("active deep-orange-text"),
 		),
-		app.Button().ID("poll").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
-			app.If(c.postButtonsDisabled,
-				app.Progress().Class("circle white-border small"),
+		app.Div().Class("row").Body(
+			app.Button().ID("poll").Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+				app.If(c.postButtonsDisabled,
+					app.Progress().Class("circle white-border small"),
+				),
+				app.Text("send new poll"),
 			),
-			app.Text("send new poll"),
 		),
 		app.Div().Class("space"),
 	)

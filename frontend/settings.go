@@ -678,16 +678,22 @@ func (c *settingsContent) Render() app.UI {
 
 		// acc deletion modal
 		app.If(c.deleteAccountModalShow,
-			app.Dialog().Class("grey9 white-text active").Body(
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("account deletion"),
 				),
 				app.Div().Class("space"),
-				app.P().Text("are you sure you want to delete your account and all posted items?"),
+
+				app.Article().Class("row").Body(
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete your account and all posted items?"),
+					),
+				),
 				app.Div().Class("space"),
-				app.Nav().Class("center-align").Body(
-					app.Button().Class("border deep-orange7 white-text").Text("yeah").OnClick(c.onClickDeleteAccount),
-					app.Button().Class("border deep-orange7 white-text").Text("nope").OnClick(c.dismissToast),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
+					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
 				),
 			),
 		),
@@ -913,7 +919,9 @@ func (c *settingsContent) Render() app.UI {
 			app.Label().Text("passphrase again").Class("active deep-orange-text"),
 		),
 
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
+		app.Div().Class("row").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Text("change passphrase").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
+		),
 
 		// about textarea
 		app.Div().Class("space"),
@@ -927,7 +935,9 @@ func (c *settingsContent) Render() app.UI {
 			app.Label().Text("about").Class("active deep-orange-text"),
 		),
 
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+		app.Div().Class("row").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Text("change about").Style("border-radius", "8px").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+		),
 
 		// website link
 		app.Div().Class("space"),
@@ -940,7 +950,10 @@ func (c *settingsContent) Render() app.UI {
 			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 			app.Label().Text("website URL").Class("active deep-orange-text"),
 		),
-		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+
+		app.Div().Class("row").Body(
+			app.Button().Class("max deep-orange7 white-text bold").Text("change website").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+		),
 
 		// user deletion
 		app.Div().Class("space"),
@@ -955,7 +968,9 @@ func (c *settingsContent) Render() app.UI {
 		),
 		app.Div().Class("medium-space"),
 
-		app.Button().Class("responsive red9 white-text bold").Text("delete account").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+		app.Div().Class("row").Body(
+			app.Button().Class("max red9 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+		),
 
 		app.Div().Class("large-space"),
 	)

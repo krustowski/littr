@@ -3,7 +3,7 @@
     "info": {
         "description": "nanoblogging platform as PWA built on go-app framework (PoC)",
         "title": "litter-go",
-        "termsOfService": "https://littr.n0p.cz/tos/",
+        "termsOfService": "https://littr.n0p.cz/tos",
         "contact": {
             "name": "API Support",
             "url": "https://littr.n0p.cz/docs",
