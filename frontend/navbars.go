@@ -192,14 +192,14 @@ func (h *header) Render() app.UI {
 
 			// app logout modal
 			app.If(modalLogoutActiveClass == " active",
-				app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Body(
+				app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Style("border-radius", "8px").Body(
 					app.Nav().Class("center-align").Body(
 						app.H5().Text("really logout?"),
 					),
 					app.Div().Class("large-space"),
-					app.Nav().Class("center-align").Body(
-						app.Button().Class("border deep-orange7 white-text").Text("yes").OnClick(h.onClickLogout),
-						app.Button().Class("border deep-orange7 white-text").Text("nah").OnClick(h.onClickModalDismiss),
+					app.Div().Class("row").Body(
+						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
+						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(h.onClickModalDismiss),
 					),
 				),
 			),
@@ -222,7 +222,7 @@ func (h *header) Render() app.UI {
 
 			// app info modal
 			app.If(modalInfoActiveClass == " active",
-				app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Body(
+				app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Style("border-radius", "8px").Body(
 					app.Div().Class("row").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Text("littr (beta)"),
@@ -257,9 +257,10 @@ func (h *header) Render() app.UI {
 							app.A().Href("https://github.com/savla-dev/swis-api").Text("swapi").Style("font-weight", "bolder"),
 						),
 					),
-					app.Nav().Class("center-align").Body(
-						app.Button().Class("border deep-orange7 white-text").Text("reload").OnClick(h.onClickReload),
-						app.Button().Class("border deep-orange7 white-text").Text("close").OnClick(h.onClickModalDismiss),
+
+					app.Div().Class("row").Body(
+						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("reload").OnClick(h.onClickReload),
+						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("close").OnClick(h.onClickModalDismiss),
 					),
 				),
 			),
