@@ -667,12 +667,12 @@ func (c *settingsContent) Render() app.UI {
 		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("change your passphrase, or your bottom text"),
 
-		app.Div().Class("space"),
+		app.Div().Class("large-space"),
 
 		app.Div().Class("").Body(
 			app.P().Text("logged as:"),
 			app.Article().Body(
-				app.Text(c.user.Nickname),
+				app.Text(c.user.Nickname+" ("+c.user.Email+")"),
 			),
 		),
 
@@ -682,6 +682,7 @@ func (c *settingsContent) Render() app.UI {
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("account deletion"),
 				),
+				app.Div().Class("space"),
 				app.P().Text("are you sure you want to delete your account and all posted items?"),
 				app.Div().Class("space"),
 				app.Nav().Class("center-align").Body(
@@ -703,21 +704,20 @@ func (c *settingsContent) Render() app.UI {
 
 		// user avatar change
 		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
 		app.H6().Text("change user's avatar"),
 		app.Div().Class("space"),
 
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
 				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
 			),
 		),
-		app.Div().Class("").Body(
-			app.P().Text("your e-mail address:"),
-			app.Article().Body(
-				app.Text(c.user.Email),
-			),
+		app.Div().Class("space"),
+
+		app.Div().Class("row").Body(
 			app.P().Text("current avatar:"),
 		),
 
@@ -725,19 +725,22 @@ func (c *settingsContent) Render() app.UI {
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 		),
 
-		app.Article().Class("row border").Body(
+		app.Div().Class("space"),
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
 		),
 
+		app.Div().Class("space"),
 		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
 		app.H6().Text("switches"),
 		app.Div().Class("space"),
 
 		// darkmode infobox
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("the UI mode "),
@@ -761,7 +764,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// left-hand infobox
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("left-hand switch "),
@@ -785,7 +788,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// live infobox
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("live mode "),
@@ -809,19 +812,21 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// notifications
+		app.Div().Class("space"),
 		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
 		app.H6().Text("notifications"),
 		app.Div().Class("space"),
 
 		// notification infobox
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
 				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
 			),
 		),
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("lightbulb"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text("reply notifications "),
@@ -858,8 +863,9 @@ func (c *settingsContent) Render() app.UI {
 
 			// user avatar change
 			//app.Div().Class("large-divider"),
-			app.H6().Text("registered devices"),
 			app.Div().Class("space"),
+			app.H6().Text("registered devices"),
+			app.Div().Class("medium-space"),
 
 			app.Div().Class().Body(
 				app.Range(c.devices).Slice(func(i int) app.UI {
@@ -891,9 +897,11 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// password change
-		app.Div().Class("large-divider"),
-		app.H6().Text("password change"),
 		app.Div().Class("space"),
+		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
+		app.H6().Text("password change"),
+		app.Div().Class("medium-space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
@@ -908,9 +916,11 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change passphrase").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 
 		// about textarea
-		app.Div().Class("large-divider"),
-		app.H6().Text("about text change"),
 		app.Div().Class("space"),
+		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
+		app.H6().Text("about text change"),
+		app.Div().Class("medium-space"),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
@@ -920,9 +930,11 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change about").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
 
 		// website link
-		app.Div().Class("large-divider"),
-		app.H6().Text("website link change"),
 		app.Div().Class("space"),
+		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
+		app.H6().Text("website link change"),
+		app.Div().Class("medium-space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
@@ -931,14 +943,17 @@ func (c *settingsContent) Render() app.UI {
 		app.Button().Class("responsive deep-orange7 white-text bold").Text("change website").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 
 		// user deletion
+		app.Div().Class("space"),
 		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
 		app.H6().Text("account deletion"),
+		app.Div().Class("space"),
 
-		app.Article().Class("row border").Body(
+		app.Article().Class("row").Body(
 			app.I().Text("warning"),
 			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
 		),
-		app.Div().Class("space"),
+		app.Div().Class("medium-space"),
 
 		app.Button().Class("responsive red9 white-text bold").Text("delete account").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
 
