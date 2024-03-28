@@ -323,7 +323,7 @@ func (c *pollsContent) Render() app.UI {
 			),
 		),
 
-		app.Table().Class("border left-align").ID("table-poll").Body(
+		app.Table().Class("left-align").ID("table-poll").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
 			app.TBody().Body(
 				app.Range(pagedPolls).Slice(func(idx int) app.UI {
 					poll := pagedPolls[idx]
@@ -350,20 +350,22 @@ func (c *pollsContent) Render() app.UI {
 
 					return app.Tr().Body(
 						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
-							app.P().Body(
-								app.Text("Q: "),
-								app.B().Text(poll.Question).Class("deep-orange-text space"),
+							app.Div().Class("row top-padding").Body(
+								app.P().Body(
+									app.Text("Q: "),
+									app.Span().Text(poll.Question).Class("deep-orange-text space bold"),
+								),
 							),
 							app.Div().Class("space"),
 
 							// show buttons to vote
 							app.If(!userVoted && poll.Author != c.user.Nickname,
-								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content).DataSet("option", poll.OptionOne.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionOne.Content).Disabled(c.pollsButtonDisabled),
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionOne.Content).DataSet("option", poll.OptionOne.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionOne.Content).Disabled(c.pollsButtonDisabled).Style("border-radius", "8px"),
 								app.Div().Class("space"),
-								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content).DataSet("option", poll.OptionTwo.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionTwo.Content).Disabled(c.pollsButtonDisabled),
+								app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionTwo.Content).DataSet("option", poll.OptionTwo.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionTwo.Content).Disabled(c.pollsButtonDisabled).Style("border-radius", "8px"),
 								app.Div().Class("space"),
 								app.If(poll.OptionThree.Content != "",
-									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content).DataSet("option", poll.OptionThree.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionThree.Content).Disabled(c.pollsButtonDisabled),
+									app.Button().Class("deep-orange7 bold white-text responsive").Text(poll.OptionThree.Content).DataSet("option", poll.OptionThree.Content).OnClick(c.onClickPollOption).ID(poll.ID).Name(poll.OptionThree.Content).Disabled(c.pollsButtonDisabled).Style("border-radius", "8px"),
 									app.Div().Class("space"),
 								),
 
@@ -391,10 +393,11 @@ func (c *pollsContent) Render() app.UI {
 									),
 								),
 
-								app.Div().Class("medium-space"),
+								app.Div().Class("space"),
 
 								// voted option III
 								app.If(poll.OptionThree.Content != "",
+									app.Div().Class("space"),
 									app.Div().Class("medium-space border").Body(
 										app.Div().Class("bold progress left deep-orange9 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);"),
 										//app.Progress().Value(strconv.Itoa(optionThreeShare)).Max(100).Class("deep-orange-text deep-orange padding medium bold left"),
@@ -403,7 +406,7 @@ func (c *pollsContent) Render() app.UI {
 										),
 									),
 
-									app.Div().Class("medium-space"),
+									app.Div().Class("space"),
 								),
 							),
 
