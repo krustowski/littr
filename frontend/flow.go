@@ -1006,7 +1006,7 @@ func (c *flowContent) Render() app.UI {
 		),
 
 		// flow posts/articles
-		app.Table().Class("border left-align").ID("table-flow").Body(
+		app.Table().Class("left-align").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
@@ -1118,7 +1118,7 @@ func (c *flowContent) Render() app.UI {
 						}
 					}*/
 
-					return app.Tr().Class().Body(
+					return app.Tr().Class().Class("bottom-padding").Body(
 						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
 
@@ -1126,14 +1126,14 @@ func (c *flowContent) Render() app.UI {
 							app.Div().Class("row top-padding").Body(
 								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 								app.P().Class("max").Body(
-									app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+									app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
 									//app.B().Text(post.Nickname).Class("deep-orange-text"),
 								),
 							),
 
 							// pic post
 							app.If(post.Type == "fig",
-								app.Article().Style("z-index", "5").Class("medium no-padding transparent").Body(
+								app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
 									app.If(c.loaderShowImage,
 										app.Div().Class("small-space"),
 										app.Div().Class("loader center large deep-orange active"),
@@ -1145,7 +1145,7 @@ func (c *flowContent) Render() app.UI {
 							// reply + post
 							).Else(
 								app.If(post.ReplyToID != "",
-									app.Article().Class("post black-text yellow10").Style("max-width", "100%").Body(
+									app.Article().Class("black-text yellow10").Style("border-radius", "8px").Style("max-width", "100%").Body(
 										app.Div().Class("row max").Body(
 											app.If(previousDetailsSummary != "",
 												app.Details().Class("max").Body(
@@ -1164,7 +1164,7 @@ func (c *flowContent) Render() app.UI {
 									),
 								),
 
-								app.Article().Class("post").Style("max-width", "100%").Body(
+								app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
 									app.If(postDetailsSummary != "",
 										app.Details().Body(
 											app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
@@ -1177,7 +1177,7 @@ func (c *flowContent) Render() app.UI {
 								),
 
 								app.If(post.Figure != "",
-									app.Article().Style("z-index", "4").Class("medium no-padding transparent").Body(
+									app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
