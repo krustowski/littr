@@ -668,9 +668,11 @@ func (c *settingsContent) Render() app.UI {
 		app.P().Text("change your passphrase, or your bottom text"),
 
 		app.Div().Class("large-space"),
+		app.H6().Text("logged user"),
+		app.Div().Class("space"),
 
 		app.Div().Class("").Body(
-			app.P().Text("logged as:"),
+			app.P().Text("nickname and e-mail:"),
 			app.Article().Body(
 				app.Text(c.user.Nickname+" ("+c.user.Email+")"),
 			),
@@ -709,9 +711,8 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// user avatar change
-		app.Div().Class("large-divider"),
-		app.Div().Class("space"),
-		app.H6().Text("change user's avatar"),
+		app.Div().Class("large-space"),
+		app.H6().Text("avatar"),
 		app.Div().Class("space"),
 
 		app.Article().Class("row").Body(
@@ -739,9 +740,7 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
-		app.Div().Class("space"),
+		app.Div().Class("large-space"),
 		app.H6().Text("switches"),
 		app.Div().Class("space"),
 
@@ -818,8 +817,6 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// notifications
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
 		app.Div().Class("space"),
 		app.H6().Text("notifications"),
 		app.Div().Class("space"),
@@ -900,11 +897,10 @@ func (c *settingsContent) Render() app.UI {
 					)
 				}),
 			),
+			app.Div().Class("space"),
 		),
 
 		// password change
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
 		app.Div().Class("space"),
 		app.H6().Text("password change"),
 		app.Div().Class("medium-space"),
@@ -924,9 +920,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// about textarea
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
-		app.Div().Class("space"),
+		app.Div().Class("large-space"),
 		app.H6().Text("about text change"),
 		app.Div().Class("medium-space"),
 
@@ -940,9 +934,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// website link
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
-		app.Div().Class("space"),
+		app.Div().Class("large-space"),
 		app.H6().Text("website link change"),
 		app.Div().Class("medium-space"),
 
@@ -956,9 +948,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// user deletion
-		app.Div().Class("space"),
-		app.Div().Class("large-divider"),
-		app.Div().Class("space"),
+		app.Div().Class("large-space"),
 		app.H6().Text("account deletion"),
 		app.Div().Class("space"),
 
@@ -966,7 +956,7 @@ func (c *settingsContent) Render() app.UI {
 			app.I().Text("warning"),
 			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
 		),
-		app.Div().Class("medium-space"),
+		app.Div().Class("space"),
 
 		app.Div().Class("row").Body(
 			app.Button().Class("max red9 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),

@@ -278,7 +278,7 @@ func (c *postContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("large-divider"),
+		app.Div().Class("space"),
 
 		// new poll header text
 		app.H5().Text("add flow poll").Style("padding-top", config.HeaderTopPadding),
