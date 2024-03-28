@@ -596,7 +596,7 @@ func (c *usersContent) Render() app.UI {
 		),
 
 		// users table
-		app.Table().Class("border").ID("table-users").Style("width", "100%").Body(
+		app.Table().Class("").ID("table-users").Style("width", "100%").Body(
 			app.TBody().Body(
 				app.Range(pagedUsers).Slice(func(idx int) app.UI {
 					user := pagedUsers[idx]
@@ -664,9 +664,9 @@ func (c *usersContent) Render() app.UI {
 							),
 
 							// cell's body
-							app.Div().Class("row middle-align top-padding").Body(
+							app.Div().Class("row middle-align").Body(
 
-								app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+								app.Article().Style("border-radius", "8px").Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 									app.Span().Text(user.About),
 								),
 							),
