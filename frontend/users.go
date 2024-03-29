@@ -666,7 +666,7 @@ func (c *usersContent) Render() app.UI {
 							// cell's body
 							app.Div().Class("row middle-align").Body(
 
-								app.Article().Style("border-radius", "8px").Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+								app.Article().Style("border-radius", "8px").Class("max surface-container-highest").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 									app.Span().Text(user.About),
 								),
 							),
