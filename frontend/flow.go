@@ -650,6 +650,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	resp := struct {
 		Posts map[string]models.Post `json:"posts"`
 		Users map[string]models.User `json:"users"`
+		Code  int                    `json:"code"`
 	}{}
 
 	ctx := opts.Context
@@ -716,8 +717,16 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 		return nil, nil
 	}
 
+	if resp.Code == 401 {
+		toastText = "please log-in again"
+
+		ctx.LocalStorage().Set("user", "")
+		ctx.LocalStorage().Set("authGranted", false)
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false
+		c.toastText = toastText
 	})
 
 	return resp.Posts, resp.Users
@@ -824,8 +833,10 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.userFlowNick = parts.UserFlowNick
 			c.isPost = isPost
 
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
+			if toastText != "" {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			}
 
 			c.loaderShow = false
 			c.loaderShowImage = false

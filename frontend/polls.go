@@ -51,8 +51,11 @@ type pollsContent struct {
 }
 
 func (c *pollsContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastShow = false
-	c.pollsButtonDisabled = false
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = false
+		c.pollsButtonDisabled = false
+	})
 }
 
 func (c *pollsContent) OnNav(ctx app.Context) {
@@ -79,6 +82,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 
 		pollsRaw := struct {
 			Polls map[string]models.Poll `json:"polls"`
+			Code  int                    `json:"code"`
 		}{}
 
 		if byteData, _ := litterAPI("GET", "/api/polls", nil, user.Nickname, 0); byteData != nil {
@@ -95,6 +99,19 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 		} else {
 			toastText = "cannot fetch polls list"
 			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if pollsRaw.Code == 401 {
+			toastText = "please log-in again"
+
+			ctx.LocalStorage().Set("user", "")
+			ctx.LocalStorage().Set("authGranted", false)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
