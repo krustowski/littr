@@ -140,31 +140,16 @@ func (c *statsContent) OnNav(ctx app.Context) {
 	toastText := ""
 
 	ctx.Async(func() {
-		var enUser string
-		var user models.User
-
-		ctx.LocalStorage().Get("user", &enUser)
-
-		// decode, decrypt and unmarshal the local storage string
-		if err := prepare(enUser, &user); err != nil {
-			toastText = "frontend decoding/decryption failed: " + err.Error()
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		respRaw := struct {
+		payload := struct {
 			FlowStats map[string]int         `json:"flow_stats"`
 			UserStats map[string]userStat    `json:"user_stats"`
 			Users     map[string]models.User `json:"users"`
+			Code      int                    `json:"code"`
 		}{}
 
 		// fetch the stats
-		if byteData, _ := litterAPI("GET", "/api/stats", nil, user.Nickname, 0); byteData != nil {
-			err := json.Unmarshal(*byteData, &respRaw)
+		if byteData, _ := litterAPI("GET", "/api/stats", nil, "", 0); byteData != nil {
+			err := json.Unmarshal(*byteData, &payload)
 			if err != nil {
 				log.Println(err.Error())
 
@@ -184,10 +169,23 @@ func (c *statsContent) OnNav(ctx app.Context) {
 			return
 		}
 
+		if payload.Code == 401 {
+			toastText = "please log-in again"
+
+			ctx.LocalStorage().Set("user", "")
+			ctx.LocalStorage().Set("authGranted", false)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
 		ctx.Dispatch(func(ctx app.Context) {
-			c.users = respRaw.Users
-			c.flowStats = respRaw.FlowStats
-			c.userStats = respRaw.UserStats
+			c.users = payload.Users
+			c.flowStats = payload.FlowStats
+			c.userStats = payload.UserStats
 
 			c.loaderShow = false
 			log.Println("dispatch ends")

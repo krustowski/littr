@@ -65,31 +65,16 @@ func (c *usersContent) OnNav(ctx app.Context) {
 	c.loaderShow = true
 	toastText := ""
 
-	var enUser string
-	var user models.User
-
 	ctx.Async(func() {
-		//user.FlowList = make(map[string]bool)
-		ctx.LocalStorage().Get("user", &enUser)
-
-		// decode, decrypt and unmarshal the local storage string
-		if err := prepare(enUser, &user); err != nil {
-			toastText = "frontend decoding/decryption failed: " + err.Error()
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		usersPre := struct {
+		payload := struct {
 			Users     map[string]models.User `json:"users"`
 			UserStats map[string]userStat    `json:"user_stats"`
+			Key       string                 `json:"key"`
+			Code      int                    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, user.Nickname, 0); ok {
-			err := json.Unmarshal(*data, &usersPre)
+		if data, ok := litterAPI("GET", "/api/users", nil, "", 0); ok {
+			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())
 				toastText = "JSON parse error: " + err.Error()
@@ -111,19 +96,30 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			return
 		}
 
-		// delet dis
-		for k, u := range usersPre.Users {
-			u.Searched = true
-			usersPre.Users[k] = u
+		if payload.Code == 401 {
+			toastText = "please log-in again"
+
+			ctx.LocalStorage().Set("user", "")
+			ctx.LocalStorage().Set("authGranted", false)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
 		}
 
-		updatedUser := usersPre.Users[user.Nickname]
+		// manually toggle all users to be "searched for" on init
+		for k, u := range payload.Users {
+			u.Searched = true
+			payload.Users[k] = u
+		}
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = updatedUser
-			c.users = usersPre.Users
-			c.userStats = usersPre.UserStats
+			c.user = payload.Users[payload.Key]
+			c.users = payload.Users
+			c.userStats = payload.UserStats
 
 			//c.posts = postsPre.Posts
 

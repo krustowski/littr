@@ -89,6 +89,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Users      map[string]models.User `json:"users"`
 			Subscribed bool                   `json:"subscribed"`
 			Devices    []models.Device        `json:"devices"`
+			Code       int                    `json:"code"`
 		}{}
 
 		if data, ok := litterAPI("GET", "/api/users", nil, ctx.DeviceID(), 0); ok {
@@ -106,6 +107,19 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		} else {
 			toastText = "cannot fetch users list"
 			log.Println(toastText)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if payload.Code == 401 {
+			toastText = "please log-in again"
+
+			ctx.LocalStorage().Set("user", "")
+			ctx.LocalStorage().Set("authGranted", false)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -663,6 +677,11 @@ func (c *settingsContent) Render() app.UI {
 
 	devicesToShow := len(c.devices)
 
+	nickAndMail := ""
+	if c.user.Nickname != "" && c.user.Email != "" {
+		nickAndMail = c.user.Nickname + " (" + c.user.Email + ")"
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
 		app.P().Text("change your passphrase, or your bottom text"),
@@ -674,7 +693,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("").Body(
 			app.P().Text("nickname and e-mail:"),
 			app.Article().Body(
-				app.Text(c.user.Nickname+" ("+c.user.Email+")"),
+				app.Text(nickAndMail),
 			),
 		),
 
