@@ -158,9 +158,9 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + dismiss any modal by clicking anywhere on the screen
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + implement customizable navbar items order
-+ show offline mode notification
++ ~~show offline mode notification~~
 + ~~show user's details on the top of /flow/<username> page~~
-+ swagger docs
++ ~~swagger docs~~
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### known bugs
@@ -171,7 +171,16 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + add timestamp to a subscription
 + implement Ctrl+Enter to submit posts like YouTube
 + implement searching for flow using hashtags
+
+### roadmap to v0.30
 + improve the UI (review issues related to UI on Github)
++ unify the UI elements' border radius and their styling
+
+### roadmap to v0.29
++ ~~list subscribed devides on settings page~~
+
+### roadmap to v0.28
++ ~~enhance the notification service~~
 
 ### roadmap to v0.27
 + implement mailing (verification mails) on backend
