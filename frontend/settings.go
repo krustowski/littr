@@ -155,7 +155,6 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		})
 		return
 	})
-
 	return
 }
 

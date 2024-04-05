@@ -1,8 +1,6 @@
 package frontend
 
 import (
-	"encoding/json"
-
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -34,38 +32,15 @@ const (
 func (h *header) OnAppUpdate(ctx app.Context) {
 	// Reports that an app update is available.
 	//h.updateAvailable = ctx.AppUpdateAvailable()
-	//
+
 	ctx.Dispatch(func(ctx app.Context) {
 		h.updateAvailable = true
 	})
 
+	ctx.LocalStorage().Set("newUpdate", true)
+
 	// force reload the app on update
 	//ctx.Reload()
-}
-
-func (h *header) tryCookies(ctx app.Context) bool {
-	resp := struct {
-		Users map[string]models.User `json:"users" binding:"required"`
-	}{}
-
-	if data, ok := litterAPI("POST", "/api/token", nil, "ghost", 0); ok {
-		if err := json.Unmarshal(*data, &resp); err != nil {
-			return false
-		}
-
-		if resp.Users == nil {
-			return false
-		}
-
-		var user models.User
-		for _, user = range resp.Users {
-		}
-
-		ctx.SetState("user", user)
-		return true
-	}
-
-	return false
 }
 
 func (h *header) OnMount(ctx app.Context) {
@@ -88,12 +63,15 @@ func (h *header) OnMount(ctx app.Context) {
 		return
 	}
 
-	if authGranted {
-		ctx.SetState("user", h.user)
-	}
-
-	ctx.SetState("authGranted", authGranted)
 	h.authGranted = authGranted
+
+	// keep the update button on until clicked
+	var newUpdate bool
+	ctx.LocalStorage().Get("newUpdate", &newUpdate)
+
+	if newUpdate {
+		h.updateAvailable = true
+	}
 
 	h.onlineState = true // this is a guess
 	// this may not be implemented
@@ -104,6 +82,7 @@ func (h *header) OnMount(ctx app.Context) {
 			h.onlineState = onLine.Bool()
 		}
 	}
+
 	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
 		h.onlineState = true
 		//call(true)
@@ -118,7 +97,9 @@ func (h *header) OnMount(ctx app.Context) {
 }
 
 func (h *header) OnAppInstallChange(ctx app.Context) {
-	h.appInstallable = ctx.IsAppInstallable()
+	ctx.Dispatch(func(ctx app.Context) {
+		h.appInstallable = ctx.IsAppInstallable()
+	})
 }
 
 func (h *header) onInstallButtonClicked(ctx app.Context, e app.Event) {
@@ -126,16 +107,22 @@ func (h *header) onInstallButtonClicked(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickHeadline(ctx app.Context, e app.Event) {
-	h.modalInfoShow = true
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalInfoShow = true
+	})
 }
 
 func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
-	h.modalLogoutShow = true
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalLogoutShow = true
+	})
 }
 
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
-	h.modalInfoShow = false
-	h.modalLogoutShow = false
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalInfoShow = false
+		h.modalLogoutShow = false
+	})
 }
 
 func (h *header) onClickReload(ctx app.Context, e app.Event) {
@@ -143,39 +130,30 @@ func (h *header) onClickReload(ctx app.Context, e app.Event) {
 		h.updateAvailable = false
 	})
 
+	ctx.LocalStorage().Set("newUpdate", false)
+
 	ctx.Reload()
 }
 
 func (h *header) onClickLogout(ctx app.Context, e app.Event) {
-	//ctx.LocalStorage().Set("authGranted", false)
-	ctx.LocalStorage().Set("user", "")
-	h.authGranted = false
+	ctx.Dispatch(func(ctx app.Context) {
+		h.authGranted = false
+	})
 
+	ctx.LocalStorage().Set("user", "")
 	ctx.LocalStorage().Set("authGranted", false)
+
 	ctx.Navigate("/logout")
 }
 
+// top navbar
 func (h *header) Render() app.UI {
-	modalInfoActiveClass := ""
-	if h.modalInfoShow {
-		modalInfoActiveClass = " active"
-	}
-
-	modalLogoutActiveClass := ""
-	if h.modalLogoutShow {
-		modalLogoutActiveClass = " active"
-	}
-
-	// top navbar
-	//return app.Nav().ID("nav-top").Class("top fixed-top center-align deep-orange").
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
 			app.A().Href("/settings").Text("settings").Class("max").Body(
 				app.I().Class("large").Class("deep-orange-text").Body(
 					app.Text("build")),
-				//app.Span().Body(
-				//app.Text("settings")),
 			),
 
 			// show intallation button if available
@@ -191,8 +169,8 @@ func (h *header) Render() app.UI {
 			),
 
 			// app logout modal
-			app.If(modalLogoutActiveClass == " active",
-				app.Dialog().Class("grey9 white-text"+modalLogoutActiveClass).Style("border-radius", "8px").Body(
+			app.If(h.modalLogoutShow,
+				app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
 					app.Nav().Class("center-align").Body(
 						app.H5().Text("really logout?"),
 					),
@@ -207,14 +185,14 @@ func (h *header) Render() app.UI {
 			// snackbar offline mode
 			app.If(!h.onlineState,
 				app.A().OnClick(h.onClickModalDismiss).Body(
-					app.Div().Class("snackbar red5 white-text top active").Body(
-						app.Span().Text("internet connection is gone innit..."),
+					app.Div().Class("snackbar red10 white-text top active").Body(
+						app.Span().Text("no internet connection"),
 					),
 				),
 			),
 
 			// littr header
-			app.Div().Class("row").Body(
+			app.Div().Class("max").Body(
 				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
 					app.Span().Class("small-text middle top-align").Text(" (beta)"),
@@ -222,8 +200,8 @@ func (h *header) Render() app.UI {
 			),
 
 			// app info modal
-			app.If(modalInfoActiveClass == " active",
-				app.Dialog().Class("grey9 white-text center-align"+modalInfoActiveClass).Style("border-radius", "8px").Body(
+			app.If(h.modalInfoShow,
+				app.Dialog().Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
 					app.Div().Class("row").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Text("littr (beta)"),
@@ -278,19 +256,16 @@ func (h *header) Render() app.UI {
 				app.A().Class("max").OnClick(nil),
 			),
 
+			// login/logout button
 			app.If(h.authGranted,
 				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Body(
 					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("logout")),
-					//app.Span().Body(
-					//app.Text("logout")),
 				),
 			).Else(
 				app.A().Href("/login").Text("login").Class("max").Body(
 					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("login")),
-					//app.Span().Body(
-					//app.Text("login")),
 				),
 			),
 		)
@@ -298,39 +273,31 @@ func (h *header) Render() app.UI {
 
 // bottom navbar
 func (f *footer) Render() app.UI {
-	//return app.Nav().ID("nav-bottom").Class("bottom fixed-bottom center-align deep-orange8").
 	return app.Nav().ID("nav-top").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 		Body(
 			app.A().Href("/stats").Text("stats").Class("max").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("query_stats")),
-				//app.Span().Body(
-				//app.Text("stats")),
 			),
+
 			app.A().Href("/users").Text("users").Class("max").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("group")),
-				//app.Span().Class("large").Body(
-				//app.Text("users")),
 			),
+
 			app.A().Href("/post").Text("post").Class("max").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("add")),
-				//app.Span().Body(
-				//app.Text("post")),
 			),
+
 			app.A().Href("/polls").Text("polls").Class("max").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("equalizer")),
-				//app.Span().Body(
-				//app.Text("polls")),
 			),
+
 			app.A().Href("/flow").Text("flow").Class("max").Body(
 				app.I().Class("large deep-orange-text").Body(
-					//app.Text("trending_up")),
 					app.Text("tsunami")),
-				//app.Span().Body(
-				//app.Text("flow")),
 			),
 		)
 }
