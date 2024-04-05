@@ -676,47 +676,9 @@ func (c *settingsContent) Render() app.UI {
 
 	devicesToShow := len(c.devices)
 
-	nickAndMail := ""
-	if c.user.Nickname != "" && c.user.Email != "" {
-		nickAndMail = c.user.Nickname + " (" + c.user.Email + ")"
-	}
-
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr settings").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("change your passphrase, or your bottom text"),
-
-		app.Div().Class("large-space"),
-		app.H6().Text("logged user"),
-		app.Div().Class("space"),
-
-		app.Div().Class("").Body(
-			app.P().Text("nickname and e-mail:"),
-			app.Article().Body(
-				app.Text(nickAndMail),
-			),
-		),
-
-		// acc deletion modal
-		app.If(c.deleteAccountModalShow,
-			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("account deletion"),
-				),
-				app.Div().Class("space"),
-
-				app.Article().Class("row").Body(
-					app.P().Class("max").Body(
-						app.Span().Text("are you sure you want to delete your account and all posted items?"),
-					),
-				),
-				app.Div().Class("space"),
-
-				app.Div().Class("row").Body(
-					app.Button().Class("max border deep-orange7 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
-					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
-				),
-			),
-		),
+		app.H5().Text("settings").Style("padding-top", config.HeaderTopPadding),
+		//app.P().Text("change your passphrase, or your bottom text"),
 
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
@@ -728,10 +690,21 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		// user avatar change
-		app.Div().Class("large-space"),
-		app.H6().Text("avatar"),
 		app.Div().Class("space"),
+		app.H6().Text("user and avatar"),
+		app.Div().Class("space"),
+
+		// logged user info
+		app.Article().Class("row").Body(
+			app.I().Text("person").Class("amber-text"),
+			app.P().Class("max").Body(
+				app.Span().Text("currently logged as: "),
+				app.Span().Class("deep-orange-text").Text(c.user.Nickname),
+				app.Span().Text(" (e-mail: "),
+				app.Span().Class("deep-orange-text").Text(c.user.Email),
+				app.Span().Text(")"),
+			),
+		),
 
 		app.Article().Class("row").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
@@ -742,17 +715,14 @@ func (c *settingsContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("row").Body(
-			app.P().Text("current avatar:"),
-		),
-
+		// load current user's avatar
 		app.Div().Class("transparent middle-align center-align bottom").Body(
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 		),
 
 		app.Div().Class("space"),
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
+			app.I().Text("info").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
@@ -937,14 +907,20 @@ func (c *settingsContent) Render() app.UI {
 			app.Button().Class("max deep-orange7 white-text bold").Text("change passphrase").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 		),
 
-		// about textarea
+		// about-you textarea
 		app.Div().Class("large-space"),
-		app.H6().Text("about text change"),
+		app.H6().Text("about-you text"),
 		app.Div().Class("medium-space"),
+
+		app.Article().Class("row").Body(
+			app.I().Text("lightbulb").Class("amber-text"),
+			app.P().Class("max").Text("this textarea is to hold your status, a brief info about you, just anything up to 100 characters"),
+		),
+		app.Div().Class("space"),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
 			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("about").Class("active deep-orange-text"),
+			app.Label().Text("about-you").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("row").Body(
@@ -953,8 +929,14 @@ func (c *settingsContent) Render() app.UI {
 
 		// website link
 		app.Div().Class("large-space"),
-		app.H6().Text("website link change"),
+		app.H6().Text("website link"),
 		app.Div().Class("medium-space"),
+
+		app.Article().Class("row").Body(
+			app.I().Text("lightbulb").Class("amber-text"),
+			app.P().Class("max").Text("down below, you can enter a link to your personal homepage --- the link will then be visible to others via the user modal on the users (flowers) page"),
+		),
+		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
@@ -963,6 +945,28 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Div().Class("row").Body(
 			app.Button().Class("max deep-orange7 white-text bold").Text("change website").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+		),
+
+		// acc deletion modal
+		app.If(c.deleteAccountModalShow,
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("account deletion"),
+				),
+				app.Div().Class("space"),
+
+				app.Article().Class("row").Body(
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete your account and all posted items?"),
+					),
+				),
+				app.Div().Class("space"),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
+					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+				),
+			),
 		),
 
 		// user deletion
