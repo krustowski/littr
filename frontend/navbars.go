@@ -184,10 +184,10 @@ func (h *header) Render() app.UI {
 					app.I().Class("large").Class("deep-orange-text").Body(
 						app.Text("download"),
 					),
-					//app.Span().Body(
-					//app.Text("install"),
-					//),
 				),
+			// hotfix to keep the nav items' distances
+			).Else(
+				app.A().Class("max").OnClick(nil),
 			),
 
 			// app logout modal
@@ -213,6 +213,7 @@ func (h *header) Render() app.UI {
 				),
 			),
 
+			// littr header
 			app.Div().Class("row").Body(
 				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
@@ -272,6 +273,9 @@ func (h *header) Render() app.UI {
 						app.Text("update"),
 					),
 				),
+			// hotfix to keep the nav items' distances
+			).Else(
+				app.A().Class("max").OnClick(nil),
 			),
 
 			app.If(h.authGranted,
