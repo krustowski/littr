@@ -199,7 +199,7 @@ func (c *loginContent) Render() app.UI {
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
 				app.Span().Text("log-in for 30 days"),

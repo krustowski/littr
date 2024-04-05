@@ -227,7 +227,7 @@ func (c *registerContent) Render() app.UI {
 
 		// nickname field
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("nickname "),
 				app.Span().Text("is your unique identifier for the system operations; "),
@@ -244,7 +244,7 @@ func (c *registerContent) Render() app.UI {
 
 		// password fields
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("passphrase "),
 				app.Span().Text("is your secret key to the littr account"),
@@ -264,7 +264,7 @@ func (c *registerContent) Render() app.UI {
 
 		// e-mail field
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("e-mail "),
 				app.Span().Text("address is used for user's avatar fetching from Gravatar.com, and (not yet implemented) for the account verification, please enter a valid e-mail address"),
@@ -280,7 +280,7 @@ func (c *registerContent) Render() app.UI {
 
 		// GDPR warning
 		app.Article().Class("row").Style("word-break", "break-word").Body(
-			app.I().Text("warning"),
+			app.I().Text("warning").Class("red-text"),
 			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(
 					app.Span().Text("by clicking on the register button you are giving us a GDPR consent (a permission to store your account information in the database)"),

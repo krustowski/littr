@@ -735,7 +735,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
 				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
@@ -753,7 +753,7 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Div().Class("space"),
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
@@ -765,7 +765,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// darkmode infobox
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("the UI mode "),
 				app.Span().Text("can be adjusted according to the user's input (option) --- experimental, the mode may differ on other browsers (when logged-in on multiple devices)"),
@@ -789,7 +789,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// left-hand infobox
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("left-hand switch "),
 				app.Span().Text("is a theoretical feature which would enable an user to flip the UI for left-handed folks to browse more smoothly"),
@@ -813,7 +813,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// live infobox
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("live mode "),
 				app.Span().Text("is a theoretical feature for the live flow preview experience --- one would see other posts incoming as they reach the backend (new posts rendered in live)"),
@@ -842,14 +842,14 @@ func (c *settingsContent) Render() app.UI {
 
 		// notification infobox
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
 				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
 			),
 		),
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text("reply notifications "),
 				//app.Span().Text("enabling the notifications will trigger a request for your browser to allow notifications from littr, and will be enabled until you remove the permission in your browser only"),
@@ -972,7 +972,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Article().Class("row").Body(
-			app.I().Text("warning"),
+			app.I().Text("warning").Class("red-text"),
 			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
 		),
 		app.Div().Class("space"),

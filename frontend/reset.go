@@ -187,7 +187,7 @@ func (c *resetContent) Render() app.UI {
 
 		// pwd reset lightbulb
 		app.Article().Class("row").Body(
-			app.I().Text("lightbulb"),
+			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
 				app.Span().Text("enter your e-mail address below; after that, password of the linked account will be reset, and a confirmation mail will be sent to such address if found"),
