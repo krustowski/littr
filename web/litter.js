@@ -323,16 +323,16 @@
     LIT.checkPassword()
 
     // toggle dark/light UI mode button
-    if ($('main h5').html() === 'settings') {
-      const modeToggleButton = document.getElementById('dark-mode-switch')
-      modeToggleButton.addEventListener('click', () => {
-        LIT.toggleMode()
-      })
+    //if ($('main h5').html() === 'settings') {
+      //const modeToggleButton = document.getElementById('dark-mode-switch')
+      //modeToggleButton.addEventListener('click', () => {
+        //LIT.toggleMode()
+      //})
       // $('body > div > main').prepend(
       //   '<span class="sun" onclick="LIT.toggleMode();" style="background-color:#000;font-size:1.5rem;cursor:pointer;position:fixed;right:1px;z-index:999999;padding:0.5rem">đźŚž</span>'
       // )
       //$('body > div > main').prepend('<br>' + LIT.version)
-    }
+    //}
 
     // STATS tab
     if ($('#table-stats-flow') && $('#table-stats-flow').length) {

@@ -643,6 +643,7 @@ func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
 		}
 	})
 
+	app.Window().Get("LIT").Call("toggleMode")
 	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
 }
 

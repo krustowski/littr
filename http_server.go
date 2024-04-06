@@ -155,7 +155,8 @@ func initServer() {
 			"https://cdn.savla.dev/js/beer.nomodule.min.js",
 			"https://cdn.savla.dev/js/material-dynamic-colors.nomodule.min.js",
 			"https://cdn.savla.dev/js/sortable.min.js",
-			"https://cdn.savla.dev/js/litter.js",
+			"/web/litter.js",
+			//"https://cdn.savla.dev/js/litter.js",
 			"https://cdn.savla.dev/js/eventsource.min.js",
 		},
 	}
