@@ -211,8 +211,12 @@ func (c *registerContent) dismissToast(ctx app.Context, e app.Event) {
 
 func (c *registerContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr registration").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("do not be mid, join us to be lit"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("littr registration"),
+				//app.P().Text("do not be mid, join us to be lit"),
+			),
+		),
 		app.Div().Class("space"),
 
 		// snackbar
@@ -226,7 +230,7 @@ func (c *registerContent) Render() app.UI {
 		),
 
 		// nickname field
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("nickname "),
@@ -243,7 +247,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// password fields
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("passphrase "),
@@ -263,7 +267,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// e-mail field
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("e-mail "),
@@ -279,7 +283,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// GDPR warning
-		app.Article().Class("row").Style("word-break", "break-word").Body(
+		app.Article().Class("row surface-container-highest").Style("word-break", "break-word").Body(
 			app.I().Text("warning").Class("red-text"),
 			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(

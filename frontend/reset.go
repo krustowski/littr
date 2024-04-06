@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -169,10 +168,14 @@ func (c *resetContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr passphrase reset").Style("padding-top", config.HeaderTopPadding),
-		app.P().Body(
-			app.P().Text("actual pwd is about to be yeeted"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("littr passphrase reset"),
+			),
 		),
+		/*app.P().Body(
+			app.P().Text("actual pwd is about to be yeeted"),
+		),*/
 		app.Div().Class("space"),
 
 		// snackbar
@@ -186,7 +189,7 @@ func (c *resetContent) Render() app.UI {
 		),
 
 		// pwd reset lightbulb
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),

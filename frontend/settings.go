@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/SherClockHolmes/webpush-go"
@@ -677,8 +676,12 @@ func (c *settingsContent) Render() app.UI {
 	devicesToShow := len(c.devices)
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("settings").Style("padding-top", config.HeaderTopPadding),
-		//app.P().Text("change your passphrase, or your bottom text"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("settings"),
+				//app.P().Text("change your passphrase, or your bottom text"),
+			),
+		),
 
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
@@ -690,23 +693,31 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		app.Div().Class("space"),
-		app.H6().Text("user and avatar"),
-		app.Div().Class("space"),
+		//app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("user and avatar"),
+			),
+		),
+		//app.Div().Class("space"),
 
 		// logged user info
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("person").Class("amber-text"),
-			app.P().Class("max").Body(
-				app.Span().Text("currently logged as: "),
-				app.Span().Class("deep-orange-text").Text(c.user.Nickname),
-				app.Span().Text(" (e-mail: "),
-				app.Span().Class("deep-orange-text").Text(c.user.Email),
-				app.Span().Text(")"),
+			app.If(c.user.Nickname != "",
+				app.P().Class("max").Body(
+					app.Span().Text("currently logged as: "),
+					app.Span().Class("deep-orange-text").Text(c.user.Nickname),
+					app.Span().Text(" (e-mail: "),
+					app.Span().Class("deep-orange-text").Text(c.user.Email),
+					app.Span().Text(")"),
+				),
+			).Else(
+				app.Progress().Class("circle deep-orange-border active"),
 			),
 		),
 
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("one's avatar is linked to one's e-mail address, which has to be registered with "),
@@ -720,20 +731,25 @@ func (c *settingsContent) Render() app.UI {
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 		),
 
+		// infobox about image caching
 		app.Div().Class("space"),
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("info").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached --- you need to wait for some time for the change to propagate through the network"),
 			),
 		),
 
-		app.Div().Class("large-space"),
-		app.H6().Text("switches"),
 		app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("switches"),
+			),
+		),
+		//app.Div().Class("space"),
 
 		// darkmode infobox
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("the UI mode "),
@@ -757,7 +773,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// left-hand infobox
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("left-hand switch "),
@@ -781,7 +797,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// live infobox
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("live mode "),
@@ -805,19 +821,23 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// notifications
-		app.Div().Class("space"),
-		app.H6().Text("notifications"),
-		app.Div().Class("space"),
+		//app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("notifications"),
+			),
+		),
+		//app.Div().Class("space"),
 
 		// notification infobox
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
 				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
 			),
 		),
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text("reply notifications "),
@@ -854,9 +874,13 @@ func (c *settingsContent) Render() app.UI {
 
 			// user avatar change
 			//app.Div().Class("large-divider"),
-			app.Div().Class("space"),
-			app.H6().Text("registered devices"),
-			app.Div().Class("medium-space"),
+			//app.Div().Class("space"),
+			app.Div().Class("row").Body(
+				app.Div().Class("max padding").Body(
+					app.H6().Text("registered devices"),
+				),
+			),
+			//app.Div().Class("medium-space"),
 
 			app.Div().Class().Body(
 				app.Range(c.devices).Slice(func(i int) app.UI {
@@ -878,7 +902,7 @@ func (c *settingsContent) Render() app.UI {
 					}
 					deviceText += " (" + u.Host + ")"
 
-					return app.Article().Body(
+					return app.Article().Class("surface-container-highest").Style("border-radius", "8px").Body(
 						app.P().Class("bold").Body(app.Text(deviceText)),
 						app.P().Body(app.Text("subscribed to notifs")),
 						app.P().Body(app.Text(dev.TimeCreated)),
@@ -888,10 +912,14 @@ func (c *settingsContent) Render() app.UI {
 			app.Div().Class("space"),
 		),
 
-		// password change
-		app.Div().Class("space"),
-		app.H6().Text("password change"),
-		app.Div().Class("medium-space"),
+		// passphrase change
+		//app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("passphrase change"),
+			),
+		),
+		//app.Div().Class("medium-space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
 			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
@@ -908,11 +936,15 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// about-you textarea
-		app.Div().Class("large-space"),
-		app.H6().Text("about-you text"),
-		app.Div().Class("medium-space"),
+		app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("about-you text"),
+			),
+		),
+		//app.Div().Class("medium-space"),
 
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Text("this textarea is to hold your status, a brief info about you, just anything up to 100 characters"),
 		),
@@ -928,11 +960,15 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// website link
-		app.Div().Class("large-space"),
-		app.H6().Text("website link"),
-		app.Div().Class("medium-space"),
+		app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("website link"),
+			),
+		),
+		//app.Div().Class("medium-space"),
 
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Text("down below, you can enter a link to your personal homepage --- the link will then be visible to others via the user modal on the users (flowers) page"),
 		),
@@ -955,7 +991,7 @@ func (c *settingsContent) Render() app.UI {
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("row").Body(
+				app.Article().Class("row surface-container-highest").Body(
 					app.P().Class("max").Body(
 						app.Span().Text("are you sure you want to delete your account and all posted items?"),
 					),
@@ -970,11 +1006,15 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// user deletion
-		app.Div().Class("large-space"),
-		app.H6().Text("account deletion"),
 		app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H6().Text("account deletion"),
+			),
+		),
+		//app.Div().Class("space"),
 
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("warning").Class("red-text"),
 			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
 		),

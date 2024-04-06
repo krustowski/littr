@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -199,8 +198,12 @@ func (c *statsContent) Render() app.UI {
 	flowStats := c.flowStats
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr stats").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("user stats"),
+				//app.P().Text("wanna know your flow stats? how many you got in the flow and vice versa? yo"),
+			),
+		),
 		app.Div().Class("space"),
 
 		// snackbar
@@ -225,7 +228,7 @@ func (c *statsContent) Render() app.UI {
 			app.THead().Body(
 				app.Tr().Body(
 					app.Th().Class("align-left").Body(
-						app.Span().Text("nickname"),
+						app.Span().Style("writing-mode", "vertical-lr").Text("nickname"),
 					),
 					app.Th().Class("align-left").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("posts"),
@@ -322,8 +325,12 @@ func (c *statsContent) Render() app.UI {
 
 		app.Div().Class("large-space"),
 
-		app.H5().Text("system stats"),
-		app.P().Text("pop in to see how much this instance lit nocap"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("system stats"),
+				//app.P().Text("pop in to see how much this instance lit nocap"),
+			),
+		),
 		//app.P().Body(
 		//app.A().Class("deep-orange-text bold").Href("https://umami.gscloud.cz/share/NAA3vF0M8uBpeARj/LITTER").Text("web analytics (external link)"),
 		//),

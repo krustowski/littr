@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -519,8 +518,12 @@ func (c *usersContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr flowers").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("simplified user table, available to add to the flow!"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("flowers"),
+				//app.P().Text("simplified user table, available to add to the flow!"),
+			),
+		),
 		app.Div().Class("space"),
 
 		// snackbar

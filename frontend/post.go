@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -237,8 +236,12 @@ func (c *postContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("add flow post").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("drop it, drop it"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("add flow post"),
+				//app.P().Text("drop it, drop it"),
+			),
+		),
 
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
@@ -281,8 +284,12 @@ func (c *postContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// new poll header text
-		app.H5().Text("add flow poll").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("lmao gotem"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("add flow poll"),
+				//app.P().Text("lmao gotem"),
+			),
+		),
 		app.Div().Class("space"),
 
 		// newx poll input area

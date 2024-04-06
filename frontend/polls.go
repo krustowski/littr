@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 
-	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -326,8 +325,12 @@ func (c *pollsContent) Render() app.UI {
 	}
 
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr polls").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("brace yourself"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("polls"),
+				//app.P().Text("brace yourself"),
+			),
+		),
 		app.Div().Class("space"),
 
 		// snackbar

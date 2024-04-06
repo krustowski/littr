@@ -900,9 +900,9 @@ func (c *flowContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		// page heading
 		app.Div().Class("row").Body(
-			app.Div().Class("max").Body(
+			app.Div().Class("max padding").Body(
 				app.If(c.userFlowNick != "" && !c.isPost,
-					app.H5().Text(c.userFlowNick+"'s flow").Style("padding-top", config.HeaderTopPadding),
+					app.H5().Text(c.userFlowNick+"'s flow"),
 					//app.P().Text("exclusive content incoming frfr"),
 
 					// post header (author avatar + name + link button)
@@ -918,17 +918,20 @@ func (c *flowContent) Render() app.UI {
 						),
 					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
-					app.H5().Text("single post and its interactions").Style("padding-top", config.HeaderTopPadding),
+					app.H5().Text("single post and replies"),
 				).Else(
-					app.H5().Text("littr flow").Style("padding-top", config.HeaderTopPadding),
-					app.P().Text("exclusive content incoming frfr"),
+					app.H5().Text("flow"),
+					//app.P().Text("exclusive content incoming frfr"),
 				),
 			),
-			app.Button().Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
-				app.If(c.refreshClicked,
-					app.Progress().Class("circle deep-orange-border small"),
+
+			app.Div().Class("small-padding").Body(
+				app.Button().Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+					app.If(c.refreshClicked,
+						app.Progress().Class("circle deep-orange-border small"),
+					),
+					app.Text("refresh"),
 				),
-				app.Text("refresh"),
 			),
 		),
 		app.Div().Class("space"),

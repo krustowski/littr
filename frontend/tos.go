@@ -1,8 +1,6 @@
 package frontend
 
 import (
-	"go.savla.dev/littr/config"
-
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -36,9 +34,12 @@ func (c *tosContent) onClickDismiss(ctx app.Context, e app.Event) {
 
 func (c *tosContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr ToS (terms of service)").Style("padding-top", config.HeaderTopPadding),
-		app.P().Text("let us be serious for a sec nocap"),
-		app.Div().Class("space"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("littr ToS (terms of service)"),
+				//app.P().Text("let us be serious for a sec nocap"),
+			),
+		),
 
 		// snackbar
 		app.A().OnClick(c.onClickDismiss).Body(

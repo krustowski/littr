@@ -216,15 +216,12 @@ func (h *header) Render() app.UI {
 							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
 						),
 					),
-					app.Div().Class("small-space"),
 
-					app.Nav().Class("center-align").Body(
-						app.P().Body(
-							app.Text("version "),
-							app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
-						),
-						app.Div().Class("small-space"),
+					app.Article().Class("center-align").Style("border-radius", "8px").Body(
+						app.Text("version "),
+						app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
 					),
+					app.Div().Class("small-space"),
 
 					app.Nav().Class("center-align").Body(
 						app.P().Body(

@@ -172,10 +172,14 @@ func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
 
 func (c *loginContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.H5().Text("littr login").Style("padding-top", config.HeaderTopPadding),
-		app.P().Body(
-			app.P().Text("littr, bc even litter can be lit"),
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.H5().Text("littr login"),
+			),
 		),
+		/*app.P().Body(
+			app.P().Text("littr, bc even litter can be lit"),
+		),*/
 		app.Div().Class("space"),
 
 		// snackbar
@@ -198,7 +202,7 @@ func (c *loginContent) Render() app.UI {
 			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
-		app.Article().Class("row").Body(
+		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
