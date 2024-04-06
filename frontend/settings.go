@@ -634,12 +634,14 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
 	//m := ctx.JSSrc().Get("checked").Bool()
 
-	c.darkModeOn = !c.darkModeOn
+	ctx.Dispatch(func(ctx app.Context) {
+		c.darkModeOn = !c.darkModeOn
 
-	ctx.LocalStorage().Set("mode", "dark")
-	if !c.darkModeOn {
-		ctx.LocalStorage().Set("mode", "light")
-	}
+		ctx.LocalStorage().Set("mode", "dark")
+		if !c.darkModeOn {
+			ctx.LocalStorage().Set("mode", "light")
+		}
+	})
 
 	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
 }

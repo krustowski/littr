@@ -323,7 +323,7 @@
     LIT.checkPassword()
 
     // toggle dark/light UI mode button
-    if ($('main h5').html() === 'littr settings') {
+    if ($('main h5').html() === 'settings') {
       const modeToggleButton = document.getElementById('dark-mode-switch')
       modeToggleButton.addEventListener('click', () => {
         LIT.toggleMode()
@@ -406,11 +406,11 @@
 // })()
 
 // add Sortable tables - https://www.cssscript.com/fast-html-table-sorting/
-;(function () {
-  var x = document.createElement('script')
-  x.setAttribute('src', 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js')
-  document.body.appendChild(x)
-})()
+//;(function () {
+//  var x = document.createElement('script')
+//  x.setAttribute('src', 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js')
+//  document.body.appendChild(x)
+//})()
 
 
 
