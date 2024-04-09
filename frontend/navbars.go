@@ -201,7 +201,7 @@ func (h *header) Render() app.UI {
 
 			// littr header
 			app.Div().Class("max").Body(
-				app.H4().Class("large-padding deep-orange-text").OnClick(h.onClickHeadline).Body(
+				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
 					app.Span().Class("small-text middle top-align").Text(" (beta)"),
 				),
