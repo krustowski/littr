@@ -995,6 +995,7 @@ func (c *settingsContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Article().Class("row surface-container-highest").Body(
+					app.I().Text("warning").Class("red-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("are you sure you want to delete your account and all posted items?"),
 					),
@@ -1002,7 +1003,7 @@ func (c *settingsContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border deep-orange7 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
+					app.Button().Class("max border red9 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
 					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
 				),
 			),
