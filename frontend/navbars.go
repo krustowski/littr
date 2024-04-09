@@ -172,11 +172,19 @@ func (h *header) Render() app.UI {
 			app.If(h.modalLogoutShow,
 				app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
 					app.Nav().Class("center-align").Body(
-						app.H5().Text("really logout?"),
+						app.H5().Text("log-out"),
 					),
-					app.Div().Class("large-space"),
+
+					app.Article().Class("row surface-container-highest").Body(
+						app.I().Text("warning").Class("amber-text"),
+						app.P().Class("max").Body(
+							app.Span().Text("are you sure you want to end this session and log-out?"),
+						),
+					),
+					app.Div().Class("space"),
+
 					app.Div().Class("row").Body(
-						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
+						app.Button().Class("max border red9 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
 						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(h.onClickModalDismiss),
 					),
 				),
