@@ -1,10 +1,10 @@
 // @title		litter-go
-// @version		0.29.6
+// @version	 	0.30.17
 // @description	nanoblogging platform as PWA built on go-app framework (PoC)
 // @termsOfService	https://littr.n0p.cz/tos
 
 // @contact.name	API Support
-// @contact.url		https://littr.n0p.cz/docs
+// @contact.url		https://littr.n0p.cz/docs/
 // @contact.email	littr@n0p.cz
 
 // @license.name	MIT
