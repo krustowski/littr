@@ -53,35 +53,9 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + can run offline
 + shade function to block other accounts from following and reading their posts
 
-## REST API service (outdated)
-+ the service is reachable via (`/api`) endpoint (~~API auth-wall to be implemented~~)
-+ to-be-swagger-ized
-+ there are six main endpoints: 
-
-```http
-POST   /api/auth
-
-GET    /api/dump
-
-POST   /api/flow
-GET    /api/flow
-PUT    /api/flow
-DELETE /api/flow/:key
-
-POST   /api/polls
-GET    /api/polls
-PUT    /api/polls
-DELETE /api/polls/:key
-
-POST   /api/push
-PUT    /api/push
-
-# users management
-POST   /api/users
-GET    /api/users
-PUT    /api/users
-DELETE /api/users/:key
-```
+## REST API service
++ the service is reachable via (`/api`) endpoint
++ [swagger live docs](https://littr.n0p.cz/docs/)
 
 ## how to run
 
