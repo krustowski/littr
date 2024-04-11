@@ -190,20 +190,19 @@ func (h *header) Render() app.UI {
 				),
 			),
 
-			// snackbar offline mode
-			app.If(!h.onlineState,
-				app.A().OnClick(h.onClickModalDismiss).Body(
-					app.Div().Class("snackbar red10 white-text top active").Body(
-						app.Span().Text("no internet connection"),
-					),
-				),
-			),
-
 			// littr header
 			app.Div().Class("max").Body(
 				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Text(headerString),
 					app.Span().Class("small-text middle top-align").Text(" (beta)"),
+				),
+
+				// snackbar offline mode
+				app.If(!h.onlineState,
+					app.Div().OnClick(h.onClickModalDismiss).Class("snackbar red10 white-text top active").Body(
+						app.I().Text("warning").Class("amber-text"),
+						app.Span().Text("no internet connection"),
+					),
 				),
 			),
 
