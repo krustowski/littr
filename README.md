@@ -142,7 +142,6 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 
 ### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
-+ add timestamp to a subscription
 + implement searching for flow using hashtags
 
 ### roadmap to v0.30
@@ -151,6 +150,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~unify the UI elements' border radius and their styling~~
 
 ### roadmap to v0.29
++ ~~add timestamp to a subscription~~
 + ~~list subscribed devides on settings page~~
 
 ### roadmap to v0.28
