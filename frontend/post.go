@@ -19,6 +19,8 @@ type PostPage struct {
 type postContent struct {
 	app.Compo
 
+	postType string
+
 	newPost    string
 	newFigLink string
 	newFigFile string
@@ -34,6 +36,8 @@ type postContent struct {
 	toastType string
 
 	postButtonsDisabled bool
+
+	keyDownEventListener func()
 }
 
 func (p *PostPage) OnNav(ctx app.Context) {
@@ -104,6 +108,14 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 	})
 }
 
+func (c *postContent) onKeyDown(ctx app.Context, e app.Event) {
+	textarea := app.Window().GetElementByID("post-textarea").Get("value").String()
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea) != 0 {
+		app.Window().GetElementByID("post").Call("click")
+	}
+}
+
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
 	// post, fig, poll
 	postType := ctx.JSSrc().Get("id").String()
@@ -143,9 +155,12 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			break
 
 		case "post":
+			textarea := app.Window().GetElementByID("post-textarea").Get("value").String()
+
 			// trim the padding spaces on the extremities
 			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-			newPost := strings.TrimSpace(c.newPost)
+			//newPost := strings.TrimSpace(c.newPost)
+			newPost := strings.TrimSpace(textarea)
 
 			if newPost == "" {
 				toastText = "post textarea must be filled"
@@ -219,6 +234,10 @@ func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
 	c.postButtonsDisabled = false
 }
 
+func (c *postContent) OnMount(ctx app.Context) {
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+}
+
 func (c *postContent) Render() app.UI {
 	toastColor := ""
 
@@ -255,7 +274,7 @@ func (c *postContent) Render() app.UI {
 
 		// new post textarea
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
-			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true),
+			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true).ID("post-textarea"),
 			app.Label().Text("post content").Class("active deep-orange-text"),
 		),
 		/*app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
@@ -273,7 +292,7 @@ func (c *postContent) Render() app.UI {
 			app.I().Text("image"),
 		),
 		app.Div().Class("row").Body(
-			app.Button().ID("post").Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
+			app.Button().ID("post").Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).Body(
 				app.If(c.postButtonsDisabled,
 					app.Progress().Class("circle white-border small"),
 				),

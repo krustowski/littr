@@ -371,13 +371,6 @@
     }
   }
 
-  // 
-  addEventListener('keydown', (event) => {
-    if(event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-        event.target.form?.submit();
-    }
-  });
-
   // onload event listener
   addEventListener('load', event => {
     console.log(LIT.version)
