@@ -143,12 +143,12 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 ### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + add timestamp to a subscription
-+ implement Ctrl+Enter to submit posts like YouTube
 + implement searching for flow using hashtags
 
 ### roadmap to v0.30
++ ~~implement Ctrl+Enter to submit posts like YouTube~~
 + improve the UI (review issues related to UI on Github)
-+ unify the UI elements' border radius and their styling
++ ~~unify the UI elements' border radius and their styling~~
 
 ### roadmap to v0.29
 + ~~list subscribed devides on settings page~~
