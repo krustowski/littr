@@ -328,6 +328,10 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
 	textarea := app.Window().GetElementByID("reply-textarea")
 
+	if textarea.IsNull() {
+		return
+	}
+
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
 		app.Window().GetElementByID("reply").Call("click")
 	}

@@ -111,6 +111,11 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 func (c *postContent) onKeyDown(ctx app.Context, e app.Event) {
 	textarea := app.Window().GetElementByID("post-textarea")
 
+	//if textarea.Get("value").IsNull() {
+	if textarea.IsNull() {
+		return
+	}
+
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
 		app.Window().GetElementByID("post").Call("click")
 	}
