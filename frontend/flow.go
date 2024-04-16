@@ -67,7 +67,8 @@ type flowContent struct {
 
 	refreshClicked bool
 
-	eventListenerMsg func()
+	eventListenerMsg     func()
+	keyDownEventListener func()
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -209,7 +210,8 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		postType := "post"
 
 		// trim the spaces on the extremites
-		replyPost := strings.TrimSpace(c.replyPostContent)
+		textarea := app.Window().GetElementByID("reply-textarea").Get("value").String()
+		replyPost := strings.TrimSpace(textarea)
 
 		if replyPost == "" {
 			toastText = "no valid reply entered"
@@ -321,6 +323,14 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			c.newFigFile = ""
 		})
 	})
+}
+
+func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
+	textarea := app.Window().GetElementByID("reply-textarea")
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
+		app.Window().GetElementByID("reply").Call("click")
+	}
 }
 
 func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
@@ -557,6 +567,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
@@ -995,7 +1006,7 @@ func (c *flowContent) Render() app.UI {
 
 				app.Div().Class("field label textarea border extra deep-orange-text").Body(
 					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
-					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true),
+					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea"),
 					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
 					//app.Label().Text("text").Class("active"),
 				),
@@ -1008,7 +1019,7 @@ func (c *flowContent) Render() app.UI {
 
 				app.Div().Class("row").Body(
 					app.Button().Class("max border deep-orange7 white-text bold").Text("cancel").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
-					app.Button().ID("").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+					app.Button().ID("reply").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
 						app.If(c.postButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
