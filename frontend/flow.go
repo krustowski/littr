@@ -918,20 +918,6 @@ func (c *flowContent) Render() app.UI {
 			app.Div().Class("max padding").Body(
 				app.If(c.userFlowNick != "" && !c.isPost,
 					app.H5().Text(c.userFlowNick+"'s flow"),
-					//app.P().Text("exclusive content incoming frfr"),
-
-					// post header (author avatar + name + link button)
-					app.Div().Class("row top-padding").Body(
-						app.Img().Class("responsive max left").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
-						/*;app.P().Class("max").Body(
-							app.A().Class("vold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
-							//app.B().Text(post.Nickname).Class("deep-orange-text"),
-						),*/
-
-						app.If(c.users[c.userFlowNick].About != "",
-							app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
-						),
-					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
 					app.H5().Text("single post and replies"),
 				).Else(
@@ -949,6 +935,21 @@ func (c *flowContent) Render() app.UI {
 				),
 			),
 		),
+
+		app.If(c.userFlowNick != "" && !c.isPost,
+			app.Div().Class("row top-padding").Body(
+				app.Img().Class("responsive max left").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
+				/*;app.P().Class("max").Body(
+					app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
+					//app.B().Text(post.Nickname).Class("deep-orange-text"),
+				),*/
+
+				app.If(c.users[c.userFlowNick].About != "",
+					app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				),
+			),
+		),
+
 		app.Div().Class("space"),
 
 		// snackbar
