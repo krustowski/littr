@@ -66,7 +66,7 @@ func (c *statsContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	//c.buttonDisabled = true
 
-	ctx.Navigate("/flow/" + key)
+	ctx.Navigate("/flow/user/" + key)
 }
 
 func (c *statsContent) onSearch(ctx app.Context, e app.Event) {
@@ -284,8 +284,8 @@ func (c *statsContent) Render() app.UI {
 							app.P().Body(
 								app.P().Body(
 									//app.B().Text(key).Class("deep-orange-text"),
-									//app.A().Class("vold deep-orange-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
-									app.A().Class("vold deep-orange-text").OnClick(nil).Text(key).ID(key),
+									app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
+									//app.A().Class("bold deep-orange-text").OnClick(nil).Text(key).ID(key),
 								),
 							),
 						),
