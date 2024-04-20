@@ -619,17 +619,21 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 		// nasty hotfix, TODO
 		c.pageNoToFetch = 0
 
-		parts := c.parseFlowURI(ctx)
+		//parts := c.parseFlowURI(ctx)
 
 		opts := pageOptions{
 			PageNo:   c.pageNoToFetch,
 			Context:  ctx,
 			CallerID: c.user.Nickname,
 
-			SinglePost:   parts.SinglePost,
-			SinglePostID: parts.SinglePostID,
-			UserFlow:     parts.UserFlow,
-			UserFlowNick: parts.UserFlowNick,
+			//SinglePost:   parts.SinglePost,
+			SinglePost: c.singlePostID != "",
+			//SinglePostID: parts.SinglePostID,
+			SinglePostID: c.singlePostID,
+			//UserFlow:     parts.UserFlow,
+			UserFlow: c.userFlowNick != "",
+			//UserFlowNick: parts.UserFlowNick,
+			UserFlowNick: c.userFlowNick,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
