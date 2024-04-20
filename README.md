@@ -21,6 +21,9 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 `data/`
 + sample data used to flush existing container data by `make flush`
 
+`docs/`
++ project documentation (mainly Swagger API documentation)
+
 `frontend/`
 + frontend pages
 
@@ -145,6 +148,9 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 ### backlog
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + implement searching for flow using hashtags
+
+### roadmap to v0.31
++ implement mentions with notification tos such user
 
 ### roadmap to v0.30
 + ~~implement Ctrl+Enter to submit posts like YouTube~~
