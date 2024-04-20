@@ -19,6 +19,8 @@ type header struct {
 	modalLogoutShow bool
 
 	onlineState bool
+
+	eventListenerMessage func()
 }
 
 type footer struct {
@@ -28,6 +30,19 @@ type footer struct {
 const (
 	headerString = "littr"
 )
+
+func (h *header) onMessage(ctx app.Context, e app.Event) {
+	data := e.JSValue().Get("data").String()
+
+	if data == "heartbeat" {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		//h.toastText = "new post added above"
+		//h.toastType = "info"
+	})
+}
 
 func (h *header) OnAppUpdate(ctx app.Context) {
 	// Reports that an app update is available.
@@ -72,6 +87,9 @@ func (h *header) OnMount(ctx app.Context) {
 	if newUpdate {
 		h.updateAvailable = true
 	}
+
+	// create event listener for SSE messages
+	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
 
 	h.onlineState = true // this is a guess
 	// this may not be implemented
@@ -212,6 +230,7 @@ func (h *header) Render() app.UI {
 					app.Div().Class("row").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Text("littr (beta)"),
+						app.Div().Class("dot"),
 					),
 					app.Nav().Class("center-align large-text").Body(
 						app.P().Body(

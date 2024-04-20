@@ -149,6 +149,7 @@ func initServer() {
 		Styles: []string{
 			"https://cdn.savla.dev/css/beercss.min.css",
 			"https://cdn.savla.dev/css/sortable.min.css",
+			"/web/litter.css",
 		},
 		Scripts: []string{
 			"https://cdn.savla.dev/js/jquery.min.js",

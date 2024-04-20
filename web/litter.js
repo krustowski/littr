@@ -125,17 +125,18 @@
   const es = new EventSource("/api/flow/live");
 
   const listener = function (event) {	
-    console.log(event.type)
-    console.log(event.data)
+    //console.log(event.type)
+    //console.log(event.data)
 
     if (event.data === "heartbeat") {
+      $(".dot").stop(true, true).show().fadeOut(30000);
       return
     }
 
     let data = event.data;
     var event; // The custom event that will be created
 
-    if(document.createEvent){
+    if (document.createEvent){
       event = document.createEvent("HTMLEvents");
       event.initEvent("message", true, true);
       event.eventName = "message";
@@ -291,15 +292,15 @@
           .addClass('ff')
       })
 
-    $('#table-flow a').each(function () {
-      let x = $(this).html()
-      if (x.endsWith('.webp') || x.endsWith('.jpg') || x.endsWith('.jpeg') || x.endsWith('.png')) {
-        let u = $(this).attr('href')
-        $(this)
-          .html('<img class="ff" width=25% src="' + u + '">')
-          .addClass('ff')
-      }
-    })
+      $('#table-flow a').each(function () {
+        let x = $(this).html()
+        if (x.endsWith('.webp') || x.endsWith('.jpg') || x.endsWith('.jpeg') || x.endsWith('.png')) {
+          let u = $(this).attr('href')
+          $(this)
+            .html('<img class="ff" width=25% src="' + u + '">')
+            .addClass('ff')
+        }
+      })
     }
     $('a>img').parent().attr('href', '')
   }
