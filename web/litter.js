@@ -278,8 +278,19 @@
               )
           )
           .addClass('ff')
+      
+        $(this)
+          .html(
+            $(this)
+              .html()
+              .replace(
+                /@([\w]+)/g,
+                '<a class="red-text" target=_blank href="/flow/user/$1">@$1</a> '
+              )
+          )
+          .addClass('ff')
       })
-    }
+
     $('#table-flow a').each(function () {
       let x = $(this).html()
       if (x.endsWith('.webp') || x.endsWith('.jpg') || x.endsWith('.jpeg') || x.endsWith('.png')) {
@@ -289,6 +300,7 @@
           .addClass('ff')
       }
     })
+    }
     $('a>img').parent().attr('href', '')
   }
 
