@@ -1,9 +1,9 @@
+![](/web/android-chrome-192x192.png)
+
 # litter-go (littr)
 
 [![Go Reference](https://pkg.go.dev/badge/go.savla.dev/littr.svg)](https://pkg.go.dev/go.savla.dev/littr)
 [![Go Report Card](https://goreportcard.com/badge/go.savla.dev/littr)](https://goreportcard.com/report/go.savla.dev/littr)
-
-![](/web/android-chrome-192x192.png)
 
 litter again, now in Go as a PWA --- a microblogging service without notifications (by default off) and pesky messaging, just a raw mind _flow_
 
