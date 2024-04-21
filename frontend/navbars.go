@@ -1,6 +1,8 @@
 package frontend
 
 import (
+	"strings"
+
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -20,6 +22,8 @@ type header struct {
 
 	onlineState bool
 
+	pagePath string
+
 	eventListenerMessage func()
 }
 
@@ -35,6 +39,7 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
 
 	if data == "heartbeat" {
+
 		return
 	}
 
@@ -79,6 +84,8 @@ func (h *header) OnMount(ctx app.Context) {
 	}
 
 	h.authGranted = authGranted
+
+	h.pagePath = ctx.Page().URL().Path
 
 	// keep the update button on until clicked
 	var newUpdate bool
@@ -211,8 +218,17 @@ func (h *header) Render() app.UI {
 			// littr header
 			app.Div().Class("max").Body(
 				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).Body(
-					app.Text(headerString),
-					app.Span().Class("small-text middle top-align").Text(" (beta)"),
+					app.Span().Body(
+						app.Text(headerString),
+						app.Span().Class("col").Body(
+							app.Sup().Body(
+								app.Text(" (beta) "),
+							),
+							app.If(strings.Contains(h.pagePath, "flow"),
+								app.Span().Class("dot"),
+							),
+						),
+					),
 				),
 
 				// snackbar offline mode
@@ -229,8 +245,16 @@ func (h *header) Render() app.UI {
 				app.Dialog().Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
 					app.Div().Class("row").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
-						app.H4().Text("littr (beta)"),
-						app.Div().Class("dot"),
+						app.H4().Body(
+							app.Span().Body(
+								app.Text("littr"),
+								app.Span().Class("col").Body(
+									app.Sup().Body(
+										app.Text(" (beta) "),
+									),
+								),
+							),
+						),
 					),
 					app.Nav().Class("center-align large-text").Body(
 						app.P().Body(

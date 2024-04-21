@@ -129,7 +129,7 @@
     //console.log(event.data)
 
     if (event.data === "heartbeat") {
-      $(".dot").stop(true, true).show().fadeOut(30000);
+      $(".dot").stop(true, true).show().fadeOut(29999);
       return
     }
 
