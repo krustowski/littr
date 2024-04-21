@@ -216,7 +216,7 @@ func (h *header) Render() app.UI {
 			),
 
 			// littr header
-			app.Div().Class("max").Body(
+			app.Div().Class("max row center-align").Body(
 				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).Body(
 					app.Span().Body(
 						app.Text(headerString),
