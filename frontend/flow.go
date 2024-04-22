@@ -186,19 +186,28 @@ func (c *flowContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	ctx.Navigate("/flow/user/" + key)
 }
 
+// onClickReply acts like a caller function evoked when user click on the reply icon at one's post
 func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
-	c.interactedPostKey = ctx.JSSrc().Get("id").String()
-
-	c.modalReplyActive = true
-	c.buttonDisabled = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = ctx.JSSrc().Get("id").String()
+		c.modalReplyActive = true
+		c.postButtonsDisabled = false
+		c.buttonDisabled = true
+	})
 }
 
+// onClickPostReply acts like a caller function evoked when user clicks on "reply" button in the reply modal
 func (c *flowContent) onClickPostReply(ctx app.Context, e app.Event) {
-	//c.interactedPostKey = ctx.JSSrc().Get("id").String()
+	// prevent double-posting
+	if c.postButtonsDisabled {
+		return
+	}
 
-	c.modalReplyActive = true
-	c.postButtonsDisabled = true
-	c.buttonDisabled = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.modalReplyActive = true
+		c.postButtonsDisabled = true
+		c.buttonDisabled = true
+	})
 
 	ctx.NewAction("reply")
 }

@@ -122,6 +122,11 @@ func (c *postContent) onKeyDown(ctx app.Context, e app.Event) {
 }
 
 func (c *postContent) onClick(ctx app.Context, e app.Event) {
+	// prevent double-posting
+	if c.postButtonsDisabled {
+		return
+	}
+
 	// post, fig, poll
 	postType := ctx.JSSrc().Get("id").String()
 	content := ""
