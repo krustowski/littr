@@ -357,7 +357,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 			return
 		}
 
-		if bottom-height < 0 && !c.paginationEnd && !c.processingFire && !c.contentLoadFinished && !c.loaderShow {
+		if bottom-height < 0 && !c.paginationEnd && !c.processingFire && !c.loaderShow {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.loaderShow = true
 				c.processingFire = true
@@ -380,6 +380,15 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 					PageNo:   c.pageNoToFetch,
 					Context:  ctx,
 					CallerID: c.user.Nickname,
+
+					//SinglePost:   parts.SinglePost,
+					SinglePost: c.singlePostID != "",
+					//SinglePostID: parts.SinglePostID,
+					SinglePostID: c.singlePostID,
+					//UserFlow:     parts.UserFlow,
+					UserFlow: c.userFlowNick != "",
+					//UserFlowNick: parts.UserFlowNick,
+					UserFlowNick: c.userFlowNick,
 				}
 
 				newPosts, newUsers = c.fetchFlowPage(opts)

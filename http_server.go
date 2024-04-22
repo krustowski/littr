@@ -111,7 +111,7 @@ func initServer() {
 		Name:         "litter-go",
 		ShortName:    "littr",
 		Title:        "littr",
-		Description:  "nanoblogging platform as PWA built on go-app framework (PoC)",
+		Description:  "nanoblogging platform as PWA built on go-app framework with beercss and in-memory database",
 		Author:       "krusty",
 		LoadingLabel: "loading...",
 		Lang:         "en",
