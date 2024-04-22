@@ -150,7 +150,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement searching for flow using hashtags
 
 ### roadmap to v0.31
-+ implement mentions with notification tos such user
++ implement mentions with notification to such user
 
 ### roadmap to v0.30
 + ~~implement Ctrl+Enter to submit posts like YouTube~~
