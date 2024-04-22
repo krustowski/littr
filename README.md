@@ -131,7 +131,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~automatic links for known TLDs~~
 + ~~autosubmit on password manager autofill (when username and password get filled quite quickly)~~
 + ~~break lines on \n in posts~~
-+ check for double posting same content
++ ~~check for double posting same content~~
 + custom colour theme per user
 + deep code refactoring
 + dismiss any modal by clicking anywhere on the screen
