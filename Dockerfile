@@ -12,11 +12,7 @@
 ARG GOLANG_VERSION
 FROM --platform=linux/amd64 golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
 
-ARG APP_NAME
-ARG APP_PEPPER
-ARG APP_VERSION
-ARG API_TOKEN
-ARG VAPID_PUB_KEY
+ARG APP_NAME APP_PEPPER APP_VERSION API_TOKEN VAPID_PUB_KEY
 
 ENV APP_NAME ${APP_NAME}
 ENV APP_PEPPER ${APP_PEPPER}
@@ -56,11 +52,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 
 FROM alpine:3.19 AS litter-release
 
-ARG APP_FLAGS
-ARG APP_PEPPER
-ARG APP_VERSION
-ARG DOCKER_INTERNAL_PORT
-ARG DOCKER_USER
+ARG APP_FLAGS APP_PEPPER APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
 
 ENV APP_FLAGS ${APP_FLAGS}
 ENV APP_PEPPER ${APP_PEPPER}
@@ -74,17 +66,18 @@ RUN --mount=type=cache,target=/var/cache/apk \
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY --chown=1000:1000 --chmod=750 data/ /opt/data/
-COPY --chown=1000:1000 --chmod=750 data/.gitkeep /opt/pix/
+COPY --chown=1000:1000 --chmod=700 data/ /opt/data/
+COPY --chown=1000:1000 --chmod=700 data/.gitkeep /opt/pix/
 #COPY .script/periodic-dump.sh /opt/periodic-dump.sh
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 
 # workaround for pix
 RUN cd /opt/web && ln -s ../pix .
+RUN ln -s /opt/littr /usr/local/bin
 RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /opt/
 
 WORKDIR /opt
 USER ${DOCKER_USER}
 EXPOSE ${DOCKER_INTERNAL_PORT}
-ENTRYPOINT ["/opt/littr"]
+ENTRYPOINT ["littr"]
