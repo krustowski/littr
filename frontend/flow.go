@@ -28,6 +28,8 @@ type flowContent struct {
 	loaderShow      bool
 	loaderShowImage bool
 
+	contentLoadFinished bool
+
 	loggedUser string
 	user       models.User
 
@@ -355,10 +357,11 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 			return
 		}
 
-		if bottom-height < 0 && !c.paginationEnd && !c.processingFire {
+		if bottom-height < 0 && !c.paginationEnd && !c.processingFire && !c.contentLoadFinished && !c.loaderShow {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.loaderShow = true
 				c.processingFire = true
+				c.contentLoadFinished = false
 			})
 
 			var newPosts map[string]models.Post
@@ -422,6 +425,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 				c.processingFire = false
 				c.loaderShow = false
+				c.contentLoadFinished = true
 				c.lastPageFetched = lastPageFetched
 
 				log.Println("new content page request fired")
@@ -605,6 +609,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.loaderShow = true
 		c.loaderShowImage = true
+		c.contentLoadFinished = false
 		c.refreshClicked = true
 		c.postButtonsDisabled = true
 		//c.pageNoToFetch = 0
@@ -646,6 +651,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.loaderShowImage = false
 			c.refreshClicked = false
 			c.postButtonsDisabled = false
+			c.contentLoadFinished = true
 		})
 
 	})
@@ -800,6 +806,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.loaderShow = true
 		c.loaderShowImage = true
+		c.contentLoadFinished = false
 
 		c.toastText = ""
 
@@ -835,7 +842,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 		}
 		if parts.UserFlowNick != "" && parts.UserFlow {
 			if _, found := users[parts.UserFlowNick]; !found {
-				toastText = "user not found"
+				toastText = "user not found, or not in your flow"
 			}
 			isPost = false
 		}
@@ -859,6 +866,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 
 			c.loaderShow = false
 			c.loaderShowImage = false
+			c.contentLoadFinished = true
 		})
 		return
 	})

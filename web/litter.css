@@ -1,7 +1,7 @@
 .dot {
-  height: 8px;
-  width: 8px;
-  background-color: yellow;
+  height: 15px;
+  width: 15px;
+  background-color: #f57f17;
   border-radius: 50%;
   display: inline-block;
   display: none;

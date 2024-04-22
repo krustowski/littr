@@ -126,7 +126,7 @@
 
   const listener = function (event) {	
     //console.log(event.type)
-    //console.log(event.data)
+    console.log(event.data)
 
     if (event.data === "heartbeat") {
       $(".dot").stop(true, true).show().fadeOut(29999);
