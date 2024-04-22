@@ -149,6 +149,11 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + add periodic subscription checker (older than a week will be deleted on no activity)
 + implement searching for flow using hashtags
 
+### roadmap to v1.0.0
++ write unit and e2e tests
++ resolve tikets in github and redmine (priv)
++ [...]
+
 ### roadmap to v0.31
 + implement mentions with notification to such user
 
@@ -184,7 +189,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~use a router (Gorilla Mux, Go-Chi)~~
 
 ### roadmap to v0.22
-+ fix flow reorganize glitch (single page, after post deletion etc) (wip)
++ ~~fix flow reorganize glitch (single page, after post deletion etc) (wip)~~ (fixed in v0.30.29)
 + ~~send frontend's tagged version to backend (improve user debugging)~~
 
 ### roadmap to v0.21
