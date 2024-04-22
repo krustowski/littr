@@ -243,7 +243,7 @@ func (h *header) Render() app.UI {
 			// app info modal
 			app.If(h.modalInfoShow,
 				app.Dialog().Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
-					app.Div().Class("row").Body(
+					app.Div().Class("row center-align").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Body(
 							app.Span().Body(
@@ -271,7 +271,6 @@ func (h *header) Render() app.UI {
 						app.Text("version "),
 						app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
 					),
-					app.Div().Class("small-space"),
 
 					app.Nav().Class("center-align").Body(
 						app.P().Body(

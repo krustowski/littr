@@ -129,6 +129,7 @@
     console.log(event.data)
 
     if (event.data === "heartbeat") {
+      $(".dot").css("opacity", 1.0);
       $(".dot").stop(true, true).show().fadeOut(19999);
       return
     }
