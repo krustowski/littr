@@ -16,28 +16,28 @@ type response struct {
 	AuthGranted bool `json:"auth_granted" default:false`
 	Code        int  `json:"code"`
 
-	PublicKey string `json:"public_key"`
-	Key       string `json:"key"`
+	PublicKey string `json:"public_key,omitempty"`
+	Key       string `json:"key,omitempty"`
 	Message   string `json:"message"`
-	Count     int    `json:"count"`
+	Count     int    `json:"count,omitempty"`
 
 	Subscribed bool            `json:"subscribed"`
-	Devices    []models.Device `json:"devices"`
+	Devices    []models.Device `json:"devices,omitempty"`
 
-	Polls    map[string]models.Poll `json:"polls"`
-	Posts    map[string]models.Post `json:"posts"`
-	Users    map[string]models.User `json:"users"`
-	FlowList []string               `json:"flow_records"`
+	Polls    map[string]models.Poll `json:"polls,omitempty"`
+	Posts    map[string]models.Post `json:"posts,omitempty"`
+	Users    map[string]models.User `json:"users,omitempty"`
+	FlowList []string               `json:"flow_records,omitempty"`
 
-	Data []byte `json:"data"`
+	Data []byte `json:"data,omitempty"`
 
 	// very stats properties
-	FlowStats map[string]int      `json:"flow_stats"`
-	UserStats map[string]userStat `json:"user_stats"`
+	FlowStats map[string]int      `json:"flow_stats,omitempty"`
+	UserStats map[string]userStat `json:"user_stats,omitempty"`
 
 	// auth tokens (JWT)
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
 func (r *response) Write(w http.ResponseWriter) error {
