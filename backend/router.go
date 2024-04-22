@@ -51,7 +51,7 @@ func LoadAPIRouter() chi.Router {
 	go func() {
 		for {
 			streamer.SendMessage("/api/flow/live", sse.SimpleMessage("heartbeat"))
-			time.Sleep(time.Second * 30)
+			time.Sleep(time.Second * 20)
 		}
 	}()
 
