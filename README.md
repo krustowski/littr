@@ -150,8 +150,9 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + implement searching for flow using hashtags
 
 ### roadmap to v1.0.0
-+ write unit and e2e tests
++ write integration and e2e tests
 + resolve tikets in github and redmine (priv)
++ fix the code smells as scanned by `sonar-scanner`
 + [...]
 
 ### roadmap to v0.31
