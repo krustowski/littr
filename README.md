@@ -155,12 +155,15 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + fix the code smells as scanned by `sonar-scanner`
 + [...]
 
-### roadmap to v0.31
+### roadmap to v0.32
 + implement mentions with notification to such user
+
+### roadmap to v0.31
++ ~~implement subscribtion list item deletion~~
++ improve the UI/UX (review issues related to UI on Github)
 
 ### roadmap to v0.30
 + ~~implement Ctrl+Enter to submit posts like YouTube~~
-+ improve the UI (review issues related to UI on Github)
 + ~~unify the UI elements' border radius and their styling~~
 
 ### roadmap to v0.29
