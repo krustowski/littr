@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -113,6 +114,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	email := strings.ToLower(user.Email)
+	user.Email = email
 	user.LastActiveTime = time.Now()
 
 	if saved := setOne(UserCache, user.Nickname, user); !saved {

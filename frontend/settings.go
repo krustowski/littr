@@ -50,11 +50,14 @@ type settingsContent struct {
 
 	settingsButtonDisabled bool
 
-	deleteAccountModalShow bool
+	deleteAccountModalShow      bool
+	deleteSubscriptionModalShow bool
 
 	VAPIDpublic string
 	devices     []models.Device
-	UUID        string
+
+	thisDeviceUUID string
+	interactedUUID string
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -145,7 +148,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			//c.darkModeOn = user.AppBgMode == "dark"
 
 			c.VAPIDpublic = payload.PublicKey
-			c.UUID = ctx.DeviceID()
+			c.thisDeviceUUID = ctx.DeviceID()
 
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 			//c.replyNotifOn = user.ReplyNotificationOn
@@ -368,6 +371,65 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event) {
+	toastText := ""
+
+	uuid := c.interactedUUID
+	if uuid == "" {
+		toastText := "blank UUID string"
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = toastText != ""
+		})
+		return
+	}
+
+	payload := struct {
+		UUID string `json:"device_uuid"`
+	}{
+		UUID: uuid,
+	}
+
+	ctx.Async(func() {
+		if _, ok := litterAPI("DELETE", "/api/push", payload, c.user.Nickname, 0); !ok {
+			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
+				c.toastText = "failed to unsubscribe, try again later"
+				c.toastShow = toastText != ""
+			})
+			return
+
+		}
+
+		devs := c.devices
+		newDevs := []models.Device{}
+		for _, dev := range devs {
+			if dev.UUID == uuid {
+				continue
+			}
+			newDevs = append(newDevs, dev)
+		}
+
+		toastText = "device successfully unsubscribed"
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = toastText != ""
+			c.toastType = "info"
+
+			if uuid == c.thisDeviceUUID {
+				c.subscribed = false
+			}
+
+			c.deleteSubscriptionModalShow = false
+			c.devices = newDevs
+		})
+		return
+	})
+	return
+}
+
 func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	toastText := ""
 
@@ -412,8 +474,6 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 
 		ctx.Async(func() {
 			if _, ok := litterAPI("DELETE", "/api/push", payload, c.user.Nickname, 0); !ok {
-				toastText := "cannot reach backend!"
-
 				ctx.Dispatch(func(ctx app.Context) {
 					//c.toastText = toastText
 					c.toastText = "failed to unsubscribe, try again later"
@@ -647,17 +707,32 @@ func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
 	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
 }
 
+func (c *settingsContent) onClickDeleteSubscriptionModalShow(ctx app.Context, e app.Event) {
+	uuid := ctx.JSSrc().Get("id").String()
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.deleteSubscriptionModalShow = true
+		c.settingsButtonDisabled = true
+		c.interactedUUID = uuid
+	})
+}
+
 func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
-	c.deleteAccountModalShow = true
-	c.settingsButtonDisabled = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.deleteAccountModalShow = true
+		c.settingsButtonDisabled = true
+	})
 }
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastType = ""
-	c.toastShow = (c.toastText != "")
-	c.settingsButtonDisabled = false
-	c.deleteAccountModalShow = false
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastType = ""
+		c.toastShow = (c.toastText != "")
+		c.settingsButtonDisabled = false
+		c.deleteAccountModalShow = false
+		c.deleteSubscriptionModalShow = false
+	})
 }
 
 func (c *settingsContent) Render() app.UI {
@@ -849,6 +924,29 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// subs deletion modal
+		app.If(c.deleteSubscriptionModalShow,
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("subscription deletion"),
+				),
+				app.Div().Class("space"),
+
+				app.Article().Class("row surface-container-highest").Body(
+					app.I().Text("warning").Class("amber-text"),
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete this subscription?"),
+					),
+				),
+				app.Div().Class("space"),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border red9 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription),
+					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+				),
+			),
+		),
+
 		// notification switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
@@ -894,7 +992,7 @@ func (c *settingsContent) Render() app.UI {
 					}
 
 					deviceText := "device"
-					if dev.UUID == c.UUID {
+					if dev.UUID == c.thisDeviceUUID {
 						deviceText = "this device"
 					}
 
@@ -906,9 +1004,18 @@ func (c *settingsContent) Render() app.UI {
 					deviceText += " (" + u.Host + ")"
 
 					return app.Article().Class("surface-container-highest").Style("border-radius", "8px").Body(
-						app.P().Class("bold").Body(app.Text(deviceText)),
-						app.P().Body(app.Text("subscribed to notifs")),
-						app.P().Body(app.Text(dev.TimeCreated)),
+						app.Div().Class("row max").Body(
+							app.Div().Class("max").Body(
+
+								app.P().Class("bold").Body(app.Text(deviceText)),
+								app.P().Body(app.Text("subscribed to notifs")),
+								app.P().Body(app.Text(dev.TimeCreated)),
+							),
+
+							app.Button().ID(dev.UUID).Class("transparent circle").OnClick(c.onClickDeleteSubscriptionModalShow).Disabled(c.settingsButtonDisabled).Body(
+								app.I().Text("delete"),
+							),
+						),
 					)
 				}),
 			),

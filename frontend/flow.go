@@ -456,16 +456,20 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 func (c *flowContent) onClickDeleteButton(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 
-	c.interactedPostKey = key
-	c.deleteModalButtonsDisabled = false
-	c.deletePostModalShow = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = key
+		c.deleteModalButtonsDisabled = false
+		c.deletePostModalShow = true
+	})
 }
 
 func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
 	key := c.interactedPostKey
 	ctx.NewActionWithValue("delete", key)
 
-	c.deleteModalButtonsDisabled = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.deleteModalButtonsDisabled = true
+	})
 }
 
 func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.savla.dev/littr/config"
@@ -49,7 +50,8 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//log.Println(random)
+	email := strings.ToLower(fetch.Email)
+	fetch.Email = email
 
 	users, _ := getAll(UserCache, models.User{})
 
@@ -90,7 +92,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := user.Email
+	//email := user.Email
 
 	// compose a mail
 	m := mail.NewMsg()
