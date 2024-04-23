@@ -60,7 +60,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 
 	found := false
 	for _, u := range users {
-		if u.Email == fetch.Email {
+		if strings.ToLower(u.Email) == fetch.Email {
 			found = true
 			user = u
 			break
