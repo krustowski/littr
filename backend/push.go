@@ -134,7 +134,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 	// fetch related data from cachces
 	post, _ := getOne(FlowCache, original.ID, models.Post{})
 	devs, _ := getOne(SubscriptionCache, post.Nickname, []models.Device{})
-	user, _ := getOne(UserCache, post.Nickname, models.User{})
+	//user, _ := getOne(UserCache, post.Nickname, models.User{})
 
 	// do not notify the same person --- OK condition
 	if post.Nickname == caller {
@@ -156,6 +156,25 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// compose the body of this notification
+	body, _ := json.Marshal(app.Notification{
+		Title: "littr reply",
+		Icon:  "/web/apple-touch-icon.png",
+		Body:  caller + " replied to your post",
+		Path:  "/flow/post/" + post.ID,
+	})
+
+	sendNotificationToDevices(devs, body, l)
+
+	resp.Message = "ok, notification(s) fired"
+	resp.Code = http.StatusCreated
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
+
+func sendNotificationToDevices(devs []models.Device, body []byte, l *Logger) {
 	// range devices
 	for _, dev := range devs {
 		if dev.UUID == "" {
@@ -166,30 +185,22 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		//
 		// IMPORTANT NOTE: do not write headers in the goroutine --- this will crash the server on nil pointer dereference
 		// and memory segment violation
-		go func(dev models.Device) {
+		go func(dev models.Device, body []byte) {
 			sub := dev.Subscription
-
-			// compose the body of this notification
-			body, _ := json.Marshal(app.Notification{
-				Title: "littr reply",
-				Icon:  "/web/apple-touch-icon.png",
-				Body:  caller + " replied to your post",
-				Path:  "/flow/post/" + post.ID,
-			})
 
 			// fire a notification
 			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
-				Subscriber:      user.Email,
+				Subscriber:      os.Getenv("VAPID_SUBSCRIBER"),
 				VAPIDPublicKey:  os.Getenv("VAPID_PUB_KEY"),
 				VAPIDPrivateKey: os.Getenv("VAPID_PRIV_KEY"),
 				TTL:             30,
 				Urgency:         webpush.UrgencyNormal,
 			})
 			if err != nil {
-				resp.Code = http.StatusInternalServerError
-				resp.Message = "cannot send a notification: " + err.Error()
+				code := http.StatusInternalServerError
+				message := "cannot send a notification: " + err.Error()
 
-				l.Println(resp.Message, resp.Code)
+				l.Println(message, code)
 				return
 			}
 
@@ -206,19 +217,12 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 				bodyString = "(blank)"
 			}
 
-			resp.Code = res.StatusCode
-			resp.Message = "push gorutine: response from the counterpart: " + bodyString
-			l.Println(resp.Message, resp.Code)
+			code := res.StatusCode
+			message := "push gorutine: response from the counterpart: " + bodyString
+			l.Println(message, code)
 			return
-		}(dev)
+		}(dev, body)
 	}
-
-	resp.Message = "ok, notification(s) fired"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
-	return
 }
 
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {

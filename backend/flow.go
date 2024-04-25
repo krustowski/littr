@@ -5,12 +5,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
+	app "github.com/maxence-charriere/go-app/v9/pkg/app"
 
 	"go.savla.dev/littr/models"
 )
@@ -100,6 +102,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "flow")
+	caller, _ := r.Context().Value("nickname").(string)
 
 	// post a new post
 	var post models.Post
@@ -116,6 +119,16 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(reqBody, &post); err != nil {
 		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// check the post forgery possibility
+	if caller != post.Nickname {
+		resp.Message = "invalid author spotted --- one can post under their authenticated name only"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -168,6 +181,44 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
+	}
+
+	// notify all to-be-notifiedees
+	//
+	// find matches using regext compiling to '@username' matrix
+	re := regexp.MustCompile(`@(?P<text>\w+)`)
+	matches := re.FindAllStringSubmatch(post.Content, -1)
+
+	// we deal with a 2D array here
+	for _, match := range matches {
+		receiverName := match[1]
+
+		// fetch related data from cachces
+		devs, _ := getOne(SubscriptionCache, receiverName, []models.Device{})
+		_, found := getOne(UserCache, receiverName, models.User{})
+		if !found {
+			continue
+		}
+
+		// do not notify the same person --- OK condition
+		if receiverName == caller {
+			continue
+		}
+
+		// do not notify user --- notifications disabled --- OK condition
+		if len(devs) == 0 {
+			continue
+		}
+
+		// compose the body of this notification
+		body, _ := json.Marshal(app.Notification{
+			Title: "littr mention",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  caller + " mentioned you in their post",
+			Path:  "/flow/post/" + post.ID,
+		})
+
+		sendNotificationToDevices(devs, body, l)
 	}
 
 	// broadcast a new post to live subscribers

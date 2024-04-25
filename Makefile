@@ -117,6 +117,7 @@ version:
 		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(VAPID_PRIV_KEY\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(VAPID_PUB_KEY\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_SUBSCRIBER\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
 		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
 		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
