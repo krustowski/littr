@@ -12,8 +12,11 @@ import (
 	"syscall"
 	"time"
 
-	"go.savla.dev/littr/configs"
+	configs "go.savla.dev/littr/configs"
 	be "go.savla.dev/littr/pkg/backend"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/posts"
 	fe "go.savla.dev/littr/pkg/frontend"
 	"go.savla.dev/swis/v5/pkg/core"
 
@@ -65,7 +68,7 @@ func initServer() {
 	}
 
 	// prepare the Logger instance
-	l := backend.Logger{
+	l := common.Logger{
 		CallerID:   "system",
 		WorkerName: "initServer",
 		Version:    "system",
@@ -75,22 +78,22 @@ func initServer() {
 	configs.ParseEnv()
 
 	// initialize caches
-	be.FlowCache = &core.Cache{}
-	be.PollCache = &core.Cache{}
-	be.SubscriptionCache = &core.Cache{}
-	be.TokenCache = &core.Cache{}
-	be.UserCache = &core.Cache{}
+	db.FlowCache = &core.Cache{}
+	db.PollCache = &core.Cache{}
+	db.SubscriptionCache = &core.Cache{}
+	db.TokenCache = &core.Cache{}
+	db.UserCache = &core.Cache{}
 
 	l.Println("caches initialized", http.StatusOK)
 
 	// load up data from local dumps (/opt/data/)
 	// TODO: catch an error there!
-	be.LoadAll()
+	db.LoadAll()
 
 	l.Println("dumped data loaded", http.StatusOK)
 
 	// run migrations
-	be.RunMigrations()
+	db.RunMigrations()
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
@@ -101,11 +104,13 @@ func initServer() {
 		sig := <-sigs
 		l.Println("caught signal '"+sig.String()+"', dumping data...", http.StatusCreated)
 
-		be.DumpAll()
+		db.DumpAll()
 	}()
 
 	// API router
 	r.Mount("/api/v1", be.APIRouter())
+
+	defer posts.Streamer.Shutdown()
 
 	appHandler := &app.Handler{
 		Name:         "litter-go",

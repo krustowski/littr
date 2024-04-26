@@ -19,7 +19,7 @@ GOCACHE?=/home/${USER}/.cache/go-build
 GOMODCACHE?=/home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
-DOCKER_COMPOSE_FILE=deployments/docker-compose.yml
+DOCKER_COMPOSE_FILE?=deployments/docker-compose.yml
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -94,8 +94,9 @@ config:
 
 .PHONY: docs
 docs: 
-	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
-	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/
+	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
+	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
+	@mv docs/swagger.json api/swagger.json
 	@docker compose -f ${DOCKER_COMPOSE_FILE} up litter-swagger -d --force-recreate
 
 .PHONY: build
@@ -108,7 +109,7 @@ build:
 .PHONY: run
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
-	@docker compose up -f ${DOCKER_COMPOSE_FILE} --force-recreate --detach --remove-orphans
+	@docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
 
 .PHONY: logs
 logs:

@@ -73,7 +73,7 @@ services:
     networks: 
       - ${DOCKER_NETWORK_NAME}
     volumes: 
-      - "./docs/swagger.json:/tmp/swagger.json"
+      - "../api/swagger.json:/tmp/swagger.json"
     labels:
       - "traefik.http.routers.${APP_NAME}-swagger.rule=Host(${APP_URLS_TRAEFIK}) && PathPrefix(`/docs`)"
       - "traefik.http.services.${APP_NAME}-swagger.loadbalancer.server.port=8080"

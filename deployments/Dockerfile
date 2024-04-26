@@ -10,7 +10,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM --platform=linux/amd64 golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
+FROM golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
 
 ARG APP_NAME APP_PEPPER APP_VERSION API_TOKEN VAPID_PUB_KEY
 
