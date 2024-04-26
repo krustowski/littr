@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
