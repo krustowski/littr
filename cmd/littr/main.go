@@ -1,5 +1,5 @@
 // @title		litter-go
-// @version	 	0.32.0
+// @version	 	0.32.1
 // @description	nanoblogging platform as PWA built on go-app framework (PoC)
 // @termsOfService	https://littr.n0p.cz/tos
 
