@@ -1,4 +1,4 @@
-package backend
+package db
 
 import (
 	"encoding/json"
@@ -7,10 +7,14 @@ import (
 	"net/http"
 	"os"
 
-	"go.savla.dev/littr/config"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/configs"
+	"go.savla.dev/littr/pkg/backend/middleware"
+	"go.savla.dev/littr/pkg/backend/polls"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/push"
+	"go.savla.dev/littr/pkg/backend/users"
+
 	"go.savla.dev/swis/v5/pkg/core"
-	//"github.com/SherClockHolmes/webpush-go"
 )
 
 const (
@@ -24,78 +28,20 @@ const (
 
 func LoadAll() {
 	// TODO: catch errors!
-	loadOne(PollCache, pollsFile, models.Poll{})
-	loadOne(FlowCache, postsFile, models.Post{})
-	//loadOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
-	loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})
+	loadOne(PollCache, pollsFile, polls.Poll{})
+	loadOne(FlowCache, postsFile, posts.Post{})
+	loadOne(SubscriptionCache, subscriptionsFile, []push.Device{})
 	loadOne(TokenCache, tokensFile, void)
-	loadOne(UserCache, usersFile, models.User{})
+	loadOne(UserCache, usersFile, users.User{})
 }
 
 func DumpAll() {
 	// TODO: catch errors!
-	dumpOne(PollCache, pollsFile, models.Poll{})
-	dumpOne(FlowCache, postsFile, models.Post{})
-	//dumpOne(SubscriptionCache, subscriptionsFile, []webpush.Subscription{})
-	dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{})
+	dumpOne(PollCache, pollsFile, polls.Poll{})
+	dumpOne(FlowCache, postsFile, posts.Post{})
+	dumpOne(SubscriptionCache, subscriptionsFile, []push.Device{})
 	dumpOne(TokenCache, tokensFile, void)
-	dumpOne(UserCache, usersFile, models.User{})
-}
-
-func dumpHandler(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-
-	// prepare the Logger instance
-	l := Logger{
-		CallerID: "system",
-		//IPAddress:  r.RemoteAddr,
-		IPAddress:  r.Header.Get("X-Real-IP"),
-		Method:     r.Method,
-		Route:      r.URL.String(),
-		WorkerName: "dump",
-		Version:    "system",
-	}
-
-	// check the incoming API token
-	token := r.Header.Get("X-App-Token")
-
-	if token == "" {
-		resp.Message = "empty token"
-		resp.Code = http.StatusUnauthorized
-
-		l.Println(resp.Message, resp.Code)
-		return
-	}
-
-	if token != os.Getenv("API_TOKEN") {
-		resp.Message = "invalid token"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		return
-	}
-
-	DumpAll()
-
-	resp.Code = http.StatusOK
-	resp.Message = "data dumped successfully"
-
-	l.Println(resp.Message, resp.Code)
-
-	// dynamic encryption bypass hack --- we need unecrypted JSON for curl (healthcheck)
-	if config.EncryptionEnabled {
-		//log.Printf("[dump] disabling encryption (was %t)", config.EncryptionEnabled)
-		config.EncryptionEnabled = !config.EncryptionEnabled
-
-		resp.Write(w)
-
-		//log.Printf("[dump] enabling encryption (was %t)", config.EncryptionEnabled)
-		config.EncryptionEnabled = !config.EncryptionEnabled
-	} else {
-		resp.Write(w)
-	}
-
-	return
+	dumpOne(UserCache, usersFile, users.User{})
 }
 
 func loadOne[T any](cache *core.Cache, filepath string, model T) error {

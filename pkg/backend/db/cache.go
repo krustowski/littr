@@ -1,4 +1,4 @@
-package backend
+package db
 
 import (
 	"go.savla.dev/swis/v5/pkg/core"
@@ -12,8 +12,8 @@ var (
 	UserCache         *core.Cache
 )
 
-// getAll
-func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
+// GetAll
+func GetAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	itemsInterface, count := cache.GetAll()
 
 	items := make(map[string]T)
@@ -30,8 +30,8 @@ func getAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	return items, count
 }
 
-// getOne
-func getOne[T any](cache *core.Cache, key string, model T) (T, bool) {
+// etOne
+func GetOne[T any](cache *core.Cache, key string, model T) (T, bool) {
 	itemInterface, found := cache.Get(key)
 	if !found {
 		return model, false
@@ -45,12 +45,12 @@ func getOne[T any](cache *core.Cache, key string, model T) (T, bool) {
 	return item, true
 }
 
-// setOne
-func setOne[T any](cache *core.Cache, key string, model T) bool {
+// SetOne
+func SetOne[T any](cache *core.Cache, key string, model T) bool {
 	return cache.Set(key, model)
 }
 
-// deleteOne
-func deleteOne(cache *core.Cache, key string) bool {
+// DeleteOne
+func DeleteOne(cache *core.Cache, key string) bool {
 	return cache.Delete(key)
 }

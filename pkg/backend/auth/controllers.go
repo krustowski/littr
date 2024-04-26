@@ -10,7 +10,9 @@ import (
 	"os"
 	"time"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/users"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -22,9 +24,9 @@ type UserAuth struct {
 
 type RefreshToken string
 
-func authUser(aUser models.User) (*models.User, bool) {
+func authUser(aUser users.User) (*users.User, bool) {
 	// fetch one user from cache according to the login credential
-	user, ok := getOne(UserCache, aUser.Nickname, models.User{})
+	user, ok := db.GetOne(db.UserCache, aUser.Nickname, users.User{})
 	if !ok {
 		// not found
 		return nil, false
@@ -35,7 +37,7 @@ func authUser(aUser models.User) (*models.User, bool) {
 		// update user's hexadecimal passphrase form, as the binary form is broken and cannot be used on BE
 		if user.PassphraseHex == "" && aUser.PassphraseHex != "" {
 			user.PassphraseHex = aUser.PassphraseHex
-			_ = setOne(UserCache, user.Nickname, user)
+			_ = db.SetOne(db.UserCache, user.Nickname, user)
 		}
 
 		// auth granted
@@ -53,14 +55,14 @@ func authUser(aUser models.User) (*models.User, bool) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	Response
-// @Failure		400	{object}	Response
-// @Failure		404	{object}	Response
-// @Failure		500	{object}	Response
+// @Success		200	{object}	common.Response
+// @Failure		400	{object}	common.Response
+// @Failure		404	{object}	common.Response
+// @Failure		500	{object}	common.Response
 // @Router		/auth [post]
 func authHandler(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "auth")
+	resp := common.Response{}
+	l := common.NewLogger(r, "auth")
 	resp.AuthGranted = false
 
 	var user models.User

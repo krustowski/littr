@@ -9,7 +9,9 @@ import (
 	"os"
 
 	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/backend/polls"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/push"
 	"go.savla.dev/littr/pkg/backend/stats"
 	"go.savla.dev/littr/pkg/backend/users"
 )
@@ -24,10 +26,10 @@ type Response struct {
 	Count     int    `json:"count,omitempty"`
 
 	Subscribed bool            `json:"subscribed"`
-	Devices    []models.Device `json:"devices,omitempty"`
+	Devices    []push.Device `json:"devices,omitempty"`
 
-	Polls    map[string]models.Poll `json:"polls,omitempty"`
-	Posts    map[string]models.Post `json:"posts,omitempty"`
+	Polls    map[string]polls.Poll `json:"polls,omitempty"`
+	Posts    map[string]posts.Post `json:"posts,omitempty"`
 	Users    map[string]users.User `json:"users,omitempty"`
 	FlowList []string               `json:"flow_records,omitempty"`
 
@@ -49,14 +51,14 @@ func (r *Response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	if config.EncryptionEnabled {
+	if configs.EncryptionEnabled {
 		w.Header().Add("Content-Type", "application/octet-stream")
 	} else {
 		w.Header().Add("Content-Type", "application/json")
 	}
 	w.WriteHeader(r.Code)
 
-	enData := config.Encrypt([]byte(os.Getenv("APP_PEPPER")), jsonData)
+	enData := configs.Encrypt([]byte(os.Getenv("APP_PEPPER")), jsonData)
 	io.WriteString(w, fmt.Sprintf("%s", enData))
 
 	return nil
