@@ -1,5 +1,5 @@
 // @title		litter-go
-// @version	 	0.33.0
+// @version	 	0.30.12
 // @description	nanoblogging platform as PWA built on go-app framework (PoC)
 // @termsOfService	https://littr.n0p.cz/tos
 
@@ -37,7 +37,7 @@ import (
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	resp := Response{
-		Message: "litter-go API service (v"+os.Getenv("APP_VERSION")+")",
+		Message: "litter-go API service (v" + os.Getenv("APP_VERSION") + ")",
 		Code:    http.StatusOK,
 	}
 	resp.Write(w)

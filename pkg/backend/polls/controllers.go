@@ -39,9 +39,9 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      201  {object}  Response
-// @Failure      400  {object}  Response
-// @Failure      500  {object}  Response
+// @Success      201  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      500  {object}  common.Response
 // @Router       /polls/ [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
@@ -49,9 +49,9 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 
 	var poll Poll
 
-	if err := unmarshalRequestData(r, &poll); err != nil {
-		resp.Message = "input read error: "+err.Error()
-		resp.Code = http.StatusInternalServerError
+	if err := common.UnmarshalRequestData(r, &poll); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -93,9 +93,9 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 
 	var payload Poll
 
-	if err := unmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: "+err.Error()
-		resp.Code = http.StatusInternalServerError
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -154,9 +154,9 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 
 	var poll Poll
 
-	if err := unmarshalRequestData(r, &poll); err != nil {
-		resp.Message = "input read error: "+err.Error()
-		resp.Code = http.StatusInternalServerError
+	if err := common.UnmarshalRequestData(r, &poll); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)

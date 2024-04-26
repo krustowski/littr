@@ -1,4 +1,5 @@
 package auth
+
 // https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
 
 import (
@@ -8,7 +9,7 @@ import (
 )
 
 type UserClaims struct {
-	Nickname string      `json:"nickname"`
+	Nickname string     `json:"nickname"`
 	User     users.User `json:"user"`
 	jwt.StandardClaims
 }

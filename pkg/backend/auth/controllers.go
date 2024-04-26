@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/backend/users"
 
 	"github.com/golang-jwt/jwt"
@@ -188,4 +188,3 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 	return
 }
-

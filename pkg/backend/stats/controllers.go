@@ -4,28 +4,13 @@ import (
 	"net/http"
 	"time"
 
-	"go.savla.dev/pkg/littr/backend/polls"
-	"go.savla.dev/pkg/littr/backend/posts"
-	"go.savla.dev/pkg/littr/backend/system"
-	"go.savla.dev/pkg/littr/backend/users"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/polls"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/system"
+	"go.savla.dev/littr/pkg/backend/users"
 )
-
-type UserStat struct {
-	// PostCount is a number of posts of such user.
-	PostCount int `default:0`
-
-	// ReactionCount tells the number of interactions (stars given).
-	ReactionCount int `default:0`
-
-	// FlowerCount is basically a number of followers.
-	FlowerCount int `default:0`
-
-	// ShadeCount is basically a number of blockers.
-	ShadeCount int `default:0`
-
-	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
-	Searched bool `default:true`
-}
 
 // GetStats acts like a handler for stats page
 //
@@ -34,16 +19,16 @@ type UserStat struct {
 // @Tags         stats
 // @Accept       json
 // @Produce      json
-// @Success      200  {array}   system.Response
+// @Success      200  {array}   common.Response
 // @Router       /stats [get]
 func GetStats(w http.ResponseWriter, r *http.Request) {
-	resp := system.Response{}
-	l := system.NewLogger(r, "stats")
+	resp := common.Response{}
+	l := common.NewLogger(r, "stats")
 
 	// fetch the data
-	polls, _ := db.GetAll(PollCache, models.Poll{})
-	posts, postCount := db.GetAll(FlowCache, models.Post{})
-	users, _ := db,GetAll(UserCache, models.User{})
+	polls, _ := db.GetAll(PollCache, polls.Poll{})
+	posts, postCount := db.GetAll(FlowCache, posts.Post{})
+	users, _ := db, GetAll(UserCache, users.User{})
 
 	// prepare the maps for export
 	flowStats := make(map[string]int)

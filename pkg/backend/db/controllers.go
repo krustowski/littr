@@ -25,8 +25,8 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 
 	l := common.NewLogger(r, "dump")
-	l.CallerID: "system"
-	l.Version:    "system"
+	l.CallerID = "system"
+	l.Version = "system"
 
 	// check the incoming API token
 	token := r.Header.Get("X-Dump-Token")
@@ -56,3 +56,4 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 
 	return
+}

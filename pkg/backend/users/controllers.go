@@ -1,14 +1,23 @@
 package users
 
 import (
+	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/configs"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/stats"
+
+	mail "github.com/wneessen/go-mail"
 )
 
 // getUsers is the users handler that processes and returns existing users list.
@@ -18,20 +27,20 @@ import (
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   backend.Response
+// @Success      200  {object}   common.Response
 // @Router       /users/ [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
-	stats := make(map[string]userStat)
+	stats := make(map[string]stats.UserStat)
 
 	caller, _ := r.Context().Value("nickname").(string)
 	uuid := r.Header.Get("X-API-Caller-ID")
 
 	// fetch all data for the calculations
-	users, _ := getAll(UserCache, models.User{})
-	posts, _ := getAll(FlowCache, models.Post{})
-	devs, _ := getOne(SubscriptionCache, caller, []models.Device{})
+	users, _ := getAll(UserCache, posts.User{})
+	posts, _ := getAll(FlowCache, posts.Post{})
+	devs, _ := getOne(SubscriptionCache, caller, []push.Device{})
 
 	// check the subscription
 	devSubscribed := false
@@ -51,7 +60,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		var stat userStat
 		var found bool
 		if stat, found = stats[nick]; !found {
-			stat = userStat{}
+			stat = stats.UserStat{}
 		}
 
 		stat.PostCount++
@@ -90,12 +99,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get the user's details
 // @Description  get the user's details
 // @Tags         users
+// @Deprecated
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   Response
-// @Failure      400  {object}   Response
-// @Failure      404  {object}   Response
-// @Failure      409  {object}   Response
+// @Success      200  {object}   common.Response
+// @Failure      400  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
 // @Router       /users/{nickname} [get]
 func getOneUser(w http.ResponseWriter, r *http.Request) {}
 
@@ -106,10 +116,10 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {}
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   Response
-// @Failure      400  {object}   Response
-// @Failure      404  {object}   Response
-// @Failure      409  {object}   Response
+// @Success      200  {object}   common.Response
+// @Failure      400  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
 // @Router       /users [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -118,10 +128,10 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := unmarshalRequestData(r, &user); err != nil {
-		l.Println(
-			"input read error: " + err.Error(),
-			http.StatusBadRequest,
-		)
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
@@ -164,10 +174,10 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   Response
-// @Failure      400  {object}   Response
-// @Failure      404  {object}   Response
-// @Failure      409  {object}   Response
+// @Success      200  {object}   common.Response
+// @Failure      400  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
 // @Router       /users/{nickname} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -224,15 +234,15 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 // deleteUser is the users handler that processes and deletes given user (oneself) form the database.
 //
-// @Summary      Delete user 
+// @Summary      Delete user
 // @Description  delete user
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   Response
-// @Failure      404  {object}   Response
-// @Failure      409  {object}   Response
-// @Router       /users/{nickname} [put]
+// @Success      200  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Router       /users/{nickname} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
@@ -278,4 +288,210 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
+}
+
+// getUserPosts fetches posts only from specified user
+//
+// @Summary      Get user posts
+// @Description  get user posts
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Router       /users/{nickname}/posts [get]
+func getUserPosts(w http.ResponseWriter, r *http.Request) {
+	resp := Response{}
+	l := NewLogger(r, "users")
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	// parse the URI's path
+	// check if diff page has been requested
+	nick := chi.URLParam(r, "nickname")
+
+	pageNo := 0
+
+	pageNoString := r.Header.Get("X-Flow-Page-No")
+	page, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	pageNo = page
+
+	// mock the flowlist (nasty hack)
+	flowList := make(map[string]bool)
+	flowList[nick] = true
+
+	opts := posts.PageOptions{
+		UserFlow:     true,
+		UserFlowNick: nick,
+		CallerID:     callerID,
+		PageNo:       pageNo,
+		FlowList:     flowList,
+	}
+
+	// fetch page according to the logged user
+	pExport, uExport := posts.GetOnePage(opts)
+	if pExport == nil || uExport == nil {
+		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Users = uExport
+	resp.Posts = pExport
+
+	resp.Message = "ok, dumping user's flow posts"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
+
+// resetHandler poerforms the actual passphrase regeneration and retrieval.
+//
+// @Summary      Reset the passphrase
+// @Description  reset the passphrase
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/passphrase [patch]
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	fetch := struct {
+		Email      string   `json:"email"`
+		Passphrase string   `json:"passphrase"`
+		Tags       []string `json:"tags"`
+	}{}
+
+	if err := unmarshalRequestData(r, &fetch); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	email := strings.ToLower(fetch.Email)
+	fetch.Email = email
+
+	users, _ := db.GetAll(db.UserCache, users.User{})
+
+	// loop over users to find matching e-mail address
+	var user users.User
+
+	found := false
+	for _, u := range users {
+		if strings.ToLower(u.Email) == fetch.Email {
+			found = true
+			user = u
+			break
+		}
+	}
+
+	if !found {
+		resp.Message = "backend error: matching user not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	random := randSeq(16)
+	pepper := os.Getenv("APP_PEPPER")
+
+	passHash := sha512.Sum512([]byte(random + pepper))
+	user.PassphraseHex = fmt.Sprintf("%x", passHash)
+
+	if saved := setOne(UserCache, user.Nickname, user); !saved {
+		resp.Message = "backend error: cannot update user in database"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	//email := user.Email
+
+	// compose a mail
+	m := mail.NewMsg()
+	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
+		resp.Message = "backend error: failed to set From address: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if err := m.To(email); err != nil {
+		resp.Message = "backend error: failed to set To address: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	m.Subject("Lost password recovery")
+	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+random+"\n\nPlease change your password as soon as possible after a new log-in.")
+
+	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
+	if err != nil {
+		resp.Message = "backend error: cannot convert MAIL_PORT to int: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	c, err := mail.NewClient(os.Getenv("MAIL_HOST"), mail.WithPort(port), mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithUsername(os.Getenv("MAIL_SASL_USR")), mail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
+	if err != nil {
+		resp.Message = "backend error: failed to create mail client: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	//c.SetTLSPolicy(mail.TLSOpportunistic)
+
+	if err := c.DialAndSend(m); err != nil {
+		resp.Message = "backend error: failed to sent e-mail: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "reset e-mail was rent"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
 }

@@ -1,4 +1,4 @@
-package system
+package common
 
 import (
 	"encoding/json"
@@ -25,13 +25,13 @@ type Response struct {
 	Message   string `json:"message"`
 	Count     int    `json:"count,omitempty"`
 
-	Subscribed bool            `json:"subscribed"`
+	Subscribed bool          `json:"subscribed"`
 	Devices    []push.Device `json:"devices,omitempty"`
 
 	Polls    map[string]polls.Poll `json:"polls,omitempty"`
 	Posts    map[string]posts.Post `json:"posts,omitempty"`
 	Users    map[string]users.User `json:"users,omitempty"`
-	FlowList []string               `json:"flow_records,omitempty"`
+	FlowList []string              `json:"flow_records,omitempty"`
 
 	Data []byte `json:"data,omitempty"`
 

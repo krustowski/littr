@@ -1,4 +1,4 @@
-package models
+package push
 
 import (
 	"time"

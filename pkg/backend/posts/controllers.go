@@ -1,4 +1,4 @@
-package backend
+package posts
 
 import (
 	"encoding/json"
@@ -14,22 +14,30 @@ import (
 	chi "github.com/go-chi/chi/v5"
 	app "github.com/maxence-charriere/go-app/v9/pkg/app"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/push"
+	"go.savla.dev/littr/pkg/backend/users"
 )
 
-// getPosts fetches posts, page spicified by a header
+const (
+	pkgName = "posts"
+)
+
+// getPosts fetches posts, page spicified by a header.
 //
 // @Summary      Get posts
 // @Description  get posts
-// @Tags         flow
+// @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  Response
-// @Failure      400  {object}  Response
-// @Router       /flow/ [get]
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /posts/ [get]
 func getPosts(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 
 	pageNo := 0
@@ -66,7 +74,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	pExport, uExport := getOnePage(opts)
 	if pExport == nil || uExport == nil {
 		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusBadRequest
+		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -90,35 +98,25 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 // addNewPost adds new post
 //
-//	@Summary      Add new post
-//	@Description  add new post
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      201  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Failure      500  {object}  Response
-//	@Router       /flow/ [post]
+// @Summary      Add new post
+// @Description  add new post
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      201  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /posts/ [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
 	caller, _ := r.Context().Value("nickname").(string)
 
 	// post a new post
-	var post models.Post
+	var post Post
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &post); err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &post); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -174,7 +172,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		post.Data = []byte{}
 	}
 
-	if saved := setOne(FlowCache, key, post); !saved {
+	if saved := db.SetOne(db.FlowCache, key, post); !saved {
 		resp.Message = "backend error: cannot save new post (cache error)"
 		resp.Code = http.StatusInternalServerError
 
@@ -194,8 +192,8 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		receiverName := match[1]
 
 		// fetch related data from cachces
-		devs, _ := getOne(SubscriptionCache, receiverName, []models.Device{})
-		_, found := getOne(UserCache, receiverName, models.User{})
+		devs, _ := db.GetOne(db.SubscriptionCache, receiverName, []push.Device{})
+		_, found := db.GetOne(db.UserCache, receiverName, users.User{})
 		if !found {
 			continue
 		}
@@ -222,9 +220,9 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast a new post to live subscribers
-	streamer.SendMessage("/api/flow/live", sse.SimpleMessage(post.Nickname))
+	streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage(post.Nickname))
 
-	posts := make(map[string]models.Post)
+	posts := make(map[string]Post)
 	posts[key] = post
 
 	resp.Message = "ok, adding new post"
@@ -235,37 +233,27 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-// updatePostStarCount increases the star count for the given post
+// updatePostStarCount increases the star count for the given post.
 //
-//	@Summary      Update post's star count
-//	@Description  update the star count
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Failure      403  {object}  Response
-//	@Failure      500  {object}  Response
-//	@Router       /flow/star [put]
+// @Summary      Update post's star count
+// @Description  update the star count
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      403  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /posts/{postID}/star [patch]
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 
-	var post models.Post
+	var post Post
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &post); err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &post); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -278,7 +266,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 
 	var found bool
 
-	if post, found = getOne(FlowCache, key, models.Post{}); !found {
+	if post, found = db.etOne(db.FlowCache, key, Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -299,7 +287,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	// increment the star count by 1
 	post.ReactionCount++
 
-	if saved := setOne(FlowCache, key, post); !saved {
+	if saved := db.SetOne(db.FlowCache, key, post); !saved {
 		resp.Message = "cannot update post"
 		resp.Code = http.StatusInternalServerError
 
@@ -311,43 +299,35 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "ok, star count incremented"
 	resp.Code = http.StatusOK
 
-	resp.Posts = make(map[string]models.Post)
+	resp.Posts = make(map[string]Post)
 	resp.Posts[key] = post
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 }
 
-// updatePost updates the specified post
+// updatePost updates the specified post.
 //
-//	@Summary      Update specified post
-//	@Description  update specified post
-//	@Deprecated
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Failure      500  {object}  Response
-//	@Router       /flow/ [put]
+// @Summary      Update specified post
+// @Description  update specified post
+// @Deprecated
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      403  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /posts/{postID} [put]
 func updatePost(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
+	callerID, _ := r.Context().Value("nickname").(string)
 
-	var post models.Post
+	var post Post
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &post); err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &post); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -358,7 +338,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 	key := post.ID
 
-	if _, found := getOne(FlowCache, key, models.Post{}); !found {
+	if _, found := db.GetOne(db.FlowCache, key, Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -367,7 +347,16 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if saved := setOne(FlowCache, key, post); !saved {
+	if post.Nickname != callerID {
+		resp.Message = "one cannot update foreign post(s)"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if saved := db.SetOne(db.FlowCache, key, post); !saved {
 		resp.Message = "cannot update post"
 		resp.Code = http.StatusInternalServerError
 
@@ -383,36 +372,28 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-// deletePost removes specified post
+// deletePost removes specified post.
 //
-//	@Summary      Delete specified post
-//	@Description  delete specified post
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Failure      500  {object}  Response
-//	@Router       /flow/ [delete]
+// @Summary      Delete specified post
+// @Description  delete specified post
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      403  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /posts/{postID} [delete]
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	// remove a post
-	var post models.Post
+	var post Post
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &post); err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &post); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -423,7 +404,16 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 	key := post.ID
 
-	if deleted := deleteOne(FlowCache, key); !deleted {
+	if post.Nickname != callerID {
+		resp.Message = "one cannot delete foreign post(s)"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if deleted := db.DeleteOne(db.FlowCache, key); !deleted {
 		resp.Message = "cannot delete the post"
 		resp.Code = http.StatusInternalServerError
 
@@ -439,92 +429,25 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-// getUserPosts fetches posts only from specified user
+// getSinglePost fetch specified post and its interaction.
 //
-//	@Summary      Get user posts
-//	@Description  get user posts
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Router       /flow/user/{nickname} [get]
-func getUserPosts(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "flow")
-	callerID, _ := r.Context().Value("nickname").(string)
-
-	// parse the URI's path
-	// check if diff page has been requested
-	nick := chi.URLParam(r, "nick")
-
-	pageNo := 0
-
-	pageNoString := r.Header.Get("X-Flow-Page-No")
-	page, err := strconv.Atoi(pageNoString)
-	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	pageNo = page
-
-	// mock the flowlist (nasty hack)
-	flowList := make(map[string]bool)
-	flowList[nick] = true
-
-	opts := pageOptions{
-		UserFlow:     true,
-		UserFlowNick: nick,
-		CallerID:     callerID,
-		PageNo:       pageNo,
-		FlowList:     flowList,
-	}
-
-	// fetch page according to the logged user
-	pExport, uExport := getOnePage(opts)
-	if pExport == nil || uExport == nil {
-		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	resp.Users = uExport
-	resp.Posts = pExport
-
-	resp.Message = "ok, dumping user's flow posts"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
-}
-
-// getSinglePost fetch specified post and its interaction
-//
-//	@Summary      Get single post
-//	@Description  get single post
-//	@Tags         flow
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {object}  Response
-//	@Failure      400  {object}  Response
-//	@Router       /flow/post/{postNo} [get]
+// @Summary      Get single post
+// @Description  get single post
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	resp := Response{}
-	l := NewLogger(r, "flow")
+	l := NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 	//user, _ := getOne(UserCache, callerID, models.User{})
 
 	// parse the URI's path
 	// check if diff page has been requested
-	postID := chi.URLParam(r, "postNo")
+	postID := chi.URLParam(r, "postID")
 
 	pageNo := 0
 

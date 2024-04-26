@@ -1,4 +1,4 @@
-package backend
+package common
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ func unmarshalRequestData[T any](r *http.Request, model *T) error {
  */
 
 type ServiceOpts struct {
-	Request *http.Request 
+	Request *http.Request
 
 	Polls bool
 	Posts bool
@@ -52,7 +52,7 @@ func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsytem st
 	}
 
 	items, couddnt := db.GetAll(cache, model)
-	
+
 	resp.Items = items
 	resp.Key = caller
 

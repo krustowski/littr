@@ -5,20 +5,30 @@ import (
 	"io"
 	"net/http"
 
-	"go.savla.dev/littr/backend"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/posts"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-// GET /api/push/vapid
+// fetchVAPIDKey is a helper function to fetch new server VAPID key pair.
+//
+// @Summary      Get a VAPID key pair
+// @Description  get a VAPID key pair
+// @Tags         push
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure 	 401  {object}   common.Response
+// @Router       /push/vapid [get]
 func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
-	resp := backend.Response{}
-	l := NewLogger(r, "push")
+	resp := common.Response{}
+	l := common.NewLogger(r, "push")
 
 	caller, _ := r.Context().Value("nickname").(string)
 	if caller == "" {
-		resp.Message = "client unauthorized "
+		resp.Message = "client unauthorized"
 		resp.Code = http.StatusUnauthorized
 
 		l.Println(resp.Message, resp.Code)
@@ -35,27 +45,27 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// POST /api/push
-func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
-	resp := backend.Response{}
-	l := NewLogger(r, "push")
+// subscribeToNotifications is the push pkg handlerr function to ensure sent device ihas subscribed to notifications.
+//
+// @Summary      Add the notification subscription
+// @Description  add the notification subscription
+// @Tags         push
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /push/subscription [post]
+func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "push")
 
 	caller, _ := r.Context().Value("nickname").(string)
-	payload := models.Device{}
+	payload := Device{}
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &payload); err != nil {
-		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
-		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -64,7 +74,7 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache
-	devs, _ := getOne(SubscriptionCache, caller, []models.Device{})
+	devs, _ := db.GetOne(db.SubscriptionCache, caller, []Device{})
 
 	for _, dev := range devs {
 		if dev.UUID == payload.UUID {
@@ -81,7 +91,7 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	// append new device into the devices array for such user
 	devs = append(devs, payload)
 
-	if saved := setOne(SubscriptionCache, caller, devs); !saved {
+	if saved := db.SetOne(db.SubscriptionCache, caller, devs); !saved {
 		resp.Code = http.StatusInternalServerError
 		resp.Message = "cannot save new subscription"
 
@@ -97,23 +107,23 @@ func subscribeToNotifs(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-// PUT /api/push
-func sendNotif(w http.ResponseWriter, r *http.Request) {
-	resp := backend.Response{}
-	l := NewLogger(r, "push")
+// sendNotification is the push pkg handler function for sending new notification(s).
+//
+// @Summary      Send a notification
+// @Description  Send a notification
+// @Tags         push
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Success      201  {object}   common.Response
+// @Failure      400  {object}   common.Response
+// @Router       /push/notification/{postID} [post]
+func sendNotification(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "push")
 
 	// this user ID points to the replier
 	caller, _ := r.Context().Value("nickname").(string)
-
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
 
 	// hm, this looks kinda sketchy...
 	// TODO: make this more readable
@@ -121,8 +131,8 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 		ID string `json:"original_post"`
 	}{}
 
-	if err := json.Unmarshal(reqBody, &original); err != nil {
-		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &original); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -131,9 +141,9 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch related data from cachces
-	post, _ := getOne(FlowCache, original.ID, models.Post{})
-	devs, _ := getOne(SubscriptionCache, post.Nickname, []models.Device{})
-	//user, _ := getOne(UserCache, post.Nickname, models.User{})
+	post, _ := db.GetOne(db.FlowCache, original.ID, posts.Post{})
+	devs, _ := db.GetOne(db.SubscriptionCache, post.Nickname, []Device{})
+	//user, _ := db.GetOne(db.UserCache, post.Nickname, users.User{})
 
 	// do not notify the same person --- OK condition
 	if post.Nickname == caller {
@@ -165,7 +175,7 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 
 	sendNotificationToDevices(devs, body, l)
 
-	resp.Message = "ok, notification(s) fired"
+	resp.Message = "ok, notification(s) sent"
 	resp.Code = http.StatusCreated
 
 	l.Println(resp.Message, resp.Code)
@@ -173,30 +183,30 @@ func sendNotif(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// DELETE /api/push
+// deleteSubscription is the push pkg handler function to ensure a given subscription deleted from the database.
+//
+// @Summary      Delete a subscription
+// @Description  delete a subscription
+// @Tags         push
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      400  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /push/subscription [delete]
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {
-	resp := backend.Response{}
-	l := NewLogger(r, "push")
+	resp := common.Response{}
+	l := common.NewLogger(r, "push")
 
 	// this user ID points to the replier
 	caller, _ := r.Context().Value("nickname").(string)
-
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
 
 	payload := struct {
 		UUID string `json:"device_uuid"`
 	}{}
 
-	if err := json.Unmarshal(reqBody, &payload); err != nil {
-		resp.Message = "backend error: cannot unmarshall request data: " + err.Error()
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -214,9 +224,9 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	devices, _ := getOne(SubscriptionCache, caller, []models.Device{})
+	devices, _ := db.GetOne(db.SubscriptionCache, caller, []Device{})
 
-	var newDevices []models.Device
+	var newDevices []Device
 
 	for _, dev := range devices {
 		if dev.UUID == uuid {
@@ -231,7 +241,7 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 		newDevices = append(newDevices, dev)
 	}
 
-	if saved := setOne(SubscriptionCache, caller, newDevices); !saved {
+	if saved := db.SetOne(db.SubscriptionCache, caller, newDevices); !saved {
 		resp.Message = "new subscription state of devices could not be saved"
 		resp.Code = http.StatusInternalServerError
 
