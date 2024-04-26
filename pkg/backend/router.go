@@ -1,18 +1,44 @@
+// @title		litter-go
+// @version	 	0.33.0
+// @description	nanoblogging platform as PWA built on go-app framework (PoC)
+// @termsOfService	https://littr.n0p.cz/tos
+
+// @contact.name	API Support
+// @contact.url		https://littr.n0p.cz/docs/
+// @contact.email	littr@n0p.cz
+
+// @license.name	MIT
+// @license.url		https://github.com/krustowski/litter-go/blob/master/LICENSE
+
+// @host		littr.n0p.cz
+// @BasePath		/api/v1
+
+// @securityDefinitions.basic	BasicAuth
+
+// @externalDocs.description	OpenAPI
+// @externalDocs.url		https://swagger.io/resources/open-api/
 package backend
 
 import (
+	"context"
 	"net/http"
+	"os"
 	"time"
 
 	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
 
-	"go.savla.dev/littr/backend/push"
+	"go.savla.dev/littr/pkg/backend/auth"
+	"go.savla.dev/littr/pkg/backend/data"
+	"go.savla.dev/littr/pkg/backend/polls"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/stats"
+	"go.savla.dev/littr/pkg/backend/users"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	resp := Response{
-		Message: "litter-go API service",
+		Message: "litter-go API service (v"+os.Getenv("APP_VERSION")+")",
 		Code:    http.StatusOK,
 	}
 	resp.Write(w)
@@ -21,18 +47,27 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 var streamer *sse.Server
 
 // the very main API router
-func LoadAPIRouter() chi.Router {
+func APIRouter() chi.Router {
 	r := chi.NewRouter()
-	r.Use(authMiddleware)
+
+	// logger and response in context here
+
+	r.Use(auth.AuthMiddleware)
 
 	streamer = sse.NewServer(&sse.Options{
 		Logger: nil,
 	})
 	//defer streamer.Shutdown()
 
-	// unauth zone (skipped at auth)
 	r.Get("/", rootHandler)
-	//r.Post("/auth", authHandler)
+
+	r.Mount("/auth", auth.Router())
+	r.Mount("/data", data.Router())
+	r.Mount("/polls", polls.Router())
+	r.Mount("/posts", posts.Router())
+	r.Mount("/stats", stats.Router())
+	r.Mount("/users", users.Router())
+
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/", auth.authHandler)
 		r.Post("/password", resetHandler)

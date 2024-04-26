@@ -53,10 +53,10 @@ func authUser(aUser models.User) (*models.User, bool) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	response
-// @Failure		400	{object}	response
-// @Failure		404	{object}	response
-// @Failure		500	{object}	response
+// @Success		200	{object}	Response
+// @Failure		400	{object}	Response
+// @Failure		404	{object}	Response
+// @Failure		500	{object}	Response
 // @Router		/auth [post]
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp := response{}

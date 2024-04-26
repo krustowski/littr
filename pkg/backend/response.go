@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 
+	"go.savla.dev/littr/backend/stats"
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
-	"go.savla.dev/littr/backend/stats"
 )
 
 type Response struct {
@@ -33,7 +33,7 @@ type Response struct {
 	Data []byte `json:"data,omitempty"`
 
 	// very stats properties
-	FlowStats map[string]int      `json:"flow_stats,omitempty"`
+	FlowStats map[string]int            `json:"flow_stats,omitempty"`
 	UserStats map[string]stats.UserStat `json:"user_stats,omitempty"`
 
 	// auth tokens (JWT)

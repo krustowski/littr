@@ -1,4 +1,4 @@
-package backend
+package users
 
 import (
 	"encoding/json"
@@ -8,12 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/config"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/configs"
 )
 
-func getOneUser(w http.ResponseWriter, r *http.Request) {}
-
+// getUsers is the users handler that processes and returns existing users list.
+//
+// @Summary      Get a list of users
+// @Description  get a list of users
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   Response
+// @Router       /users/ [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
@@ -79,37 +85,52 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// getOneUser is the users handler that processes and returns existing user's details.
+//
+// @Summary      Get the user's details
+// @Description  get the user's details
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   Response
+// @Failure      400  {object}   Response
+// @Failure      404  {object}   Response
+// @Failure      409  {object}   Response
+// @Router       /users/{nickname} [get]
+func getOneUser(w http.ResponseWriter, r *http.Request) {}
+
+// addNewUser is the users handler that processes input and creates a new user.
+//
+// @Summary      Add new user
+// @Description  add new user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   Response
+// @Failure      400  {object}   Response
+// @Failure      404  {object}   Response
+// @Failure      409  {object}   Response
+// @Router       /users [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
 
 	var user models.User
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	err = json.Unmarshal(reqBody, &user)
-	if err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
+	if err := unmarshalRequestData(r, &user); err != nil {
+		l.Println(
+			"input read error: " + err.Error(),
+			http.StatusBadRequest,
+		)
 		resp.Write(w)
 		return
 	}
 
 	if _, found := getOne(UserCache, user.Nickname, models.User{}); found {
-		resp.Message = "user already exists"
-		resp.Code = http.StatusConflict
-
-		l.Println(resp.Message, resp.Code)
+		l.Println(
+			"user already exists",
+			http.StatusConflict,
+		)
 		resp.Write(w)
 		return
 	}
@@ -119,7 +140,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	user.LastActiveTime = time.Now()
 
 	if saved := setOne(UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot save new user"
+		resp.Message = "cannot save new user"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -136,6 +157,18 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// updateUser is the users handler function that processes and updates given user in the database.
+//
+// @Summary      Update the user's details
+// @Description  update the user's details
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   Response
+// @Failure      400  {object}   Response
+// @Failure      404  {object}   Response
+// @Failure      409  {object}   Response
+// @Router       /users/{nickname} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
@@ -189,6 +222,17 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// deleteUser is the users handler that processes and deletes given user (oneself) form the database.
+//
+// @Summary      Delete user 
+// @Description  delete user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   Response
+// @Failure      404  {object}   Response
+// @Failure      409  {object}   Response
+// @Router       /users/{nickname} [put]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	l := NewLogger(r, "users")
