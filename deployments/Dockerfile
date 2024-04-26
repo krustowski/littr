@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.4
 #
 # litter-go / Dockerfile
 #
@@ -30,20 +30,25 @@ COPY go.mod .
 ARG GOMODCACHE GOCACHE
 RUN --mount=type=cache,target="$GOMODCACHE" go mod download
 
-COPY . .
+#COPY .. . 
+COPY cmd/littr /usr/local/go/src/cmd/littr
+COPY . /go/src/${APP_NAME}/
 
-# build the client -- wasm binary
-#RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/config.APIToken=$API_TOKEN' -X 'go.savla.dev/littr/config.Version=$APP_VERSION' -X 'go.savla.dev/littr/config.Pepper=$APP_PEPPER'"
+# build the client (wasm binary)
 RUN --mount=type=cache,target="$GOMODCACHE" \
 	--mount=type=cache,target="$GOCACHE" \
-	GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm -ldflags "-X 'go.savla.dev/littr/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/frontend.vapidPublicKey=$VAPID_PUB_KEY'"
-#RUN GOARCH=wasm GOOS=js go build -o web/app.wasm -tags wasm 
+	GOARCH=wasm GOOS=js go build \
+		-o web/app.wasm \
+		-tags wasm \
+		-ldflags "-X 'go.savla.dev/littr/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/frontend.vapidPublicKey=$VAPID_PUB_KEY'"\
+		cmd/littr/
 
-# build the server
-#RUN go build -ldflags "-X 'litter-go/config.Version=$APP_VERSION'" ${APP_NAME}
+# build the server (go binary)
 RUN --mount=type=cache,target="$GOMODCACHE" \
 	--mount=type=cache,target="$GOCACHE" \
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o littr
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+		-o littr \
+		cmd/littr/
 
 
 #
@@ -66,9 +71,9 @@ RUN --mount=type=cache,target=/var/cache/apk \
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY --chown=1000:1000 --chmod=700 data/ /opt/data/
-COPY --chown=1000:1000 --chmod=700 data/.gitkeep /opt/pix/
-#COPY .script/periodic-dump.sh /opt/periodic-dump.sh
+COPY --chown=1000:1000 --chmod=700 .data/ /opt/data/
+COPY --chown=1000:1000 --chmod=700 .data/.gitkeep /opt/pix/
+
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
 

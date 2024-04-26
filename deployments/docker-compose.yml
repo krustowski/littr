@@ -16,9 +16,10 @@ services:
     image: ${DOCKER_IMAGE_TAG}
     container_name: ${DOCKER_CONTAINER_NAME}
     env_file:
-      - .env
+      - ../.env
     build:
-      context: .
+      context: ..
+      dockerfile: deployments/Dockerfile
       args: 
         APP_NAME: ${APP_NAME}
         APP_FLAGS: ${APP_FLAGS}

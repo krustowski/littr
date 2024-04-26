@@ -136,7 +136,7 @@ version:
 		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
 		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
 		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
-		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' main.go
+		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' cmd/littr/main.go
 
 .PHONY: push
 push:
