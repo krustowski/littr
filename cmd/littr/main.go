@@ -1,22 +1,3 @@
-// @title		litter-go
-// @version	 	0.32.1
-// @description	nanoblogging platform as PWA built on go-app framework (PoC)
-// @termsOfService	https://littr.n0p.cz/tos
-
-// @contact.name	API Support
-// @contact.url		https://littr.n0p.cz/docs/
-// @contact.email	littr@n0p.cz
-
-// @license.name	MIT
-// @license.url		https://github.com/krustowski/litter-go/blob/master/LICENSE
-
-// @host		littr.n0p.cz
-// @BasePath		/api
-
-// @securityDefinitions.basic	BasicAuth
-
-// @externalDocs.description	OpenAPI
-// @externalDocs.url		https://swagger.io/resources/open-api/
 package main
 
 func main() {

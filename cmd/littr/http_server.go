@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"go.savla.dev/littr/backend"
-	"go.savla.dev/littr/config"
-	"go.savla.dev/littr/frontend"
+	"go.savla.dev/littr/configs"
+	be "go.savla.dev/littr/pkg/backend"
+	fe "go.savla.dev/littr/pkg/frontend"
 	"go.savla.dev/swis/v5/pkg/core"
 
 	"github.com/go-chi/chi/v5"
@@ -23,20 +23,20 @@ import (
 )
 
 func initClient() {
-	app.Route("/", &frontend.LoginPage{})
-	app.Route("/flow", &frontend.FlowPage{})
-	app.RouteWithRegexp("/flow/post/\\d+", &frontend.FlowPage{})
-	app.RouteWithRegexp("/flow/user/\\w+", &frontend.FlowPage{})
-	app.Route("/login", &frontend.LoginPage{})
-	app.Route("/logout", &frontend.LoginPage{})
-	app.Route("/polls", &frontend.PollsPage{})
-	app.Route("/post", &frontend.PostPage{})
-	app.Route("/register", &frontend.RegisterPage{})
-	app.Route("/reset", &frontend.ResetPage{})
-	app.Route("/settings", &frontend.SettingsPage{})
-	app.Route("/stats", &frontend.StatsPage{})
-	app.Route("/tos", &frontend.ToSPage{})
-	app.Route("/users", &frontend.UsersPage{})
+	app.Route("/", &fe.LoginPage{})
+	app.Route("/flow", &fe.FlowPage{})
+	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowPage{})
+	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowPage{})
+	app.Route("/login", &fe.LoginPage{})
+	app.Route("/logout", &fe.LoginPage{})
+	app.Route("/polls", &fe.PollsPage{})
+	app.Route("/post", &fe.PostPage{})
+	app.Route("/register", &fe.RegisterPage{})
+	app.Route("/reset", &fe.ResetPage{})
+	app.Route("/settings", &fe.SettingsPage{})
+	app.Route("/stats", &fe.StatsPage{})
+	app.Route("/tos", &fe.ToSPage{})
+	app.Route("/users", &fe.UsersPage{})
 
 	app.RunWhenOnBrowser()
 }
@@ -72,25 +72,25 @@ func initServer() {
 	}
 
 	// parse ENV contants from .env file (should be loaded using Makefile and docker-compose.yml file)
-	config.ParseEnv()
+	configs.ParseEnv()
 
 	// initialize caches
-	backend.FlowCache = &core.Cache{}
-	backend.PollCache = &core.Cache{}
-	backend.SubscriptionCache = &core.Cache{}
-	backend.TokenCache = &core.Cache{}
-	backend.UserCache = &core.Cache{}
+	be.FlowCache = &core.Cache{}
+	be.PollCache = &core.Cache{}
+	be.SubscriptionCache = &core.Cache{}
+	be.TokenCache = &core.Cache{}
+	be.UserCache = &core.Cache{}
 
 	l.Println("caches initialized", http.StatusOK)
 
 	// load up data from local dumps (/opt/data/)
 	// TODO: catch an error there!
-	backend.LoadAll()
+	be.LoadAll()
 
 	l.Println("dumped data loaded", http.StatusOK)
 
 	// run migrations
-	backend.RunMigrations()
+	be.RunMigrations()
 
 	// handle system calls, signals
 	sigs := make(chan os.Signal, 1)
@@ -101,11 +101,11 @@ func initServer() {
 		sig := <-sigs
 		l.Println("caught signal '"+sig.String()+"', dumping data...", http.StatusCreated)
 
-		backend.DumpAll()
+		be.DumpAll()
 	}()
 
 	// API router
-	r.Mount("/api", backend.LoadAPIRouter())
+	r.Mount("/api", be.LoadAPIRouter())
 
 	appHandler := &app.Handler{
 		Name:         "litter-go",
