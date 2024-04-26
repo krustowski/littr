@@ -2,8 +2,8 @@ package push
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
+	"os"
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
@@ -173,7 +173,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		Path:  "/flow/post/" + post.ID,
 	})
 
-	sendNotificationToDevices(devs, body, l)
+	SendNotificationToDevices(devs, body, l)
 
 	resp.Message = "ok, notification(s) sent"
 	resp.Code = http.StatusCreated

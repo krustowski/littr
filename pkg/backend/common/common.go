@@ -2,14 +2,15 @@ package common
 
 import (
 	"encoding/json"
-	"errors"
+	//"errors"
 	"io"
 	"net/http"
 
+	//"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/swis/v5/pkg/core"
 )
 
-func unmarshalRequestData[T any](r *http.Request, model *T) error {
+func UnmarshalRequestData[T any](r *http.Request, model *T) error {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
@@ -37,30 +38,23 @@ type ServiceOpts struct {
 	Users bool
 }
 
-func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsytem string) {
-	resp := Response{}
+func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
+	/*resp := Response{}
 	l := NewLogger(r, subsystem)
 
-	caller, err := r.Context().Value("nickname").(string)
-	if err != nil {
-		l.Println(
-			"internal system error: "+err.Error(),
-			http.StatusInternalServerError,
-		)
-		resp.Write(w)
-		return
-	}
+	caller, _ := r.Context().Value("nickname").(string)
 
-	items, couddnt := db.GetAll(cache, model)
+	//items, _ := db.GetAll(cache, model)
 
-	resp.Items = items
+	//resp.Items = items
 	resp.Key = caller
 
 	l.Println(
 		"ok, dumping items of '"+subsystem+"' subsystem",
 		http.StatusOK,
 	)
-	resp.Write(w)
+	//resp.Write(w)
+	*/
 }
 
 func GetOneItem[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {

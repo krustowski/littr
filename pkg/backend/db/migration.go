@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/models"
 )
 
@@ -26,7 +27,7 @@ const defaultAvatarImage = "/web/android-chrome-192x192.png"
 
 // RunMigrations is a "wrapper" function for the migration registration and execution
 func RunMigrations() bool {
-	l := Logger{
+	l := common.Logger{
 		CallerID:   "system",
 		WorkerName: "migration",
 		Version:    "system",
@@ -47,7 +48,7 @@ func RunMigrations() bool {
 
 // migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 func migrateAvatarURL() bool {
-	users, _ := getAll(UserCache, models.User{})
+	users, _ := GetAll(UserCache, models.User{})
 
 	for key, user := range users {
 		if user.AvatarURL != "" && user.AvatarURL != defaultAvatarImage {
@@ -55,7 +56,7 @@ func migrateAvatarURL() bool {
 		}
 
 		user.AvatarURL = GetGravatarURL(user.Email)
-		if ok := setOne(UserCache, key, user); !ok {
+		if ok := SetOne(UserCache, key, user); !ok {
 			return false
 		}
 	}
@@ -65,12 +66,12 @@ func migrateAvatarURL() bool {
 
 // migrateFlowPurge function deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
 func migrateFlowPurge() bool {
-	users, _ := getAll(UserCache, models.User{})
-	posts, _ := getAll(FlowCache, models.Post{})
+	users, _ := GetAll(UserCache, models.User{})
+	posts, _ := GetAll(FlowCache, models.Post{})
 
 	for key, post := range posts {
 		if _, found := users[post.Nickname]; !found {
-			deleteOne(FlowCache, key)
+			DeleteOne(FlowCache, key)
 		}
 	}
 
@@ -88,22 +89,22 @@ func migrateUserDeletion() bool {
 		"lma0",
 	}
 
-	users, _ := getAll(UserCache, models.User{})
+	users, _ := GetAll(UserCache, models.User{})
 
 	for key, user := range users {
 		if contains(bank, user.Nickname) {
-			if deleted := deleteOne(UserCache, key); !deleted {
+			if deleted := DeleteOne(UserCache, key); !deleted {
 				//return false
 				continue
 			}
 		}
 	}
 
-	posts, _ := getAll(FlowCache, models.Post{})
+	posts, _ := GetAll(FlowCache, models.Post{})
 
 	for key, post := range posts {
 		if contains(bank, post.Nickname) {
-			if deleted := deleteOne(FlowCache, key); !deleted {
+			if deleted := DeleteOne(FlowCache, key); !deleted {
 				//return false
 				continue
 			}
@@ -115,12 +116,12 @@ func migrateUserDeletion() bool {
 
 // migrateUserRegisteredTime function fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
 func migrateUserRegisteredTime() bool {
-	users, _ := getAll(UserCache, models.User{})
+	users, _ := GetAll(UserCache, models.User{})
 
 	for key, user := range users {
 		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
-			if ok := setOne(UserCache, key, user); !ok {
+			if ok := SetOne(UserCache, key, user); !ok {
 				return false
 			}
 		}
@@ -131,7 +132,7 @@ func migrateUserRegisteredTime() bool {
 
 // migrateUserShadeList function lists ShadeList items and ensures user shaded (no mutual following, no replying).
 func migrateUserShadeList() bool {
-	users, _ := getAll(UserCache, models.User{})
+	users, _ := GetAll(UserCache, models.User{})
 
 	for key, user := range users {
 		shadeList := user.ShadeList
@@ -154,7 +155,7 @@ func migrateUserShadeList() bool {
 		// ensure that users can see themselves
 		flowList[key] = true
 		user.FlowList = flowList
-		if ok := setOne(UserCache, key, user); !ok {
+		if ok := SetOne(UserCache, key, user); !ok {
 			return false
 		}
 	}
@@ -164,7 +165,7 @@ func migrateUserShadeList() bool {
 
 // migrateUserUnshade function lists all users and unshades manually some explicitly list users
 func migrateUserUnshade() bool {
-	users, _ := getAll(UserCache, models.User{})
+	users, _ := GetAll(UserCache, models.User{})
 
 	usersToUnshade := []string{
 		"amdulka",
@@ -185,7 +186,7 @@ func migrateUserUnshade() bool {
 		}
 
 		user.ShadeList = shadeList
-		if ok := setOne(UserCache, key, user); !ok {
+		if ok := SetOne(UserCache, key, user); !ok {
 			return false
 		}
 	}

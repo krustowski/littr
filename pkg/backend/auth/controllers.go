@@ -1,11 +1,8 @@
 package auth
 
 import (
-	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -24,9 +21,9 @@ type UserAuth struct {
 
 type RefreshToken string
 
-func authUser(aUser users.User) (*users.User, bool) {
+func authUser(aUser models.User) (*models.User, bool) {
 	// fetch one user from cache according to the login credential
-	user, ok := db.GetOne(db.UserCache, aUser.Nickname, users.User{})
+	user, ok := db.GetOne(db.UserCache, aUser.Nickname, models.User{})
 	if !ok {
 		// not found
 		return nil, false
@@ -67,21 +64,11 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream"
-		resp.Code = http.StatusInternalServerError
+	if err := common.UnmarshalRequestData(r, &user); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
 
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if err = json.Unmarshal(reqBody, &user); err != nil {
-		resp.Message = "backend error: cannot unmarshall request data"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
@@ -142,7 +129,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	refreshSum.Write([]byte(signedRefreshToken))
 	sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-	if saved := TokenCache.Set(sum, u.Nickname); !saved {
+	if saved := db.TokenCache.Set(sum, u.Nickname); !saved {
 		resp.Message = "new refresh token couldn't be saved on backend"
 		resp.Code = http.StatusInternalServerError
 

@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
-	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/models"
 	"go.savla.dev/swis/v5/pkg/core"
 )
@@ -63,7 +61,7 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 			continue
 		}
 
-		if saved := setOne(cache, key, val); !saved {
+		if saved := SetOne(cache, key, val); !saved {
 			return fmt.Errorf("cannot load item from file '%s' (key: %s)", filepath, key)
 			//continue
 		}
@@ -81,7 +79,7 @@ func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
 		Items map[string]T `json:"items"`
 	}{}
 
-	matrix.Items, _ = getAll(cache, model)
+	matrix.Items, _ = GetAll(cache, model)
 
 	jsonData, err := json.Marshal(matrix)
 	if err != nil {

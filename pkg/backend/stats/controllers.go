@@ -18,18 +18,18 @@ import (
 // @Produce      json
 // @Success      200  {array}   common.Response
 // @Router       /stats [get]
-func GetStats(w http.ResponseWriter, r *http.Request) {
+func getStats(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "stats")
 
 	// fetch the data
-	polls, _ := db.GetAll(PollCache, models.Poll{})
-	posts, postCount := db.GetAll(FlowCache, models.Post{})
-	users, _ := db, GetAll(UserCache, models.User{})
+	polls, _ := db.GetAll(db.PollCache, models.Poll{})
+	posts, postCount := db.GetAll(db.FlowCache, models.Post{})
+	users, _ := db.GetAll(db.UserCache, models.User{})
 
 	// prepare the maps for export
 	flowStats := make(map[string]int)
-	userStats := make(map[string]UserStat)
+	userStats := make(map[string]models.UserStat)
 
 	flowers := make(map[string]int)
 	shades := make(map[string]int)
@@ -46,7 +46,7 @@ func GetStats(w http.ResponseWriter, r *http.Request) {
 		stat, ok := userStats[val.Nickname]
 		if !ok {
 			// create a blank stat
-			stat = userStat{}
+			stat = models.UserStat{}
 			stat.Searched = true
 		}
 

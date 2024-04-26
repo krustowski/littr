@@ -20,15 +20,14 @@
 package backend
 
 import (
-	"context"
 	"net/http"
 	"os"
-	"time"
 
 	chi "github.com/go-chi/chi/v5"
 
 	"go.savla.dev/littr/pkg/backend/auth"
-	"go.savla.dev/littr/pkg/backend/data"
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/backend/polls"
 	"go.savla.dev/littr/pkg/backend/posts"
 	"go.savla.dev/littr/pkg/backend/stats"
@@ -36,7 +35,7 @@ import (
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	resp := Response{
+	resp := common.Response{
 		Message: "litter-go API service (v" + os.Getenv("APP_VERSION") + ")",
 		Code:    http.StatusOK,
 	}
@@ -48,7 +47,7 @@ func APIRouter() chi.Router {
 	r := chi.NewRouter()
 
 	r.Use(auth.AuthMiddleware)
-	r.Use(system.LoggerMiddleware)
+	//r.Use(system.LoggerMiddleware)
 
 	r.Get("/", rootHandler)
 

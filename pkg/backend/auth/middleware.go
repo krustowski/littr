@@ -3,19 +3,19 @@ package auth
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"time"
 
+	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
 )
 
-func authMiddleware(next http.Handler) http.Handler {
+func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//ctx := r.Context()
 
@@ -26,18 +26,18 @@ func authMiddleware(next http.Handler) http.Handler {
 		  		}*/
 
 		// skip those routes
-		if r.URL.Path == "/api" ||
-			r.URL.Path == "/api/auth" ||
-			r.URL.Path == "/api/dump" ||
-			r.URL.Path == "/api/flow/live" ||
-			r.URL.Path == "/api/auth/password" ||
-			(r.URL.Path == "/api/users" && r.Method == "POST") {
+		if r.URL.Path == "/api/v1" ||
+			r.URL.Path == "/api/v1/auth" ||
+			r.URL.Path == "/api/v1/dump" ||
+			r.URL.Path == "/api/v1/flow/live" ||
+			r.URL.Path == "/api/v1/users/passphrase" ||
+			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		resp := response{}
-		l := NewLogger(r, "auth")
+		resp := common.Response{}
+		l := common.NewLogger(r, "auth")
 		resp.AuthGranted = false
 
 		secret := os.Getenv("APP_PEPPER")
@@ -82,7 +82,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			refreshSum.Write([]byte(refreshCookie.Value))
 			sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-			rawNick, found := TokenCache.Get(sum)
+			rawNick, found := db.TokenCache.Get(sum)
 			if !found {
 				voidCookie := &http.Cookie{
 					Name:     "refresh-token",
@@ -113,9 +113,9 @@ func authMiddleware(next http.Handler) http.Handler {
 			}
 
 			// invalidate refresh token on non-existing user referenced
-			user, ok = getOne(UserCache, nickname, models.User{})
+			user, ok = db.GetOne(db.UserCache, nickname, models.User{})
 			if !ok {
-				deleteOne(TokenCache, sum)
+				db.DeleteOne(db.TokenCache, sum)
 
 				voidCookie := &http.Cookie{
 					Name:     "refresh-token",
@@ -190,7 +190,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		refreshSum.Write([]byte(refreshCookie.Value))
 		sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-		rawNick, found := TokenCache.Get(sum)
+		rawNick, found := db.TokenCache.Get(sum)
 		if !found {
 			voidCookie := &http.Cookie{
 				Name:     "refresh-token",

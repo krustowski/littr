@@ -2,9 +2,7 @@ package users
 
 import (
 	"crypto/sha512"
-	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -14,8 +12,11 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
+	chi "github.com/go-chi/chi/v5"
 	mail "github.com/wneessen/go-mail"
 )
 
@@ -29,9 +30,9 @@ import (
 // @Success      200  {object}   common.Response
 // @Router       /users/ [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "users")
-	stats := make(map[string]stats.UserStat)
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+	stats := make(map[string]models.UserStat)
 
 	caller, _ := r.Context().Value("nickname").(string)
 	uuid := r.Header.Get("X-API-Caller-ID")
@@ -56,10 +57,10 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	for _, post := range posts {
 		nick := post.Nickname
 
-		var stat userStat
+		var stat models.UserStat
 		var found bool
 		if stat, found = stats[nick]; !found {
-			stat = stats.UserStat{}
+			stat = models.UserStat{}
 		}
 
 		stat.PostCount++
@@ -121,12 +122,12 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {}
 // @Failure      409  {object}   common.Response
 // @Router       /users [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "users")
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
 
 	var user models.User
 
-	if err := unmarshalRequestData(r, &user); err != nil {
+	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -179,12 +180,12 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      409  {object}   common.Response
 // @Router       /users/{nickname} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "users")
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
 
 	var user models.User
 
-	if err := unmarshalRequestData(r, &user); err != nil {
+	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -231,8 +232,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.Response
 // @Router       /users/{nickname} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "users")
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
 
 	key, _ := r.Context().Value("nickname").(string)
 
@@ -255,18 +256,18 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete all user's posts and polls
-	posts, _ := getAll(FlowCache, models.Post{})
-	polls, _ := getAll(PollCache, models.Poll{})
+	posts, _ := db.GetAll(db.FlowCache, models.Post{})
+	polls, _ := db.GetAll(db.PollCache, models.Poll{})
 
 	for id, post := range posts {
 		if post.Nickname == key {
-			deleteOne(FlowCache, id)
+			db.DeleteOne(db.FlowCache, id)
 		}
 	}
 
 	for id, poll := range polls {
 		if poll.Author == key {
-			deleteOne(PollCache, id)
+			db.DeleteOne(db.PollCache, id)
 		}
 	}
 
@@ -288,8 +289,8 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.Response
 // @Router       /users/{nickname}/posts [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, "users")
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
 	callerID, _ := r.Context().Value("nickname").(string)
 
 	// parse the URI's path
@@ -366,7 +367,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		Tags       []string `json:"tags"`
 	}{}
 
-	if err := unmarshalRequestData(r, &fetch); err != nil {
+	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
 		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
 
@@ -402,7 +403,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	random := randSeq(16)
+	random := helpers.RandSeq(16)
 	pepper := os.Getenv("APP_PEPPER")
 
 	passHash := sha512.Sum512([]byte(random + pepper))

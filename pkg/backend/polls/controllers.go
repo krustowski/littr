@@ -1,8 +1,6 @@
 package polls
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 
 	"go.savla.dev/littr/pkg/backend/common"

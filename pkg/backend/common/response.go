@@ -6,9 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 
-	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/models"
 )
 
@@ -21,18 +19,18 @@ type Response struct {
 	Message   string `json:"message"`
 	Count     int    `json:"count,omitempty"`
 
-	Subscribed bool          `json:"subscribed"`
+	Subscribed bool            `json:"subscribed"`
 	Devices    []models.Device `json:"devices,omitempty"`
 
 	Polls    map[string]models.Poll `json:"polls,omitempty"`
 	Posts    map[string]models.Post `json:"posts,omitempty"`
 	Users    map[string]models.User `json:"users,omitempty"`
-	FlowList []string              `json:"flow_records,omitempty"`
+	FlowList []string               `json:"flow_records,omitempty"`
 
 	Data []byte `json:"data,omitempty"`
 
 	// very stats properties
-	FlowStats map[string]int            `json:"flow_stats,omitempty"`
+	FlowStats map[string]int             `json:"flow_stats,omitempty"`
 	UserStats map[string]models.UserStat `json:"user_stats,omitempty"`
 
 	// auth tokens (JWT)

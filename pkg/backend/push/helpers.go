@@ -1,18 +1,17 @@
 package push
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"os"
 
+	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/SherClockHolmes/webpush-go"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-func sendNotificationToDevices(devs []models.Device, body []byte, l *Logger) {
+func SendNotificationToDevices(devs []models.Device, body []byte, l *common.Logger) {
 	// range devices
 	for _, dev := range devs {
 		if dev.UUID == "" {

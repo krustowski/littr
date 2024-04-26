@@ -2,7 +2,6 @@ package posts
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -16,6 +15,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/push"
 	"go.savla.dev/littr/pkg/models"
 )
 
@@ -63,14 +63,14 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	opts := pageOptions{
+	opts := PageOptions{
 		CallerID: callerID,
 		PageNo:   pageNo,
 		FlowList: nil,
 	}
 
 	// fetch page according to the logged user
-	pExport, uExport := getOnePage(opts)
+	pExport, uExport := GetOnePage(opts)
 	if pExport == nil || uExport == nil {
 		resp.Message = "error while requesting more page, one exported map is nil!"
 		resp.Code = http.StatusInternalServerError
@@ -87,7 +87,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Users = uExport
 
 	// pageSize is a constant -> see backend/pagination.go
-	resp.Count = pageSize
+	resp.Count = PageSize
 
 	// write Response and logs
 	l.Println(resp.Message, resp.Code)
@@ -215,11 +215,11 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			Path:  "/flow/post/" + post.ID,
 		})
 
-		sendNotificationToDevices(devs, body, l)
+		push.SendNotificationToDevices(devs, body, l)
 	}
 
 	// broadcast a new post to live subscribers
-	streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage(post.Nickname))
+	Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage(post.Nickname))
 
 	posts := make(map[string]models.Post)
 	posts[key] = post
@@ -265,7 +265,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 
 	var found bool
 
-	if post, found = db.etOne(db.FlowCache, key, models.Post{}); !found {
+	if post, found = db.GetOne(db.FlowCache, key, models.Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -439,8 +439,8 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.Response
 // @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
-	resp := Response{}
-	l := NewLogger(r, pkgName)
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 	//user, _ := getOne(UserCache, callerID, models.User{})
 
@@ -468,7 +468,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 		flowList = make(map[string]bool)
 	}*/
 
-	opts := pageOptions{
+	opts := PageOptions{
 		SinglePost:   true,
 		SinglePostID: postID,
 		CallerID:     callerID,
@@ -477,7 +477,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch page according to the logged user
-	pExport, uExport := getOnePage(opts)
+	pExport, uExport := GetOnePage(opts)
 	if pExport == nil || uExport == nil {
 		resp.Message = "error while requesting more page, one exported map is nil!"
 		resp.Code = http.StatusBadRequest

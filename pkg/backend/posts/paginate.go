@@ -3,9 +3,9 @@ package posts
 import (
 	"sort"
 
-	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/users"
+	"go.savla.dev/littr/pkg/helpers"
+	"go.savla.dev/littr/pkg/models"
 )
 
 const PageSize int = 25
@@ -86,11 +86,11 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 	})
 
 	// cut the <pageSize>*2 number of posts only
-	var part []posts.Post
+	var part []models.Post
 
 	pageNo := opts.PageNo
-	start := (pageSize * 2) * pageNo
-	end := (pageSize * 2) * (pageNo + 1)
+	start := (PageSize * 2) * pageNo
+	end := (PageSize * 2) * (pageNo + 1)
 
 	if len(posts) > start {
 		// only valid for the very first page
@@ -157,7 +157,7 @@ func convertMapToArray[T any](m map[string]T, reverseOutput bool) ([]string, []T
 	}
 
 	if reverseOutput {
-		reverse(keys)
+		helpers.Reverse(keys)
 		//reverse(vals)
 	}
 
