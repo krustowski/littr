@@ -8,12 +8,7 @@ import (
 	"os"
 
 	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/backend/middleware"
-	"go.savla.dev/littr/pkg/backend/polls"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/backend/push"
-	"go.savla.dev/littr/pkg/backend/users"
-
+	"go.savla.dev/littr/pkg/models"
 	"go.savla.dev/swis/v5/pkg/core"
 )
 
@@ -28,20 +23,20 @@ const (
 
 func LoadAll() {
 	// TODO: catch errors!
-	loadOne(PollCache, pollsFile, polls.Poll{})
-	loadOne(FlowCache, postsFile, posts.Post{})
-	loadOne(SubscriptionCache, subscriptionsFile, []push.Device{})
+	loadOne(PollCache, pollsFile, models.Poll{})
+	loadOne(FlowCache, postsFile, models.Post{})
+	loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	loadOne(TokenCache, tokensFile, void)
-	loadOne(UserCache, usersFile, users.User{})
+	loadOne(UserCache, usersFile, models.User{})
 }
 
 func DumpAll() {
 	// TODO: catch errors!
-	dumpOne(PollCache, pollsFile, polls.Poll{})
-	dumpOne(FlowCache, postsFile, posts.Post{})
-	dumpOne(SubscriptionCache, subscriptionsFile, []push.Device{})
+	dumpOne(PollCache, pollsFile, models.Poll{})
+	dumpOne(FlowCache, postsFile, models.Post{})
+	dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	dumpOne(TokenCache, tokensFile, void)
-	dumpOne(UserCache, usersFile, users.User{})
+	dumpOne(UserCache, usersFile, models.User{})
 }
 
 func loadOne[T any](cache *core.Cache, filepath string, model T) error {

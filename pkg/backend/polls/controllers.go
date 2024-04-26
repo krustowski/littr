@@ -7,6 +7,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/models"
 )
 
 // getPolls get a list of polls
@@ -22,7 +23,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 
-	polls, _ := db.GetAll(db.PollCache, Poll{})
+	polls, _ := db.GetAll(db.PollCache, models.Poll{})
 
 	resp.Message = "ok, dumping polls"
 	resp.Code = http.StatusOK
@@ -47,7 +48,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 
-	var poll Poll
+	var poll models.Poll
 
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -91,7 +92,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 
-	var payload Poll
+	var payload models.Poll
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -107,7 +108,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	var poll models.Poll
 	var found bool
 
-	if poll, found = db.GetOne(db.PollCache, key, Poll{}); !found {
+	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
 		resp.Message = "unknown poll update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -152,7 +153,7 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 
-	var poll Poll
+	var poll models.Poll
 
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -168,7 +169,7 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	// check for possible poll forgery
 	//if caller != poll.Author {}
 
-	if deleted := deleteOne(PollCache, key); !deleted {
+	if deleted := db.DeleteOne(db.PollCache, key); !deleted {
 		resp.Message = "cannot delete the poll"
 		resp.Code = http.StatusInternalServerError
 

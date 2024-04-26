@@ -1,4 +1,4 @@
-package backend
+package db
 
 import (
 	"crypto/md5"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 )
 
 type migration func() bool
