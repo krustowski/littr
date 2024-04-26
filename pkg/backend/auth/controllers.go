@@ -12,7 +12,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/users"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
 )

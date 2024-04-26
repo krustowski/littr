@@ -1,4 +1,4 @@
-package backend
+package auth
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
 )
