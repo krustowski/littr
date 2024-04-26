@@ -1,12 +1,13 @@
-package backend
+package stats
 
 import (
 	"net/http"
 	"time"
 
-	"go.savla.dev/littr/backend"
-	"go.savla.dev/littr/backend/data"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/pkg/littr/backend/polls"
+	"go.savla.dev/pkg/littr/backend/posts"
+	"go.savla.dev/pkg/littr/backend/system"
+	"go.savla.dev/pkg/littr/backend/users"
 )
 
 type UserStat struct {
@@ -33,16 +34,16 @@ type UserStat struct {
 // @Tags         stats
 // @Accept       json
 // @Produce      json
-// @Success      200  {array}   response
+// @Success      200  {array}   system.Response
 // @Router       /stats [get]
 func GetStats(w http.ResponseWriter, r *http.Request) {
-	resp := backend.Response{}
-	l := backend.NewLogger(r, "stats")
+	resp := system.Response{}
+	l := system.NewLogger(r, "stats")
 
 	// fetch the data
-	polls, _ := getAll(PollCache, models.Poll{})
-	posts, postCount := getAll(FlowCache, models.Post{})
-	users, _ := getAll(UserCache, models.User{})
+	polls, _ := db.GetAll(PollCache, models.Poll{})
+	posts, postCount := db.GetAll(FlowCache, models.Post{})
+	users, _ := db,GetAll(UserCache, models.User{})
 
 	// prepare the maps for export
 	flowStats := make(map[string]int)

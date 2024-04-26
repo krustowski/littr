@@ -1,4 +1,4 @@
-package backend
+package system
 
 import (
 	"encoding/json"
@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"os"
 
-	"go.savla.dev/littr/backend/stats"
-	"go.savla.dev/littr/config"
+	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/backend/stats"
+	"go.savla.dev/littr/pkg/backend/users"
 )
 
 type Response struct {
@@ -27,7 +28,7 @@ type Response struct {
 
 	Polls    map[string]models.Poll `json:"polls,omitempty"`
 	Posts    map[string]models.Post `json:"posts,omitempty"`
-	Users    map[string]models.User `json:"users,omitempty"`
+	Users    map[string]users.User `json:"users,omitempty"`
 	FlowList []string               `json:"flow_records,omitempty"`
 
 	Data []byte `json:"data,omitempty"`

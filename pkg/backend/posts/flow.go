@@ -24,11 +24,11 @@ import (
 // @Tags         flow
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  response
-// @Failure      400  {object}  response
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
 // @Router       /flow/ [get]
 func getPosts(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 	callerID, _ := r.Context().Value("nickname").(string)
 
@@ -82,7 +82,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	// pageSize is a constant -> see backend/pagination.go
 	resp.Count = pageSize
 
-	// write response and logs
+	// write Response and logs
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 	return
@@ -95,12 +95,12 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      201  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      201  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /flow/ [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 	caller, _ := r.Context().Value("nickname").(string)
 
@@ -242,13 +242,13 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      403  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      403  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /flow/star [put]
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 	callerID, _ := r.Context().Value("nickname").(string)
 
@@ -326,12 +326,12 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /flow/ [put]
 func updatePost(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 
 	var post models.Post
@@ -390,12 +390,12 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /flow/ [delete]
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 
 	// remove a post
@@ -446,11 +446,11 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
 //	@Router       /flow/user/{nickname} [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 	callerID, _ := r.Context().Value("nickname").(string)
 
@@ -513,11 +513,11 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 //	@Tags         flow
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
 //	@Router       /flow/post/{postNo} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
+	resp := Response{}
 	l := NewLogger(r, "flow")
 	callerID, _ := r.Context().Value("nickname").(string)
 	//user, _ := getOne(UserCache, callerID, models.User{})

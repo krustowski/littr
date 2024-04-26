@@ -18,7 +18,7 @@ import (
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   Response
+// @Success      200  {object}   backend.Response
 // @Router       /users/ [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	resp := response{}

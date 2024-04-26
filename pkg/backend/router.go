@@ -25,7 +25,6 @@ import (
 	"os"
 	"time"
 
-	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
 
 	"go.savla.dev/littr/pkg/backend/auth"
@@ -44,93 +43,21 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-var streamer *sse.Server
-
 // the very main API router
 func APIRouter() chi.Router {
 	r := chi.NewRouter()
 
-	// logger and response in context here
-
 	r.Use(auth.AuthMiddleware)
-
-	streamer = sse.NewServer(&sse.Options{
-		Logger: nil,
-	})
-	//defer streamer.Shutdown()
+	r.Use(system.LoggerMiddleware)
 
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.Router())
-	r.Mount("/data", data.Router())
+	r.Mount("/dump", db.Router())
 	r.Mount("/polls", polls.Router())
 	r.Mount("/posts", posts.Router())
 	r.Mount("/stats", stats.Router())
 	r.Mount("/users", users.Router())
-
-	r.Route("/auth", func(r chi.Router) {
-		r.Post("/", auth.authHandler)
-		r.Post("/password", resetHandler)
-	})
-	r.Get("/dump", dumpHandler)
-
-	// Get live flow event stream
-	//
-	//  @Summary      Get live flow event stream
-	//  @Description  get live flow event stream
-	//  @Tags         flow
-	//  @Accept       json
-	//  @Produce      json
-	//  @Success      200  {object} octet-stream
-	//  @Failure      500  {object} octet-stream
-	//  @Router       /flow/live [get]
-	go func() {
-		for {
-			streamer.SendMessage("/api/flow/live", sse.SimpleMessage("heartbeat"))
-			time.Sleep(time.Second * 20)
-		}
-	}()
-
-	r.Route("/flow", func(r chi.Router) {
-		r.Get("/", getPosts)
-		// ->backend/streamer.go
-		r.Mount("/live", streamer)
-		// single-post view request
-		r.Route("/post", func(r chi.Router) {
-			r.Get("/{postNo}", getSinglePost)
-		})
-		// user flow page request
-		r.Route("/user", func(r chi.Router) {
-			r.Get("/{nick}", getUserPosts)
-		})
-		r.Post("/", addNewPost)
-		//r.Put("/", updatePost)
-		r.Put("/star", updatePostStarCount)
-		r.Delete("/", deletePost)
-	})
-
-	r.Route("/polls", func(r chi.Router) {
-		r.Get("/", getPolls)
-		r.Post("/", addNewPoll)
-		r.Put("/", updatePoll)
-		r.Delete("/", deletePoll)
-	})
-
-	r.Route("/push", func(r chi.Router) {
-		r.Post("/", subscribeToNotifs)
-		r.Put("/", sendNotif)
-		r.Delete("/", deleteSubscription)
-		r.Get("/vapid", fetchVAPIDKey)
-	})
-
-	r.Get("/stats", statsHandler)
-
-	r.Route("/users", func(r chi.Router) {
-		r.Get("/", getUsers)
-		r.Post("/", addNewUser)
-		r.Put("/", updateUser)
-		r.Delete("/", deleteUser)
-	})
 
 	return r
 }

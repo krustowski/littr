@@ -1,15 +1,15 @@
+package auth
 // https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
-package backend
 
 import (
-	"go.savla.dev/littr/models"
+	"go.savla.devlittr/pkg/backend/users"
 
 	"github.com/golang-jwt/jwt"
 )
 
 type UserClaims struct {
 	Nickname string      `json:"nickname"`
-	User     models.User `json:"user"`
+	User     users.User `json:"user"`
 	jwt.StandardClaims
 }
 

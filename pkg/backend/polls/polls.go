@@ -15,7 +15,7 @@ import (
 //	@Tags         polls
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}   response
+//	@Success      200  {object}   Response
 //	@Router       /polls/ [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -38,9 +38,9 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 //	@Tags         polls
 //	@Accept       json
 //	@Produce      json
-//	@Success      201  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      201  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /polls/ [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -92,9 +92,9 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 //	@Tags         polls
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /polls/ [put]
 func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -163,9 +163,9 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 //	@Tags         polls
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  response
-//	@Failure      400  {object}  response
-//	@Failure      500  {object}  response
+//	@Success      200  {object}  Response
+//	@Failure      400  {object}  Response
+//	@Failure      500  {object}  Response
 //	@Router       /polls/ [delete]
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
