@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"time"
 
+	"go.savla.dev/littr/backend"
+	"go.savla.dev/littr/backend/data"
 	"go.savla.dev/littr/models"
 )
 
-type userStat struct {
+type UserStat struct {
 	// PostCount is a number of posts of such user.
 	PostCount int `default:0`
 
@@ -24,18 +26,18 @@ type userStat struct {
 	Searched bool `default:true`
 }
 
-// statsHandler acts like a handler for stats page
+// GetStats acts like a handler for stats page
 //
-//	@Summary      Get stats
-//	@Description  get stats
-//	@Tags         stats
-//	@Accept       json
-//	@Produce      json
-//	@Success      200  {array}   response
-//	@Router       /stats [get]
-func statsHandler(w http.ResponseWriter, r *http.Request) {
-	resp := response{}
-	l := NewLogger(r, "stats")
+// @Summary      Get stats
+// @Description  get stats
+// @Tags         stats
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   response
+// @Router       /stats [get]
+func GetStats(w http.ResponseWriter, r *http.Request) {
+	resp := backend.Response{}
+	l := backend.NewLogger(r, "stats")
 
 	// fetch the data
 	polls, _ := getAll(PollCache, models.Poll{})

@@ -1,4 +1,3 @@
-// litter-go backend
 package backend
 
 import (
@@ -7,10 +6,12 @@ import (
 
 	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
+
+	"go.savla.dev/littr/backend/push"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	resp := response{
+	resp := Response{
 		Message: "litter-go API service",
 		Code:    http.StatusOK,
 	}
@@ -33,7 +34,7 @@ func LoadAPIRouter() chi.Router {
 	r.Get("/", rootHandler)
 	//r.Post("/auth", authHandler)
 	r.Route("/auth", func(r chi.Router) {
-		r.Post("/", authHandler)
+		r.Post("/", auth.authHandler)
 		r.Post("/password", resetHandler)
 	})
 	r.Get("/dump", dumpHandler)

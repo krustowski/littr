@@ -10,9 +10,10 @@ import (
 
 	"go.savla.dev/littr/config"
 	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/backend/stats"
 )
 
-type response struct {
+type Response struct {
 	AuthGranted bool `json:"auth_granted" default:false`
 	Code        int  `json:"code"`
 
@@ -33,14 +34,14 @@ type response struct {
 
 	// very stats properties
 	FlowStats map[string]int      `json:"flow_stats,omitempty"`
-	UserStats map[string]userStat `json:"user_stats,omitempty"`
+	UserStats map[string]stats.UserStat `json:"user_stats,omitempty"`
 
 	// auth tokens (JWT)
 	AccessToken  string `json:"access_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
-func (r *response) Write(w http.ResponseWriter) error {
+func (r *Response) Write(w http.ResponseWriter) error {
 	jsonData, err := json.Marshal(r)
 	if err != nil {
 		log.Println(err.Error())
@@ -60,9 +61,8 @@ func (r *response) Write(w http.ResponseWriter) error {
 	return nil
 }
 
-func (r *response) WritePix(w http.ResponseWriter) error {
-	enData := config.Encrypt([]byte(os.Getenv("APP_PEPPER")), r.Data)
-	w.Write(enData)
+func (r *Response) WritePix(w http.ResponseWriter) error {
+	w.Write(r.Data)
 
 	return nil
 }
