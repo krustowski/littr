@@ -23,23 +23,23 @@ type PageOptions struct {
 }
 
 // for now, let us use it for posts/flow exclusively only
-func GetOnePage(opts pageOptions) (map[string]Post, map[string]users.User) {
-	user, ok := db.GetOne(db.UserCache, opts.CallerID, users.User{})
+func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.User) {
+	user, ok := db.GetOne(db.UserCache, opts.CallerID, models.User{})
 	if !ok {
 		return nil, nil
 	}
 
 	// fetch the flow + users and combine them into one response
 	// those variables are both of type map[string]T
-	allPosts, _ := db.GetAll(db.FlowCache, Post{})
-	allUsers, _ := db.GetAll(db.UserCache, users.User{})
+	allPosts, _ := db.GetAll(db.FlowCache, models.Post{})
+	allUsers, _ := db.GetAll(db.UserCache, models.User{})
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
 	// + include previous posts to a reply
 	// + only include users mentioned
 
-	posts := []Post{}
+	posts := []models.Post{}
 	num := 0
 
 	// extract requested post
@@ -110,8 +110,8 @@ func GetOnePage(opts pageOptions) (map[string]Post, map[string]users.User) {
 
 	// loop through the array and manually include other posts too
 	// watch for users as well
-	pExport := make(map[string]Post)
-	uExport := make(map[string]users.User)
+	pExport := make(map[string]models.Post)
+	uExport := make(map[string]models.User)
 
 	num = 0
 	for _, post := range part {

@@ -7,7 +7,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -61,7 +61,7 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
 	caller, _ := r.Context().Value("nickname").(string)
-	payload := Device{}
+	payload := models.Device{}
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -74,7 +74,7 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache
-	devs, _ := db.GetOne(db.SubscriptionCache, caller, []Device{})
+	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
 	for _, dev := range devs {
 		if dev.UUID == payload.UUID {
@@ -141,8 +141,8 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch related data from cachces
-	post, _ := db.GetOne(db.FlowCache, original.ID, posts.Post{})
-	devs, _ := db.GetOne(db.SubscriptionCache, post.Nickname, []Device{})
+	post, _ := db.GetOne(db.FlowCache, original.ID, models.Post{})
+	devs, _ := db.GetOne(db.SubscriptionCache, post.Nickname, []models.Device{})
 	//user, _ := db.GetOne(db.UserCache, post.Nickname, users.User{})
 
 	// do not notify the same person --- OK condition
@@ -224,9 +224,9 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	devices, _ := db.GetOne(db.SubscriptionCache, caller, []Device{})
+	devices, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
-	var newDevices []Device
+	var newDevices []models.Device
 
 	for _, dev := range devices {
 		if dev.UUID == uuid {

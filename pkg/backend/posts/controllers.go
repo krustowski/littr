@@ -16,8 +16,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/push"
-	"go.savla.dev/littr/pkg/backend/users"
+	"go.savla.dev/littr/pkg/models"
 )
 
 const (
@@ -113,7 +112,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	caller, _ := r.Context().Value("nickname").(string)
 
 	// post a new post
-	var post Post
+	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -192,8 +191,8 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		receiverName := match[1]
 
 		// fetch related data from cachces
-		devs, _ := db.GetOne(db.SubscriptionCache, receiverName, []push.Device{})
-		_, found := db.GetOne(db.UserCache, receiverName, users.User{})
+		devs, _ := db.GetOne(db.SubscriptionCache, receiverName, []models.Device{})
+		_, found := db.GetOne(db.UserCache, receiverName, models.User{})
 		if !found {
 			continue
 		}
@@ -222,7 +221,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	// broadcast a new post to live subscribers
 	streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage(post.Nickname))
 
-	posts := make(map[string]Post)
+	posts := make(map[string]models.Post)
 	posts[key] = post
 
 	resp.Message = "ok, adding new post"
@@ -250,7 +249,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 
-	var post Post
+	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -266,7 +265,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 
 	var found bool
 
-	if post, found = db.etOne(db.FlowCache, key, Post{}); !found {
+	if post, found = db.etOne(db.FlowCache, key, models.Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -299,7 +298,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "ok, star count incremented"
 	resp.Code = http.StatusOK
 
-	resp.Posts = make(map[string]Post)
+	resp.Posts = make(map[string]models.Post)
 	resp.Posts[key] = post
 
 	l.Println(resp.Message, resp.Code)
@@ -324,7 +323,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, pkgName)
 	callerID, _ := r.Context().Value("nickname").(string)
 
-	var post Post
+	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		resp.Message = "input read error: " + err.Error()
@@ -338,7 +337,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
 	key := post.ID
 
-	if _, found := db.GetOne(db.FlowCache, key, Post{}); !found {
+	if _, found := db.GetOne(db.FlowCache, key, models.Post{}); !found {
 		resp.Message = "unknown post update requested"
 		resp.Code = http.StatusBadRequest
 
@@ -390,7 +389,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	callerID, _ := r.Context().Value("nickname").(string)
 
 	// remove a post
-	var post Post
+	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		resp.Message = "input read error: " + err.Error()
