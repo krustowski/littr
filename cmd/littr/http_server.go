@@ -105,7 +105,7 @@ func initServer() {
 	}()
 
 	// API router
-	r.Mount("/api", be.LoadAPIRouter())
+	r.Mount("/api/v1", be.APIRouter())
 
 	appHandler := &app.Handler{
 		Name:         "litter-go",
