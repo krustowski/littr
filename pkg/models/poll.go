@@ -1,4 +1,4 @@
-package polls
+package models
 
 import (
 	"time"
