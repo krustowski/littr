@@ -6,10 +6,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/polls"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/backend/system"
-	"go.savla.dev/littr/pkg/backend/users"
+	"go.savla.dev/littr/pkg/models"
 )
 
 // GetStats acts like a handler for stats page
@@ -26,13 +23,13 @@ func GetStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
 	// fetch the data
-	polls, _ := db.GetAll(PollCache, polls.Poll{})
-	posts, postCount := db.GetAll(FlowCache, posts.Post{})
-	users, _ := db, GetAll(UserCache, users.User{})
+	polls, _ := db.GetAll(PollCache, models.Poll{})
+	posts, postCount := db.GetAll(FlowCache, models.Post{})
+	users, _ := db, GetAll(UserCache, models.User{})
 
 	// prepare the maps for export
 	flowStats := make(map[string]int)
-	userStats := make(map[string]userStat)
+	userStats := make(map[string]UserStat)
 
 	flowers := make(map[string]int)
 	shades := make(map[string]int)

@@ -14,8 +14,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/backend/stats"
+	"go.savla.dev/littr/pkg/models"
 
 	mail "github.com/wneessen/go-mail"
 )
@@ -38,9 +37,9 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Header.Get("X-API-Caller-ID")
 
 	// fetch all data for the calculations
-	users, _ := getAll(UserCache, posts.User{})
-	posts, _ := getAll(FlowCache, posts.Post{})
-	devs, _ := getOne(SubscriptionCache, caller, []push.Device{})
+	users, _ := db.GetAll(db.UserCache, models.User{})
+	posts, _ := db.GetAll(db.FlowCache, models.Post{})
+	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
 	// check the subscription
 	devSubscribed := false
@@ -129,14 +128,14 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := unmarshalRequestData(r, &user); err != nil {
 		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	if _, found := getOne(UserCache, user.Nickname, models.User{}); found {
+	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); found {
 		l.Println(
 			"user already exists",
 			http.StatusConflict,
@@ -149,7 +148,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.LastActiveTime = time.Now()
 
-	if saved := setOne(UserCache, user.Nickname, user); !saved {
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		resp.Message = "cannot save new user"
 		resp.Code = http.StatusInternalServerError
 
@@ -185,29 +184,16 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		resp.Message = "backend error: cannot read input stream: " + err.Error()
-		resp.Code = http.StatusInternalServerError
+	if err := unmarshalRequestData(r, &user); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
 
-	data := config.Decrypt([]byte(os.Getenv("APP_PEPPER")), reqBody)
-
-	err = json.Unmarshal(data, &user)
-	if err != nil {
-		resp.Message = "backend error: cannot unmarshall fetched data: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	if _, found := getOne(UserCache, user.Nickname, models.User{}); !found {
+	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); !found {
 		resp.Message = "user not found"
 		resp.Code = http.StatusNotFound
 
@@ -216,7 +202,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if saved := setOne(UserCache, user.Nickname, user); !saved {
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		resp.Message = "backend error: cannot update the user"
 		resp.Code = http.StatusInternalServerError
 
@@ -242,6 +228,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {object}   common.Response
 // @Failure      404  {object}   common.Response
 // @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
 // @Router       /users/{nickname} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
@@ -249,7 +236,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	key, _ := r.Context().Value("nickname").(string)
 
-	if _, found := getOne(UserCache, key, models.User{}); !found {
+	if _, found := db.GetOne(db.UserCache, key, models.User{}); !found {
 		resp.Message = "user nout found: " + key
 		resp.Code = http.StatusNotFound
 
@@ -258,7 +245,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if deleted := deleteOne(UserCache, key); !deleted {
+	if deleted := db.DeleteOne(db.UserCache, key); !deleted {
 		resp.Message = "error deleting:" + key
 		resp.Code = http.StatusInternalServerError
 
@@ -357,7 +344,6 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-
 // resetHandler poerforms the actual passphrase regeneration and retrieval.
 //
 // @Summary      Reset the passphrase
@@ -392,10 +378,10 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	email := strings.ToLower(fetch.Email)
 	fetch.Email = email
 
-	users, _ := db.GetAll(db.UserCache, users.User{})
+	users, _ := db.GetAll(db.UserCache, models.User{})
 
 	// loop over users to find matching e-mail address
-	var user users.User
+	var user models.User
 
 	found := false
 	for _, u := range users {
@@ -422,7 +408,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	passHash := sha512.Sum512([]byte(random + pepper))
 	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
-	if saved := setOne(UserCache, user.Nickname, user); !saved {
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		resp.Message = "backend error: cannot update user in database"
 		resp.Code = http.StatusInternalServerError
 
