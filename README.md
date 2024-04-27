@@ -133,7 +133,6 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~break lines on \n in posts~~
 + ~~check for double posting same content~~
 + custom colour theme per user
-+ deep code refactoring
 + dismiss any modal by clicking anywhere on the screen
 + ~~fix update indicator checker (runs only on once after reload)~~ (autoupdate)
 + implement customizable navbar items order
@@ -155,8 +154,12 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + fix the code smells as scanned by `sonar-scanner`
 + [...]
 
+### roadmap to v0.33
++ deep code refactoring (wip)
++ ~~fix swagger docs~~
+
 ### roadmap to v0.32
-+ implement mentions with notification to such user
++ ~~implement mentions with notification to such user~~
 
 ### roadmap to v0.31
 + ~~implement subscribtion list item deletion~~
