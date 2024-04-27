@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	configs "go.savla.dev/littr/configs"
@@ -17,7 +16,6 @@ import (
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
 
 var urlsChan chan string
-var wg sync.WaitGroup
 
 // RunMigrations is a "wrapper" function for the migration registration and execution
 func RunMigrations() bool {
@@ -36,7 +34,6 @@ func RunMigrations() bool {
 
 	// migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 	urlsChan := make(chan string)
-	//wg.Add(len(users))
 
 	for key, user := range users {
 		if user.AvatarURL != "" && user.AvatarURL != defaultAvatarImage {
