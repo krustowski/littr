@@ -166,9 +166,12 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + resolve tikets in github and redmine (priv)
 + write integration and e2e tests
 
+### roadmap to v0.34
++ implement private account logic
+
 ### roadmap to v0.33
-+ BE deep code refactoring (wip)
-+ ~~fix swagger docs~~
++ ~~BE deep code refactoring~~ (wip)
++ ~~write and fix swagger docs~~
 
 ### roadmap to v0.32
 + ~~implement mentions with notification to such user~~
