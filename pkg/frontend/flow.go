@@ -1,0 +1,1295 @@
+package frontend
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"log"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"go.savla.dev/littr/configs"
+	"go.savla.dev/littr/pkg/models"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
+)
+
+type FlowPage struct {
+	app.Compo
+}
+
+type flowContent struct {
+	app.Compo
+
+	eventListener func()
+
+	loaderShow      bool
+	loaderShowImage bool
+
+	contentLoadFinished bool
+
+	loggedUser string
+	user       models.User
+
+	toastShow bool
+	toastText string
+	toastType string
+
+	buttonDisabled      bool
+	postButtonsDisabled bool
+	modalReplyActive    bool
+	replyPostContent    string
+	newFigLink          string
+	newFigFile          string
+	newFigData          []byte
+
+	deletePostModalShow        bool
+	deleteModalButtonsDisabled bool
+
+	interactedPostKey string
+	singlePostID      string
+	isPost            bool
+	userFlowNick      string
+
+	paginationEnd  bool
+	pagination     int
+	pageNo         int
+	pageNoToFetch  int
+	lastFire       int64
+	processingFire bool
+
+	lastPageFetched bool
+
+	postKey     string
+	posts       map[string]models.Post
+	users       map[string]models.User
+	sortedPosts []models.Post
+
+	refreshClicked bool
+
+	eventListenerMsg     func()
+	keyDownEventListener func()
+}
+
+func (p *FlowPage) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("flow / littr")
+}
+
+func (p *FlowPage) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&flowContent{},
+	)
+}
+
+func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	url := ctx.Page().URL()
+	scheme := url.Scheme
+	host := url.Host
+
+	// write the link to browsers's clipboard
+	app.Window().Get("navigator").Get("clipboard").Call("writeText", scheme+"://"+host+"/flow/post/"+key)
+	ctx.Navigate("/flow/post/" + key)
+}
+
+func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
+		if c.toastText == "" {
+			c.modalReplyActive = false
+		}
+
+		c.toastShow = false
+		c.toastText = ""
+		c.toastType = ""
+		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+		c.deletePostModalShow = false
+	})
+}
+
+// https://github.com/maxence-charriere/go-app/issues/882
+func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
+	var toastText string
+
+	file := e.Get("target").Get("files").Index(0)
+
+	//log.Println("name", file.Get("name").String())
+	//log.Println("size", file.Get("size").Int())
+	//log.Println("type", file.Get("type").String())
+
+	c.postButtonsDisabled = true
+
+	ctx.Async(func() {
+		if data, err := readFile(file); err != nil {
+			toastText = err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.postButtonsDisabled = true
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+
+		} else {
+			toastText = "image uploaded"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastType = "success"
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = true
+
+				c.newFigFile = file.Get("name").String()
+				c.newFigData = data
+			})
+			return
+
+		}
+	})
+}
+
+func (c *flowContent) onClickImage(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	src := ctx.JSSrc().Get("src").String()
+
+	split := strings.Split(src, ".")
+	ext := split[len(split)-1]
+
+	// image preview (thumbnail) to the actual image logic
+	if (ext != "gif" && strings.Contains(src, "thumb")) || (ext == "gif" && strings.Contains(src, "click")) {
+		ctx.JSSrc().Set("src", "/web/pix/"+key+"."+ext)
+		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
+		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position")
+	} else if ext == "gif" && !strings.Contains(src, "thumb") {
+		ctx.JSSrc().Set("src", "/web/click-to-see.gif")
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+	} else {
+		ctx.JSSrc().Set("src", "/web/pix/thumb_"+key+"."+ext)
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+	}
+}
+
+func (c *flowContent) handleImage(ctx app.Context, a app.Action) {
+	ctx.JSSrc().Set("src", "")
+}
+
+func (c *flowContent) onClickUserFlow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	//c.buttonDisabled = true
+
+	ctx.Navigate("/flow/user/" + key)
+}
+
+// onClickReply acts like a caller function evoked when user click on the reply icon at one's post
+func (c *flowContent) onClickReply(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = ctx.JSSrc().Get("id").String()
+		c.modalReplyActive = true
+		c.postButtonsDisabled = false
+		c.buttonDisabled = true
+	})
+}
+
+// onClickPostReply acts like a caller function evoked when user clicks on "reply" button in the reply modal
+func (c *flowContent) onClickPostReply(ctx app.Context, e app.Event) {
+	// prevent double-posting
+	if c.postButtonsDisabled {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.modalReplyActive = true
+		c.postButtonsDisabled = true
+		c.buttonDisabled = true
+	})
+
+	ctx.NewAction("reply")
+}
+
+func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
+	ctx.Async(func() {
+		toastText := ""
+
+		// TODO: allow figs in replies
+		// check if the contents is a valid URL, then change the type to "fig"
+		postType := "post"
+
+		// trim the spaces on the extremites
+		textarea := app.Window().GetElementByID("reply-textarea").Get("value").String()
+		replyPost := strings.TrimSpace(textarea)
+
+		if replyPost == "" {
+			toastText = "no valid reply entered"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.postButtonsDisabled = true
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		//newPostID := time.Now()
+		//stringID := strconv.FormatInt(newPostID.UnixNano(), 10)
+
+		path := "/api/v1/posts"
+
+		// TODO: the Post data model has to be changed
+		// migrate Post.ReplyID (int) to Post.ReplyID (string)
+		// ReplyID is to be string key to easily refer to other post
+		payload := models.Post{
+			//ID:        stringID,
+			Nickname:  c.user.Nickname,
+			Type:      postType,
+			Content:   replyPost,
+			ReplyToID: c.interactedPostKey,
+			Data:      c.newFigData,
+			Figure:    c.newFigFile,
+			//Timestamp: newPostID,
+			//ReplyTo: replyID, <--- is type int
+		}
+
+		postsRaw := struct {
+			Posts map[string]models.Post `posts`
+		}{}
+
+		// add new post/poll to backend struct
+		if resp, _ := litterAPI("POST", path, payload, c.user.Nickname, c.pageNo); resp != nil {
+			err := json.Unmarshal(*resp, &postsRaw)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+
+					c.interactedPostKey = ""
+					c.newFigData = []byte{}
+					c.newFigFile = ""
+				})
+				return
+			}
+		} else {
+			log.Println("cannot fetch post flow list")
+			toastText = "API error: cannot fetch the post list"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+
+				c.interactedPostKey = ""
+				c.newFigData = []byte{}
+				c.newFigFile = ""
+			})
+			return
+		}
+
+		payloadNotif := struct {
+			OriginalPost string `json:"original_post"`
+		}{
+			OriginalPost: c.interactedPostKey,
+		}
+
+		// create a notification
+		if _, ok := litterAPI("POST", "/api/v1/push/notification/"+c.interactedPostKey, payloadNotif, c.user.Nickname, c.pageNo); !ok {
+			toastText = "cannot POST new notification"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+
+				c.interactedPostKey = ""
+				c.newFigData = []byte{}
+				c.newFigFile = ""
+			})
+			return
+		}
+
+		posts := c.posts
+
+		// we do not know the ID, as it is assigned in the BE logic,
+		// so we need to loop over the list of posts (1)...
+		for k, p := range postsRaw.Posts {
+			posts[k] = p
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			// add new post to post list on frontend side to render
+			//c.posts[stringID] = payload
+			c.posts = posts
+
+			c.modalReplyActive = false
+			c.postButtonsDisabled = false
+			c.buttonDisabled = false
+
+			c.interactedPostKey = ""
+			c.newFigData = []byte{}
+			c.newFigFile = ""
+		})
+	})
+}
+
+func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
+	textarea := app.Window().GetElementByID("reply-textarea")
+
+	if textarea.IsNull() {
+		return
+	}
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
+		app.Window().GetElementByID("reply").Call("click")
+	}
+}
+
+func (c *flowContent) onScroll(ctx app.Context, e app.Event) {
+	ctx.NewAction("scroll")
+}
+
+func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
+	ctx.Async(func() {
+		elem := app.Window().GetElementByID("page-end-anchor")
+		boundary := elem.JSValue().Call("getBoundingClientRect")
+		bottom := boundary.Get("bottom").Int()
+
+		_, height := app.Window().Size()
+
+		// limit the fire rate to 1/5 Hz
+		now := time.Now().Unix()
+		if now-c.lastFire < 2 {
+			return
+		}
+
+		if bottom-height < 0 && !c.paginationEnd && !c.processingFire && !c.loaderShow {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.loaderShow = true
+				c.processingFire = true
+				c.contentLoadFinished = false
+			})
+
+			var newPosts map[string]models.Post
+			var newUsers map[string]models.User
+
+			posts := c.posts
+			users := c.users
+
+			updated := false
+			lastPageFetched := c.lastPageFetched
+
+			// fetch more posts
+			//if (c.pageNoToFetch+1)*(c.pagination*2) >= len(posts) && !lastPageFetched {
+			if !lastPageFetched {
+				opts := pageOptions{
+					PageNo:   c.pageNoToFetch,
+					Context:  ctx,
+					CallerID: c.user.Nickname,
+
+					//SinglePost:   parts.SinglePost,
+					SinglePost: c.singlePostID != "",
+					//SinglePostID: parts.SinglePostID,
+					SinglePostID: c.singlePostID,
+					//UserFlow:     parts.UserFlow,
+					UserFlow: c.userFlowNick != "",
+					//UserFlowNick: parts.UserFlowNick,
+					UserFlowNick: c.userFlowNick,
+				}
+
+				newPosts, newUsers = c.fetchFlowPage(opts)
+				postControlCount := len(posts)
+
+				// patch single-post and user flow atypical scenarios
+				if posts == nil {
+					posts = make(map[string]models.Post)
+				}
+				if users == nil {
+					users = make(map[string]models.User)
+				}
+
+				// append/insert more posts/users
+				for key, post := range newPosts {
+					posts[key] = post
+				}
+				for key, user := range newUsers {
+					users[key] = user
+				}
+
+				updated = true
+
+				// no more posts, fetching another page does not make sense
+				if len(posts) == postControlCount {
+					updated = false
+					lastPageFetched = true
+
+				}
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.lastFire = now
+				c.pageNoToFetch++
+				c.pageNo++
+
+				if updated {
+					c.posts = posts
+					c.users = users
+
+					log.Println("updated")
+				}
+
+				c.processingFire = false
+				c.loaderShow = false
+				c.contentLoadFinished = true
+				c.lastPageFetched = lastPageFetched
+
+				log.Println("new content page request fired")
+			})
+			return
+		}
+	})
+}
+
+func (c *flowContent) onClickDeleteButton(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = key
+		c.deleteModalButtonsDisabled = false
+		c.deletePostModalShow = true
+	})
+}
+
+func (c *flowContent) onClickDelete(ctx app.Context, e app.Event) {
+	key := c.interactedPostKey
+	ctx.NewActionWithValue("delete", key)
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.deleteModalButtonsDisabled = true
+	})
+}
+
+func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	c.postKey = key
+
+	ctx.Async(func() {
+		var toastText string = ""
+
+		key := c.postKey
+		interactedPost := c.posts[key]
+
+		if interactedPost.Nickname != c.user.Nickname {
+			toastText = "you only can delete your own posts!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.deletePostModalShow = false
+				c.deleteModalButtonsDisabled = false
+			})
+		}
+
+		if _, ok := litterAPI("DELETE", "/api/v1/posts/"+interactedPost.ID, interactedPost, c.user.Nickname, c.pageNo); !ok {
+			toastText = "backend error: cannot delete a post"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			delete(c.posts, key)
+
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.deletePostModalShow = false
+			c.deleteModalButtonsDisabled = false
+		})
+	})
+}
+
+func (c *flowContent) onClickStar(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("star", key)
+}
+
+func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	// runs on the main UI goroutine via a component ActionHandler
+	post := c.posts[key]
+	post.ReactionCount++
+	c.posts[key] = post
+	c.postKey = key
+
+	ctx.Async(func() {
+		//var author string
+		var toastText string = ""
+
+		//key := ctx.JSSrc().Get("id").String()
+		key := c.postKey
+		//author = c.user.Nickname
+
+		interactedPost := c.posts[key]
+		//interactedPost.ReactionCount++
+
+		postsRaw := struct {
+			Posts map[string]models.Post `json:"posts"`
+		}{}
+
+		// add new post to backend struct
+		if resp, ok := litterAPI("PATCH", "/api/v1/posts/"+interactedPost.ID+"/star", interactedPost, c.user.Nickname, c.pageNo); ok {
+			err := json.Unmarshal(*resp, &postsRaw)
+			if err != nil {
+				log.Println(err.Error())
+				toastText = "JSON parsing error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+		} else {
+			toastText = "backend error: cannot rate a post"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.posts[key] = postsRaw.Posts[key]
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+		})
+	})
+}
+
+func (c *flowContent) OnMount(ctx app.Context) {
+	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("image", c.handleImage)
+	ctx.Handle("reply", c.handleReply)
+	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("star", c.handleStar)
+	ctx.Handle("message", c.handleNewPost)
+
+	c.paginationEnd = false
+	c.pagination = 0
+	c.pageNo = 1
+	c.pageNoToFetch = 0
+	c.lastPageFetched = false
+
+	c.deletePostModalShow = false
+	c.deleteModalButtonsDisabled = false
+
+	var user string
+	ctx.LocalStorage().Get("user", &user)
+	juser, _ := base64.StdEncoding.DecodeString(user)
+	err := json.Unmarshal(juser, &c.user)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	log.Println(c.user.Nickname)
+
+	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+}
+
+func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
+	data := e.JSValue().Get("data").String()
+	log.Println("msg event: data:" + data)
+
+	if data == "heartbeat" || data == c.user.Nickname {
+		return
+	}
+
+	if _, flowed := c.user.FlowList[data]; !flowed {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = "new post added above"
+		c.toastType = "info"
+	})
+}
+
+func (c *flowContent) handleNewPost(ctx app.Context, a app.Action) {
+	log.Println("msg event lmaooooooooooooo")
+}
+
+func (c *flowContent) OnDismount() {
+	// https://go-app.dev/reference#BrowserWindow
+	//c.eventListener()
+}
+
+func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+		c.contentLoadFinished = false
+		c.refreshClicked = true
+		c.postButtonsDisabled = true
+		//c.pageNoToFetch = 0
+
+		c.toastText = ""
+
+		c.posts = nil
+		c.users = nil
+	})
+
+	ctx.Async(func() {
+		// nasty hotfix, TODO
+		c.pageNoToFetch = 0
+
+		//parts := c.parseFlowURI(ctx)
+
+		opts := pageOptions{
+			PageNo:   c.pageNoToFetch,
+			Context:  ctx,
+			CallerID: c.user.Nickname,
+
+			//SinglePost:   parts.SinglePost,
+			SinglePost: c.singlePostID != "",
+			//SinglePostID: parts.SinglePostID,
+			SinglePostID: c.singlePostID,
+			//UserFlow:     parts.UserFlow,
+			UserFlow: c.userFlowNick != "",
+			//UserFlowNick: parts.UserFlowNick,
+			UserFlowNick: c.userFlowNick,
+		}
+
+		posts, users := c.fetchFlowPage(opts)
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.posts = posts
+			c.users = users
+
+			c.loaderShow = false
+			c.loaderShowImage = false
+			c.refreshClicked = false
+			c.postButtonsDisabled = false
+			c.contentLoadFinished = true
+		})
+
+	})
+}
+
+type pageOptions struct {
+	PageNo   int `default:0`
+	Context  app.Context
+	CallerID string
+
+	SinglePost bool `default:false`
+	UserFlow   bool `default:false`
+
+	SinglePostID string `default:""`
+	UserFlowNick string `default:""`
+}
+
+func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
+	var toastText string
+
+	resp := struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Code  int                    `json:"code"`
+	}{}
+
+	ctx := opts.Context
+	pageNo := opts.PageNo
+
+	if opts.Context == nil {
+		toastText = "app context pointer cannot be nil"
+		log.Println(toastText)
+
+		return nil, nil
+	}
+
+	//pageNo := c.pageNoToFetch
+	if c.refreshClicked {
+		pageNo = 0
+	}
+	//pageNoString := strconv.FormatInt(int64(pageNo), 10)
+
+	url := "/api/v1/posts"
+	if opts.UserFlow || opts.SinglePost {
+		if opts.SinglePostID != "" {
+			url += "/" + opts.SinglePostID
+		}
+
+		if opts.UserFlowNick != "" {
+			//url += "/user/" + opts.UserFlowNick
+			url = "/api/v1/users/" + opts.UserFlowNick + "/posts"
+		}
+
+		if opts.SinglePostID == "" && opts.UserFlowNick == "" {
+			toastText = "single post/user flow parameters cannot be blank"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.refreshClicked = false
+			})
+			return nil, nil
+		}
+
+	}
+
+	if byteData, _ := litterAPI("GET", url, nil, c.user.Nickname, pageNo); byteData != nil {
+		err := json.Unmarshal(*byteData, &resp)
+		if err != nil {
+			log.Println(err.Error())
+			toastText = "JSON parsing error: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.refreshClicked = false
+			})
+			return nil, nil
+		}
+	} else {
+		log.Println("cannot fetch the flow page")
+		toastText = "API error: cannot fetch the flow page"
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.refreshClicked = false
+		})
+		return nil, nil
+	}
+
+	if resp.Code == 401 {
+		toastText = "please log-in again"
+
+		ctx.LocalStorage().Set("user", "")
+		ctx.LocalStorage().Set("authGranted", false)
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.refreshClicked = false
+		c.toastText = toastText
+	})
+
+	return resp.Posts, resp.Users
+}
+
+type URIParts struct {
+	SinglePost   bool
+	SinglePostID string
+	UserFlow     bool
+	UserFlowNick string
+}
+
+func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
+	parts := URIParts{
+		SinglePost:   false,
+		SinglePostID: "",
+		UserFlow:     false,
+		UserFlowNick: "",
+	}
+
+	url := strings.Split(ctx.Page().URL().Path, "/")
+
+	if len(url) > 3 && url[3] != "" {
+		switch url[2] {
+		case "post":
+			parts.SinglePost = true
+			parts.SinglePostID = url[3]
+			break
+		case "user":
+			parts.UserFlow = true
+			parts.UserFlowNick = url[3]
+			break
+		}
+	}
+
+	isPost := true
+	if _, err := strconv.Atoi(parts.SinglePostID); parts.SinglePostID != "" && err != nil {
+		// prolly not a post ID, but an user's nickname
+		isPost = false
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.isPost = isPost
+		c.userFlowNick = parts.UserFlowNick
+		c.singlePostID = parts.SinglePostID
+	})
+
+	return parts
+}
+
+func (c *flowContent) OnNav(ctx app.Context) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+		c.contentLoadFinished = false
+
+		c.toastText = ""
+
+		c.posts = nil
+		c.users = nil
+	})
+
+	toastText := ""
+
+	isPost := true
+
+	ctx.Async(func() {
+		parts := c.parseFlowURI(ctx)
+
+		opts := pageOptions{
+			PageNo:   0,
+			Context:  ctx,
+			CallerID: c.user.Nickname,
+
+			SinglePost:   parts.SinglePost,
+			SinglePostID: parts.SinglePostID,
+			UserFlow:     parts.UserFlow,
+			UserFlowNick: parts.UserFlowNick,
+		}
+
+		posts, users := c.fetchFlowPage(opts)
+
+		// try the singlePostID/userFlowNick var if present
+		if parts.SinglePostID != "" && parts.SinglePost {
+			if _, found := posts[parts.SinglePostID]; !found {
+				toastText = "post not found"
+			}
+		}
+		if parts.UserFlowNick != "" && parts.UserFlow {
+			if _, found := users[parts.UserFlowNick]; !found {
+				toastText = "user not found, or not in your flow"
+			}
+			isPost = false
+		}
+
+		// Storing HTTP response in component field:
+		ctx.Dispatch(func(ctx app.Context) {
+			c.pagination = 25
+			c.pageNo = 1
+			c.pageNoToFetch = 1
+
+			c.users = users
+			c.posts = posts
+			c.singlePostID = parts.SinglePostID
+			c.userFlowNick = parts.UserFlowNick
+			c.isPost = isPost
+
+			if toastText != "" {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			}
+
+			c.loaderShow = false
+			c.loaderShowImage = false
+			c.contentLoadFinished = true
+		})
+		return
+	})
+}
+
+func (c *flowContent) sortPosts() []models.Post {
+	var sortedPosts []models.Post
+
+	posts := c.posts
+	if posts == nil {
+		posts = make(map[string]models.Post)
+	}
+
+	// fetch posts and put them in an array
+	for _, sortedPost := range posts {
+		// do not append a post that is not meant to be shown
+		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" {
+			continue
+		}
+
+		sortedPosts = append(sortedPosts, sortedPost)
+	}
+
+	return sortedPosts
+}
+
+func (c *flowContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
+	counter := 0
+
+	sortedPosts := c.sortPosts()
+
+	// order posts by timestamp DESC
+	sort.SliceStable(sortedPosts, func(i, j int) bool {
+		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
+	})
+
+	// compose a summary of a long post to be replied to
+	replySummary := ""
+	if c.modalReplyActive && len(c.posts[c.interactedPostKey].Content) > config.MaxPostLength {
+		replySummary = c.posts[c.interactedPostKey].Content[:config.MaxPostLength/10] + "- [...]"
+	}
+
+	return app.Main().Class("responsive").Body(
+		// page heading
+		app.Div().Class("row").Body(
+			app.Div().Class("max padding").Body(
+				app.If(c.userFlowNick != "" && !c.isPost,
+					app.H5().Text(c.userFlowNick+"'s flow"),
+				).ElseIf(c.singlePostID != "" && c.isPost,
+					app.H5().Text("single post and replies"),
+				).Else(
+					app.H5().Text("flow"),
+					//app.P().Text("exclusive content incoming frfr"),
+				),
+			),
+
+			app.Div().Class("small-padding").Body(
+				app.Button().Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+					app.If(c.refreshClicked,
+						app.Progress().Class("circle deep-orange-border small"),
+					),
+					app.Text("refresh"),
+				),
+			),
+		),
+
+		app.If(c.userFlowNick != "" && !c.isPost,
+			app.Div().Class("row top-padding").Body(
+				app.Img().Class("responsive max left").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
+				/*;app.P().Class("max").Body(
+					app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
+					//app.B().Text(post.Nickname).Class("deep-orange-text"),
+				),*/
+
+				app.If(c.users[c.userFlowNick].About != "",
+					app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				),
+			),
+		),
+
+		app.Div().Class("space"),
+
+		// snackbar
+		app.A().OnClick(c.onClickDismiss).Body(
+			app.If(c.toastText != "",
+				app.Div().Class("snackbar white-text top active "+toastColor).Body(
+					app.I().Text("error"),
+					app.Span().Text(c.toastText),
+				),
+			),
+		),
+
+		// post deletion modal
+		app.If(c.deletePostModalShow,
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("post deletion"),
+				),
+
+				app.Div().Class("space"),
+				app.Article().Class("row").Body(
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete your post?"),
+					),
+				),
+				app.Div().Class("space"),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+						app.If(c.deleteModalButtonsDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("yeah"),
+					),
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
+				),
+			),
+		),
+
+		// sketchy reply modal
+		app.If(c.modalReplyActive,
+			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("reply"),
+				),
+				app.Div().Class("space"),
+
+				app.Article().Class("post").Style("max-width", "100%").Body(
+					app.If(replySummary != "",
+						app.Details().Body(
+							app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+							app.Div().Class("space"),
+							app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+						),
+					).Else(
+						app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+					),
+				),
+
+				app.Div().Class("field label textarea border extra deep-orange-text").Body(
+					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
+					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea"),
+					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
+					//app.Label().Text("text").Class("active"),
+				),
+				app.Div().Class("field label border extra deep-orange-text").Body(
+					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
+					app.Label().Text("image").Class("active deep-orange-text"),
+					app.I().Text("image"),
+				),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text bold").Text("cancel").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
+					app.Button().ID("reply").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+						app.If(c.postButtonsDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("reply"),
+					),
+				),
+				app.Div().Class("space"),
+			),
+		),
+
+		// flow posts/articles
+		app.Table().Class("left-align").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
+			// table body
+			app.TBody().Body(
+				//app.Range(c.posts).Map(func(key string) app.UI {
+				//app.Range(pagedPosts).Slice(func(idx int) app.UI {
+				app.Range(sortedPosts).Slice(func(idx int) app.UI {
+					counter++
+					if counter > c.pagination*c.pageNo {
+						return nil
+					}
+
+					//post := c.sortedPosts[idx]
+					post := sortedPosts[idx]
+					key := post.ID
+
+					previousContent := ""
+
+					// prepare reply parameters to render
+					if post.ReplyToID != "" {
+						//c.posts[post.ReplyToID].ReplyCount++
+						if previous, found := c.posts[post.ReplyToID]; found {
+							previousContent = previous.Nickname + " posted: " + previous.Content
+						} else {
+							previousContent = "the post was deleted bye"
+						}
+					}
+
+					// filter out not-single-post items
+					if c.singlePostID != "" {
+						if c.isPost && post.ID != c.singlePostID && c.singlePostID != post.ReplyToID {
+							return nil
+						}
+
+						if _, found := c.users[c.singlePostID]; (!c.isPost && !found) || (found && post.Nickname != c.singlePostID) {
+							return nil
+						}
+					}
+
+					if c.userFlowNick != "" {
+						if post.Nickname != c.userFlowNick {
+							return nil
+						}
+					}
+
+					// only show posts of users in one's flowList
+					if !c.user.FlowList[post.Nickname] && post.Nickname != "system" {
+						return nil
+					}
+
+					// check the post's length, on threshold use <details> tag
+					postDetailsSummary := ""
+					if len(post.Content) > config.MaxPostLength {
+						postDetailsSummary = post.Content[:config.MaxPostLength/10] + "- [...]"
+					}
+
+					// the same as above with the previous post's length for reply render
+					previousDetailsSummary := ""
+					if len(previousContent) > config.MaxPostLength {
+						previousDetailsSummary = previousContent[:config.MaxPostLength/10] + "- [...]"
+					}
+
+					// fetch the image
+					var imgSrc string
+
+					// check the URL/URI format
+					if post.Type == "fig" {
+						if _, err := url.ParseRequestURI(post.Content); err == nil {
+							imgSrc = post.Content
+						} else {
+							fileExplode := strings.Split(post.Content, ".")
+							extension := fileExplode[len(fileExplode)-1]
+
+							imgSrc = "/web/pix/thumb_" + post.Content
+							if extension == "gif" {
+								imgSrc = "/web/click-to-see-gif.jpg"
+							}
+						}
+					} else if post.Type == "post" {
+						if _, err := url.ParseRequestURI(post.Figure); err == nil {
+							imgSrc = post.Figure
+						} else {
+							fileExplode := strings.Split(post.Figure, ".")
+							extension := fileExplode[len(fileExplode)-1]
+
+							imgSrc = "/web/pix/thumb_" + post.Figure
+							if extension == "gif" {
+								imgSrc = "/web/click-to-see.gif"
+							}
+						}
+					}
+
+					// fetch binary image data
+					/*if post.Type == "fig" && imgSrc == "" {
+						payload := struct {
+							PostID  string `json:"post_id"`
+							Content string `json:"content"`
+						}{
+							PostID:  post.ID,
+							Content: post.Content,
+						}
+
+						var resp *[]byte
+						var ok bool
+
+						if resp, ok = litterAPI("POST", "/api/pix", payload, c.user.Nickname); !ok {
+							log.Println("api failed")
+							imgSrc = "/web/android-chrome-512x512.png"
+						} else {
+							imgSrc = "data:image/*;base64," + b64.StdEncoding.EncodeToString(*resp)
+						}
+					}*/
+
+					return app.Tr().Class().Class("bottom-padding").Body(
+						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
+
+							// post header (author avatar + name + link button)
+							app.Div().Class("row top-padding").Body(
+								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+								app.P().Class("max").Body(
+									app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+									//app.B().Text(post.Nickname).Class("deep-orange-text"),
+								),
+							),
+
+							// pic post
+							app.If(post.Type == "fig",
+								app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+									app.If(c.loaderShowImage,
+										app.Div().Class("small-space"),
+										app.Div().Class("loader center large deep-orange active"),
+									),
+									//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+									app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
+								),
+
+							// reply + post
+							).Else(
+								app.If(post.ReplyToID != "",
+									app.Article().Class("black-text yellow10").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.Div().Class("row max").Body(
+											app.If(previousDetailsSummary != "",
+												app.Details().Class("max").Body(
+													app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+													app.Div().Class("space"),
+													app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+												),
+											).Else(
+												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+											),
+
+											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+												app.I().Text("history"),
+											),
+										),
+									),
+								),
+
+								app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
+									app.If(postDetailsSummary != "",
+										app.Details().Body(
+											app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+											app.Div().Class("space"),
+											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+										),
+									).Else(
+										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+									),
+								),
+
+								app.If(post.Figure != "",
+									app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+										app.If(c.loaderShowImage,
+											app.Div().Class("small-space"),
+											app.Div().Class("loader center large deep-orange active"),
+										),
+										//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+										app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
+									),
+								),
+							),
+
+							// post footer (timestamp + reply buttom + star/delete button)
+							app.Div().Class("row").Body(
+								app.Div().Class("max").Body(
+									app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+								),
+								app.If(post.Nickname != "system",
+									//app.B().Text(post.ReplyCount).Class("left-padding"),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
+										app.I().Text("reply"),
+									),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+										app.I().Text("link"),
+									),
+								),
+								app.If(c.user.Nickname == post.Nickname,
+									app.B().Text(post.ReactionCount).Class("left-padding"),
+									//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
+										app.I().Text("delete"),
+									),
+								).Else(
+									app.B().Text(post.ReactionCount).Class("left-padding"),
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
+										//app.I().Text("ac_unit"),
+										app.I().Text("bomb"),
+									),
+								),
+							),
+						),
+					)
+				}),
+			),
+		),
+		app.Div().ID("page-end-anchor"),
+		app.If(c.loaderShow,
+			app.Div().Class("small-space"),
+			app.Progress().Class("circle center large deep-orange-border active"),
+		),
+	)
+}
