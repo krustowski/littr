@@ -1,6 +1,6 @@
 // @title		litter-go
 // @version	 	0.33.0
-// @description	nanoblogging platform as PWA built on go-app framework (PoC)
+// @description		nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://littr.n0p.cz/tos
 
 // @contact.name	API Support
@@ -13,7 +13,8 @@
 // @host		littr.n0p.cz
 // @BasePath		/api/v1
 
-// @security            []
+// @supportedSubmitMethods	[]
+// @security            	[]
 // @securityDefinitions.basic	BasicAuth
 
 // @externalDocs.description	OpenAPI

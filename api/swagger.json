@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "nanoblogging platform as PWA built on go-app framework (PoC)",
+        "description": "nanoblogging platform as PWA built on go-app framework",
         "title": "litter-go",
         "termsOfService": "https://littr.n0p.cz/tos",
         "contact": {
