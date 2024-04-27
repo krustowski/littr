@@ -100,8 +100,8 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// don't allow very long nicknames
-		if len(nickname) > config.NicknameLengthMax {
-			toastText = "nickname has to be " + strconv.Itoa(config.NicknameLengthMax) + " chars long at max"
+		if len(nickname) > configs.NicknameLengthMax {
+			toastText = "nickname has to be " + strconv.Itoa(configs.NicknameLengthMax) + " chars long at max"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -157,8 +157,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			Email:          email,
 			FlowList:       make(map[string]bool),
 			RegisteredTime: time.Now(),
-			AvatarURL:      db.GetGravatarURL(email),
-			//Passphrase:     string(passHash[:]),
+			AvatarURL:      db.GetGravatarURL(email, nil),
 		}
 
 		user.FlowList[nickname] = true

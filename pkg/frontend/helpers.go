@@ -37,7 +37,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 			return nil, false
 		}
 
-		payload := config.Encrypt([]byte(app.Getenv("APP_PEPPER")), jsonData)
+		payload := configs.Encrypt([]byte(app.Getenv("APP_PEPPER")), jsonData)
 
 		bodyReader = bytes.NewReader([]byte(payload))
 
@@ -54,7 +54,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 		}
 	}
 
-	if config.EncryptionEnabled {
+	if configs.EncryptionEnabled {
 		req.Header.Set("Content-Type", "application/octet-stream")
 	} else {
 		req.Header.Set("Content-Type", "application/json")
@@ -88,7 +88,7 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 	}
 
 	// decrypt the data
-	decrData := config.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
+	decrData := configs.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
 
 	return &decrData, true
 }
@@ -104,9 +104,9 @@ func prepare[T any](localStorageInput string, model *T) error {
 		return err
 	}
 
-	// decrypt the decoded string if the encryption is enabled (config.EncryptionEnabled)
+	// decrypt the decoded string if the encryption is enabled (configs.EncryptionEnabled)
 	// returns the decodedString if the encryption is disabled
-	decryptedString := config.Decrypt(
+	decryptedString := configs.Decrypt(
 		[]byte(app.Getenv("APP_PEPPER")),
 		[]byte(decodedString),
 	)
@@ -129,7 +129,7 @@ func reload[T any](model T, stream *[]byte) error {
 		return errors.New("marshal error: model marshal failed" + err.Error())
 	}
 
-	encryptedStream := config.Encrypt(
+	encryptedStream := configs.Encrypt(
 		[]byte(app.Getenv("APP_PEPPER")),
 		preStream,
 	)
