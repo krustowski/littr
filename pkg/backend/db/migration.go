@@ -6,134 +6,101 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	configs "go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/models"
 )
 
-type migration func() bool
-
-var migrations = map[string]migration{
-	"migrateAvatarURL()":          migrateAvatarURL,
-	"migrateFlowPurge()":          migrateFlowPurge,
-	"migrateUserDeletion()":       migrateUserDeletion,
-	"migrateUserRegisteredTime()": migrateUserRegisteredTime,
-	"migrateUserShadeList()":      migrateUserShadeList,
-	"migrateUserUnshade()":        migrateUserUnshade,
-}
-
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
+
+var urlsChan chan string
+var wg sync.WaitGroup
 
 // RunMigrations is a "wrapper" function for the migration registration and execution
 func RunMigrations() bool {
 	l := common.Logger{
 		CallerID:   "system",
-		WorkerName: "migration",
+		WorkerName: "migrations",
 		Version:    "system",
 	}
 
-	for migName, migFunc := range migrations {
-		code := http.StatusOK
+	code := http.StatusOK
 
-		if ok := migFunc(); !ok {
-			code = http.StatusInternalServerError
-		}
-
-		l.Println(migName, code)
-	}
-
-	return true
-}
-
-// migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
-func migrateAvatarURL() bool {
+	// fetch the data
 	users, _ := GetAll(UserCache, models.User{})
+	//polls, _ := GetAll(PollCache, models.Poll{})
+	posts, _ := GetAll(FlowCache, models.Post{})
+
+	// migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
+	urlsChan := make(chan string)
+	//wg.Add(len(users))
 
 	for key, user := range users {
 		if user.AvatarURL != "" && user.AvatarURL != defaultAvatarImage {
 			continue
 		}
 
-		user.AvatarURL = GetGravatarURL(user.Email)
-		if ok := SetOne(UserCache, key, user); !ok {
-			return false
-		}
-	}
+		go GetGravatarURL(user.Email, urlsChan)
+		url := <-urlsChan
 
-	return true
-}
+		if url != user.AvatarURL {
+			user.AvatarURL = url
 
-// migrateFlowPurge function deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
-func migrateFlowPurge() bool {
-	users, _ := GetAll(UserCache, models.User{})
-	posts, _ := GetAll(FlowCache, models.Post{})
-
-	for key, post := range posts {
-		if _, found := users[post.Nickname]; !found {
-			DeleteOne(FlowCache, key)
-		}
-	}
-
-	return true
-}
-
-// migrateUserDeletion function takes care of default users deletion from the database. Function returns bool based on the process result.
-func migrateUserDeletion() bool {
-	bank := []string{
-		"fred",
-		"fred2",
-		"admin",
-		"alternative",
-		"Lmao",
-		"lma0",
-	}
-
-	users, _ := GetAll(UserCache, models.User{})
-
-	for key, user := range users {
-		if contains(bank, user.Nickname) {
-			if deleted := DeleteOne(UserCache, key); !deleted {
-				//return false
-				continue
-			}
-		}
-	}
-
-	posts, _ := GetAll(FlowCache, models.Post{})
-
-	for key, post := range posts {
-		if contains(bank, post.Nickname) {
-			if deleted := DeleteOne(FlowCache, key); !deleted {
-				//return false
-				continue
-			}
-		}
-	}
-
-	return true
-}
-
-// migrateUserRegisteredTime function fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
-func migrateUserRegisteredTime() bool {
-	users, _ := GetAll(UserCache, models.User{})
-
-	for key, user := range users {
-		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
-			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 			if ok := SetOne(UserCache, key, user); !ok {
+				l.Println("migrateAvatarURL: cannot save an avatar: "+key, http.StatusInternalServerError)
 				return false
 			}
 		}
 	}
 
-	return true
-}
+	close(urlsChan)
 
-// migrateUserShadeList function lists ShadeList items and ensures user shaded (no mutual following, no replying).
-func migrateUserShadeList() bool {
-	users, _ := GetAll(UserCache, models.User{})
+	// migrateFlowPurge function deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
+	for key, post := range posts {
+		if _, found := users[post.Nickname]; !found {
+			if deleted := DeleteOne(FlowCache, key); !deleted {
+				l.Println("migrateFlowPurge: cannot delete user: "+key, http.StatusInternalServerError)
+				return false
+			}
+		}
+	}
 
+	// migrateUserDeletion function takes care of default users deletion from the database. Function returns bool based on the process result.
+	bank := configs.UserDeletionList
+
+	for key, user := range users {
+		if contains(bank, user.Nickname) {
+			if deleted := DeleteOne(UserCache, key); !deleted {
+				l.Println("migrateUserDeletion: cannot delete an user: "+key, http.StatusInternalServerError)
+				return false
+			}
+		}
+	}
+
+	for key, post := range posts {
+		if contains(bank, post.Nickname) {
+			if deleted := DeleteOne(FlowCache, key); !deleted {
+				l.Println("migrateUserDeletion: cannot delete a post: "+key, http.StatusInternalServerError)
+				return false
+			}
+		}
+	}
+
+	// migrateUserRegisteredTime function fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
+	for key, user := range users {
+		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
+			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
+			if ok := SetOne(UserCache, key, user); !ok {
+				l.Println("migrateUserRegisteredTime: cannot save an user: "+key, http.StatusInternalServerError)
+				return false
+			}
+		}
+	}
+
+	// migrateUserShadeList function lists ShadeList items and ensures user shaded (no mutual following, no replying).
 	for key, user := range users {
 		shadeList := user.ShadeList
 		flowList := user.FlowList
@@ -156,21 +123,12 @@ func migrateUserShadeList() bool {
 		flowList[key] = true
 		user.FlowList = flowList
 		if ok := SetOne(UserCache, key, user); !ok {
-			return false
+			//return false
 		}
 	}
 
-	return true
-}
-
-// migrateUserUnshade function lists all users and unshades manually some explicitly list users
-func migrateUserUnshade() bool {
-	users, _ := GetAll(UserCache, models.User{})
-
-	usersToUnshade := []string{
-		"amdulka",
-		"nestolecek",
-	}
+	// migrateUserUnshade function lists all users and unshades manually some explicitly list users
+	usersToUnshade := configs.UsersToUnshade
 
 	for key, user := range users {
 		if !contains(usersToUnshade, key) {
@@ -187,10 +145,12 @@ func migrateUserUnshade() bool {
 
 		user.ShadeList = shadeList
 		if ok := SetOne(UserCache, key, user); !ok {
+			l.Println("migrateUserUnshade: cannot save an user: "+key, http.StatusInternalServerError)
 			return false
 		}
 	}
 
+	l.Println("migrations", code)
 	return true
 }
 
@@ -210,9 +170,8 @@ func contains(s []string, str string) bool {
 }
 
 // GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
-func GetGravatarURL(emailInput string) string {
+func GetGravatarURL(emailInput string, channel chan string) string {
 	// TODO: do not hardcode this
-	baseURL := "https://littr.n0p.cz/"
 	email := strings.ToLower(emailInput)
 	size := 150
 
@@ -221,12 +180,19 @@ func GetGravatarURL(emailInput string) string {
 	hashEmail := md5.Sum(byteEmail)
 	hashedStringEmail := hex.EncodeToString(hashEmail[:])
 
-	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?d=" + baseURL + "&s=" + strconv.Itoa(size)
+	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "&s=" + strconv.Itoa(size)
 
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != 200 {
-		return defaultAvatarImage
+		//log.Println(resp.StatusCode)
+		//log.Println(err.Error())
+		url = defaultAvatarImage
 	}
+	resp.Body.Close()
 
+	// maybe we are running in a goroutine...
+	if channel != nil {
+		channel <- url
+	}
 	return url
 }
