@@ -11,43 +11,57 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 
 ## repo vademecum
 
-`backend/`
+`api`
++ swagger documentation
+
+`cmd`
++ main app entrypoints for build
+
+`cmd/littrhttp_server.go`
++ init app file for the app's backend side with REST API service
+
+`cmd/littr/wasm_client.go`
++ lightened version of HTTP server, includes basic app router, lacks REST API service
+
+`configs`
++ configuration files
++ nginx proxy full configuration
+
+`.data/`
++ sample data used to flush existing container data by `make flush`
+
+`deployments`
++ docker deployment files
+
+`.env` + `.env.example`
++ environmental contants and vars for the app to run smoothly (in Docker via Makefile)
+
+`pkg`
++ app libs 
+
+`pkg/backend`
 + REST API backend service
 + service is used by WASM client for fetching of app data
 
-`config/`
-+ configuration procedures for litter module packages
-
-`data/`
-+ sample data used to flush existing container data by `make flush`
-
-`docs/`
-+ project documentation (mainly Swagger API documentation)
-
-`frontend/`
+`pkg/frontend`
 + frontend pages
++ go-app framework usecase
 
-`models/`
-+ model declarations
+`pkg/models/`
++ various shared model declarations
 
-`web/`
+`web`
 + static web files, logos, web manifest
 
-`.env` + `.env.example`
-+ environmental contants and vars for the app to run smoothly (in Docker)
-
-`http_server.go`
-+ init app file for the app's backend side with REST API service
-
-`wasm_client.go`
-+ lightened version of HTTP server, includes basic app router, lacks REST API service
 
 ## how it should work
+
 + users must register (`/register`) or existed users login (`/login`)
 + users can navigate to the flow (`/flow`) and read other's mind _flows_
 + users can change their passphrase or the _about_ description in settings (`/settings`)
 + posts can be written and sent (`/post`) by any logged-in user
 + users can logout (`/logout`)
+
 
 ## features
 
@@ -58,11 +72,15 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + can run offline
 + shade function to block other accounts from following and reading their posts
 
+
 ## REST API service
-+ the service is reachable via (`/api`) endpoint
+
++ API documentation is stored in `api/` root directory
++ the service is reachable via (`/api/v1`) endpoint
 + [swagger live docs](https://littr.n0p.cz/docs/)
 
-## how to run
+
+## how to run (docker)
 
 ```bash
 # create env file copy and modify it
@@ -141,21 +159,15 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~swagger docs~~
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
-### known bugs
-+ [...] the actual usermap could one obtain using sniffing on the register page via nickname field brute-force changing; the obtained map would be a partial (can't elaborate) usermap copy of the genuine database (to be fixed)
-
-### backlog
-+ add periodic subscription checker (older than a week will be deleted on no activity)
-+ implement searching for flow using hashtags
-
 ### roadmap to v1.0.0
-+ write integration and e2e tests
-+ resolve tikets in github and redmine (priv)
++ add periodic subscription checker (older than a week will be deleted on no activity)
 + fix the code smells as scanned by `sonar-scanner`
-+ [...]
++ implement searching for flow using hashtags
++ resolve tikets in github and redmine (priv)
++ write integration and e2e tests
 
 ### roadmap to v0.33
-+ deep code refactoring (wip)
++ BE deep code refactoring (wip)
 + ~~fix swagger docs~~
 
 ### roadmap to v0.32
@@ -163,7 +175,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 
 ### roadmap to v0.31
 + ~~implement subscribtion list item deletion~~
-+ improve the UI/UX (review issues related to UI on Github)
++ improve the UI/UX (review issues related to UI on Github) (wip)
 
 ### roadmap to v0.30
 + ~~implement Ctrl+Enter to submit posts like YouTube~~
