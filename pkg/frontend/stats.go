@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -147,7 +147,7 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}{}
 
 		// fetch the stats
-		if byteData, _ := litterAPI("GET", "/api/stats", nil, "", 0); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/v1/stats", nil, "", 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &payload)
 			if err != nil {
 				log.Println(err.Error())

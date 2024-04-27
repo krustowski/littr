@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -238,7 +238,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		//newPostID := time.Now()
 		//stringID := strconv.FormatInt(newPostID.UnixNano(), 10)
 
-		path := "/api/flow"
+		path := "/api/v1/posts"
 
 		// TODO: the Post data model has to be changed
 		// migrate Post.ReplyID (int) to Post.ReplyID (string)
@@ -298,8 +298,8 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		// create a notification
-		if _, ok := litterAPI("PUT", "/api/push", payloadNotif, c.user.Nickname, c.pageNo); !ok {
-			toastText = "cannot PUT new notification"
+		if _, ok := litterAPI("POST", "/api/v1/push/notification/"+c.interactedPostKey, payloadNotif, c.user.Nickname, c.pageNo); !ok {
+			toastText = "cannot POST new notification"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -497,7 +497,7 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 			})
 		}
 
-		if _, ok := litterAPI("DELETE", "/api/flow", interactedPost, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := litterAPI("DELETE", "/api/v1/posts/"+interactedPost.ID, interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
 
@@ -545,7 +545,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		}{}
 
 		// add new post to backend struct
-		if resp, ok := litterAPI("PUT", "/api/flow/star", interactedPost, c.user.Nickname, c.pageNo); ok {
+		if resp, ok := litterAPI("PATCH", "/api/v1/posts/"+interactedPost.ID+"/star", interactedPost, c.user.Nickname, c.pageNo); ok {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -716,7 +716,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	}
 	//pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
-	url := "/api/flow"
+	url := "/api/v1/posts"
 	if opts.UserFlow || opts.SinglePost {
 		if opts.SinglePostID != "" {
 			url += "/post/" + opts.SinglePostID

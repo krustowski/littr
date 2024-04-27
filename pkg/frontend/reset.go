@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -84,7 +84,7 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		respRaw, ok := litterAPI("POST", "/api/auth/password", &models.User{
+		respRaw, ok := litterAPI("PATCH", "/api/v1/users/passphrase", &models.User{
 			Nickname:   "",
 			Passphrase: "",
 			Email:      email,

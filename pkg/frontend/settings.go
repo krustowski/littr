@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -94,7 +94,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Code       int                    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, ctx.DeviceID(), 0); ok {
+		if data, ok := litterAPI("GET", "/api/v1/users", nil, ctx.DeviceID(), 0); ok {
 			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())
@@ -201,7 +201,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
+		if data, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 			}
@@ -264,7 +264,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.About = aboutText
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -343,7 +343,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		updatedUser := c.user
 		updatedUser.Web = website
 
-		if _, ok := litterAPI("PUT", "/api/users", updatedUser, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -392,7 +392,7 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 	}
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/push", payload, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("DELETE", "/api/v1/push/subscription", payload, c.user.Nickname, 0); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
@@ -439,7 +439,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/users", c.user, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -473,7 +473,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		ctx.Async(func() {
-			if _, ok := litterAPI("DELETE", "/api/push", payload, c.user.Nickname, 0); !ok {
+			if _, ok := litterAPI("DELETE", "/api/v1/push/subscription", payload, c.user.Nickname, 0); !ok {
 				ctx.Dispatch(func(ctx app.Context) {
 					//c.toastText = toastText
 					c.toastText = "failed to unsubscribe, try again later"
@@ -641,7 +641,7 @@ func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
 		}*/
 
 		// send the registeration to backend
-		if _, ok := litterAPI("POST", "/api/push", deviceSub, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
 			toastText := "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {

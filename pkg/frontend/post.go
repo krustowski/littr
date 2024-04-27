@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -202,7 +202,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		author := user.Nickname
-		path := "/api/flow"
+		path := "/api/v1/posts"
 
 		if postType == "post" {
 			payload = models.Post{
@@ -215,7 +215,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 				//Timestamp: time.Now(),
 			}
 		} else if postType == "poll" {
-			path = "/api/polls"
+			path = "/api/v1/polls"
 			poll.Author = user.Nickname
 			payload = poll
 		}

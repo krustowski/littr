@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -96,7 +96,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 
 		passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 
-		respRaw, ok := litterAPI("POST", "/api/auth", &models.User{
+		respRaw, ok := litterAPI("POST", "/api/v1/auth", &models.User{
 			Nickname:      nickname,
 			Passphrase:    string(passHash[:]),
 			PassphraseHex: fmt.Sprintf("%x", passHash),

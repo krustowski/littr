@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.savla.dev/littr/models"
+	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -72,7 +72,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			Code      int                    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/users", nil, "", 0); ok {
+		if data, ok := litterAPI("GET", "/api/v1/users", nil, "", 0); ok {
 			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())
@@ -203,7 +203,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		updatedData := c.user
 		updatedData.FlowList = flowList
 
-		respRaw, ok := litterAPI("PUT", "/api/users", updatedData, c.user.Nickname, 0)
+		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, updatedData, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -342,7 +342,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		// update shaded user
-		respRaw, ok := litterAPI("PUT", "/api/users", userShaded, c.user.Nickname, 0)
+		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+userShaded.Nickname, userShaded, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -371,7 +371,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 		}
 
 		// update user
-		respRaw, ok = litterAPI("PUT", "/api/users", c.user, c.user.Nickname, 0)
+		respRaw, ok = litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
