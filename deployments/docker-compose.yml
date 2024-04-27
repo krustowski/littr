@@ -1,4 +1,5 @@
-version: '3.9'
+#version: '3.9'
+name: ${PROJECT_NAME}
 
 networks:
   traefik_savla:
