@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.0'
+  window.LIT.version = 'LittrJS v0.6.1'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -122,7 +122,7 @@
   //  })
   //}
 
-  const es = new EventSource("/api/flow/live");
+  const es = new EventSource("/api/v1/posts/live");
 
   const listener = function (event) {	
     //console.log(event.type)

@@ -1,0 +1,30 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "nanoblogging platform as PWA built on go-app framework (PoC)",
+        "title": "litter-go",
+        "termsOfService": "https://littr.n0p.cz/tos",
+        "contact": {
+            "name": "API Support",
+            "url": "https://littr.n0p.cz/docs/",
+            "email": "littr@n0p.cz"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
+        },
+        "version": "0.33.0"
+    },
+    "host": "littr.n0p.cz",
+    "basePath": "/api",
+    "paths": {},
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
+        }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
+    }
+}
