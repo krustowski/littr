@@ -28,7 +28,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// skip those routes
 		if r.URL.Path == "/api/v1" ||
 			r.URL.Path == "/api/v1/auth" ||
-			r.URL.Path == "/api/v1/dump" ||
+			r.URL.Path == "/api/v1/dump/" ||
 			r.URL.Path == "/api/v1/flow/live" ||
 			r.URL.Path == "/api/v1/users/passphrase" ||
 			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {

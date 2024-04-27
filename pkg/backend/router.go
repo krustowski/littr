@@ -1,5 +1,5 @@
 // @title		litter-go
-// @version	 	0.30.12
+// @version	 	0.33.0
 // @description	nanoblogging platform as PWA built on go-app framework (PoC)
 // @termsOfService	https://littr.n0p.cz/tos
 
@@ -30,6 +30,7 @@ import (
 	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/backend/polls"
 	"go.savla.dev/littr/pkg/backend/posts"
+	"go.savla.dev/littr/pkg/backend/push"
 	"go.savla.dev/littr/pkg/backend/stats"
 	"go.savla.dev/littr/pkg/backend/users"
 )
@@ -55,6 +56,7 @@ func APIRouter() chi.Router {
 	r.Mount("/dump", db.Router())
 	r.Mount("/polls", polls.Router())
 	r.Mount("/posts", posts.Router())
+	r.Mount("/push", push.Router())
 	r.Mount("/stats", stats.Router())
 	r.Mount("/users", users.Router())
 

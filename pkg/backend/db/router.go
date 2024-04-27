@@ -8,7 +8,7 @@ func Router() chi.Router {
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
-		r.Get("/dump", dumpHandler)
+		r.Get("/", dumpHandler)
 	})
 
 	return r

@@ -719,11 +719,12 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	url := "/api/v1/posts"
 	if opts.UserFlow || opts.SinglePost {
 		if opts.SinglePostID != "" {
-			url += "/post/" + opts.SinglePostID
+			url += "/" + opts.SinglePostID
 		}
 
 		if opts.UserFlowNick != "" {
-			url += "/user/" + opts.UserFlowNick
+			//url += "/user/" + opts.UserFlowNick
+			url = "/api/v1/users/" + opts.UserFlowNick + "/posts"
 		}
 
 		if opts.SinglePostID == "" && opts.UserFlowNick == "" {
