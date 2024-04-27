@@ -13,6 +13,7 @@
 // @host		littr.n0p.cz
 // @BasePath		/api/v1
 
+// @security            []
 // @securityDefinitions.basic	BasicAuth
 
 // @externalDocs.description	OpenAPI

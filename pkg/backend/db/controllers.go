@@ -17,7 +17,7 @@ import (
 // @Success      200  {object}   common.Response
 // @Failure 	 401  {object}   common.Response
 // @Failure 	 403  {object}   common.Response
-// @Router       /dump [get]
+// @Router       /dump/ [get]
 func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 

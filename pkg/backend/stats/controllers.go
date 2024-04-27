@@ -17,7 +17,7 @@ import (
 // @Accept       json
 // @Produce      json
 // @Success      200  {array}   common.Response
-// @Router       /stats [get]
+// @Router       /stats/ [get]
 func getStats(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "stats")

@@ -18,8 +18,15 @@
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",
     "paths": {
-        "/auth": {
+        "/auth/": {
             "post": {
+                "security": [
+                    {
+                        "": [
+                            ""
+                        ]
+                    }
+                ],
                 "description": "auth an user",
                 "consumes": [
                     "application/json"
@@ -59,7 +66,7 @@
                 }
             }
         },
-        "/dump": {
+        "/dump/": {
             "get": {
                 "description": "perform system data dump",
                 "consumes": [
@@ -567,7 +574,7 @@
                 }
             }
         },
-        "/stats": {
+        "/stats/": {
             "get": {
                 "description": "get stats",
                 "consumes": [
@@ -593,7 +600,28 @@
                 }
             }
         },
-        "/users": {
+        "/users/": {
+            "get": {
+                "description": "get a list of users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get a list of users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "add new user",
                 "consumes": [
@@ -627,29 +655,6 @@
                     },
                     "409": {
                         "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/": {
-            "get": {
-                "description": "get a list of users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get a list of users",
-                "responses": {
-                    "200": {
-                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -1244,6 +1249,13 @@
             "type": "basic"
         }
     },
+    "security": [
+        {
+            "": [
+                ""
+            ]
+        }
+    ],
     "externalDocs": {
         "description": "OpenAPI",
         "url": "https://swagger.io/resources/open-api/"

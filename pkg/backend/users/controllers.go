@@ -120,7 +120,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {}
 // @Failure      400  {object}   common.Response
 // @Failure      404  {object}   common.Response
 // @Failure      409  {object}   common.Response
-// @Router       /users [post]
+// @Router       /users/ [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")

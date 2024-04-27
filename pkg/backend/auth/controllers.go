@@ -56,7 +56,8 @@ func authUser(aUser models.User) (*models.User, bool) {
 // @Failure		400	{object}	common.Response
 // @Failure		404	{object}	common.Response
 // @Failure		500	{object}	common.Response
-// @Router		/auth [post]
+// @Router		/auth/ [post]
+// @security            []
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "auth")
