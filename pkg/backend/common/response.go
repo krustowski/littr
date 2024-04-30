@@ -19,8 +19,11 @@ type Response struct {
 	Message   string `json:"message"`
 	Count     int    `json:"count,omitempty"`
 
-	Subscribed bool            `json:"subscribed"`
-	Devices    []models.Device `json:"devices,omitempty"`
+	Subscription struct {
+		Replies  bool `json:"replies"`
+		Mentions bool `json:"mentions"`
+	} `json:"subscription,omitempty"`
+	Devices []models.Device `json:"devices,omitempty"`
 
 	Polls    map[string]models.Poll `json:"polls,omitempty"`
 	Posts    map[string]models.Post `json:"posts,omitempty"`

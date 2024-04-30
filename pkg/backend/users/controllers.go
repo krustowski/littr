@@ -43,16 +43,23 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
 	// check the subscription
-	devSubscribed := false
+	//devSubscribed := false
+	var devTags []string = nil
 	for _, dev := range devs {
 		if dev.UUID == uuid {
-			devSubscribed = true
+			devTags = dev.Tags
+			//devSubscribed = true
 			break
 		}
 	}
 
 	// assign the result of looping through devices
-	resp.Subscribed = devSubscribed
+	if helpers.Contains(devTags, "reply") {
+		resp.Subscription.Replies = true
+	}
+	if helpers.Contains(devTags, "mention") {
+		resp.Subscription.Mentions = true
+	}
 
 	for _, post := range posts {
 		nick := post.Nickname

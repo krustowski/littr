@@ -45,7 +45,20 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// subscribeToNotifications is the push pkg handlerr function to ensure sent device ihas subscribed to notifications.
+// updateSubscription is the push pkg's handler function used to update an existing subscription.
+//
+// @Summary      Update the notification subscription
+// @Description  Update the notification subscription
+// @Tags         push
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /push/subscription/{uuid} [put]
+func updateSubscription(w http.ResponseWriter, r *http.Request) {}
+
+// subscribeToNotifications is the push pkg's handler function to ensure sent device has subscribed to notifications.
 //
 // @Summary      Add the notification subscription
 // @Description  add the notification subscription

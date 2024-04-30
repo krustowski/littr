@@ -10,8 +10,9 @@ func Router() chi.Router {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/vapid", fetchVAPIDKey)
 		r.Post("/subscription", subscribeToNotifications)
+		r.Put("/subscription/{uuid}", updateSubscription)
 		r.Post("/notification/{postID}", sendNotification)
-		r.Delete("/subscription", deleteSubscription)
+		r.Delete("/subscription/{uuid}", deleteSubscription)
 	})
 
 	return r

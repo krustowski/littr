@@ -10,6 +10,7 @@ import (
 
 	configs "go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 )
 
@@ -69,7 +70,7 @@ func RunMigrations() bool {
 	bank := configs.UserDeletionList
 
 	for key, user := range users {
-		if contains(bank, user.Nickname) {
+		if helpers.Contains(bank, user.Nickname) {
 			if deleted := DeleteOne(UserCache, key); !deleted {
 				l.Println("migrateUserDeletion: cannot delete an user: "+key, http.StatusInternalServerError)
 				return false
@@ -78,7 +79,7 @@ func RunMigrations() bool {
 	}
 
 	for key, post := range posts {
-		if contains(bank, post.Nickname) {
+		if helpers.Contains(bank, post.Nickname) {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
 				l.Println("migrateUserDeletion: cannot delete a post: "+key, http.StatusInternalServerError)
 				return false
@@ -128,14 +129,14 @@ func RunMigrations() bool {
 	usersToUnshade := configs.UsersToUnshade
 
 	for key, user := range users {
-		if !contains(usersToUnshade, key) {
+		if !helpers.Contains(usersToUnshade, key) {
 			continue
 		}
 
 		shadeList := user.ShadeList
 
 		for name := range shadeList {
-			if contains(usersToUnshade, name) {
+			if helpers.Contains(usersToUnshade, name) {
 				shadeList[name] = false
 			}
 		}
@@ -154,17 +155,6 @@ func RunMigrations() bool {
 /*
  *  helpers
  */
-
-// contains checks if a string is present in a slice.
-// https://freshman.tech/snippets/go/check-if-slice-contains-element/
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
 
 // GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
 func GetGravatarURL(emailInput string, channel chan string) string {
