@@ -153,11 +153,11 @@ sh:
 .PHONY: flush
 flush:
 	@echo -e "\n${YELLOW} Flushing app data... ${RESET}\n"
-	@docker cp .data/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
-	@docker cp .data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
-	@docker cp .data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
-	@docker cp .data/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
-	@docker cp .data/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
+	@docker cp test/data/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
+	@docker cp test/data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
+	@docker cp test/data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
+	@docker cp test/data/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
+	@docker cp test/data/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
 
 .PHONY: kill
 kill:
