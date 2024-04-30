@@ -20,7 +20,7 @@ services:
       - ../.env
     build:
       context: ..
-      dockerfile: deployments/Dockerfile
+      dockerfile: build/Dockerfile
       args: 
         APP_NAME: ${APP_NAME}
         APP_FLAGS: ${APP_FLAGS}

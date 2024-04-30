@@ -71,8 +71,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
-COPY --chown=1000:1000 --chmod=700 .data/ /opt/data/
-COPY --chown=1000:1000 --chmod=700 .data/.gitkeep /opt/pix/
+COPY --chown=1000:1000 --chmod=700 test/data/ /opt/data/
+COPY --chown=1000:1000 --chmod=700 test/data/.gitkeep /opt/pix/
 
 COPY --from=litter-build /go/src/litter-go/littr /opt/littr
 COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm

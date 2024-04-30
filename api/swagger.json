@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.33.1"
+        "version": "0.33.2"
     },
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",
@@ -510,7 +510,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/push/subscription/{uuid}": {
             "delete": {
                 "description": "delete a subscription",
                 "consumes": [
@@ -532,6 +534,76 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/push/subscription/{uuid}/mention": {
+            "put": {
+                "description": "Update the notification subscription tag",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "push"
+                ],
+                "summary": "Update the notification subscription tag",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/push/subscription/{uuid}/reply": {
+            "put": {
+                "description": "Update the notification subscription tag",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "push"
+                ],
+                "summary": "Update the notification subscription tag",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -919,8 +991,16 @@
                 "refresh_token": {
                     "type": "string"
                 },
-                "subscribed": {
-                    "type": "boolean"
+                "subscription": {
+                    "type": "object",
+                    "properties": {
+                        "mentions": {
+                            "type": "boolean"
+                        },
+                        "replies": {
+                            "type": "boolean"
+                        }
+                    }
                 },
                 "user_stats": {
                     "type": "object",
@@ -1168,13 +1248,20 @@
                     "description": "PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).",
                     "type": "string"
                 },
+                "private": {
+                    "description": "Private boolean indicates a private user's account.",
+                    "type": "boolean"
+                },
                 "registered_time": {
                     "description": "RegisteredTime is an UNIX timestamp of the user's registeration.",
                     "type": "string"
                 },
-                "reply_notification_on": {
-                    "description": "ReplyNotificationOn is a bool, that indicates the state of notification permission made by user.\nIs set to false (off) on default.",
-                    "type": "boolean"
+                "request_list": {
+                    "description": "RequestList is a map of account requested to add this user to their flow --- used with the Private property.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
                 },
                 "shade_list": {
                     "description": "ShadeList is a map of account/users to be shaded (soft-blocked) from following.",
