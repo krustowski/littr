@@ -32,8 +32,28 @@ func RunMigrations() bool {
 	users, _ := GetAll(UserCache, models.User{})
 	//polls, _ := GetAll(PollCache, models.Poll{})
 	posts, _ := GetAll(FlowCache, models.Post{})
+	subs, _ := GetAll(SubscriptionCache, []models.Device{})
 
-	// migrateAvatarURL function take care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
+	// migrateEmptyDeviceTags function takes care of filling empty device tags arrays.
+	for key, devs := range subs {
+		changed := false
+		for idx, dev := range devs {
+			if len(dev.Tags) == 0 {
+				dev.Tags = []string{
+					"reply",
+					"mention",
+				}
+				changed = true
+				devs[idx] = dev
+			}
+		}
+
+		if changed {
+			SetOne(SubscriptionCache, key, devs)
+		}
+	}
+
+	// migrateAvatarURL function takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 	urlsChan := make(chan string)
 
 	for key, user := range users {
