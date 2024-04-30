@@ -35,11 +35,17 @@ type User struct {
 	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`
 
+	// Private boolean indicates a private user's account.
+	Private bool `json:"private"`
+
 	// FlowList is a string map of users, which posts should be added to one's flow page.
 	FlowList map[string]bool `json:"flow_list"`
 
 	// ShadeList is a map of account/users to be shaded (soft-blocked) from following.
 	ShadeList map[string]bool `json:"shade_list"`
+
+	// RequestList is a map of account requested to add this user to their flow --- used with the Private property.
+	RequestList map[string]bool `json:"request_list"`
 
 	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`
@@ -65,10 +71,6 @@ type User struct {
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
 	AppBgMode string `json:"app_bg_mode" default:"dark"`
-
-	// ReplyNotificationOn is a bool, that indicates the state of notification permission made by user.
-	// Is set to false (off) on default.
-	ReplyNotificationOn bool `json:"reply_notification_on" default:false`
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags"`
