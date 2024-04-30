@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -47,16 +49,88 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 
 // updateSubscription is the push pkg's handler function used to update an existing subscription.
 //
-// @Summary      Update the notification subscription
-// @Description  Update the notification subscription
+// @Summary      Update the notification subscription tag
+// @Description  Update the notification subscription tag
 // @Tags         push
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   common.Response
 // @Failure      409  {object}   common.Response
 // @Failure      500  {object}   common.Response
-// @Router       /push/subscription/{uuid} [put]
-func updateSubscription(w http.ResponseWriter, r *http.Request) {}
+// @Router       /push/subscription/{uuid}/mention [put]
+// @Router       /push/subscription/{uuid}/reply [put]
+func updateSubscription(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "push")
+
+	path := r.URL.Path
+	caller, _ := r.Context().Value("nickname").(string)
+	payload := models.Device{}
+
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// let us check this device
+	// we are about to loop through []models.Device fetched from SubscriptionCache later on
+	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
+
+	tag := ""
+	if strings.Contains(path, "mention") {
+		tag = "mention"
+	} else if strings.Contains(path, "reply") {
+		tag = "reply"
+	}
+
+	if !helpers.Contains(payload.Tags, tag) {
+		payload.Tags = append(payload.Tags, tag)
+	} else {
+		tags := payload.Tags
+		newTags := []string{}
+		for _, t := range tags {
+			if t == tag {
+				continue
+			}
+			newTags = append(newTags, t)
+		}
+		payload.Tags = newTags
+	}
+
+	// if found, update the existing device
+	found := false
+	for idx, dev := range devs {
+		if dev.UUID == payload.UUID {
+			devs[idx] = payload
+			found = true
+		}
+	}
+
+	// append new device into the devices array for such user
+	if !found {
+		devs = append(devs, payload)
+	}
+
+	if saved := db.SetOne(db.SubscriptionCache, caller, devs); !saved {
+		resp.Code = http.StatusInternalServerError
+		resp.Message = "cannot save new subscription"
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, device subscription updated"
+	resp.Code = http.StatusCreated
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
 
 // subscribeToNotifications is the push pkg's handler function to ensure sent device has subscribed to notifications.
 //
@@ -206,7 +280,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {object}   common.Response
 // @Failure      400  {object}   common.Response
 // @Failure      500  {object}   common.Response
-// @Router       /push/subscription [delete]
+// @Router       /push/subscription/{uuid} [delete]
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "push")
