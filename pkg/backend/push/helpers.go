@@ -4,17 +4,31 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"go.savla.dev/littr/pkg/backend/common"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/SherClockHolmes/webpush-go"
 )
 
 func SendNotificationToDevices(devs []models.Device, body []byte, l *common.Logger) {
+	tag := ""
+	if strings.Contains(string(body), "reply") {
+		tag = "reply"
+	} else if strings.Contains(string(body), "mention") {
+		tag = "mention"
+	}
+
 	// range devices
 	for _, dev := range devs {
 		if dev.UUID == "" {
+			continue
+		}
+
+		// skip devices unsubscribed to such notification tag
+		if !helpers.Contains(dev.Tags, tag) {
 			continue
 		}
 
