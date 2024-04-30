@@ -20,6 +20,7 @@ GOMODCACHE?=/home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
 DOCKER_COMPOSE_FILE?=deployments/docker-compose.yml
+DOCKER_COMPOSE_OVERRIDE?=deployments/docker-compose.override.yml
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -97,19 +98,23 @@ docs:
 	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
 	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
 	@mv docs/swagger.json api/swagger.json
-	@docker compose -f ${DOCKER_COMPOSE_FILE} up litter-swagger -d --force-recreate
+	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
+		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up litter-swagger -d --force-recreate \
+		|| docker compose -f ${DOCKER_COMPOSE_FILE} up litter-swagger -d --force-recreate
 
 .PHONY: build
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
-	@DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} build
-# ^https://stackoverflow.com/questions/67910547/why-docker-copy-doesnt-change-file-permissions-chmod
-#@docker compose build --no-cache
+	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
+		&& DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build \
+		|| DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} build
 
 .PHONY: run
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
-	@docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
+	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
+		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
+		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
 
 .PHONY: logs
 logs:
