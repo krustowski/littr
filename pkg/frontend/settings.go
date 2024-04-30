@@ -1,18 +1,13 @@
 package frontend
 
 import (
-	"crypto/sha512"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/url"
-	"regexp"
-	"strings"
-	"time"
 
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
-	"github.com/SherClockHolmes/webpush-go"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -47,6 +42,11 @@ type settingsContent struct {
 
 	notificationPermission app.NotificationPermission
 	subscribed             bool
+	subscription           struct {
+		Replies  bool
+		Mentions bool
+	}
+	mentionNotificationEnabled bool
 
 	settingsButtonDisabled bool
 
@@ -55,6 +55,7 @@ type settingsContent struct {
 
 	VAPIDpublic string
 	devices     []models.Device
+	thisDevice  models.Device
 
 	thisDeviceUUID string
 	interactedUUID string
@@ -132,6 +133,22 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 
 		user := payload.Users[payload.Key]
 
+		var thisDevice models.Device
+		for _, dev := range payload.Devices {
+			if dev.UUID == ctx.DeviceID() {
+				thisDevice = dev
+				break
+			}
+		}
+
+		subscription := c.subscription
+		if helpers.Contains(thisDevice.Tags, "reply") {
+			subscription.Replies = true
+		}
+		if helpers.Contains(thisDevice.Tags, "mention") {
+			subscription.Mentions = true
+		}
+
 		// get the mode
 		var mode string
 		ctx.LocalStorage().Get("mode", &mode)
@@ -143,12 +160,14 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			c.devices = payload.Devices
 
 			c.subscribed = payload.Subscribed
+			c.subscription = subscription
 
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
 
 			c.VAPIDpublic = payload.PublicKey
 			c.thisDeviceUUID = ctx.DeviceID()
+			c.thisDevice = thisDevice
 
 			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
 			//c.replyNotifOn = user.ReplyNotificationOn
@@ -158,581 +177,6 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 		return
 	})
 	return
-}
-
-func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
-	toastText := ""
-
-	c.settingsButtonDisabled = true
-
-	ctx.Async(func() {
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		passphrase := strings.TrimSpace(c.passphrase)
-		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
-
-		if passphrase == "" || passphraseAgain == "" {
-			toastText = "both passphrases need to be filled, or text changed"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if passphrase != passphraseAgain {
-			toastText = "passphrases do not match"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
-		updatedUser := c.user
-		//updatedUser.Passphrase = string(passHash[:])
-		updatedUser.PassphraseHex = fmt.Sprintf("%x", passHash)
-
-		response := struct {
-			Message string `json:"message"`
-			Code    int    `json:"code"`
-		}{}
-
-		if data, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
-			if err := json.Unmarshal(*data, &response); err != nil {
-				toastText = "JSON parse error: " + err.Error()
-			}
-			toastText = "generic backend error: " + response.Message
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		c.user.Passphrase = string(passHash[:])
-
-		var userStream []byte
-		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		ctx.Navigate("/users")
-	})
-}
-
-func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
-	toastText := ""
-
-	c.settingsButtonDisabled = true
-
-	ctx.Async(func() {
-		// trim the padding spaces on the extremities
-		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		aboutText := strings.TrimSpace(c.aboutText)
-
-		if aboutText == "" {
-			toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if len(aboutText) > 100 {
-			toastText = "about text has to be shorter than 100 chars"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		updatedUser := c.user
-		updatedUser.About = aboutText
-
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
-			toastText = "generic backend error"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		c.user.About = c.aboutText
-
-		var userStream []byte
-		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		ctx.LocalStorage().Set("user", userStream)
-
-		ctx.Navigate("/users")
-	})
-}
-
-func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
-	toastText := ""
-
-	c.settingsButtonDisabled = true
-
-	ctx.Async(func() {
-		website := strings.TrimSpace(c.website)
-
-		// check the trimmed version of website string
-		if website == "" {
-			toastText = "website URL has to be filled, or changed"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		// check the URL/URI format
-		if _, err := url.ParseRequestURI(website); err != nil {
-			toastText = "website prolly not a valid URL"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		// create a regex object
-		regex, err := regexp.Compile("^(http|https)://")
-		if err != nil {
-			toastText := "failed to check the website (regex object fail)"
-			log.Println(toastText)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if !regex.MatchString(website) {
-			website = "https://" + website
-		}
-
-		updatedUser := c.user
-		updatedUser.Web = website
-
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
-			toastText = "generic backend error"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		c.user.Web = c.website
-
-		var userStream []byte
-		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		ctx.Navigate("/users")
-	})
-	return
-}
-
-func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event) {
-	toastText := ""
-
-	uuid := c.interactedUUID
-	if uuid == "" {
-		toastText := "blank UUID string"
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = toastText != ""
-		})
-		return
-	}
-
-	payload := struct {
-		UUID string `json:"device_uuid"`
-	}{
-		UUID: uuid,
-	}
-
-	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/v1/push/subscription", payload, c.user.Nickname, 0); !ok {
-			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to unsubscribe, try again later"
-				c.toastShow = toastText != ""
-			})
-			return
-
-		}
-
-		devs := c.devices
-		newDevs := []models.Device{}
-		for _, dev := range devs {
-			if dev.UUID == uuid {
-				continue
-			}
-			newDevs = append(newDevs, dev)
-		}
-
-		toastText = "device successfully unsubscribed"
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = toastText != ""
-			c.toastType = "info"
-
-			if uuid == c.thisDeviceUUID {
-				c.subscribed = false
-			}
-
-			c.deleteSubscriptionModalShow = false
-			c.devices = newDevs
-		})
-		return
-	})
-	return
-}
-
-func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
-	toastText := ""
-
-	c.settingsButtonDisabled = true
-
-	//ctx.LocalStorage().Set("userLogged", false)
-	ctx.LocalStorage().Set("user", "")
-
-	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
-			toastText = "generic backend error"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		//c.userLogged = false
-		//ctx.Navigate("/login")
-		ctx.Navigate("/logout")
-	})
-	return
-}
-
-func (c *settingsContent) onReplyNotifSwitch(ctx app.Context, e app.Event) {
-	checked := ctx.JSSrc().Get("checked").Bool()
-	toastText := ""
-
-	//c.replyNotifOn = !c.replyNotifOn
-
-	// unsubscribe
-	if !checked {
-		uuid := ctx.DeviceID()
-
-		payload := struct {
-			UUID string `json:"device_uuid"`
-		}{
-			UUID: uuid,
-		}
-
-		ctx.Async(func() {
-			if _, ok := litterAPI("DELETE", "/api/v1/push/subscription", payload, c.user.Nickname, 0); !ok {
-				ctx.Dispatch(func(ctx app.Context) {
-					//c.toastText = toastText
-					c.toastText = "failed to unsubscribe, try again later"
-					c.toastShow = toastText != ""
-
-					c.subscribed = true
-				})
-				return
-
-			}
-
-			devs := c.devices
-			newDevs := []models.Device{}
-			for _, dev := range devs {
-				if dev.UUID == ctx.DeviceID() {
-					continue
-				}
-				newDevs = append(newDevs, dev)
-			}
-
-			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "successfully unsubscribed, notifications off"
-				c.toastShow = toastText != ""
-				c.toastType = "info"
-
-				c.subscribed = false
-				c.devices = newDevs
-			})
-			return
-		})
-		return
-	}
-
-	ctx.Async(func() {
-		// notify user that their browser does not support notifications and therefore they cannot
-		// use notifications service
-		if c.notificationPermission == app.NotificationNotSupported && checked {
-			toastText = "notifications are not supported in this browser"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.toastType = "error"
-
-				c.replyNotifOn = false
-				c.subscribed = false
-			})
-			return
-		}
-
-		// request the permission on default when switch is toggled
-		if (c.notificationPermission == app.NotificationDefault && checked) ||
-			(c.notificationPermission == app.NotificationDenied) {
-			c.notificationPermission = ctx.Notifications().RequestPermission()
-		}
-
-		// fail on denied permission
-		if c.notificationPermission != app.NotificationGranted {
-			toastText = "notification permission denied by user"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-
-				c.replyNotifOn = false
-				c.subscribed = false
-			})
-			return
-		}
-
-		// fetch the unique identificator for notifications and unsubscribe option
-		uuid := ctx.DeviceID()
-
-		/*keysGenerated := false
-		// generate the VAPID key pair if missing
-		// TODO: move this to backend!
-		if privKey == "" || pubKey == "" {
-			var err error
-
-			privKey, pubKey, err = webpush.GenerateVAPIDKeys()
-			if err != nil {
-				toastText = "cannot generate new VAPID keys"
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = toastText != ""
-
-					c.subscribed = false
-				})
-				return
-			}
-			keysGenerated = true
-		}*/
-
-		/*vapid := struct {
-			Key     string `json:"key"`
-			Message string `json:"message"`
-		}{}
-
-		if data, ok := litterAPI("GET", "/api/push/vapid", nil, "", 0); !ok {
-			if err := json.Unmarshal(*data, &vapid); err != nil {
-				toastText = "JSON parse error: " + err.Error()
-			}
-			toastText = "generic backend error: " + vapid.Message
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}*/
-
-		vapidPubKey := c.VAPIDpublic
-		if vapidPubKey == "" {
-			// compiled into frontend/helpers.vapidPublicKey variable in wasm binary (see Dockerfile for more info)
-			vapidPubKey = vapidPublicKey
-		}
-
-		// register the subscription
-		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
-		if err != nil {
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "failed to subscribe to notifications: " + err.Error()
-				c.toastShow = c.toastText != ""
-
-				c.subscribed = false
-			})
-			return
-		}
-
-		// we need to convert type app.NotificationSubscription into webpush.Subscription
-		webSub := webpush.Subscription{
-			Endpoint: sub.Endpoint,
-			Keys: webpush.Keys{
-				Auth:   sub.Keys.Auth,
-				P256dh: sub.Keys.P256dh,
-			},
-		}
-
-		// compose the Device struct to be saved to the database
-		deviceSub := models.Device{
-			UUID:         uuid,
-			TimeCreated:  time.Now(),
-			Subscription: webSub,
-		}
-
-		/*user := c.user
-		user.VapidPrivKey = privKey
-		user.VapidPubKey = pubKey
-
-		// update user on backend via API
-		if keysGenerated {
-			if _, ok := litterAPI("PUT", "/api/users", user, c.user.Nickname, 0); !ok {
-				toastText := "cannot reach backend!"
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = toastText != ""
-
-					c.subscribed = false
-				})
-				return
-			}
-		}*/
-
-		// send the registeration to backend
-		if _, ok := litterAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
-			toastText := "cannot reach backend!"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to subscribe to notifications"
-				c.toastShow = toastText != ""
-
-				c.subscribed = false
-			})
-			return
-		}
-
-		devs := c.devices
-		devs = append(devs, deviceSub)
-
-		// dispatch the good news to client
-		ctx.Dispatch(func(ctx app.Context) {
-			//c.user = user
-			c.subscribed = true
-
-			c.toastText = "successfully subscribed"
-			c.toastShow = toastText != ""
-			c.toastType = "success"
-
-			c.devices = devs
-		})
-		return
-
-		/*ctx.Notifications().New(app.Notification{
-			Title: "littr",
-			Icon:  "/web/apple-touch-icon.png",
-			Body:  "successfully subscribed to notifications",
-			Path:  "/flow",
-		})*/
-
-		// encode subscription into a HTTP request body
-		/*var body bytes.Buffer
-		if err := json.NewEncoder(&body).Encode(sub); err != nil {
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "encoding notification subscription failed:" + err.Error()
-				c.toastShow = c.toastText != ""
-
-				c.subscribed = false
-			})
-			return
-		}*/
-	})
-}
-
-func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
-	//m := ctx.JSSrc().Get("checked").Bool()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.darkModeOn = !c.darkModeOn
-
-		ctx.LocalStorage().Set("mode", "dark")
-		if !c.darkModeOn {
-			ctx.LocalStorage().Set("mode", "light")
-		}
-	})
-
-	app.Window().Get("LIT").Call("toggleMode")
-	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
-}
-
-func (c *settingsContent) onClickDeleteSubscriptionModalShow(ctx app.Context, e app.Event) {
-	uuid := ctx.JSSrc().Get("id").String()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.deleteSubscriptionModalShow = true
-		c.settingsButtonDisabled = true
-		c.interactedUUID = uuid
-	})
-}
-
-func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.deleteAccountModalShow = true
-		c.settingsButtonDisabled = true
-	})
-}
-
-func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.toastText = ""
-		c.toastType = ""
-		c.toastShow = (c.toastText != "")
-		c.settingsButtonDisabled = false
-		c.deleteAccountModalShow = false
-		c.deleteSubscriptionModalShow = false
-	})
 }
 
 func (c *settingsContent) Render() app.UI {
@@ -757,7 +201,6 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.H5().Text("settings"),
-				//app.P().Text("change your passphrase, or your bottom text"),
 			),
 		),
 
@@ -771,13 +214,11 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		//app.Div().Class("space"),
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.H6().Text("user and avatar"),
 			),
 		),
-		//app.Div().Class("space"),
 
 		// logged user info
 		app.Article().Class("row surface-container-highest").Body(
@@ -824,7 +265,6 @@ func (c *settingsContent) Render() app.UI {
 				app.H6().Text("switches"),
 			),
 		),
-		//app.Div().Class("space"),
 
 		// darkmode infobox
 		app.Article().Class("row surface-container-highest").Body(
@@ -850,30 +290,6 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		// left-hand infobox
-		app.Article().Class("row surface-container-highest").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("left-hand switch "),
-				app.Span().Text("is a theoretical feature which would enable an user to flip the UI for left-handed folks to browse more smoothly"),
-			),
-		),
-
-		// left-hand switch
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("left-hand switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("left-hand-switch").Checked(false).Disabled(true).OnChange(nil),
-					app.Span().Body(
-						app.I().Text("front_hand"),
-					),
-				),
-			),
-		),
-
 		// live infobox
 		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
@@ -890,7 +306,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("live switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("live-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Input().Type("checkbox").ID("live-switch").Checked(true).Disabled(true).OnChange(nil),
 					app.Span().Body(
 						app.I().Text("stream"),
 					),
@@ -898,14 +314,36 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// private acc infobox
+		app.Article().Class("row surface-container-highest").Body(
+			app.I().Text("lightbulb").Class("amber-text"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("private account "),
+				app.Span().Text("is a feature allowing one to be hidden on littr in terms of free reachibility via the users page, thus others have to be allowed to add you in their flow and to see your profile"),
+			),
+		),
+
+		// private acc switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("private acc switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").ID("private-acc-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Span().Body(
+						app.I().Text("lock"),
+					),
+				),
+			),
+		),
+
 		// notifications
-		//app.Div().Class("space"),
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.H6().Text("notifications"),
 			),
 		),
-		//app.Div().Class("space"),
 
 		// notification infobox
 		app.Article().Class("row surface-container-highest").Body(
@@ -947,7 +385,7 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
-		// notification switch
+		// reply notification switch
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
 				app.Div().Class("max").Body(
@@ -955,13 +393,36 @@ func (c *settingsContent) Render() app.UI {
 				),
 				app.Label().Class("switch icon").Body(
 					// nasty workaround to ensure the switch to be updated "correctly"
-					app.If(c.subscribed,
-						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
+					app.If(c.subscription.Replies,
+						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 						app.Span().Body(
 							app.I().Text("notifications"),
 						),
 					).Else(
-						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onReplyNotifSwitch),
+						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+						app.Span().Body(
+							app.I().Text("notifications"),
+						),
+					),
+				),
+			),
+		),
+
+		// mention notification switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("mention notification switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					// nasty workaround to ensure the switch to be updated "correctly"
+					app.If(c.subscription.Mentions,
+						app.Input().Type("checkbox").ID("mention-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+						app.Span().Body(
+							app.I().Text("notifications"),
+						),
+					).Else(
+						app.Input().Type("checkbox").ID("mention-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 						app.Span().Body(
 							app.I().Text("notifications"),
 						),
@@ -972,7 +433,6 @@ func (c *settingsContent) Render() app.UI {
 
 		// print list of subscribed devices
 		app.If(devicesToShow > 0,
-
 			// user avatar change
 			//app.Div().Class("large-divider"),
 			//app.Div().Class("space"),
@@ -981,7 +441,6 @@ func (c *settingsContent) Render() app.UI {
 					app.H6().Text("registered devices"),
 				),
 			),
-			//app.Div().Class("medium-space"),
 
 			app.Div().Class().Body(
 				app.Range(c.devices).Slice(func(i int) app.UI {
@@ -1008,7 +467,10 @@ func (c *settingsContent) Render() app.UI {
 							app.Div().Class("max").Body(
 
 								app.P().Class("bold").Body(app.Text(deviceText)),
-								app.P().Body(app.Text("subscribed to notifs")),
+								app.P().Body(
+									app.Text("subscribed to notifs: "),
+									app.Text(dev.Tags),
+								),
 								app.P().Body(app.Text(dev.TimeCreated)),
 							),
 
