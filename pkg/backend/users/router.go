@@ -11,11 +11,15 @@ func Router() chi.Router {
 		r.Get("/", getUsers)
 		r.Post("/", addNewUser)
 		r.Patch("/passphrase", resetHandler)
+
 		r.Get("/{nickname}", getOneUser)
-		r.Get("/{nickname}/posts", getUserPosts)
 		r.Put("/{nickname}", updateUser)
-		r.Patch("/{nickname}/private", togglePrivateMode)
 		r.Delete("/{nickname}", deleteUser)
+
+		r.Get("/{nickname}/posts", getUserPosts)
+		r.Post("/{nickname}/request", addToRequestList)
+		r.Delete("/{nickname}/request", removeFromRequestList)
+		r.Patch("/{nickname}/private", togglePrivateMode)
 	})
 
 	return r

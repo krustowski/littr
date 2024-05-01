@@ -498,7 +498,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
+// @Failure      403  {object}  common.Response
 // @Failure      404  {object}  common.Response
 // @Failure      500  {object}  common.Response
 // @Router       /users/{nickname}/private [patch]
@@ -544,6 +544,114 @@ func togglePrivateMode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.Message = "ok, private mode toggled"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
+
+// addToRequestList is a handler function to add an user to the request list of the private account called as {nickname}.
+//
+// @Summary      Add to the request list
+// @Description  add to the request list
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/{nickname}/request [post]
+func addToRequestList(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	nick := chi.URLParam(r, "nickname")
+	caller, _ := r.Context().Value("nickname").(string)
+
+	var user models.User
+	var found bool
+
+	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
+		resp.Message = "user not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// toggle the status
+	if user.RequestList == nil {
+		user.RequestList = make(map[string]bool)
+	}
+	user.RequestList[caller] = true
+
+	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, request addeed to the reqeust list"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
+
+// removeFromRequestList is a handler function to remove an user from the request list of the private account called as {nickname}.
+//
+// @Summary      Remove from the request list
+// @Description  remove from the request list
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/{nickname}/request [delete]
+func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	nick := chi.URLParam(r, "nickname")
+	caller, _ := r.Context().Value("nickname").(string)
+
+	var user models.User
+	var found bool
+
+	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
+		resp.Message = "user not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// toggle the status
+	if user.RequestList == nil {
+		user.RequestList = make(map[string]bool)
+	}
+	user.RequestList[caller] = false
+
+	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, request removed from the reqeust list"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)
