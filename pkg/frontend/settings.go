@@ -351,6 +351,9 @@ func (c *settingsContent) Render() app.UI {
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("reply notifications "),
 				app.Span().Text("are fired when someone posts a reply to your post; you will be notified via your browser as this is the so-called web app"),
+				app.Div().Class("small-space"),
+				app.Span().Class("deep-orange-text").Text("mention notifications "),
+				app.Span().Text("are fired when someone mentions you via the at-sign (@) handler (e.g. @example)"),
 			),
 		),
 		app.Article().Class("row surface-container-highest").Body(
@@ -469,7 +472,7 @@ func (c *settingsContent) Render() app.UI {
 								app.P().Class("bold").Body(app.Text(deviceText)),
 								app.P().Body(
 									app.Text("subscribed to notifs: "),
-									app.Text(dev.Tags),
+									app.Span().Text(dev.Tags).Class("deep-orange-text"),
 								),
 								app.P().Body(app.Text(dev.TimeCreated)),
 							),
