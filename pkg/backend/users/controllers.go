@@ -42,6 +42,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
 	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
+	// flush email addresses
+	for key, user := range users {
+		user.Email = ""
+		users[key] = user
+	}
+
 	// check the subscription
 	//devSubscribed := false
 	var devTags []string = nil
@@ -340,6 +346,12 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
+	}
+
+	// flush email addresses
+	for key, user := range uExport {
+		user.Email = ""
+		uExport[key] = user
 	}
 
 	resp.Users = uExport

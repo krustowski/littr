@@ -27,6 +27,12 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	posts, postCount := db.GetAll(db.FlowCache, models.Post{})
 	users, _ := db.GetAll(db.UserCache, models.User{})
 
+	// flush email addresses
+	for key, user := range users {
+		user.Email = ""
+		users[key] = user
+	}
+
 	// prepare the maps for export
 	flowStats := make(map[string]int)
 	userStats := make(map[string]models.UserStat)

@@ -83,6 +83,12 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "ok, dumping posts"
 	resp.Code = http.StatusOK
 
+	// flush email addresses
+	for key, user := range uExport {
+		user.Email = ""
+		uExport[key] = user
+	}
+
 	resp.Posts = pExport
 	resp.Users = uExport
 
@@ -487,6 +493,12 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
+	}
+
+	// flush email addresses
+	for key, user := range uExport {
+		user.Email = ""
+		uExport[key] = user
 	}
 
 	resp.Users = uExport
