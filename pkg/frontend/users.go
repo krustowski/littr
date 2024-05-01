@@ -498,6 +498,114 @@ func (c *usersContent) onClickPrivateOn(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
+	nick := ctx.JSSrc().Get("id").String()
+	if nick == "" {
+		return
+	}
+
+	toastText := ""
+
+	ctx.Async(func() {
+		user := c.users[nick]
+		toastType := "error"
+
+		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname+"/request", nil, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			//toastText = "requested to see"
+			//toastType = "success"
+
+			if c.user.RequestList == nil {
+				c.user.RequestList = make(map[string]bool)
+			}
+			//c.user.RequestList[nick] = false
+			delete(c.user.RequestList, nick)
+		}
+
+		payload := user
+		flowList := c.user.FlowList
+		flowList[nick] = true
+		payload.FlowList = flowList
+
+		if _, ok := litterAPI("PUT", "/api/v1/users/"+payload.Nickname, payload, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "user updated, request removed"
+			toastType = "success"
+		}
+
+		if _, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "user updated, request removed"
+			toastType = "success"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.toastType = toastType
+			c.usersButtonDisabled = false
+
+			c.users[c.user.Nickname] = payload
+		})
+		return
+	})
+	return
+}
+
+func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
+	nick := ctx.JSSrc().Get("id").String()
+	if nick == "" {
+		return
+	}
+
+	toastText := ""
+
+	ctx.Async(func() {
+		user := c.user
+		toastType := "error"
+
+		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname+"/request", nil, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "requested removed"
+			toastType = "success"
+
+			if user.RequestList == nil {
+				user.RequestList = make(map[string]bool)
+			}
+			user.RequestList[nick] = false
+			delete(user.RequestList, nick)
+		}
+
+		if _, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, user, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "user updated, request removed"
+			toastType = "success"
+
+			/*if user.RequestList == nil {
+				user.RequestList = make(map[string]bool)
+			}*/
+			//user.RequestList[nick] = false
+			//delete(user.RequestList, nick)
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.toastType = toastType
+			c.usersButtonDisabled = false
+
+			c.users[c.user.Nickname] = user
+		})
+		return
+	})
+	return
+}
+
 func (c *usersContent) onClickUser(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("preview", key)
@@ -607,11 +715,60 @@ func (c *usersContent) Render() app.UI {
 		pagedUsers = sortedUsers[start:stop]
 	}
 
+	var numOfReqs int64 = 0
+
+	requestList := c.user.RequestList
+	for _, state := range requestList {
+		if state {
+			numOfReqs++
+			// we don't need to loop further as the number is going to be always greater than zero henceforth
+			break
+		}
+	}
+
 	return app.Main().Class("responsive").Body(
+		app.If(c.user.RequestList != nil && numOfReqs > 0,
+			app.Div().Class("row").Body(
+				app.Div().Class("max padding").Body(
+					app.H5().Text("requests"),
+				),
+			),
+			app.Div().Class("space"),
+
+			// requests table
+			app.Table().Class("").ID("table-users").Style("width", "100%").Body(
+				app.TBody().Body(
+					app.Range(c.user.RequestList).Map(func(key string) app.UI {
+						if !c.user.RequestList[key] {
+							return nil
+						}
+
+						return app.Tr().Body(
+							app.Td().Class("left-align").Body(
+
+								// cell's header
+								app.Div().Class("row medium top-padding").Body(
+									app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+									app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
+									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text border").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
+										app.Text("allow"),
+									),
+									app.Button().Class("max responsive no-padding transparent circular red10 white-text border").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
+										app.Text("cancel"),
+									),
+								),
+							),
+						)
+
+					}),
+				),
+			),
+			app.Div().Class("space"),
+		),
+
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.H5().Text("flowers"),
-				//app.P().Text("simplified user table, available to add to the flow!"),
 			),
 		),
 		app.Div().Class("space"),

@@ -1,7 +1,6 @@
 package frontend
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/url"
@@ -32,6 +31,7 @@ type flowContent struct {
 
 	loggedUser string
 	user       models.User
+	key        string
 
 	toastShow bool
 	toastText string
@@ -586,15 +586,6 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.deletePostModalShow = false
 	c.deleteModalButtonsDisabled = false
 
-	var user string
-	ctx.LocalStorage().Get("user", &user)
-	juser, _ := base64.StdEncoding.DecodeString(user)
-	err := json.Unmarshal(juser, &c.user)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	log.Println(c.user.Nickname)
-
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
@@ -698,6 +689,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 		Posts map[string]models.Post `json:"posts"`
 		Users map[string]models.User `json:"users"`
 		Code  int                    `json:"code"`
+		Key   string                 `json:"key"`
 	}{}
 
 	ctx := opts.Context
@@ -775,6 +767,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false
 		c.toastText = toastText
+		c.key = resp.Key
 	})
 
 	return resp.Posts, resp.Users
@@ -875,6 +868,8 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.pagination = 25
 			c.pageNo = 1
 			c.pageNoToFetch = 1
+
+			c.user = users[c.key]
 
 			c.users = users
 			c.posts = posts
