@@ -627,7 +627,18 @@ func (c *usersContent) Render() app.UI {
 							// cell's header
 							app.Div().Class("row medium top-padding").Body(
 								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
-								app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
+
+								app.If(user.Private,
+									// nasty hack to ensure the padding lock icon is next to nickname
+									app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser),
+
+									// show private mode
+									app.Span().Class("bold max").Body(
+										app.I().Text("lock"),
+									),
+								).Else(
+									app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
+								),
 
 								// user's stats --- flower count
 								app.B().Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
