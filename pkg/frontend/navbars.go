@@ -72,20 +72,22 @@ func (h *header) OnMount(ctx app.Context) {
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
 	// redirect client to the unauthorized zone
-	if !authGranted && ctx.Page().URL().Path != "/login" && ctx.Page().URL().Path != "/register" && ctx.Page().URL().Path != "/reset" {
+	path := ctx.Page().URL().Path
+	if !authGranted && path != "/login" && path != "/register" && path != "/reset" && path != "/tos" {
 		ctx.Navigate("/login")
 		return
 	}
 
 	// redirect auth'd client from the unauthorized zone
-	if authGranted && (ctx.Page().URL().Path == "/" || ctx.Page().URL().Path == "/login" || ctx.Page().URL().Path == "/register") {
+	if authGranted && (path == "/" || path == "/login" || path == "/register" || path == "/reset") {
 		ctx.Navigate("/flow")
 		return
 	}
 
-	h.authGranted = authGranted
-
-	h.pagePath = ctx.Page().URL().Path
+	ctx.Dispatch(func(ctx app.Context) {
+		h.authGranted = authGranted
+		h.pagePath = path
+	})
 
 	// keep the update button on until clicked
 	var newUpdate bool
