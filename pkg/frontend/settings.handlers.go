@@ -619,6 +619,37 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
+	toastText := ""
+	private := c.user.Private
+
+	ctx.Async(func() {
+		// send the registeration to backend
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/private", nil, c.user.Nickname, 0); !ok {
+			toastText = "cannot reach backend!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
+				c.toastText = "failed to toggle the private mode"
+				c.toastShow = toastText != ""
+
+				c.user.Private = private
+			})
+			return
+		}
+
+		// dispatch the good news to client
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = "private mode toggled"
+			c.toastShow = toastText != ""
+			c.toastType = "success"
+
+			c.user.Private = !private
+		})
+		return
+	})
+}
+
 func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	toastText := ""
 

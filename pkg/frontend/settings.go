@@ -330,7 +330,7 @@ func (c *settingsContent) Render() app.UI {
 					app.Span().Text("private acc switch"),
 				),
 				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("private-acc-switch").Checked(false).Disabled(true).OnChange(nil),
+					app.Input().Type("checkbox").ID("private-acc-switch").Checked(c.user.Private).Disabled(c.settingsButtonDisabled).OnChange(c.onClickPrivateSwitch),
 					app.Span().Body(
 						app.I().Text("lock"),
 					),
