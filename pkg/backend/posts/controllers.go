@@ -86,6 +86,8 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Posts = pExport
 	resp.Users = uExport
 
+	resp.Key = callerID
+
 	// pageSize is a constant -> see backend/pagination.go
 	resp.Count = PageSize
 

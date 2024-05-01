@@ -345,6 +345,8 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Users = uExport
 	resp.Posts = pExport
 
+	resp.Key = callerID
+
 	resp.Message = "ok, dumping user's flow posts"
 	resp.Code = http.StatusOK
 
