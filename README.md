@@ -173,6 +173,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 ### roadmap to v0.34
 + ~~fix the flow-users glitch (new users' posts not seen in flow on other devices)~~
 + ~~implement private account logic~~ (wip)
++ ~~allow picture-only posting~~
 
 ### roadmap to v0.33
 + ~~BE deep code refactoring~~ (wip)

@@ -171,7 +171,8 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			//newPost := strings.TrimSpace(c.newPost)
 			newPost := strings.TrimSpace(textarea)
 
-			if newPost == "" {
+			// allow just picture posting
+			if newPost == "" && c.newFigFile == "" {
 				toastText = "post textarea must be filled"
 				break
 			}

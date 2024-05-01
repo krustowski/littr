@@ -230,7 +230,8 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		textarea := app.Window().GetElementByID("reply-textarea").Get("value").String()
 		replyPost := strings.TrimSpace(textarea)
 
-		if replyPost == "" {
+		// allow picture-only posting
+		if replyPost == "" && c.newFigFile == "" {
 			toastText = "no valid reply entered"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -1240,15 +1241,17 @@ func (c *flowContent) Render() app.UI {
 									),
 								),
 
-								app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
-									app.If(postDetailsSummary != "",
-										app.Details().Body(
-											app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
-											app.Div().Class("space"),
+								app.If(len(post.Content) > 0,
+									app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.If(postDetailsSummary != "",
+											app.Details().Body(
+												app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+												app.Div().Class("space"),
+												app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+											),
+										).Else(
 											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 										),
-									).Else(
-										app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 									),
 								),
 
