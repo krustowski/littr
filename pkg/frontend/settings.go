@@ -225,11 +225,11 @@ func (c *settingsContent) Render() app.UI {
 			app.I().Text("person").Class("amber-text"),
 			app.If(c.user.Nickname != "",
 				app.P().Class("max").Body(
-					app.Span().Text("currently logged as: "),
+					app.Span().Text("logged as: "),
 					app.Span().Class("deep-orange-text").Text(c.user.Nickname),
-					app.Span().Text(" (e-mail: "),
+					app.Div().Class("small-space"),
+					app.Span().Text("e-mail: "),
 					app.Span().Class("deep-orange-text").Text(c.user.Email),
-					app.Span().Text(")"),
 				),
 			).Else(
 				app.Progress().Class("circle deep-orange-border active"),

@@ -44,6 +44,9 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 	// flush email addresses
 	for key, user := range users {
+		if key == caller {
+			continue
+		}
 		user.Email = ""
 		users[key] = user
 	}
@@ -350,6 +353,9 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 
 	// flush email addresses
 	for key, user := range uExport {
+		if key == callerID {
+			continue
+		}
 		user.Email = ""
 		uExport[key] = user
 	}
