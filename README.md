@@ -161,13 +161,18 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 
 ### roadmap to v1.0.0
 + add periodic subscription checker (older than a week will be deleted on no activity)
-+ fix the code smells as scanned by `sonar-scanner`
+
+### roadmap to v0.36
 + implement searching for flow using hashtags
-+ resolve tikets in github and redmine (priv)
 + write integration and e2e tests
 
+### roadmap to v0.35
++ fix the code smells as scanned by `sonar-scanner`
++ resolve tikets in github and redmine (priv)
+
 ### roadmap to v0.34
-+ implement private account logic
++ ~~fix the flow-users glitch (new users' posts not seen in flow on other devices)~~
++ ~~implement private account logic~~ (wip)
 
 ### roadmap to v0.33
 + ~~BE deep code refactoring~~ (wip)
