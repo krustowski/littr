@@ -360,6 +360,18 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		uExport[key] = user
 	}
 
+	// hack: include caller's models.User struct
+	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		resp.Message = "cannot fetch such callerID-named user"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	} else {
+		uExport[callerID] = caller
+	}
+
 	resp.Users = uExport
 	resp.Posts = pExport
 

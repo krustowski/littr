@@ -93,7 +93,13 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 	host := url.Host
 
 	// write the link to browsers's clipboard
-	app.Window().Get("navigator").Get("clipboard").Call("writeText", scheme+"://"+host+"/flow/post/"+key)
+	navigator := app.Window().Get("navigator")
+	if !navigator.IsNull() {
+		clipboard := navigator.Get("clipboard")
+		if !clipboard.IsNull() && !clipboard.IsUndefined() {
+			clipboard.Call("writeText", scheme+"://"+host+"/flow/post/"+key)
+		}
+	}
 	ctx.Navigate("/flow/post/" + key)
 }
 
@@ -660,6 +666,8 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.posts = posts
 			c.users = users
 
+			c.user = users[c.key]
+
 			c.loaderShow = false
 			c.loaderShowImage = false
 			c.refreshClicked = false
@@ -768,6 +776,9 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 		c.refreshClicked = false
 		c.toastText = toastText
 		c.key = resp.Key
+		if resp.Key != "" {
+			c.user = c.users[resp.Key]
+		}
 	})
 
 	return resp.Posts, resp.Users
@@ -896,6 +907,11 @@ func (c *flowContent) sortPosts() []models.Post {
 	posts := c.posts
 	if posts == nil {
 		posts = make(map[string]models.Post)
+	}
+
+	flowList := c.user.FlowList
+	if len(flowList) == 0 {
+		return sortedPosts
 	}
 
 	// fetch posts and put them in an array

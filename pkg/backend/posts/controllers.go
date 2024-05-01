@@ -89,6 +89,18 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		uExport[key] = user
 	}
 
+	// hack: include caller's models.User struct
+	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		resp.Message = "cannot fetch such callerID-named user"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	} else {
+		uExport[callerID] = caller
+	}
+
 	resp.Posts = pExport
 	resp.Users = uExport
 
@@ -497,12 +509,29 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 
 	// flush email addresses
 	for key, user := range uExport {
+		if key == callerID {
+			continue
+		}
 		user.Email = ""
 		uExport[key] = user
 	}
 
+	// hack: include caller's models.User struct
+	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		resp.Message = "cannot fetch such callerID-named user"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	} else {
+		uExport[callerID] = caller
+	}
+
 	resp.Users = uExport
 	resp.Posts = pExport
+
+	resp.Key = callerID
 
 	resp.Message = "ok, dumping single post and its interactions"
 	resp.Code = http.StatusOK
