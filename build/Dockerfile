@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
 WORKDIR /go/src/${APP_NAME}
 COPY go.mod .
 
-ARG GOMODCACHE GOCACHE
+ARG GOMODCACHE GOCACHE GOARCH
 RUN --mount=type=cache,target="$GOMODCACHE" go mod download
 
 #COPY .. . 
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 # build the server (go binary)
 RUN --mount=type=cache,target="$GOMODCACHE" \
 	--mount=type=cache,target="$GOCACHE" \
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=$GOARCH go build \
 		-o littr \
 		cmd/littr/
 
