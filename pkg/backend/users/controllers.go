@@ -489,3 +489,64 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 	return
 }
+
+// togglePrivateMode is the users' pkg handler to toggle the private status/mode of such user who requested this.
+//
+// @Summary      Toggle the private mode
+// @Description  toggle the private mode
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/{nickname}/private [patch]
+func togglePrivateMode(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	nick := chi.URLParam(r, "nickname")
+	caller, _ := r.Context().Value("nickname").(string)
+
+	// disallow unauthorized access
+	if nick != caller {
+		resp.Message = "access denied"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	var user models.User
+	var found bool
+
+	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
+		resp.Message = "user not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// toggle the status
+	user.Private = !user.Private
+
+	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, private mode toggled"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}

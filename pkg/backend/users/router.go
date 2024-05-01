@@ -14,6 +14,7 @@ func Router() chi.Router {
 		r.Get("/{nickname}", getOneUser)
 		r.Get("/{nickname}/posts", getUserPosts)
 		r.Put("/{nickname}", updateUser)
+		r.Patch("/{nickname}/private", togglePrivateMode)
 		r.Delete("/{nickname}", deleteUser)
 	})
 
