@@ -42,6 +42,7 @@ type usersContent struct {
 
 	toastShow bool
 	toastText string
+	toastType string
 
 	usersButtonDisabled  bool
 	showUserPreviewModal bool
@@ -423,6 +424,80 @@ func (c *usersContent) onClickUserFlow(ctx app.Context, e app.Event) {
 	ctx.Navigate("/flow/user/" + key)
 }
 
+func (c *usersContent) onClickPrivateOff(ctx app.Context, e app.Event) {
+	nick := ctx.JSSrc().Get("id").String()
+	if nick == "" {
+		return
+	}
+
+	toastText := ""
+
+	ctx.Async(func() {
+		user := c.users[nick]
+		toastType := "error"
+
+		if _, ok := litterAPI("DELETE", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "request to see removed"
+			toastType = "info"
+
+			if user.RequestList == nil {
+				user.RequestList = make(map[string]bool)
+			}
+			user.RequestList[c.user.Nickname] = false
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.toastType = toastType
+			c.usersButtonDisabled = false
+
+			c.users[nick] = user
+		})
+		return
+	})
+	return
+}
+
+func (c *usersContent) onClickPrivateOn(ctx app.Context, e app.Event) {
+	nick := ctx.JSSrc().Get("id").String()
+	if nick == "" {
+		return
+	}
+
+	toastText := ""
+
+	ctx.Async(func() {
+		user := c.users[nick]
+		toastType := "error"
+
+		if _, ok := litterAPI("POST", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+		} else {
+			toastText = "requested to see"
+			toastType = "success"
+
+			if user.RequestList == nil {
+				user.RequestList = make(map[string]bool)
+			}
+			user.RequestList[c.user.Nickname] = true
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.toastType = toastType
+			c.usersButtonDisabled = false
+
+			c.users[nick] = user
+		})
+		return
+	})
+	return
+}
+
 func (c *usersContent) onClickUser(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("preview", key)
@@ -444,6 +519,21 @@ func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *usersContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	keys := []string{}
 
 	// prepare the keys array
@@ -529,7 +619,7 @@ func (c *usersContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
@@ -621,6 +711,16 @@ func (c *usersContent) Render() app.UI {
 						return nil
 					}
 
+					var requested bool = false
+					var found bool
+
+					if user.RequestList != nil {
+						requested, found = user.RequestList[c.user.Nickname]
+						if !found {
+							requested = false
+						}
+					}
+
 					return app.Tr().Body(
 						app.Td().Class("left-align").Body(
 
@@ -694,26 +794,36 @@ func (c *usersContent) Render() app.UI {
 									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("system acc"),
 									),
+								// private mode
+								).ElseIf(user.Private && !requested && !inFlow,
+									app.Button().Class("max yellow10 white-text bold").OnClick(c.onClickPrivateOn).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
+										app.Text("ask to see"),
+									),
+								// private mode, requested already
+								).ElseIf(user.Private && requested && !inFlow,
+									app.Button().Class("max border gray white-text bold").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
+										app.Text("cancel the request"),
+									),
 								// if shaded
 								).ElseIf(shaded || c.users[user.Nickname].ShadeList[c.user.Nickname],
 									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("shaded"),
 									),
-								// toggle off
+								// flow toggle off
 								).ElseIf(inFlow,
-									app.Button().Class("max border black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
+									app.Button().Class("max border gray white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("remove from flow"),
 									),
-								// toggle on
+								// flow toggle on
 								).Else(
 									app.Button().Class("max deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("add to flow"),
 									),
 								),
 
-								// shading
+								// shading button
 								app.If(shaded,
-									app.Button().Class("no-padding transparent circular black white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
+									app.Button().Class("no-padding transparent circular gray white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
 										app.I().Text("block"),
 									),
 								).ElseIf(user.Nickname == c.user.Nickname,
