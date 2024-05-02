@@ -170,6 +170,18 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 	ctx.LocalStorage().Set("authGranted", false)
 
+	ctx.Async(func() {
+		if _, ok := litterAPI("POST", "/api/v1/auth/logout", nil, "", 0); !ok {
+			//toastText := "cannot POST logout request"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				//h.toastText = toastText
+				//h.toastShow = (toastText != "")
+			})
+			return
+		}
+	})
+
 	ctx.Navigate("/logout")
 }
 
