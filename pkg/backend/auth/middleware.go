@@ -28,6 +28,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// skip those routes
 		if r.URL.Path == "/api/v1" ||
 			r.URL.Path == "/api/v1/auth" ||
+			r.URL.Path == "/api/v1/auth/logout" ||
 			r.URL.Path == "/api/v1/dump/" ||
 			r.URL.Path == "/api/v1/flow/live" ||
 			r.URL.Path == "/api/v1/users/passphrase" ||
@@ -87,9 +88,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				voidCookie := &http.Cookie{
 					Name:     "refresh-token",
 					Value:    "",
-					Expires:  time.Now().Add(time.Second * 1),
+					Expires:  time.Now().Add(time.Second * -30),
 					Path:     "/",
 					HttpOnly: true,
+					Secure:   true,
 				}
 
 				http.SetCookie(w, voidCookie)
@@ -120,9 +122,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				voidCookie := &http.Cookie{
 					Name:     "refresh-token",
 					Value:    "",
-					Expires:  time.Now().Add(time.Second * 1),
+					Expires:  time.Now().Add(time.Second * -30),
 					Path:     "/",
 					HttpOnly: true,
+					Secure:   true,
 				}
 
 				http.SetCookie(w, voidCookie)
@@ -161,6 +164,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				Expires:  time.Now().Add(time.Minute * 15),
 				Path:     "/",
 				HttpOnly: true,
+				Secure:   true,
 			}
 
 			http.SetCookie(w, accessCookie)
@@ -195,9 +199,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			voidCookie := &http.Cookie{
 				Name:     "refresh-token",
 				Value:    "",
-				Expires:  time.Now().Add(time.Second * 1),
+				Expires:  time.Now().Add(time.Second * -30),
 				Path:     "/",
 				HttpOnly: true,
+				Secure:   true,
 			}
 
 			http.SetCookie(w, voidCookie)

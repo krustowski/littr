@@ -147,7 +147,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteDefaultMode,
 	}
 	refreshCookie := &http.Cookie{
 		Name:     "refresh-token",
@@ -156,7 +156,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteDefaultMode,
 	}
 
 	// save tokens as HTTP-only cookie
@@ -175,6 +175,52 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	l.Println(resp.Message, resp.Code)
 
+	resp.Write(w)
+	return
+}
+
+// logoutHandler send a client invalidated cookies to cease the session created before.
+//
+// @Summary 		Log-out an user
+// @Description		log-out an user
+// @Tags		auth
+// @Accept		json
+// @Produce		json
+// @Success		200	{object}	common.Response
+// @Failure		404	{object}	common.Response
+// @Failure		500	{object}	common.Response
+// @Router		/auth/logout [post]
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "auth")
+	resp.AuthGranted = false
+
+	voidAccessCookie := &http.Cookie{
+		Name:     "access-token",
+		Value:    "",
+		Expires:  time.Now().Add(time.Second * -30),
+		MaxAge:   0,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+	voidRefreshCookie := &http.Cookie{
+		Name:     "refresh-token",
+		Value:    "",
+		Expires:  time.Now().Add(time.Second * -30),
+		MaxAge:   0,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	http.SetCookie(w, voidAccessCookie)
+	http.SetCookie(w, voidRefreshCookie)
+
+	resp.Message = "void cookies sent (logout)"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 	return
 }

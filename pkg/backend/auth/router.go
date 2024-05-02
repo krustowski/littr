@@ -9,7 +9,7 @@ func Router() chi.Router {
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", authHandler)
-		//r.Post("/password", resetHandler)
+		r.Post("/logout", logoutHandler)
 	})
 
 	return r
