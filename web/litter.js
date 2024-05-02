@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.2'
+  window.LIT.version = 'LittrJS v0.6.3'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -125,12 +125,24 @@
   const es = new EventSource("/api/v1/posts/live");
 
   const listener = function (event) {	
-    //console.log(event.type)
+    console.log(event.type)
     console.log(event.data)
 
     if (event.data === "heartbeat") {
       $(".dot").css("opacity", "1.0");
       $(".dot").stop(true, true).show().fadeOut(19999);
+      return
+    }
+
+    if (event.type === "open") {
+      console.log(event)
+      return
+    }
+
+    if (event.type === "error") {
+      console.log("closing event stream")
+      es.close()
+      console.log(event)
       return
     }
 
@@ -157,9 +169,9 @@
     }
   }
 
-  //es.addEventListener("open", listener);
+  es.addEventListener("open", listener);
   es.addEventListener("message", listener);
-  //es.addEventListener("error", listener);
+  es.addEventListener("error", listener);
 
 
   // deregister the service worker
