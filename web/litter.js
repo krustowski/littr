@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.1'
+  window.LIT.version = 'LittrJS v0.6.2'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -129,7 +129,7 @@
     console.log(event.data)
 
     if (event.data === "heartbeat") {
-      $(".dot").css("opacity", 1.0);
+      $(".dot").css("opacity", "1.0");
       $(".dot").stop(true, true).show().fadeOut(19999);
       return
     }

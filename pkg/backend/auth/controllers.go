@@ -146,6 +146,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Minute * 15),
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	}
 	refreshCookie := &http.Cookie{
@@ -154,6 +155,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 168 * 4),
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	}
 
