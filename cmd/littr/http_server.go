@@ -5,6 +5,7 @@ package main
 
 import (
 	"compress/flate"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	configs "go.savla.dev/littr/configs"
 	be "go.savla.dev/littr/pkg/backend"
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
@@ -48,15 +48,20 @@ func initServer() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.CleanPath)
+	// TODO
 	//r.Use(middleware.Logger)
-	compressor := middleware.NewCompressor(flate.DefaultCompression,
-		"application/wasm", "text/css", "image/svg+xml", "application/json")
-	r.Use(compressor.Handler)
 	r.Use(middleware.Recoverer)
+
+	compressor := middleware.NewCompressor(
+		//flate.DefaultCompression,
+		flate.BestCompression,
+		"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif",
+	)
+	r.Use(compressor.Handler)
 
 	// custom listener
 	// https://github.com/oderwat/go-nats-app/blob/master/back/back.go
-	listener, err := net.Listen("tcp", ":8080")
+	listener, err := net.Listen("tcp", ":"+os.Getenv("APP_PORT"))
 	if err != nil {
 		panic(err)
 	}
@@ -65,6 +70,8 @@ func initServer() {
 	// https://github.com/oderwat/go-nats-app/blob/master/back/back.go
 	server := &http.Server{
 		Addr: listener.Addr().String(),
+		//ReadTimeout: 0 * time.Second,
+		WriteTimeout: 0 * time.Second,
 	}
 
 	// prepare the Logger instance
@@ -73,9 +80,6 @@ func initServer() {
 		WorkerName: "initServer",
 		Version:    "system",
 	}
-
-	// parse ENV contants from .env file (should be loaded using Makefile and docker-compose.yml file)
-	configs.ParseEnv()
 
 	// initialize caches
 	db.FlowCache = &core.Cache{}
@@ -102,15 +106,26 @@ func initServer() {
 	// signals goroutine
 	go func() {
 		sig := <-sigs
-		l.Println("caught signal '"+sig.String()+"', dumping data...", http.StatusCreated)
+		signal.Stop(sigs)
 
+		l.Println("caught signal '"+sig.String()+"', exiting gracefully...", http.StatusCreated)
+
+		// TODO
+		//db.LockAll()
 		db.DumpAll()
+		posts.Streamer.Shutdown()
 	}()
+
+	// parse the custom Service Worker template string for the app handler
+	tpl, err := os.ReadFile("/opt/web/app-worker.js")
+	if err != nil {
+		panic(err)
+	}
+
+	swTemplateString := fmt.Sprintf("%s", tpl)
 
 	// API router
 	r.Mount("/api/v1", be.APIRouter())
-
-	defer posts.Streamer.Shutdown()
 
 	appHandler := &app.Handler{
 		Name:         "litter-go",
@@ -165,6 +180,7 @@ func initServer() {
 			//"https://cdn.savla.dev/js/litter.js",
 			"https://cdn.savla.dev/js/eventsource.min.js",
 		},
+		ServiceWorkerTemplate: swTemplateString,
 	}
 
 	r.Handle("/*", appHandler)

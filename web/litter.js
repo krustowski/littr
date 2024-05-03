@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.3'
+  window.LIT.version = 'LittrJS v0.6.4'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -123,10 +123,20 @@
   //}
 
   const es = new EventSource("/api/v1/posts/live");
+  es.retry = 5000;
+
+  es.onerror = (err) => {
+    console.error("EventSource failed:", err);
+  };
 
   const listener = function (event) {	
     console.log(event.type)
     console.log(event.data)
+
+    /*if (event.eventPhase === EventSource.CLOSED) {
+      console.log("closing event stream")
+      es.close()
+    }*/
 
     if (event.data === "heartbeat") {
       $(".dot").css("opacity", "1.0");
@@ -136,12 +146,13 @@
 
     if (event.type === "open") {
       console.log(event)
+      //window.LIT.clearCache();
       return
     }
 
     if (event.type === "error") {
-      console.log("closing event stream")
-      es.close()
+      //console.log("closing event stream")
+      //es.close()
       console.log(event)
       return
     }
