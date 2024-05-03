@@ -40,7 +40,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 	GOARCH=wasm GOOS=js go build \
 		-o web/app.wasm \
 		-tags wasm \
-		-ldflags "-X 'go.savla.dev/littr/pkg/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/pkg/frontend.vapidPublicKey=$VAPID_PUB_KEY'"\
+		-ldflags "-X 'go.savla.dev/littr/pkg/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/pkg/frontend.appPepper=$APP_PEPPER' -X 'go.savla.dev/littr/pkg/frontend.vapidPublicKey=$VAPID_PUB_KEY'"\
 		cmd/littr/
 
 # build the server (go binary)
@@ -57,13 +57,12 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 
 FROM alpine:3.19 AS litter-release
 
-ARG APP_FLAGS APP_PEPPER APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
+ARG APP_FLAGS APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
 
 ENV APP_FLAGS ${APP_FLAGS}
-ENV APP_PEPPER ${APP_PEPPER}
 ENV APP_VERSION ${APP_VERSION}
-ENV DOCKER_DEV_PORT ${DOCKER_INTERNAL_PORT}
-ENV DOCKER_USER ${DOCKER_USER}
+ENV APP_PORT ${DOCKER_INTERNAL_PORT}
+ENV APP_USER ${DOCKER_USER}
 
 RUN --mount=type=cache,target=/var/cache/apk \
 	apk update && apk add tzdata

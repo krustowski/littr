@@ -21,6 +21,7 @@ import (
 var (
 	// those vars are used during the build --- linker (ld) bakes the values in
 	appVersion     string
+	appPepper      string
 	vapidPublicKey string
 )
 
