@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.34.7"
+        "version": "0.34.8"
     },
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",
@@ -324,6 +324,32 @@
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
+                    }
+                }
+            }
+        },
+        "/posts/live": {
+            "get": {
+                "description": "get real-time posts event stream",
+                "consumes": [
+                    "text/event-stream"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Get real-time posts event stream (SSE stream)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
