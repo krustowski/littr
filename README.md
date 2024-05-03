@@ -17,7 +17,7 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 `cmd`
 + main app entrypoints for build
 
-`cmd/littrhttp_server.go`
+`cmd/littr/http_server.go`
 + init app file for the app's backend side with REST API service
 
 `cmd/littr/wasm_client.go`
