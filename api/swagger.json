@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.34.8"
+        "version": "0.34.9"
     },
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",

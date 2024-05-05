@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/backend/posts"
@@ -140,6 +141,15 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {}
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")
+
+	if !configs.REGISTERATION_ENABLED {
+		resp.Message = "registeration disallowed at the moment"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 
 	var user models.User
 

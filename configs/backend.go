@@ -1,12 +1,9 @@
 package configs
 
-import (
-// "os"
-)
-
 const (
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
-	HEARTBEAT_SLEEP_TIME = 20
+	HEARTBEAT_SLEEP_TIME  = 20
+	REGISTERATION_ENABLED = false
 )
 
 /*

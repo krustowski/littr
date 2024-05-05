@@ -295,8 +295,14 @@ func (c *registerContent) Render() app.UI {
 
 		// register button
 		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(
-				app.Text("register"),
+			app.If(configs.REGISTERATION_ENABLED,
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(
+					app.Text("register"),
+				),
+			).Else(
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(nil).Disabled(true).Body(
+					app.Text("registeration off"),
+				),
 			),
 		),
 
