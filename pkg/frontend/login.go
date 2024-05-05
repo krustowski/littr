@@ -226,8 +226,14 @@ func (c *loginContent) Render() app.UI {
 			),
 
 			// register button
-			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
-				app.Text("register"),
+			app.If(configs.REGISTERATION_ENABLED,
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+					app.Text("register"),
+				),
+			).Else(
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(nil).Disabled(true).Body(
+					app.Text("register"),
+				),
 			),
 		),
 		app.Div().Class("space"),
