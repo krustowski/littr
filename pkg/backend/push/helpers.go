@@ -81,7 +81,7 @@ func SendNotificationToDevices(nickname string, devs []models.Device, body []byt
 			code := res.StatusCode
 
 			// expired or unsubscribed -> delete subscription
-			if code != 200 {
+			if code != 201 {
 				devicesToDelete = append(devicesToDelete, dev.UUID)
 			}
 
