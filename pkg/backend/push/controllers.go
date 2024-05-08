@@ -260,7 +260,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		Path:  "/flow/post/" + post.ID,
 	})
 
-	SendNotificationToDevices(devs, body, l)
+	SendNotificationToDevices(post.Nickname, devs, body, l)
 
 	resp.Message = "ok, notification(s) sent"
 	resp.Code = http.StatusCreated

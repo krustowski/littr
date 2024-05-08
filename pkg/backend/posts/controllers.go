@@ -235,7 +235,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			Path:  "/flow/post/" + post.ID,
 		})
 
-		push.SendNotificationToDevices(devs, body, l)
+		push.SendNotificationToDevices(receiverName, devs, body, l)
 	}
 
 	// broadcast a new post to live subscribers
