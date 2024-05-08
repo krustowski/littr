@@ -154,7 +154,7 @@ func initServer() {
 		},
 		BackgroundColor: "#000000",
 		ThemeColor:      "#000000",
-		Version:         os.Getenv("APP_VERSION") + time.Now().String(),
+		Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
 		Env: map[string]string{
 			"APP_VERSION":   os.Getenv("APP_VERSION"),
 			"APP_PEPPER":    os.Getenv("APP_PEPPER"),
