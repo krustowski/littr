@@ -16,6 +16,7 @@ func Router() chi.Router {
 		r.Put("/{nickname}", updateUser)
 		r.Delete("/{nickname}", deleteUser)
 
+		r.Post("/{nickname}/avatar", postUsersAvatar)
 		r.Get("/{nickname}/posts", getUserPosts)
 		r.Post("/{nickname}/request", addToRequestList)
 		r.Delete("/{nickname}/request", removeFromRequestList)

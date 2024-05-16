@@ -700,3 +700,114 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 	return
 }
+
+// postUsersAvatar is a handler function to update user's avatar directly in the app.
+//
+// @Summary      Post user's avatar
+// @Description  post user's avatar
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/{nickname}/avatar [post]
+func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	nick := chi.URLParam(r, "nickname")
+	caller, _ := r.Context().Value("nickname").(string)
+
+	var user models.User
+	var found bool
+
+	if caller != nick {
+		resp.Message = "bad request (access denied)"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
+		resp.Message = "user not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	fetch := struct {
+		Figure string `json."figure"`
+		Data   []byte `json:"data"`
+	}{}
+
+	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	timestamp := time.Now()
+	key := strconv.FormatInt(timestamp.UnixNano(), 10)
+
+	var content string
+
+	// uploadedFigure handling
+	if fetch.Data != nil && fetch.Figure != "" {
+		fileExplode := strings.Split(fetch.Figure, ".")
+		extension := fileExplode[len(fileExplode)-1]
+
+		content = key + "." + extension
+
+		// upload to local storage
+		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/"+content, fetch.Data, 0600); err != nil {
+			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// generate thumbanils
+		if err := posts.GenThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content); err != nil {
+			resp.Message = "backend error: cannot generate the image thumbnail"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		fetch.Figure = content
+		fetch.Data = []byte{}
+	}
+
+	user.AvatarURL = "/web/pix/thumb_" + content
+
+	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+		resp.Message = "backend error: cannot save new avatar"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, updating user's avatar"
+	resp.Code = http.StatusOK
+	resp.Key = content
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}

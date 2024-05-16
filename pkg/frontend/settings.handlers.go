@@ -675,3 +675,89 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	})
 	return
 }
+
+func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
+	var toastText string
+
+	file := e.Get("target").Get("files").Index(0)
+
+	//c.postButtonsDisabled = true
+
+	ctx.Async(func() {
+		if data, err := readFile(file); err != nil {
+			toastText = err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+
+		} else {
+			/*payload := models.Post{
+				Nickname:  author,
+				Type:      "fig",
+				Content:   file.Get("name").String(),
+				Timestamp: time.Now(),
+				Data:      data,
+			}*/
+
+			// add new post/poll to backend struct
+			/*if _, ok := litterAPI("POST", path, payload, user.Nickname, 0); !ok {
+				toastText = "backend error: cannot add new content"
+				log.Println("cannot post new content to API!")
+			} else {
+				ctx.Navigate("/flow")
+			}*/
+
+			path := "/api/v1/users/" + c.user.Nickname + "/avatar"
+
+			payload := models.Post{
+				Nickname: c.user.Nickname,
+				Figure:   file.Get("name").String(),
+				Data:     data,
+			}
+
+			resp := struct {
+				Key string
+			}{}
+
+			if raw, ok := litterAPI("POST", path, payload, c.user.Nickname, 0); ok {
+				if err := json.Unmarshal(*raw, &resp); err != nil {
+					toastText = "JSON parse error: " + err.Error()
+					ctx.Dispatch(func(ctx app.Context) {
+						c.toastText = toastText
+						c.toastShow = (toastText != "")
+					})
+					return
+				}
+
+			} else {
+				//ctx.Navigate("/flow")
+				toastText = "generic backend error: cannot process the request"
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
+			}
+
+			toastText = "avatar successfully updated"
+
+			avatar := "/web/pix/thumb_" + resp.Key
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastType = "success"
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+
+				c.newFigFile = file.Get("name").String()
+				c.newFigData = data
+
+				c.user.AvatarURL = avatar
+			})
+			return
+		}
+	})
+}

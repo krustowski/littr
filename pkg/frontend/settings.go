@@ -59,6 +59,10 @@ type settingsContent struct {
 
 	thisDeviceUUID string
 	interactedUUID string
+
+	newFigLink string
+	newFigData []byte
+	newFigFile string
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -247,7 +251,11 @@ func (c *settingsContent) Render() app.UI {
 
 		// load current user's avatar
 		app.Div().Class("transparent middle-align center-align bottom").Body(
-			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
+			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+			//app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
+			//app.Label().Text("image").Class("active deep-orange-text"),
+			//app.I().Text("image"),
 		),
 
 		// infobox about image caching

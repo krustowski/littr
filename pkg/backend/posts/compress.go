@@ -12,7 +12,7 @@ import (
 )
 
 // https://github.com/prplecake/go-thumbnail/blob/master/thumbnail.go
-func genThumbnails(src, dest string) error {
+func GenThumbnails(src, dest string) error {
 	var config = thumb.Generator{
 		DestinationPath:   "",
 		DestinationPrefix: "thumb_",
