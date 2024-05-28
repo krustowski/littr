@@ -1197,7 +1197,7 @@ func (c *flowContent) Render() app.UI {
 
 					return app.Tr().Class().Class("bottom-padding").Body(
 						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Body(
+						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
 
 							// post header (author avatar + name + link button)
 							app.Div().Class("row top-padding").Body(
@@ -1289,7 +1289,7 @@ func (c *flowContent) Render() app.UI {
 									),
 								).Else(
 									app.B().Text(post.ReactionCount).Class("left-padding"),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
 										//app.I().Text("ac_unit"),
 										app.I().Text("bomb"),
 									),

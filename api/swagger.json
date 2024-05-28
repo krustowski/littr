@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.34.11"
+        "version": "0.34.12"
     },
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",
@@ -943,6 +943,47 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{nickname}/avatar": {
+            "post": {
+                "description": "post user's avatar",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Post user's avatar",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }

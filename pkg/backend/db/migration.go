@@ -95,6 +95,7 @@ func RunMigrations() bool {
 				l.Println("migrateUserDeletion: cannot delete an user: "+key, http.StatusInternalServerError)
 				return false
 			}
+			delete(users, key)
 		}
 	}
 
