@@ -157,14 +157,14 @@ func initServer() {
 		Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
 		Env: map[string]string{
 			"APP_VERSION":   os.Getenv("APP_VERSION"),
-			"APP_PEPPER":    os.Getenv("APP_PEPPER"),
 			"VAPID_PUB_KEY": os.Getenv("VAPID_PUB_KEY"),
 		},
 		Preconnect: []string{
-			"https://cdn.savla.dev/",
+			//"https://cdn.savla.dev/",
 		},
 		Fonts: []string{
-			"https://cdn.savla.dev/webfonts/material-symbols-outlined.woff2",
+			"https://cdn.savla.dev/css/material-symbols-outlined.woff2",
+			//"https://cdn.jsdelivr.net/npm/beercss@3.5.0/dist/cdn/material-symbols-outlined.woff2",
 		},
 		Styles: []string{
 			"https://cdn.savla.dev/css/beercss.min.css",
