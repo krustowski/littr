@@ -133,6 +133,10 @@
     console.log(event.type)
     console.log(event.data)
 
+    //const lastEventTime = window.performance.timeOrigin + window.performance.now()
+    const lastEventTime = Math.floor(Date.now() / 1000)
+    localStorage.setItem("lastEventTime", lastEventTime)
+
     /*if (event.eventPhase === EventSource.CLOSED) {
       console.log("closing event stream")
       es.close()

@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/pkg/models"
 
@@ -28,6 +30,7 @@ type header struct {
 	pagePath string
 
 	eventListenerMessage func()
+	lastHeartbeatTime    int64
 
 	toastText string
 	toastShow bool
@@ -44,6 +47,8 @@ const (
 
 func (h *header) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
+
+	//ctx.LocalStorage().Set("lastEventTime", time.Now().UnixNano())
 
 	if data == "heartbeat" {
 		return
@@ -71,16 +76,17 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		return
 	}
 
+	// show the snack bar the nasty way
 	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
 		snack.Get("classList").Call("add", "active")
 	}
 
-	ctx.Dispatch(func(ctx app.Context) {
+	/*ctx.Dispatch(func(ctx app.Context) {
 		// won't trigger the render for some reason...
 		//h.toastText = "new post added above"
 		//h.toastType = "info"
-	})
+	})*/
 	return
 }
 
@@ -121,7 +127,6 @@ func (h *header) OnMount(ctx app.Context) {
 
 	// create event listener for SSE messages
 	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
-	h.toastText = "new post added to the flow"
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
@@ -248,6 +253,31 @@ func (h *header) Render() app.UI {
 		toastColor = "blue10"
 	}
 
+	// a very nasty way on how to store the timestamp...
+	var last int64 = 0
+
+	beat := app.Window().Get("localStorage")
+	if !beat.IsNull() && !beat.Call("getItem", "lastEventTime").IsNull() {
+		str := beat.Call("getItem", "lastEventTime").String()
+
+		lastInt, err := strconv.Atoi(str)
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		last = int64(lastInt)
+	}
+
+	sseConnStatus := "disconnected"
+	if last > 0 && (time.Now().Unix()-last) < 45 {
+		sseConnStatus = "connected"
+	}
+
+	toastText := h.toastText
+	if toastText == "" {
+		toastText = "new post added to the flow"
+	}
+
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
@@ -292,7 +322,7 @@ func (h *header) Render() app.UI {
 
 			// littr header
 			app.Div().Class("max row center-align").Body(
-				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).Body(
+				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 					app.Span().Body(
 						app.Text(headerString),
 						app.Span().Class("col").Body(
@@ -318,7 +348,7 @@ func (h *header) Render() app.UI {
 				//app.If(h.toastText != "",
 				app.Div().ID("snackbar-general").OnClick(h.onClickModalDismiss).Class("snackbar white-text top "+toastColor).Body(
 					app.I().Text("error"),
-					app.Span().Text(h.toastText),
+					app.Span().Text(toastText),
 				),
 				//),
 			),
@@ -326,7 +356,7 @@ func (h *header) Render() app.UI {
 			// app info modal
 			app.If(h.modalInfoShow,
 				app.Dialog().Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
-					app.Div().Class("row center-align").Body(
+					app.Article().Class("row center-align").Style("border-radius", "8px").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Body(
 							app.Span().Body(
@@ -353,6 +383,14 @@ func (h *header) Render() app.UI {
 					app.Article().Class("center-align").Style("border-radius", "8px").Body(
 						app.Text("version "),
 						app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+						app.P().Body(
+							app.Text("SSE status: "),
+							app.If(sseConnStatus == "connected",
+								app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold"),
+							).Else(
+								app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold"),
+							),
+						),
 					),
 
 					app.Nav().Class("center-align").Body(
