@@ -63,13 +63,23 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		log.Println(err.Error())
 	}
 
+	if data == user.Nickname {
+		return
+	}
+
 	if _, flowed := user.FlowList[data]; !flowed {
 		return
 	}
 
+	snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("add", "active")
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
-		h.toastText = "new post added above"
-		h.toastType = "info"
+		// won't trigger the render for some reason...
+		//h.toastText = "new post added above"
+		//h.toastType = "info"
 	})
 	return
 }
@@ -111,6 +121,7 @@ func (h *header) OnMount(ctx app.Context) {
 
 	// create event listener for SSE messages
 	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
+	h.toastText = "new post added to the flow"
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
@@ -172,6 +183,11 @@ func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
+	snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("remove", "active")
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalInfoShow = false
 		h.modalLogoutShow = false
@@ -224,12 +240,12 @@ func (h *header) Render() app.UI {
 		toastColor = "green10"
 		break
 
-	case "info":
-		toastColor = "blue10"
+	case "error":
+		toastColor = "red10"
 		break
 
 	default:
-		toastColor = "red10"
+		toastColor = "blue10"
 	}
 
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
@@ -299,12 +315,12 @@ func (h *header) Render() app.UI {
 				),
 
 				// snackbar toast
-				app.If(h.toastText != "",
-					app.Div().OnClick(h.onClickModalDismiss).Class("snackbar white-text top active "+toastColor).Body(
-						app.I().Text("error"),
-						app.Span().Text(h.toastText),
-					),
+				//app.If(h.toastText != "",
+				app.Div().ID("snackbar-general").OnClick(h.onClickModalDismiss).Class("snackbar white-text top "+toastColor).Body(
+					app.I().Text("error"),
+					app.Span().Text(h.toastText),
 				),
+				//),
 			),
 
 			// app info modal
