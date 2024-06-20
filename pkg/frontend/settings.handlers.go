@@ -49,7 +49,9 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
+		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
+		passHash := sha512.Sum512([]byte(passphrase + appPepper))
+
 		updatedUser := c.user
 		//updatedUser.Passphrase = string(passHash[:])
 		updatedUser.PassphraseHex = fmt.Sprintf("%x", passHash)

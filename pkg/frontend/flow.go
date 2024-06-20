@@ -582,7 +582,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
-	ctx.Handle("message", c.handleNewPost)
+	//ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
 	c.pagination = 0
@@ -594,7 +594,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.deleteModalButtonsDisabled = false
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
+	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
@@ -614,10 +614,6 @@ func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
 		c.toastText = "new post added above"
 		c.toastType = "info"
 	})
-}
-
-func (c *flowContent) handleNewPost(ctx app.Context, a app.Action) {
-	log.Println("msg event lmaooooooooooooo")
 }
 
 func (c *flowContent) OnDismount() {

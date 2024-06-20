@@ -1,6 +1,9 @@
 package frontend
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"log"
 	"strings"
 
 	"go.savla.dev/littr/pkg/models"
@@ -25,6 +28,10 @@ type header struct {
 	pagePath string
 
 	eventListenerMessage func()
+
+	toastText string
+	toastShow bool
+	toastType string
 }
 
 type footer struct {
@@ -39,14 +46,32 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
 
 	if data == "heartbeat" {
+		return
+	}
 
+	var baseString string
+	var user models.User
+	ctx.LocalStorage().Get("user", &baseString)
+
+	str, err := base64.StdEncoding.DecodeString(baseString)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	err = json.Unmarshal(str, &user)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	if _, flowed := user.FlowList[data]; !flowed {
 		return
 	}
 
 	ctx.Dispatch(func(ctx app.Context) {
-		//h.toastText = "new post added above"
-		//h.toastType = "info"
+		h.toastText = "new post added above"
+		h.toastType = "info"
 	})
+	return
 }
 
 func (h *header) OnAppUpdate(ctx app.Context) {
@@ -84,9 +109,13 @@ func (h *header) OnMount(ctx app.Context) {
 		return
 	}
 
+	// create event listener for SSE messages
+	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
+
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
 		h.pagePath = path
+		//h.toastText = "lmaooooo"
 	})
 
 	// keep the update button on until clicked
@@ -96,9 +125,6 @@ func (h *header) OnMount(ctx app.Context) {
 	if newUpdate {
 		h.updateAvailable = true
 	}
-
-	// create event listener for SSE messages
-	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
 
 	h.onlineState = true // this is a guess
 	// this may not be implemented
@@ -149,6 +175,10 @@ func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalInfoShow = false
 		h.modalLogoutShow = false
+
+		h.toastShow = false
+		h.toastText = ""
+		h.toastType = ""
 	})
 }
 
@@ -172,11 +202,11 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		if _, ok := litterAPI("POST", "/api/v1/auth/logout", nil, "", 0); !ok {
-			//toastText := "cannot POST logout request"
+			toastText := "cannot POST logout request"
 
 			ctx.Dispatch(func(ctx app.Context) {
-				//h.toastText = toastText
-				//h.toastShow = (toastText != "")
+				h.toastText = toastText
+				h.toastShow = (toastText != "")
 			})
 			return
 		}
@@ -187,6 +217,21 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 
 // top navbar
 func (h *header) Render() app.UI {
+	toastColor := ""
+
+	switch h.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
@@ -250,6 +295,14 @@ func (h *header) Render() app.UI {
 					app.Div().OnClick(h.onClickModalDismiss).Class("snackbar red10 white-text top active").Body(
 						app.I().Text("warning").Class("amber-text"),
 						app.Span().Text("no internet connection"),
+					),
+				),
+
+				// snackbar toast
+				app.If(h.toastText != "",
+					app.Div().OnClick(h.onClickModalDismiss).Class("snackbar white-text top active "+toastColor).Body(
+						app.I().Text("error"),
+						app.Span().Text(h.toastText),
 					),
 				),
 			),

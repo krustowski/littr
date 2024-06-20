@@ -94,7 +94,8 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
+		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
+		passHash := sha512.Sum512([]byte(passphrase + appPepper))
 
 		respRaw, ok := litterAPI("POST", "/api/v1/auth", &models.User{
 			Nickname:      nickname,
@@ -133,7 +134,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if !response.AuthGranted {
-			toastText = "wrong credentials on input"
+			toastText = "wrong credentials passed"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText

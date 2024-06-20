@@ -89,7 +89,8 @@ func litterAPI(method, url string, data interface{}, caller string, pageNo int) 
 	}
 
 	// decrypt the data
-	decrData := configs.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
+	//decrData := configs.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
+	decrData := configs.Decrypt([]byte(appPepper), respData)
 
 	return &decrData, true
 }
