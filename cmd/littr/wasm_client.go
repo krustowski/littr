@@ -28,4 +28,5 @@ func initClient() {
 	app.RunWhenOnBrowser()
 }
 
+// function initServer() is blanked here to reduce the final WASM binary file size, which is used on the client's side (see build at the top of this file)
 func initServer() {}

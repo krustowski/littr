@@ -10,10 +10,25 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
 )
+
+const (
+	ACCESS_TOKEN = "access-token",
+	REFRESH_TOKEN = "refresh-token",
+)
+
+var pathExceptions []string = []string{
+	"/api/v1",
+	"/api/v1/auth",
+	"/api/v1/auth/logout",
+	"/api/v1/dump/",
+	"/api/v1/posts/live",
+	"/api/v1/users/passphrase",
+}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -26,13 +41,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		  		}*/
 
 		// skip those routes
-		if r.URL.Path == "/api/v1" ||
-			r.URL.Path == "/api/v1/auth" ||
-			r.URL.Path == "/api/v1/auth/logout" ||
-			r.URL.Path == "/api/v1/dump/" ||
-			r.URL.Path == "/api/v1/posts/live" ||
-			r.URL.Path == "/api/v1/users/passphrase" ||
-			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {
+		if helpers.Contains(pathExceptions, r.URL.Path) || (r.URL.Path == "/api/v1/users" && r.Method == "POST") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -48,7 +57,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		var user models.User
 		var err error
 
-		if refreshCookie, err = r.Cookie("refresh-token"); err != nil {
+		if refreshCookie, err = r.Cookie(REFRESH_TOKEN); err != nil {
 			// logout --- missing refresh token
 			resp.Message = "client unauthorized"
 			resp.Code = http.StatusUnauthorized
@@ -72,7 +81,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		var userClaims *UserClaims
-		accessCookie, err = r.Cookie("access-token")
+		accessCookie, err = r.Cookie(ACCESS_TOKEN)
 		if err == nil {
 			userClaims = ParseAccessToken(accessCookie.Value, secret)
 		}
@@ -86,7 +95,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			rawNick, found := db.TokenCache.Get(sum)
 			if !found {
 				voidCookie := &http.Cookie{
-					Name:     "refresh-token",
+					Name:     REFRESH_TOKEN,
 					Value:    "",
 					Expires:  time.Now().Add(time.Second * -30),
 					Path:     "/",
@@ -120,7 +129,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				db.DeleteOne(db.TokenCache, sum)
 
 				voidCookie := &http.Cookie{
-					Name:     "refresh-token",
+					Name:     REFRESH_TOKEN,
 					Value:    "",
 					Expires:  time.Now().Add(time.Second * -30),
 					Path:     "/",
@@ -159,7 +168,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 
 			accessCookie := &http.Cookie{
-				Name:     "access-token",
+				Name:     ACCESS_TOKEN,
 				Value:    accessToken,
 				Expires:  time.Now().Add(time.Minute * 15),
 				Path:     "/",
@@ -197,7 +206,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		rawNick, found := db.TokenCache.Get(sum)
 		if !found {
 			voidCookie := &http.Cookie{
-				Name:     "refresh-token",
+				Name:     REFRESH_TOKEN,
 				Value:    "",
 				Expires:  time.Now().Add(time.Second * -30),
 				Path:     "/",
