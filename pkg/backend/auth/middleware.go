@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	ACCESS_TOKEN = "access-token",
-	REFRESH_TOKEN = "refresh-token",
+	ACCESS_TOKEN  = "access-token"
+	REFRESH_TOKEN = "refresh-token"
 )
 
 var pathExceptions []string = []string{
