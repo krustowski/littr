@@ -76,7 +76,7 @@ info:
 dev: fmt build run logs
 
 .PHONY: prod
-prod: build run logs
+prod: run logs
 
 
 #
