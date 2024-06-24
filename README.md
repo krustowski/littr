@@ -27,9 +27,6 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + configuration files
 + nginx proxy full configuration
 
-`.data/`
-+ sample data used to flush existing container data by `make flush`
-
 `deployments`
 + docker deployment files
 
@@ -41,14 +38,17 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 
 `pkg/backend`
 + REST API backend service
-+ service is used by WASM client for fetching of app data
++ service is used by WASM client for the app's running data fetch
 
 `pkg/frontend`
 + frontend pages
 + go-app framework usecase
 
-`pkg/models/`
+`pkg/models`
 + various shared model declarations
+
+`test/data`
++ sample data used to flush existing container's data by `make flush`
 
 `web`
 + static web files, logos, web manifest
@@ -58,6 +58,7 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 
 + users must register (`/register`) or existed users login (`/login`)
 + users can navigate to the flow (`/flow`) and read other's mind _flows_
++ users can modify their flow-list (list of followed accounts, `/users`)
 + users can change their passphrase or the _about_ description in settings (`/settings`)
 + posts can be written and sent (`/post`) by any logged-in user
 + users can logout (`/logout`)
@@ -69,8 +70,10 @@ litter again, now in Go as a PWA --- a microblogging service without notificatio
 + in-memory runtime cache(s)
 + data persistence on container restart (on `SIGINT`)
 + flow posts filtering using the FlowList --- simply choose who to follow
-+ can run offline
++ can (partially) run offline
 + shade function to block other accounts from following and reading their posts
++ webpush notification management --- chose which notifications (reply/mention) is one's device willing to accept
++ private acccount --- others have to file a followw request to such account (and have to approved by the acc's owner)
 
 
 ## REST API service
