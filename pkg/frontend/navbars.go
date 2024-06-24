@@ -369,19 +369,17 @@ func (h *header) Render() app.UI {
 							),
 						),
 					),
-					app.Nav().Class("center-align large-text").Body(
+					app.Article().Class("center-align large-text").Style("border-radius", "8px").Body(
 						app.P().Body(
 							app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 						),
-					),
-					app.Nav().Class("center-align large-text").Body(
 						app.P().Body(
 							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
 						),
 					),
 
 					app.Article().Class("center-align").Style("border-radius", "8px").Body(
-						app.Text("version "),
+						app.Text("version: "),
 						app.A().Text("v"+app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
 						app.P().Body(
 							app.Text("SSE status: "),
