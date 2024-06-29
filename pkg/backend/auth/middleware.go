@@ -23,7 +23,7 @@ const (
 
 var pathExceptions []string = []string{
 	"/api/v1",
-	"/api/v1/auth",
+	"/api/v1/auth/",
 	"/api/v1/auth/logout",
 	"/api/v1/dump/",
 	"/api/v1/posts/live",

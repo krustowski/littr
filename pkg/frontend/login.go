@@ -97,7 +97,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 		passHash := sha512.Sum512([]byte(passphrase + appPepper))
 
-		respRaw, ok := litterAPI("POST", "/api/v1/auth", &models.User{
+		respRaw, ok := litterAPI("POST", "/api/v1/auth/", &models.User{
 			Nickname:      nickname,
 			Passphrase:    string(passHash[:]),
 			PassphraseHex: fmt.Sprintf("%x", passHash),
