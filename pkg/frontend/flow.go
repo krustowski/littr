@@ -407,6 +407,8 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 					UserFlow: c.userFlowNick != "",
 					//UserFlowNick: parts.UserFlowNick,
 					UserFlowNick: c.userFlowNick,
+
+					Hashtag: c.hashtag,
 				}
 
 				newPosts, newUsers = c.fetchFlowPage(opts)
