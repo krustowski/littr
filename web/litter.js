@@ -313,6 +313,17 @@
             $(this)
               .html()
               .replace(
+                /#([\w]+)/g,
+                '<a class="red-text" target=_blank href="/flow/hashtag/$1">#$1</a> '
+              )
+          )
+          .addClass('ff')
+
+        $(this)
+          .html(
+            $(this)
+              .html()
+              .replace(
                 /@([\w]+)/g,
                 '<a class="red-text" target=_blank href="/flow/user/$1">@$1</a> '
               )

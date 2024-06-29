@@ -29,6 +29,7 @@ func initClient() {
 	app.Route("/", &fe.LoginPage{})
 	app.Route("/flow", &fe.FlowPage{})
 	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowPage{})
+	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowPage{})
 	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowPage{})
 	app.Route("/login", &fe.LoginPage{})
 	app.Route("/logout", &fe.LoginPage{})

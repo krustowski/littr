@@ -539,3 +539,83 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 }
+
+// fetchHashtaggedPosts
+//
+// @Summary      Get hashtagged post list
+// @Description  get hashtagged post list
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Router       /posts/hashtag/{hashtag} [get]
+func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, pkgName)
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	// parse the URI's path
+	// check if diff page has been requested
+	hashtag := chi.URLParam(r, "hashtag")
+
+	pageNoString := r.Header.Get("X-Flow-Page-No")
+	page, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	opts := PageOptions{
+		Hashtag:  hashtag,
+		CallerID: callerID,
+		PageNo:   page,
+	}
+
+	// fetch page according to the logged user
+	pExport, uExport := GetOnePage(opts)
+	if pExport == nil || uExport == nil {
+		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// flush email addresses
+	for key, user := range uExport {
+		if key == callerID {
+			continue
+		}
+		user.Email = ""
+		uExport[key] = user
+	}
+
+	// hack: include caller's models.User struct
+	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		resp.Message = "cannot fetch such callerID-named user"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	} else {
+		uExport[callerID] = caller
+	}
+
+	resp.Users = uExport
+	resp.Posts = pExport
+
+	resp.Key = callerID
+
+	resp.Message = "ok, dumping hashtagged posts and their parent posts"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}

@@ -53,6 +53,8 @@ func Router() chi.Router {
 		//r.Put("/", updatePost)
 		r.Patch("/{postID}/star", updatePostStarCount)
 		r.Delete("/{postID}", deletePost)
+
+		r.Get("/hashtag/{hashtag}", fetchHashtaggedPosts)
 	})
 
 	return r

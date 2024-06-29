@@ -2,6 +2,7 @@ package posts
 
 import (
 	"sort"
+	"strings"
 
 	"go.savla.dev/littr/pkg/backend/db"
 	"go.savla.dev/littr/pkg/helpers"
@@ -20,6 +21,8 @@ type PageOptions struct {
 	UserFlow     bool   `json:"user_flow" default:false`
 	SinglePostID string `json:"single_post_id"`
 	UserFlowNick string `json:"user_Flow_nick"`
+
+	Hashtag string `json:"hashtag" default:""`
 }
 
 // for now, let us use it for posts/flow exclusively only
@@ -59,6 +62,13 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 	for _, post := range allPosts {
 		// check the caller's flow list, skip on unfollowed, or unknown user
 		if value, found := flowList[post.Nickname]; !found || !value {
+			continue
+		}
+
+		if opts.Hashtag != "" {
+			if strings.Contains(post.Content, "#"+opts.Hashtag) {
+				posts = append(posts, post)
+			}
 			continue
 		}
 

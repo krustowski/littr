@@ -69,6 +69,8 @@ type flowContent struct {
 
 	refreshClicked bool
 
+	hashtag string
+
 	eventListenerMsg     func()
 	keyDownEventListener func()
 }
@@ -655,6 +657,7 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			UserFlow: c.userFlowNick != "",
 			//UserFlowNick: parts.UserFlowNick,
 			UserFlowNick: c.userFlowNick,
+			Hashtag:      c.hashtag,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
@@ -685,6 +688,8 @@ type pageOptions struct {
 
 	SinglePostID string `default:""`
 	UserFlowNick string `default:""`
+
+	Hashtag string `default:""`
 }
 
 func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
@@ -714,7 +719,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 	//pageNoString := strconv.FormatInt(int64(pageNo), 10)
 
 	url := "/api/v1/posts"
-	if opts.UserFlow || opts.SinglePost {
+	if opts.UserFlow || opts.SinglePost || opts.Hashtag != "" {
 		if opts.SinglePostID != "" {
 			url += "/" + opts.SinglePostID
 		}
@@ -724,8 +729,12 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 			url = "/api/v1/users/" + opts.UserFlowNick + "/posts"
 		}
 
-		if opts.SinglePostID == "" && opts.UserFlowNick == "" {
-			toastText = "single post/user flow parameters cannot be blank"
+		if opts.Hashtag != "" {
+			url = "/api/v1/posts/hashtag/" + opts.Hashtag
+		}
+
+		if opts.SinglePostID == "" && opts.UserFlowNick == "" && opts.Hashtag == "" {
+			toastText = "page parameters (singlePost, userFlow, hashtag) cannot be blank"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -786,6 +795,7 @@ type URIParts struct {
 	SinglePostID string
 	UserFlow     bool
 	UserFlowNick string
+	Hashtag      string
 }
 
 func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
@@ -794,6 +804,7 @@ func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
 		SinglePostID: "",
 		UserFlow:     false,
 		UserFlowNick: "",
+		Hashtag:      "",
 	}
 
 	url := strings.Split(ctx.Page().URL().Path, "/")
@@ -804,9 +815,14 @@ func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
 			parts.SinglePost = true
 			parts.SinglePostID = url[3]
 			break
+
 		case "user":
 			parts.UserFlow = true
 			parts.UserFlowNick = url[3]
+			break
+
+		case "hashtag":
+			parts.Hashtag = url[3]
 			break
 		}
 	}
@@ -821,6 +837,7 @@ func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
 		c.isPost = isPost
 		c.userFlowNick = parts.UserFlowNick
 		c.singlePostID = parts.SinglePostID
+		c.hashtag = parts.Hashtag
 	})
 
 	return parts
@@ -854,6 +871,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			SinglePostID: parts.SinglePostID,
 			UserFlow:     parts.UserFlow,
 			UserFlowNick: parts.UserFlowNick,
+			Hashtag:      parts.Hashtag,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
@@ -884,6 +902,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			c.singlePostID = parts.SinglePostID
 			c.userFlowNick = parts.UserFlowNick
 			c.isPost = isPost
+			c.hashtag = parts.Hashtag
 
 			if toastText != "" {
 				c.toastText = toastText
