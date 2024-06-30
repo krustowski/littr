@@ -5,11 +5,11 @@ go 1.22
 require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
 	github.com/alexandrevicenzi/go-sse v1.6.0
-	github.com/go-chi/chi/v5 v5.0.13
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/maxence-charriere/go-app/v9 v9.8.0
 	github.com/prplecake/go-thumbnail v0.1.6
-	github.com/wneessen/go-mail v0.4.1
+	github.com/wneessen/go-mail v0.4.2
 	go.savla.dev/swis/v5 v5.16.4
 )
 
@@ -37,7 +37,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
-	golang.org/x/image v0.17.0 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
