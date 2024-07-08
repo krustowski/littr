@@ -53,7 +53,7 @@ type User struct {
 	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
 
-	// RegisteredTime is an UNIX timestamp of the user's registeration.
+	// RegisteredTime is an UNIX timestamp of the user's registration.
 	RegisteredTime time.Time `json:"registered_time"`
 
 	// LastLoginTime is an UNIX timestamp of the last user's successful log-in.

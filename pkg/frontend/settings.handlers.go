@@ -579,7 +579,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			},
 		}
 
-		// send the registeration to backend
+		// send the registration to backend
 		if _, ok := litterAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
 			toastText := "cannot reach backend!"
 
@@ -626,7 +626,7 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	private := c.user.Private
 
 	ctx.Async(func() {
-		// send the registeration to backend
+		// send the registration to backend
 		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/private", nil, c.user.Nickname, 0); !ok {
 			toastText = "cannot reach backend!"
 

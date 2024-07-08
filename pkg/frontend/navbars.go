@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.savla.dev/littr/configs"
@@ -327,11 +326,11 @@ func (h *header) Render() app.UI {
 					app.Span().Body(
 						app.Text(headerString),
 						app.If(configs.APP_ENVIRONMENT == "dev",
-						app.Span().Class("col").Body(
-							app.Sup().Body(
-								app.Text(" (beta) "),
+							app.Span().Class("col").Body(
+								app.Sup().Body(
+									app.Text(" (beta) "),
+								),
 							),
-						),
 						),
 					),
 				),

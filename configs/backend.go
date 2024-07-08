@@ -1,34 +1,40 @@
 package configs
 
 import (
+	"strconv"
 	"os"
 )
 
 const (
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
-	HEARTBEAT_SLEEP_TIME  = 20
-	//REGISTERATION_ENABLED = false
+	HEARTBEAT_SLEEP_TIME = 20
 )
 
 /*
- *  Registeration
+ *  Registration
  */
 
-var REGISTERATION_ENABLED bool = false
-
-if os.Getenv("REGISTERATION_ENABLED") != "" {
-	REGISTERATION_ENABLED = os.Getenv("REGISTERATION_ENABLED")
-}
+var REGISTRATION_ENABLED bool = func() bool {
+	if os.Getenv("REGISTRATION_ENABLED") != "" {
+		boolVal, err := strconv.ParseBool(os.Getenv("REGISTRATION_ENABLED"))
+		if err != nil {
+			return false
+		}
+		return boolVal
+	}
+	return true
+}()
 
 /*
  *  App environment
  */
 
-var APP_ENVIRONMENT string = "dev"
-
-if os.Getenv("APP_ENVIRONMENT") != "" {
-	APP_ENVIRONMENT = os.Getenv("APP_ENVIRONMENT")
-}
+var APP_ENVIRONMENT string = func() string {
+	if os.Getenv("APP_ENVIRONMENT") != "" {
+		return os.Getenv("APP_ENVIRONMENT")
+	}
+	return "dev"
+}()
 
 /*
  *  BE data migrations

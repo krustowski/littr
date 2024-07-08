@@ -142,8 +142,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
-	if !configs.REGISTERATION_ENABLED {
-		resp.Message = "registeration disallowed at the moment"
+	if !configs.REGISTRATION_ENABLED {
+		resp.Message = "registration disallowed at the moment"
 		resp.Code = http.StatusForbidden
 
 		l.Println(resp.Message, resp.Code)
