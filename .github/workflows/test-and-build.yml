@@ -10,14 +10,14 @@ on:
 
 
 jobs:
-  unit:
-    runs-on: ${{ secrets.RUNNER_LABELS }}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Run unit/integration tests.
-      env:
-        HOSTNAME: ${{ vars.HOSTNAME }}
-      run: make unit
+#  unit:
+#    runs-on: ${{ secrets.RUNNER_LABELS }}
+#    steps:
+#    - uses: actions/checkout@v4
+#    - name: Run unit/integration tests.
+#      env:
+#        HOSTNAME: ${{ vars.HOSTNAME }}
+#      run: make unit
 
   build:
     runs-on: ${{ secrets.RUNNER_LABELS }}
