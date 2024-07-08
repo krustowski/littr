@@ -5,21 +5,8 @@ on:
 
 
 jobs:
-#  test_deploy:
-#    runs-on: [ self-hosted, public, docker ]
-#    steps:
-#    - uses: actions/checkout@v4
-#    - name: Run test container and run end-to-end test on it.
-#      env:
-#        LOKI_URL: ${{ secrets.LOKI_URL }}
-#        GIN_MODE: debug
-#        HOSTNAME: ${{ vars.HOSTNAME }}
-#        REGISTRY: ${{ secrets.REGISTRY }}
-#      run: make test_deploy e2e
-
   prod_deploy:
-    runs-on: [ self-hosted, public, docker ]
-    needs: [ ]
+    runs-on: [ ${{ secrets.RUNNER_LABELS }} ]
     steps:
     - uses: actions/checkout@v4
     - name: Deploy prod docker container, recreate container with fresh image.
