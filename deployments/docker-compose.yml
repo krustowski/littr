@@ -60,10 +60,10 @@ services:
 
   litter-swagger:
     image: swaggerapi/swagger-ui
-    container_name: litter-swagger
+    container_name: ${DOCKER_SWAGGER_CONTAINER_NAME}
     ports: 
       - target: 8080
-        published: 8998
+        published: ${DOCKER_SWAGGER_EXTERNAL_PORT}
         mode: host
         protocol: tcp
     environment: 
