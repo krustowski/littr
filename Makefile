@@ -37,7 +37,9 @@ GOOS := $(shell go env GOOS)
 
 # docker environment
 DOCKER_COMPOSE_FILE?=deployments/docker-compose.yml
+DOCKER_COMPOSE_TEST_FILE?=deployments/docker-compose-test.yml
 DOCKER_COMPOSE_OVERRIDE?=deployments/docker-compose.override.yml
+DOCKER_COMPOSE_TEST_OVERRIDE?=deployments/docker-compose-test.override.yml
 DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
 DOCKER_IMAGE_TAG?=${REGISTRY}backend:${APP_VERSION}-go${GOLANG_VERSION}
 DOCKER_INTERNAL_PORT?=8080
@@ -142,6 +144,14 @@ run:
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
+
+.PHONY: run-test
+run-test:	
+	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
+	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
+		&& docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans \
+		|| docker compose -f ${DOCKER_COMPOSE_TEST_FILE} up --force-recreate --detach --remove-orphans
 
 .PHONY: logs
 logs:
