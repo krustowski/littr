@@ -6,7 +6,7 @@ on:
 
 jobs:
   prod_deploy:
-    runs-on: ${{ secrets.RUNNER_LABELS }}
+    runs-on: ${{ vars.RUNNER_LABELS }}
     steps:
     - uses: actions/checkout@v4
     - name: Deploy prod docker container, recreate container with fresh image.
