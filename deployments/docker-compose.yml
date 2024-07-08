@@ -2,7 +2,7 @@
 name: ${PROJECT_NAME}
 
 networks:
-  traefik_savla:
+  traefik:
     name: ${DOCKER_NETWORK_NAME}
 
 volumes:
@@ -42,7 +42,7 @@ services:
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - traefik
     labels:
       - "traefik.http.routers.${APP_NAME}.rule=Host(${APP_URLS_TRAEFIK})"
       - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${DOCKER_INTERNAL_PORT}"
@@ -71,7 +71,7 @@ services:
       BASE_PATH: "/api"
       SWAGGER_JSON: "/tmp/swagger.json"
     networks: 
-      - ${DOCKER_NETWORK_NAME}
+      - traefik
     volumes: 
       - "../api/swagger.json:/tmp/swagger.json"
     labels:
