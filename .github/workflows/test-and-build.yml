@@ -3,7 +3,6 @@ name: litter-go CI/CD test and build pipeline
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
     tags:
       - 'v0.*'
       - 'v1.*'
@@ -20,8 +19,7 @@ jobs:
 #      run: make unit
 
   build:
-    runs-on: ${{ secrets.RUNNER_LABELS }}
-    needs: [ unit ]
+    runs-on: ${{ vars.RUNNER_LABELS }}
     steps:
     - uses: actions/checkout@v4
     - name: Build new swapi image (with staging).
@@ -35,7 +33,7 @@ jobs:
       run: make build
 
   push:
-    runs-on: ${{ secrets.RUNNER_LABELS }}
+    runs-on: ${{ vars.RUNNER_LABELS }}
     needs: [ build ]
     steps:
     - uses: actions/checkout@v4
@@ -45,8 +43,8 @@ jobs:
       run: make push_to_registry
 
   generate_docs:
-    runs-on: ${{ secrets.RUNNER_LABELS }}
-    needs: [ unit ]
+    runs-on: ${{ vars.RUNNER_LABELS }}
+    needs: [ build ]
     steps:
     - uses: actions/checkout@v4
     - name: (re)Generate interface API swagger docs.
