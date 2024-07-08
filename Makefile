@@ -128,6 +128,7 @@ docs: config
 	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
 	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
 	@mv docs/swagger.json api/swagger.json
+	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up litter-swagger -d --force-recreate \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up litter-swagger -d --force-recreate
@@ -228,4 +229,10 @@ fetch_running_dump:
 backup: fetch_running_dump
 	@echo -e "\n${YELLOW} Making the backup archive... ${RESET}\n"
 	@tar czvf /mnt/backup/litter-go/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_DIR}
+
+.PHONY: push_to_registry
+push_to_registry:
+	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
+	@[ -n "${REGISTRY}" ] && \
+                docker push ${DOCKER_IMAGE_TAG}
 
