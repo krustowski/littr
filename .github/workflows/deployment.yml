@@ -17,6 +17,8 @@ jobs:
         DOCKER_CONTAINER_NAME: ${{ secrets.DOCKER_CONTAINER_NAME }}
         DOCKER_EXTERNAL_PORT: ${{ secrets.DOCKER_EXTERNAL_PORT }}
         DOCKER_NETWORK_NAME: ${{ secrets.DOCKER_NETWORK_NAME }}
+        DOCKER_VOLUME_DATA_NAME: ${{ vars.DOCKER_VOLUME_DATA_NAME }}
+        DOCKER_VOLUME_PIX_NAME: ${{ vars.DOCKER_VOLUME_PIX_NAME }}
         LOKI_URL: ${{ secrets.LOKI_URL }}
         MAIL_HOST: ${{ secrets.MAIL_HOST }}
         MAIL_PORT: ${{ secrets.MAIL_PORT }}

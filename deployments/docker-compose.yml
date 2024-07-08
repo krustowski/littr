@@ -7,9 +7,9 @@ networks:
 
 volumes:
   litter-data:
-    name: "litter-data"
+    name: ${DOCKER_VOLUME_DATA_NAME}
   litter-pix:
-    name: "litter-pix"
+    name: ${DOCKER_VOLUME_PIX_NAME}
 
 services:
   litter-backend:

@@ -43,7 +43,8 @@ DOCKER_IMAGE_TAG?=${REGISTRY}backend:${APP_VERSION}-go${GOLANG_VERSION}
 DOCKER_INTERNAL_PORT?=8080
 DOCKER_NETWORK_NAME?=traefik
 DOCKER_USER?=littr
-
+DOCKER_VOLUME_DATA_NAME?="litter-data"
+DOCKER_VOLUME_PIX_NAME?="litter-pix"
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
