@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -325,13 +326,12 @@ func (h *header) Render() app.UI {
 				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 					app.Span().Body(
 						app.Text(headerString),
+						app.If(configs.APP_ENVIRONMENT == "dev",
 						app.Span().Class("col").Body(
 							app.Sup().Body(
 								app.Text(" (beta) "),
 							),
-							app.If(strings.Contains(h.pagePath, "flow"),
-								app.Span().Class("dot"),
-							),
+						),
 						),
 					),
 				),

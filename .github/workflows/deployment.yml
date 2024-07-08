@@ -12,6 +12,7 @@ jobs:
     - name: Deploy prod docker container, recreate container with fresh image.
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
+        APP_ENVIRONMENT: ${{ vars.APP_ENVIRONMENT }}
         APP_PEPPER: ${{ secrets.APP_PEPPER }}
         APP_URLS_TRAEFIK: ${{ vars.APP_URLS_TRAEFIK }}
         DOCKER_CONTAINER_NAME: ${{ vars.DOCKER_CONTAINER_NAME }}
@@ -26,6 +27,7 @@ jobs:
         MAIL_PORT: ${{ secrets.MAIL_PORT }}
         MAIL_SASL_USR: ${{ secrets.MAIL_SASL_USR }}
         MAIL_SASL_PWD: ${{ secrets.MAIL_SASL_PWD }}
+        REGISTERATION_ENABLED: ${{ vars.REGISTERATION_ENABLED }}
         REGISTRY: ${{ secrets.REGISTRY }} 
         VAPID_PUB_KEY: ${{ secrets.VAPID_PUB_KEY }}
         VAPID_PRIV_KEY: ${{ secrets.VAPID_PRIV_KEY }}

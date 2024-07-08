@@ -1,0 +1,82 @@
+#version: '3.9'
+name: ${PROJECT_NAME}
+
+networks:
+  traefik:
+    name: ${DOCKER_NETWORK_NAME}
+
+volumes:
+  litter-data:
+    name: ${DOCKER_VOLUME_DATA_NAME}
+  litter-pix:
+    name: ${DOCKER_VOLUME_PIX_NAME}
+
+services:
+  litter-backend-test:
+    image: ${DOCKER_IMAGE_TAG}
+    container_name: ${DOCKER_CONTAINER_NAME}
+    env_file:
+      - ../.env
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args: 
+        APP_NAME: ${APP_NAME}
+        APP_PEPPER: ${APP_PEPPER}
+        APP_VERSION: ${APP_VERSION}
+        DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 
+        DOCKER_USER: ${DOCKER_USER}
+        OARCH: ${GOARCH}
+        GOCACHE: ${GOCACHE}
+        GOMODCACHE: ${GOMODCACHE}
+        GOLANG_VERSION: ${GOLANG_VERSION}
+        TZ: ${TZ}
+        VAPID_PUB_KEY: ${VAPID_PUB_KEY}
+    restart: unless-stopped
+    cpus: 0.3
+    mem_limit: 128m
+    mem_reservation: 32m
+    volumes:
+      - "litter-data:/opt/data"
+      - "litter-pix:/opt/pix"
+    ports:
+      - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
+    networks:
+      - traefik
+    labels:
+      - "traefik.http.routers.${APP_NAME}.rule=Host(${APP_URLS_TRAEFIK})"
+      - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${DOCKER_INTERNAL_PORT}"
+      - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
+    environment:
+      API_TOKEN: ${API_TOKEN}
+      APP_PEPPER: ${APP_PEPPER}
+      VAPID_PUB_KEY: ${VAPID_PUB_KEY}
+    healthcheck:
+      #test: ["CMD", "/opt/periodic-dump.sh"]
+      test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump/", "-O", "-", "-S" ]
+      interval: 5m
+      timeout: 5s
+      retries: 3
+
+  litter-swagger-test:
+    image: swaggerapi/swagger-ui
+    container_name: ${DOCKER_SWAGGER_CONTAINER_NAME}
+    ports: 
+      - target: 8080
+        published: ${DOCKER_SWAGGER_EXTERNAL_PORT}
+        mode: host
+        protocol: tcp
+    environment: 
+      BASE_URL: "/docs/"
+      BASE_PATH: "/api"
+      SWAGGER_JSON: "/tmp/swagger.json"
+    networks: 
+      - traefik
+    volumes: 
+      - "../api/swagger.json:/tmp/swagger.json"
+    labels:
+      - "traefik.http.routers.${APP_NAME}-swagger.rule=Host(${APP_URLS_TRAEFIK}) && PathPrefix(`/docs`)"
+      - "traefik.http.services.${APP_NAME}-swagger.loadbalancer.server.port=8080"
+      #- "traefik.http.middlewares.${APP_NAME}.stripprefix.prefixes=/docs"
+      - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
+
