@@ -11,7 +11,7 @@ on:
 
 jobs:
   unit:
-    runs-on: [ ${{ secrets.RUNNER_LABELS }} ]
+    runs-on: ${{ secrets.RUNNER_LABELS }}
     steps:
     - uses: actions/checkout@v4
     - name: Run unit/integration tests.
@@ -20,7 +20,7 @@ jobs:
       run: make unit
 
   build:
-    runs-on: [ ${{ secrets.RUNNER_LABELS }} ]
+    runs-on: ${{ secrets.RUNNER_LABELS }}
     needs: [ unit ]
     steps:
     - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
       run: make build
 
   push:
-    runs-on: [ ${{ secrets.RUNNER_LABELS }} ]
+    runs-on: ${{ secrets.RUNNER_LABELS }}
     needs: [ build ]
     steps:
     - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
       run: make push_to_registry
 
   generate_docs:
-    runs-on: [ ${{ secrets.RUNNER_LABELS }} ]
+    runs-on: ${{ secrets.RUNNER_LABELS }}
     needs: [ unit ]
     steps:
     - uses: actions/checkout@v4
