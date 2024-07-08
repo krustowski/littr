@@ -1,0 +1,55 @@
+name: litter-go CI/CD test and build pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v0.*'
+      - 'v1.*'
+
+
+jobs:
+  unit:
+    runs-on: [ self-hosted, builder, docker ]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run unit/integration tests.
+      env:
+        HOSTNAME: ${{ vars.HOSTNAME }}
+      run: make unit
+
+  build:
+    runs-on: [ self-hosted, builder, docker ]
+    needs: [ unit ]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build new swapi image (with staging).
+      env:
+        APP_PEPPER: ${{ secrets.APP_PEPPER }}
+        APP_URLS_TRAEFIK: ${{ secrets.APP_URLS_TRAEFIK }}
+        DOCKER_CONTAINER_NAME: ${{ secrets.DOCKER_CONTAINER_NAME }}
+        DOCKER_NETWORK_NAME: ${{ secrets.DOCKER_NETWORK_NAME }}
+        REGISTRY: ${{ secrets.REGISTRY }} 
+        VAPID_PUB_KEY: ${{ secrets.VAPID_PUB_KEY }}
+      run: make build
+
+  push:
+    runs-on: [ self-hosted, builder, docker ]
+    needs: [ build ]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Push the image to registry.
+      env:
+        REGISTRY: ${{ secrets.REGISTRY }}
+      run: make push_to_registry
+
+  generate_docs:
+    runs-on: [ self-hosted, public, docker ]
+    needs: [ unit ]
+    steps:
+    - uses: actions/checkout@v4
+    - name: (re)Generate interface API swagger docs.
+      env:
+      run: make docs
+   

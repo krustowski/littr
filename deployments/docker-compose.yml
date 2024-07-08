@@ -4,7 +4,6 @@ name: ${PROJECT_NAME}
 networks:
   traefik_savla:
     name: ${DOCKER_NETWORK_NAME}
-    external: true
 
 volumes:
   litter-data:
@@ -23,7 +22,6 @@ services:
       dockerfile: build/Dockerfile
       args: 
         APP_NAME: ${APP_NAME}
-        APP_FLAGS: ${APP_FLAGS}
         APP_PEPPER: ${APP_PEPPER}
         APP_VERSION: ${APP_VERSION}
         DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 

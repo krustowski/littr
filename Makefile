@@ -9,18 +9,42 @@
 include .env.example
 -include .env
 
-PROJECT_NAME?=litter-go
 
-DOCKER_IMAGE_TAG?=${PROJECT_NAME}-image
-DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
 
+APP_NAME=litter-go
+APP_URLS_TRAEFIK?=`${HOSTNAME}`
+PROJECT_NAME=${APP_NAME}
+TZ=Europe/Vienna
+
+LOKI_URL?=""
+
+APP_PEPPER?=""
+API_TOKEN?=""
+
+VAPID_PUB_KEY?=""
+VAPID_PRIV_KEY?=""
+VAPID_SUBSCRIBER?=""
+
+MAIL_HOST?=""
+MAIL_PORT?=25
+MAIL_SASL_USR?=""
+MAIL_SASL_PWD?=""
+
+
+# go environment
 GOARCH := $(shell go env GOARCH)
 GOCACHE?=/home/${USER}/.cache/go-build
 GOMODCACHE?=/home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
+# docker environment
 DOCKER_COMPOSE_FILE?=deployments/docker-compose.yml
 DOCKER_COMPOSE_OVERRIDE?=deployments/docker-compose.override.yml
+DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
+DOCKER_IMAGE_TAG?=${REGISTRY}backend:${APP_VERSION}-go${GOLANG_VERSION}
+DOCKER_INTERNAL_PORT?=8080
+DOCKER_USER?=littr
+
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9

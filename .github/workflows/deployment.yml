@@ -1,0 +1,43 @@
+name: litter-go CI/CD deployment pipeline
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+#  test_deploy:
+#    runs-on: [ self-hosted, public, docker ]
+#    steps:
+#    - uses: actions/checkout@v4
+#    - name: Run test container and run end-to-end test on it.
+#      env:
+#        LOKI_URL: ${{ secrets.LOKI_URL }}
+#        GIN_MODE: debug
+#        HOSTNAME: ${{ vars.HOSTNAME }}
+#        REGISTRY: ${{ secrets.REGISTRY }}
+#      run: make test_deploy e2e
+
+  prod_deploy:
+    runs-on: [ self-hosted, public, docker ]
+    needs: [ ]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy prod docker container, recreate container with fresh image.
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
+        APP_PEPPER: ${{ secrets.APP_PEPPER }}
+        APP_URLS_TRAEFIK: ${{ secrets.APP_URLS_TRAEFIK }}
+        DOCKER_CONTAINER_NAME: ${{ secrets.DOCKER_CONTAINER_NAME }}
+        DOCKER_EXTERNAL_PORT: ${{ secrets.DOCKER_EXTERNAL_PORT }}
+        DOCKER_NETWORK_NAME: ${{ secrets.DOCKER_NETWORK_NAME }}
+        LOKI_URL: ${{ secrets.LOKI_URL }}
+        MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        MAIL_PORT: ${{ secrets.MAIL_PORT }}
+        MAIL_SASL_USR: ${{ secrets.MAIL_SASL_USR }}
+        MAIL_SASL_PWD: ${{ secrets.MAIL_SASL_PWD }}
+        REGISTRY: ${{ secrets.REGISTRY }} 
+        VAPID_PUB_KEY: ${{ secrets.VAPID_PUB_KEY }}
+        VAPID_PRIV_KEY: ${{ secrets.VAPID_PRIV_KEY }}
+        VAPID_SUBSCRIBER: ${{ secrets.VAPID_SUBSCRIBER }}
+      run: make run
+
