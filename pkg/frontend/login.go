@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"go.savla.dev/littr/configs"
@@ -172,6 +173,8 @@ func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *loginContent) Render() app.UI {
+	registration := os.Getenv("REGISTRATION_ENABLED")
+
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
@@ -227,7 +230,7 @@ func (c *loginContent) Render() app.UI {
 			),
 
 			// register button
-			app.If(configs.REGISTRATION_ENABLED,
+			app.If(registration == "true",
 				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
 					app.Text("register"),
 				),

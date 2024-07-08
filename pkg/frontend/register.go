@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/mail"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -210,6 +211,8 @@ func (c *registerContent) dismissToast(ctx app.Context, e app.Event) {
 }
 
 func (c *registerContent) Render() app.UI {
+	registration := os.Getenv("REGISTRATION_ENABLED")
+
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
@@ -296,7 +299,7 @@ func (c *registerContent) Render() app.UI {
 
 		// register button
 		app.Div().Class("row").Body(
-			app.If(configs.REGISTRATION_ENABLED,
+			app.If(registration == "true",
 				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(
 					app.Text("register"),
 				),

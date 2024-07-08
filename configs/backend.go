@@ -1,8 +1,8 @@
 package configs
 
 import (
-	"strconv"
 	"os"
+	"strconv"
 )
 
 const (
@@ -21,8 +21,9 @@ var REGISTRATION_ENABLED bool = func() bool {
 			return false
 		}
 		return boolVal
+	} else {
+		return true
 	}
-	return true
 }()
 
 /*
@@ -32,8 +33,9 @@ var REGISTRATION_ENABLED bool = func() bool {
 var APP_ENVIRONMENT string = func() string {
 	if os.Getenv("APP_ENVIRONMENT") != "" {
 		return os.Getenv("APP_ENVIRONMENT")
+	} else {
+		return "dev"
 	}
-	return "dev"
 }()
 
 /*

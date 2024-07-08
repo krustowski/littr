@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
-	"go.savla.dev/littr/configs"
+	//"go.savla.dev/littr/configs"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -256,6 +257,8 @@ func (h *header) Render() app.UI {
 	// a very nasty way on how to store the timestamp...
 	var last int64 = 0
 
+	environ := os.Getenv("APP_ENVIRONMENT")
+
 	beat := app.Window().Get("localStorage")
 	if !beat.IsNull() && !beat.Call("getItem", "lastEventTime").IsNull() {
 		str := beat.Call("getItem", "lastEventTime").String()
@@ -325,7 +328,7 @@ func (h *header) Render() app.UI {
 				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 					app.Span().Body(
 						app.Text(headerString),
-						app.If(configs.APP_ENVIRONMENT == "dev",
+						app.If(environ == "dev",
 							app.Span().Class("col").Body(
 								app.Sup().Body(
 									app.Text(" (beta) "),
@@ -360,9 +363,11 @@ func (h *header) Render() app.UI {
 						app.H4().Body(
 							app.Span().Body(
 								app.Text("littr"),
-								app.Span().Class("col").Body(
-									app.Sup().Body(
-										app.Text(" (beta) "),
+								app.If(environ == "dev",
+									app.Span().Class("col").Body(
+										app.Sup().Body(
+											app.Text(" (beta) "),
+										),
 									),
 								),
 							),
