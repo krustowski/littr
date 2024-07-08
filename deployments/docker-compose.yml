@@ -49,8 +49,15 @@ services:
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
     environment:
       API_TOKEN: ${API_TOKEN}
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT}
       APP_PEPPER: ${APP_PEPPER}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SASL_USR: ${MAIL_SASL_USR}
+      MAIL_SASL_PWD: ${MAIL_SASL_PWD}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED}
       VAPID_PUB_KEY: ${VAPID_PUB_KEY}
+      VAPID_PRIV_KEY: ${VAPID_PRIV_KEY}
     healthcheck:
       #test: ["CMD", "/opt/periodic-dump.sh"]
       test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump/", "-O", "-", "-S" ]
