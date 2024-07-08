@@ -9,8 +9,6 @@
 include .env.example
 -include .env
 
-
-
 APP_NAME=litter-go
 APP_URLS_TRAEFIK?=`${HOSTNAME}`
 PROJECT_NAME=${APP_NAME}
@@ -120,7 +118,7 @@ config:
 	@go install github.com/swaggo/swag/cmd/swag@latest
 
 .PHONY: docs
-docs: 
+docs: config
 	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
 	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
 	@mv docs/swagger.json api/swagger.json
@@ -131,6 +129,7 @@ docs:
 .PHONY: build
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build \
 		|| DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} build
@@ -138,6 +137,7 @@ build:
 .PHONY: run
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
@@ -150,6 +150,7 @@ logs:
 .PHONY: stop
 stop:  
 	@echo -e "\n${YELLOW} Stopping and purging project (docker compose down)... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
 	@docker compose -f ${DOCKER_COMPOSE_FILE} down
 
 .PHONY: version
@@ -180,6 +181,7 @@ push:
 .PHONY: sh
 sh:
 	@echo -e "\n${YELLOW} Attaching container's (${DOCKER_CONTAINER_NAME})... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
 	@docker exec -it ${DOCKER_CONTAINER_NAME} sh
 
 .PHONY: flush
@@ -194,6 +196,7 @@ flush:
 .PHONY: kill
 kill:
 	@echo -e "\n${YELLOW} Killing the container not to dump running caches... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
 	@docker kill ${DOCKER_CONTAINER_NAME}
 
 RUN_DATA_DIR=./.run_data
