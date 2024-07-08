@@ -50,6 +50,5 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: (re)Generate interface API swagger docs.
-      env:
       run: make docs
    
