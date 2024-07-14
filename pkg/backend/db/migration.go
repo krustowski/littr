@@ -188,15 +188,17 @@ func GetGravatarURL(emailInput string, channel chan string) string {
 	hashEmail := md5.Sum(byteEmail)
 	hashedStringEmail := hex.EncodeToString(hashEmail[:])
 
-	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "&s=" + strconv.Itoa(size)
+	//url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "&s=" + strconv.Itoa(size)
+	url := "/web/android-chrome-192x192.png"
 
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != 200 {
 		//log.Println(resp.StatusCode)
 		//log.Println(err.Error())
 		url = defaultAvatarImage
+	} else {
+		resp.Body.Close()
 	}
-	resp.Body.Close()
 
 	// maybe we are running in a goroutine...
 	if channel != nil {
