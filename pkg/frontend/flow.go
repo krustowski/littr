@@ -696,6 +696,7 @@ type pageOptions struct {
 
 func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
 	var toastText string
+	var toastType string
 
 	resp := struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -780,9 +781,16 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 		ctx.LocalStorage().Set("authGranted", false)
 	}
 
+	if len(resp.Posts) < 1 {
+		toastText = "no posts to show; try adding some folks to your flow, or create a new post!"
+		toastType = "info"
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false
 		c.toastText = toastText
+		c.toastType = toastType
+
 		c.key = resp.Key
 		if resp.Key != "" {
 			c.user = c.users[resp.Key]

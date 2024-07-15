@@ -39,6 +39,7 @@ type pollsContent struct {
 
 	toastShow bool
 	toastText string
+	toastType string
 
 	paginationEnd bool
 	pagination    int
@@ -60,7 +61,8 @@ func (c *pollsContent) dismissToast(ctx app.Context, e app.Event) {
 func (c *pollsContent) OnNav(ctx app.Context) {
 	// show loader
 	c.loaderShow = true
-	toastText := ""
+	var toastText string
+	var toastType string
 
 	ctx.Async(func() {
 		var enUser string
@@ -114,6 +116,18 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if len(pollsRaw.Polls) < 1 {
+			toastText = "no polls to show, go create one!"
+			toastType = "info"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastType = toastType
 				c.toastShow = (toastText != "")
 			})
 			return
@@ -280,6 +294,21 @@ func contains(s []string, str string) bool {
 }
 
 func (c *pollsContent) Render() app.UI {
+	toastColor := ""
+
+	switch c.toastType {
+	case "success":
+		toastColor = "green10"
+		break
+
+	case "info":
+		toastColor = "blue10"
+		break
+
+	default:
+		toastColor = "red10"
+	}
+
 	var sortedPolls []models.Poll
 
 	for _, sortedPoll := range c.polls {
@@ -336,7 +365,7 @@ func (c *pollsContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),

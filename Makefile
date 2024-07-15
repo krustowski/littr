@@ -170,7 +170,7 @@ stop:
 
 .PHONY: version
 version: 
-	@[ -f "./.env" ] && cat .env | \
+	@[ -f "./.env" ] && head -n 7 .env | \
 		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(REGISTRY\)=\(.*\)/\1=""/' | \
 		sed -e 's/\(MAIL_SASL_USR\)=\(.*\)/\1=xxx/' | \
