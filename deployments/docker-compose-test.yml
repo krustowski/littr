@@ -50,9 +50,9 @@ services:
     environment:
       API_TOKEN: ${API_TOKEN}
       APP_PEPPER: ${APP_PEPPER}
+      TZ: ${TZ}
       VAPID_PUB_KEY: ${VAPID_PUB_KEY}
     healthcheck:
-      #test: ["CMD", "/opt/periodic-dump.sh"]
       test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump/", "-O", "-", "-S" ]
       interval: 5m
       timeout: 5s

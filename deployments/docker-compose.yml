@@ -56,11 +56,11 @@ services:
       MAIL_SASL_USR: ${MAIL_SASL_USR}
       MAIL_SASL_PWD: ${MAIL_SASL_PWD}
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED}
+      TZ: ${TZ}
       VAPID_PUB_KEY: ${VAPID_PUB_KEY}
       VAPID_PRIV_KEY: ${VAPID_PRIV_KEY}
       VAPID_SUBSCRIBER: ${VAPID_SUBSCRIBER}
     healthcheck:
-      #test: ["CMD", "/opt/periodic-dump.sh"]
       test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump/", "-O", "-", "-S" ]
       interval: 5m
       timeout: 5s
