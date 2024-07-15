@@ -3,17 +3,17 @@
     "info": {
         "description": "nanoblogging platform as PWA built on go-app framework",
         "title": "litter-go",
-        "termsOfService": "https://littr.n0p.cz/tos",
+        "termsOfService": "https://littr.eu/tos",
         "contact": {
             "name": "API Support",
-            "url": "https://littr.n0p.cz/docs/",
+            "url": "https://littr.eu/docs/",
             "email": "littr@n0p.cz"
         },
         "license": {
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.35.10"
+        "version": "0.35.11"
     },
     "host": "littr.n0p.cz",
     "basePath": "/api/v1",
