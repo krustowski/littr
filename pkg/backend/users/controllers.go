@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/mail"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +20,7 @@ import (
 	"go.savla.dev/littr/pkg/models"
 
 	chi "github.com/go-chi/chi/v5"
-	mail "github.com/wneessen/go-mail"
+	gomail "github.com/wneessen/go-mail"
 )
 
 // getUsers is the users handler that processes and returns existing users list.
@@ -172,9 +174,9 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// https://stackoverflow.com/a/38554480
-	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
+	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
 		resp.Message = "nickname can only have chars a-z, A-Z and numbers"
-		resp.Code = http.BadRequest
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -188,7 +190,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	// https://stackoverflow.com/a/66624104
 	if _, err := mail.ParseAddress(email); err != nil {
 		resp.Message = "e-mail address has wrong format"
-		resp.Code = http.BadRequest
+		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -492,7 +494,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	//email := user.Email
 
 	// compose a mail
-	m := mail.NewMsg()
+	m := gomail.NewMsg()
 	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
 		resp.Message = "backend error: failed to set From address: " + err.Error()
 		resp.Code = http.StatusInternalServerError
@@ -512,7 +514,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m.Subject("Lost password recovery")
-	m.SetBodyString(mail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+random+"\n\nPlease change your password as soon as possible after a new log-in.")
+	m.SetBodyString(gomail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+random+"\n\nPlease change your password as soon as possible after a new log-in.")
 
 	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
 	if err != nil {
@@ -524,8 +526,8 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c, err := mail.NewClient(os.Getenv("MAIL_HOST"), mail.WithPort(port), mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername(os.Getenv("MAIL_SASL_USR")), mail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
+	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
+		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
 	if err != nil {
 		resp.Message = "backend error: failed to create mail client: " + err.Error()
 		resp.Code = http.StatusInternalServerError
