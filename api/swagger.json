@@ -7,7 +7,7 @@
         "contact": {
             "name": "API Support",
             "url": "https://littr.eu/docs/",
-            "email": "littr@n0p.cz"
+            "email": "info@littr.eu"
         },
         "license": {
             "name": "MIT",
@@ -15,7 +15,7 @@
         },
         "version": "0.35.14"
     },
-    "host": "littr.n0p.cz",
+    "host": "littr.eu",
     "basePath": "/api/v1",
     "paths": {
         "/auth/": {

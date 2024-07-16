@@ -5,12 +5,12 @@
 
 // @contact.name	API Support
 // @contact.url		https://littr.eu/docs/
-// @contact.email	littr@n0p.cz
+// @contact.email	info@littr.eu
 
 // @license.name	MIT
 // @license.url		https://github.com/krustowski/litter-go/blob/master/LICENSE
 
-// @host		littr.n0p.cz
+// @host		littr.eu
 // @BasePath		/api/v1
 
 // @supportedSubmitMethods	[]
