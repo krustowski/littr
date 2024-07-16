@@ -72,6 +72,7 @@ func RunMigrations() bool {
 				l.Println("migrateAvatarURL: cannot save an avatar: "+key, http.StatusInternalServerError)
 				return false
 			}
+			users[key] = user
 		}
 	}
 
@@ -84,6 +85,7 @@ func RunMigrations() bool {
 				l.Println("migrateFlowPurge: cannot delete user: "+key, http.StatusInternalServerError)
 				return false
 			}
+			delete(posts, key)
 		}
 	}
 
@@ -106,6 +108,7 @@ func RunMigrations() bool {
 				l.Println("migrateUserDeletion: cannot delete a post: "+key, http.StatusInternalServerError)
 				return false
 			}
+			delete(posts, key)
 		}
 	}
 
@@ -117,6 +120,7 @@ func RunMigrations() bool {
 				l.Println("migrateUserRegisteredTime: cannot save an user: "+key, http.StatusInternalServerError)
 				return false
 			}
+			users[key] = user
 		}
 	}
 
@@ -145,6 +149,7 @@ func RunMigrations() bool {
 		if ok := SetOne(UserCache, key, user); !ok {
 			//return false
 		}
+		users[key] = user
 	}
 
 	// migrateUserUnshade function lists all users and unshades manually some explicitly list users
@@ -168,9 +173,10 @@ func RunMigrations() bool {
 			l.Println("migrateUserUnshade: cannot save an user: "+key, http.StatusInternalServerError)
 			return false
 		}
+		users[key] = user
 	}
 
-	l.Println("migrations", code)
+	l.Println("migrations done", code)
 	return true
 }
 
@@ -180,7 +186,6 @@ func RunMigrations() bool {
 
 // GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
 func GetGravatarURL(emailInput string, channel chan string) string {
-	// TODO: do not hardcode this
 	email := strings.ToLower(emailInput)
 	size := 150
 
@@ -200,8 +205,7 @@ func GetGravatarURL(emailInput string, channel chan string) string {
 	if err != nil || resp.StatusCode != 200 {
 		//log.Println(resp.StatusCode)
 		//log.Println(err.Error())
-		//url = defaultAvatarImage
-		url = "/web/android-chrome-192x192.png"
+		url = defaultAvatarImage
 	} else {
 		resp.Body.Close()
 	}
