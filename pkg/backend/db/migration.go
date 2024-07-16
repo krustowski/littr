@@ -194,7 +194,7 @@ func GetGravatarURL(emailInput string, channel chan string) string {
 	//hashEmail := md5.Sum(byteEmail)
 	//hashedStringEmail := hex.EncodeToString(hashEmail[:])
 
-	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "&s=" + strconv.Itoa(size)
+	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?s=" + strconv.Itoa(size)
 
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != 200 {
