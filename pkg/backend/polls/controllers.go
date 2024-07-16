@@ -5,6 +5,7 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 )
 
@@ -20,8 +21,19 @@ import (
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
+
+	// hide poll's author
+	for key, poll := range polls {
+		if poll.Author == callerID {
+			continue
+		}
+
+		poll.Author = ""
+		polls[key] = poll
+	}
 
 	resp.Message = "ok, dumping polls"
 	resp.Code = http.StatusOK
@@ -45,6 +57,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	var poll models.Poll
 
@@ -58,6 +71,15 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := poll.ID
+
+	if poll.Author != callerID {
+		resp.Message = "backend error: such poll's author differs from callerID"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
 		resp.Message = "backend error: cannot save new poll (cache error)"
@@ -89,6 +111,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 func updatePoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	var payload models.Poll
 
@@ -108,6 +131,24 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 
 	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
 		resp.Message = "unknown poll update requested"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if poll.Author == callerID {
+		resp.Message = "you cannot vote on your own poll"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if helpers.Contains(poll.Voted, callerID) {
+		resp.Message = "this user already voted on such poll"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -149,12 +190,22 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 // @Router       /polls/{pollID} [delete]
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
+	callerID, _ := r.Context().Value("nickname").(string)
 	l := common.NewLogger(r, "polls")
 
 	var poll models.Poll
 
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
 		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if poll.Author != callerID {
+		resp.Message = "one can only delete their own poll"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)

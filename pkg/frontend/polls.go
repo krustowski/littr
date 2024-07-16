@@ -45,16 +45,22 @@ type pollsContent struct {
 	pagination    int
 	pageNo        int
 
+	pollKey                    string
+	interactedPollKey          string
+	deleteModalButtonsDisabled bool
+	deletePollModalShow        bool
+
 	polls map[string]models.Poll
 
 	pollsButtonDisabled bool
 }
 
-func (c *pollsContent) dismissToast(ctx app.Context, e app.Event) {
+func (c *pollsContent) onClickDismiss(ctx app.Context, e app.Event) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.toastText = ""
 		c.toastShow = false
 		c.pollsButtonDisabled = false
+		c.deletePollModalShow = false
 	})
 }
 
@@ -150,6 +156,67 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 	return
 }
 
+func (c *pollsContent) onClickDeleteButton(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPollKey = key
+		c.deleteModalButtonsDisabled = false
+		c.deletePollModalShow = true
+	})
+}
+
+func (c *pollsContent) onClickDelete(ctx app.Context, e app.Event) {
+	ctx.NewActionWithValue("delete", c.interactedPollKey)
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.deleteModalButtonsDisabled = true
+	})
+}
+
+func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	if key != c.interactedPollKey {
+		return
+	}
+
+	ctx.Async(func() {
+		var toastText string = ""
+
+		//key := c.pollKey
+		interactedPoll := c.polls[key]
+
+		if interactedPoll.Author != c.user.Nickname {
+			toastText = "you only can delete your own polls!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.deletePollModalShow = false
+				c.deleteModalButtonsDisabled = false
+			})
+			return
+		}
+
+		if _, ok := litterAPI("DELETE", "/api/v1/polls/"+interactedPoll.ID, interactedPoll, c.user.Nickname, c.pageNo); !ok {
+			toastText = "backend error: cannot delete a poll"
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			delete(c.polls, key)
+
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+			c.deletePollModalShow = false
+			c.deleteModalButtonsDisabled = false
+		})
+	})
+}
+
 func (c *pollsContent) onScroll(ctx app.Context, e app.Event) {
 	ctx.NewAction("scroll")
 }
@@ -238,38 +305,6 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *pollsContent) onClickDelete(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	ctx.NewActionWithValue("delete", key)
-
-	c.pollsButtonDisabled = true
-}
-
-func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
-	key, ok := a.Value.(string)
-	if !ok {
-		return
-	}
-
-	ctx.Async(func() {
-		var toastText string = ""
-
-		interactedPoll := c.polls[key]
-
-		if _, ok := litterAPI("DELETE", "/api/v1/polls/"+interactedPoll.ID, interactedPoll, c.user.Nickname, 0); !ok {
-			toastText = "backend error: cannot delete a poll"
-		}
-
-		ctx.Dispatch(func(ctx app.Context) {
-			delete(c.polls, key)
-
-			c.pollsButtonDisabled = false
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-		})
-	})
-}
-
 func (c *pollsContent) OnMount(ctx app.Context) {
 	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
@@ -320,7 +355,7 @@ func (c *pollsContent) Render() app.UI {
 		return sortedPolls[i].Timestamp.After(sortedPolls[j].Timestamp)
 	})
 
-	// prepare posts according to the actual pagination and pageNo
+	// prepare polls according to the actual pagination and pageNo
 	pagedPolls := []models.Poll{}
 
 	end := len(sortedPolls)
@@ -363,11 +398,39 @@ func (c *pollsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.A().OnClick(c.dismissToast).Body(
+		app.A().OnClick(c.onClickDismiss).Body(
 			app.If(c.toastText != "",
 				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
+				),
+			),
+		),
+
+		// poll deletion modal
+		app.If(c.deletePollModalShow,
+			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+				app.Nav().Class("center-align").Body(
+					app.H5().Text("poll deletion"),
+				),
+
+				app.Div().Class("space"),
+				app.Article().Class("row").Body(
+					app.I().Text("warning").Class("amber-text"),
+					app.P().Class("max").Body(
+						app.Span().Text("are you sure you want to delete your poll?"),
+					),
+				),
+				app.Div().Class("space"),
+
+				app.Div().Class("row").Body(
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+						app.If(c.deleteModalButtonsDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("yeah"),
+					),
+					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
 				),
 			),
 		),
@@ -466,7 +529,7 @@ func (c *pollsContent) Render() app.UI {
 								),
 								app.If(poll.Author == c.user.Nickname,
 									app.B().Text(len(poll.Voted)),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Body(
+									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
