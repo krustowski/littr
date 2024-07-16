@@ -45,21 +45,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
 	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
 
-	// flush email addresses
-	for key, user := range users {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-		user.Email = ""
-
-		if user.Nickname != caller {
-			user.FlowList = nil
-			user.ShadeList = nil
-			user.RequestList = nil
-		}
-
-		users[key] = user
-	}
-
 	// check the subscription
 	//devSubscribed := false
 	var devTags []string = nil
@@ -92,6 +77,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		stats[nick] = stat
 	}
 
+	// calculate the users stats
 	for nick, user := range users {
 		flowList := user.FlowList
 		if flowList == nil {
@@ -105,6 +91,21 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 				stats[key] = stat
 			}
 		}
+	}
+
+	// flush unwanted properties
+	for key, user := range users {
+		user.Passphrase = ""
+		user.PassphraseHex = ""
+		user.Email = ""
+
+		if user.Nickname != caller {
+			user.FlowList = nil
+			user.ShadeList = nil
+			user.RequestList = nil
+		}
+
+		users[key] = user
 	}
 
 	resp.Message = "ok, dumping users"
