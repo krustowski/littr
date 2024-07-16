@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"go.savla.dev/littr/configs"
@@ -86,6 +87,17 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 
 		if nickname == "" || passphrase == "" {
 			toastText = "all fields need to be filled"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// don't allow special chars and spaces in the nickname
+		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
+			toastText = "nickname can contain only chars a-z, A-Z and numbers"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
