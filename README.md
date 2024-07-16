@@ -166,15 +166,17 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### roadmap to v1.0.0
++ resolve tikets in github and redmine (priv)
++ write integration and e2e tests
 + [...]
 
 ### roadmap to v0.36
-+ write integration and e2e tests
++ user activation via mail
 
 ### roadmap to v0.35
 + fix the code smells as scanned by `sonar-scanner`
-~~+ implement searching for flow using hashtags~~ (wip)
-+ resolve tikets in github and redmine (priv)
++ ~~implement searching for flow using hashtags~~ (wip)
++ ~~fix various bugs and typos (login, register pages; texts)~~ (wip)
 
 ### roadmap to v0.34
 + ~~fix the flow-users glitch (new users' posts not seen in flow on other devices)~~

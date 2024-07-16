@@ -327,7 +327,7 @@ func (c *settingsContent) Render() app.UI {
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("private account "),
-				app.Span().Text("is a feature allowing one to be hidden on littr in terms of free reachibility via the users page, thus others have to be allowed to add you in their flow and to see your profile"),
+				app.Span().Text("is a feature allowing one to be hidden on littr in terms of free reachability via the users page, thus others have to be allowed to add you in their flow and to see your profile and posts"),
 			),
 		),
 
@@ -600,7 +600,7 @@ func (c *settingsContent) Render() app.UI {
 
 		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("warning").Class("red-text"),
-			app.P().Class("max").Text("down here, you can delete your account; please note that this action is irreversible!"),
+			app.P().Class("max").Text("please note that this action is irreversible!"),
 		),
 		app.Div().Class("space"),
 

@@ -1043,6 +1043,7 @@ func (c *flowContent) Render() app.UI {
 
 				app.Div().Class("space"),
 				app.Article().Class("row").Body(
+					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("are you sure you want to delete your post?"),
 					),

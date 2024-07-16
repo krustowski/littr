@@ -122,7 +122,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 		}
 
 		if len(pollsRaw.Polls) < 1 {
-			toastText = "no polls to show, go create one!"
+			toastText = "there is nothing here yet, be the first to create a poll!"
 			toastType = "info"
 
 			ctx.Dispatch(func(ctx app.Context) {
