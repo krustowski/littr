@@ -171,8 +171,30 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// https://stackoverflow.com/a/38554480
+	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
+		resp.Message = "nickname can only have chars a-z, A-Z and numbers"
+		resp.Code = http.BadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	email := strings.ToLower(user.Email)
 	user.Email = email
+
+	// validate e-mail struct
+	// https://stackoverflow.com/a/66624104
+	if _, err := mail.ParseAddress(email); err != nil {
+		resp.Message = "e-mail address has wrong format"
+		resp.Code = http.BadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	user.LastActiveTime = time.Now()
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {

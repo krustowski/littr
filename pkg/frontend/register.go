@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/mail"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -102,6 +103,17 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		// don't allow very long nicknames
 		if len(nickname) > configs.NicknameLengthMax {
 			toastText = "nickname has to be " + strconv.Itoa(configs.NicknameLengthMax) + " chars long at max"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		// don't allow special chars and spaces in the nickname
+		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
+			toastText = "nickname can contain only chars a-z, A-Z and numbers"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
