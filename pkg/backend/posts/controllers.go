@@ -83,12 +83,6 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "ok, dumping posts"
 	resp.Code = http.StatusOK
 
-	// flush email addresses
-	for key, user := range uExport {
-		user.Email = ""
-		uExport[key] = user
-	}
-
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
 		resp.Message = "cannot fetch such callerID-named user"
@@ -99,6 +93,21 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		uExport[callerID] = caller
+	}
+
+	// TODO: use DTO
+	for key, user := range uExport {
+		user.Passphrase = ""
+		user.PassphraseHex = ""
+		user.Email = ""
+
+		if user.Nickname != callerID {
+			user.FlowList = nil
+			user.ShadeList = nil
+			user.RequestList = nil
+		}
+
+		uExport[key] = user
 	}
 
 	resp.Posts = pExport

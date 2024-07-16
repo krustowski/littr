@@ -15,19 +15,19 @@ type User struct {
 	FullName string `json:"full_name"`
 
 	// Passphrase is a hashed pass phrase string (binary form).
-	Passphrase string `json:"passphrase"`
+	Passphrase string `json:"passphrase,omitempty"`
 
 	// PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).
-	PassphraseHex string `json:"passphrase_hex"`
+	PassphraseHex string `json:"passphrase_hex,omitempty"`
 
 	// Email is a primary user's e-mail address.
-	Email string `json:"email"`
+	Email string `json:"email,omitempty"`
 
 	// Web is user's personal homepage.
 	Web string `json:"web"`
 
 	// AvatarURL is an URL to the user's custom profile picture.
-	AvatarURL string `json:"avatar_url"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 
 	// About is a description string of such user.
 	About string `json:"about"`
@@ -39,13 +39,13 @@ type User struct {
 	Private bool `json:"private"`
 
 	// FlowList is a string map of users, which posts should be added to one's flow page.
-	FlowList map[string]bool `json:"flow_list"`
+	FlowList map[string]bool `json:"flow_list,omitempty"`
 
 	// ShadeList is a map of account/users to be shaded (soft-blocked) from following.
-	ShadeList map[string]bool `json:"shade_list"`
+	ShadeList map[string]bool `json:"shade_list,omitempty"`
 
 	// RequestList is a map of account requested to add this user to their flow --- used with the Private property.
-	RequestList map[string]bool `json:"request_list"`
+	RequestList map[string]bool `json:"request_list,omitempty"`
 
 	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`

@@ -47,10 +47,16 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 	// flush email addresses
 	for key, user := range users {
-		if key == caller {
-			continue
-		}
+		user.Passphrase = ""
+		user.PassphraseHex = ""
 		user.Email = ""
+
+		if user.Nickname != caller {
+			user.FlowList = nil
+			user.ShadeList = nil
+			user.RequestList = nil
+		}
+
 		users[key] = user
 	}
 
