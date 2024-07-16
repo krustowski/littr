@@ -1,8 +1,9 @@
 package db
 
 import (
-	"crypto/md5"
-	"encoding/hex"
+	"crypto/sha256"
+	//"encoding/hex"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -183,10 +184,15 @@ func GetGravatarURL(emailInput string, channel chan string) string {
 	email := strings.ToLower(emailInput)
 	size := 150
 
+	sha := sha256.New()
+	sha.Write([]byte(email))
+
+	hashedStringEmail := fmt.Sprintf("%x", sha.Sum(nil))
+
 	// hash the emailInput
-	byteEmail := []byte(email)
-	hashEmail := md5.Sum(byteEmail)
-	hashedStringEmail := hex.EncodeToString(hashEmail[:])
+	//byteEmail := []byte(email)
+	//hashEmail := md5.Sum(byteEmail)
+	//hashedStringEmail := hex.EncodeToString(hashEmail[:])
 
 	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "&s=" + strconv.Itoa(size)
 
