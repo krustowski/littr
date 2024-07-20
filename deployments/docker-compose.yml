@@ -43,6 +43,11 @@ services:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     networks:
       - traefik
+    logging:
+      driver: loki
+      options:
+        loki-url: ${LOKI_URL}
+        labels: ${LOKI_LABELS}
     labels:
       - "traefik.http.routers.${APP_NAME}.rule=Host(${APP_URLS_TRAEFIK})"
       - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${DOCKER_INTERNAL_PORT}"
