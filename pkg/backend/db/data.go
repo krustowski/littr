@@ -86,10 +86,33 @@ func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
 		return err
 	}
 
+	// system-critical short log hack
+	msg := struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}{}
+
 	err = os.WriteFile(filepath, jsonData, 0660)
 	if err != nil {
+		msg.Message = err.Error()
+		err = nil
+	} else {
+		return nil
+	}
+
+	if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
+		msg.Message += "; cannot even dump the data to a backup file: " + err.Error()
+		err = nil
+	}
+
+	msg.Code = 500
+	marsh, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println(msg.Message)
 		return err
 	}
 
-	return nil
+	fmt.Println(string(marsh))
+
+	return fmt.Errorf(msg.Message)
 }
