@@ -226,7 +226,11 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			toastText = "backend error: cannot add new content"
 			log.Println("cannot post new content to API!")
 		} else {
-			ctx.Navigate("/flow")
+			if postType == "poll" {
+				ctx.Navigate("/polls")
+			} else {
+				ctx.Navigate("/flow")
+			}
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
