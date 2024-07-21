@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"time"
 
 	"go.savla.dev/littr/pkg/models"
 
@@ -726,6 +727,25 @@ func (c *usersContent) Render() app.UI {
 		}
 	}
 
+	var userRegisteredTime string
+	var userLastActiveTime string
+
+	if c.userInModal.Nickname != "" {
+		registeredTime := c.userInModal.RegisteredTime
+		lastActiveTime := c.userInModal.LastActiveTime
+
+		registered := app.Window().
+			Get("Date").
+			New(registeredTime.Format(time.RFC3339))
+
+		lastActive := app.Window().
+			Get("Date").
+			New(lastActiveTime.Format(time.RFC3339))
+
+		userRegisteredTime = registered.Call("toLocaleString", "en-GB").String()
+		userLastActiveTime = lastActive.Call("toLocaleString", "en-GB").String()
+	}
+
 	return app.Main().Class("responsive").Body(
 		app.If(c.user.RequestList != nil && numOfReqs > 0,
 			app.Div().Class("row").Body(
@@ -790,41 +810,30 @@ func (c *usersContent) Render() app.UI {
 				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
 				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
 
-				app.Nav().Class("center-align").Body(
-					app.H5().Text(c.userInModal.Nickname),
-				),
+				app.Div().Class("row center-align").Body(
+					app.H5().Class().Body(
+						app.A().Href("/flow/user/"+c.userInModal.Nickname).Text(c.userInModal.Nickname),
+					),
 
-				app.Div().Class("space"),
+					app.If(c.userInModal.Web != "",
+						app.A().Href(c.userInModal.Web).Body(
+							app.Span().Class("bold").Body(
+								app.I().Text("captive_portal"),
+							),
+						),
+					),
+				),
 
 				app.If(c.userInModal.About != "",
-					app.Article().Class("center-align").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About),
-					app.Div().Class("space"),
+					app.Article().Class("center-align").Style("border-radius", "8px").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About),
 				),
 
-				app.Table().Class("border center-align").Style("max-width", "100%").Body(
-					app.TBody().Body(
-						app.Range(userInModalInfo).Map(func(key string) app.UI {
-							if userInModalInfo[key] == "" {
-								return app.Text("")
-							}
+				app.Article().Class("left-align").Style("border-radius", "8px").Body(
+					app.P().Class("bold").Text("registered"),
+					app.P().Class().Text(userRegisteredTime),
 
-							return app.Tr().Body(
-								app.Td().Body(
-									app.Text(key),
-								),
-
-								app.If(key == "web",
-									app.Td().Body(
-										app.A().Class("bold").Href(userInModalInfo[key]).Text(userInModalInfo[key]),
-									),
-								).Else(
-									app.Td().Body(
-										app.Span().Class("bold").Text(userInModalInfo[key]),
-									),
-								),
-							)
-						}),
-					),
+					app.P().Class("bold").Text("last online"),
+					app.P().Class().Text(userLastActiveTime),
 				),
 
 				//app.Div().Class("large-space"),
