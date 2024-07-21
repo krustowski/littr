@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"strconv"
+	"time"
 
 	"go.savla.dev/littr/pkg/models"
 
@@ -460,6 +461,13 @@ func (c *pollsContent) Render() app.UI {
 						optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
 					}
 
+					// use JS toLocaleString() function to reformat the timestamp
+					pollLocale := app.Window().
+						Get("Date").
+						New(poll.Timestamp.Format(time.RFC3339))
+
+					pollLocaleTimestamp := pollLocale.Call("toLocaleString", "en-GB").String()
+
 					return app.Tr().Body(
 						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
 							app.Div().Class("row top-padding").Body(
@@ -525,7 +533,8 @@ func (c *pollsContent) Render() app.UI {
 							// bottom row of the poll
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
-									app.Text(poll.Timestamp.Format("Jan 02, 2006; 15:04:05")),
+									//app.Text(poll.Timestamp.Format("Jan 02, 2006; 15:04:05")),
+									app.Text(pollLocaleTimestamp),
 								),
 								app.If(poll.Author == c.user.Nickname,
 									app.B().Text(len(poll.Voted)),

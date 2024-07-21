@@ -1221,6 +1221,13 @@ func (c *flowContent) Render() app.UI {
 						}
 					}*/
 
+					// use JS toLocaleString() function to reformat the timestamp
+					postLocale := app.Window().
+						Get("Date").
+						New(post.Timestamp.Format(time.RFC3339))
+
+					postLocaleTimestamp := postLocale.Call("toLocaleString", "en-GB").String()
+
 					return app.Tr().Class().Class("bottom-padding").Body(
 						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
 						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
@@ -1296,7 +1303,8 @@ func (c *flowContent) Render() app.UI {
 							// post footer (timestamp + reply buttom + star/delete button)
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
-									app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+									//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+									app.Text(postLocaleTimestamp),
 								),
 								app.If(post.Nickname != "system",
 									//app.B().Text(post.ReplyCount).Class("left-padding"),
