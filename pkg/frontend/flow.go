@@ -104,11 +104,24 @@ func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 
 	if value, found := flowList[key]; found {
 		if !value && c.users[key].Private {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.buttonDisabled = false
+				c.postButtonsDisabled = false
+				c.toastText = "this account is private"
+				c.toastShow = true
+			})
+
 			return
 		}
 		flowList[key] = !flowList[key]
 	} else {
 		if c.users[key].Private {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.buttonDisabled = false
+				c.postButtonsDisabled = false
+				c.toastText = "this account is private"
+				c.toastShow = true
+			})
 			return
 		}
 		flowList[key] = true
@@ -1071,7 +1084,13 @@ func (c *flowContent) Render() app.UI {
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.If(c.userFlowNick != "" && !c.isPost,
-					app.H5().Text(c.userFlowNick+"'s flow"),
+					app.H5().Body(
+						app.Text(c.userFlowNick+"'s flow"),
+
+						app.Span().Class("bold").Body(
+							app.I().Text("lock"),
+						),
+					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
 					app.H5().Text("single post and replies"),
 				).Else(

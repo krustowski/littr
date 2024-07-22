@@ -81,6 +81,10 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 		}
 
 		if opts.UserFlow && opts.UserFlowNick != "" {
+			if value, found := user.FlowList[opts.UserFlowNick]; (!value || !found) && allUsers[opts.UserFlowNick].Private {
+				continue
+			}
+
 			if post.Nickname == opts.UserFlowNick {
 				posts = append(posts, post)
 			}
