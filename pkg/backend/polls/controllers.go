@@ -2,6 +2,8 @@ package polls
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
@@ -83,6 +85,26 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
 		resp.Message = "backend error: cannot save new poll (cache error)"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	postStamp := time.Now()
+	postKey := strconv.FormatInt(postStamp.UnixNano(), 10)
+
+	post := models.Post{
+		ID:        postKey,
+		Type:      "poll",
+		Nickname:  "system",
+		Content:   "new poll has been added",
+		Timestamp: postStamp,
+	}
+
+	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
+		resp.Message = "backend error: cannot create a new post about new poll creation"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)

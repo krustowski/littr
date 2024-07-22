@@ -1228,68 +1228,49 @@ func (c *flowContent) Render() app.UI {
 
 					postLocaleTimestamp := postLocale.Call("toLocaleString", "en-GB").String()
 
-					return app.Tr().Class().Class("bottom-padding").Body(
-						//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-						app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
+					if post.Nickname == "system" && post.Timestamp.Before(c.user.RegisteredTime) {
+						return nil
+					}
 
-							// post header (author avatar + name + link button)
-							app.Div().Class("row top-padding").Body(
-								app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
-								app.P().Class("max").Body(
-									app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
-									//app.B().Text(post.Nickname).Class("deep-orange-text"),
+					systemLink := "/polls"
+					if post.Nickname == "system" && post.Type == "user" {
+						systemLink = "/flow/user/" + post.Figure
+					}
+
+					return app.Tr().Class().Class("bottom-padding").Body(
+						// special system post
+						app.If(post.Nickname == "system",
+							app.Td().Class("post align-left").Attr("touch-action", "none").Body(
+								app.Article().Class("responsive center-align").Body(
+									app.A().Href(systemLink).Body(
+										app.Span().Class("bold").Text(post.Content),
+									),
+								),
+								app.Div().Class("row").Body(
+									app.Div().Class("max").Body(
+										//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+										app.Text(postLocaleTimestamp),
+									),
 								),
 							),
 
-							// pic post
-							app.If(post.Type == "fig",
-								app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
-									app.If(c.loaderShowImage,
-										app.Div().Class("small-space"),
-										app.Div().Class("loader center large deep-orange active"),
-									),
-									//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
-									app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
-								),
+						// other posts
+						).Else(
+							//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
+							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
 
-							// reply + post
-							).Else(
-								app.If(post.ReplyToID != "",
-									app.Article().Class("black-text yellow10").Style("border-radius", "8px").Style("max-width", "100%").Body(
-										app.Div().Class("row max").Body(
-											app.If(previousDetailsSummary != "",
-												app.Details().Class("max").Body(
-													app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
-													app.Div().Class("space"),
-													app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-												),
-											).Else(
-												app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-											),
-
-											app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-												app.I().Text("history"),
-											),
-										),
+								// post header (author avatar + name + link button)
+								app.Div().Class("row top-padding").Body(
+									app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+									app.P().Class("max").Body(
+										app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+										//app.B().Text(post.Nickname).Class("deep-orange-text"),
 									),
 								),
 
-								app.If(len(post.Content) > 0,
-									app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
-										app.If(postDetailsSummary != "",
-											app.Details().Body(
-												app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
-												app.Div().Class("space"),
-												app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-											),
-										).Else(
-											app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-										),
-									),
-								),
-
-								app.If(post.Figure != "",
-									app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+								// pic post
+								app.If(post.Type == "fig",
+									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -1297,35 +1278,82 @@ func (c *flowContent) Render() app.UI {
 										//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 										app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
 									),
-								),
-							),
 
-							// post footer (timestamp + reply buttom + star/delete button)
-							app.Div().Class("row").Body(
-								app.Div().Class("max").Body(
-									//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
-									app.Text(postLocaleTimestamp),
-								),
-								app.If(post.Nickname != "system",
-									//app.B().Text(post.ReplyCount).Class("left-padding"),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
-										app.I().Text("reply"),
-									),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-										app.I().Text("link"),
-									),
-								),
-								app.If(c.user.Nickname == post.Nickname,
-									app.B().Text(post.ReactionCount).Class("left-padding"),
-									//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
-										app.I().Text("delete"),
-									),
+								// reply + post
 								).Else(
-									app.B().Text(post.ReactionCount).Class("left-padding"),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
-										//app.I().Text("ac_unit"),
-										app.I().Text("bomb"),
+									app.If(post.ReplyToID != "",
+										app.Article().Class("black-text yellow10").Style("border-radius", "8px").Style("max-width", "100%").Body(
+											app.Div().Class("row max").Body(
+												app.If(previousDetailsSummary != "",
+													app.Details().Class("max").Body(
+														app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+														app.Div().Class("space"),
+														app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+													),
+												).Else(
+													app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+												),
+
+												app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+													app.I().Text("history"),
+												),
+											),
+										),
+									),
+
+									app.If(len(post.Content) > 0,
+										app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
+											app.If(postDetailsSummary != "",
+												app.Details().Body(
+													app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+													app.Div().Class("space"),
+													app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+												),
+											).Else(
+												app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+											),
+										),
+									),
+
+									app.If(post.Figure != "",
+										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+											app.If(c.loaderShowImage,
+												app.Div().Class("small-space"),
+												app.Div().Class("loader center large deep-orange active"),
+											),
+											//app.Img().Class("no-padding absolute center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+											app.Img().Class("no-padding absolute center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
+										),
+									),
+								),
+
+								// post footer (timestamp + reply buttom + star/delete button)
+								app.Div().Class("row").Body(
+									app.Div().Class("max").Body(
+										//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+										app.Text(postLocaleTimestamp),
+									),
+									app.If(post.Nickname != "system",
+										//app.B().Text(post.ReplyCount).Class("left-padding"),
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
+											app.I().Text("reply"),
+										),
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+											app.I().Text("link"),
+										),
+									),
+									app.If(c.user.Nickname == post.Nickname,
+										app.B().Text(post.ReactionCount).Class("left-padding"),
+										//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
+											app.I().Text("delete"),
+										),
+									).Else(
+										app.B().Text(post.ReactionCount).Class("left-padding"),
+										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
+											//app.I().Text("ac_unit"),
+											app.I().Text("bomb"),
+										),
 									),
 								),
 							),

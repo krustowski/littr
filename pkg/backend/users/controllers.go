@@ -217,6 +217,27 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	//resp.Users[user.Nickname] = user
 
+	postStamp := time.Now()
+	postKey := strconv.FormatInt(postStamp.UnixNano(), 10)
+
+	post := models.Post{
+		ID:        postKey,
+		Type:      "user",
+		Figure:    user.Nickname,
+		Nickname:  "system",
+		Content:   "new user has been added (" + user.Nickname + ")",
+		Timestamp: postStamp,
+	}
+
+	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
+		resp.Message = "backend error: cannot create a new post about new user adition"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	resp.Message = "ok, adding user"
 	resp.Code = http.StatusCreated
 
