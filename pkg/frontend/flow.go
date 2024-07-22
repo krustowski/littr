@@ -1087,8 +1087,10 @@ func (c *flowContent) Render() app.UI {
 					app.H5().Body(
 						app.Text(c.userFlowNick+"'s flow"),
 
-						app.Span().Class("bold").Body(
-							app.I().Text("lock"),
+						app.If(c.users[c.userFlowNick].Private,
+							app.Span().Class("bold").Body(
+								app.I().Text("lock"),
+							),
 						),
 					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
