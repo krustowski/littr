@@ -87,6 +87,81 @@ func (p *FlowPage) Render() app.UI {
 	)
 }
 
+func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	flowList := c.user.FlowList
+
+	if c.user.ShadeList[key] {
+		return
+	}
+
+	if flowList == nil {
+		flowList = make(map[string]bool)
+		flowList[c.user.Nickname] = true
+		//c.user.FlowList = flowList
+	}
+
+	if value, found := flowList[key]; found {
+		if !value && c.users[key].Private {
+			return
+		}
+		flowList[key] = !flowList[key]
+	} else {
+		if c.users[key].Private {
+			return
+		}
+		flowList[key] = true
+	}
+
+	ctx.Async(func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.buttonDisabled = true
+			c.postButtonsDisabled = true
+		})
+
+		toastText := ""
+
+		// do not save new flow user to local var until it is saved on backend
+		//flowRecords := append(c.flowRecords, flowName)
+
+		updatedData := c.user
+		updatedData.FlowList = flowList
+
+		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, updatedData, c.user.Nickname, 0)
+		if !ok {
+			toastText = "generic backend error"
+			return
+		}
+
+		response := struct {
+			Message string `json:"message"`
+			Code    int    `json:"code"`
+		}{}
+
+		if err := json.Unmarshal(*respRaw, &response); err != nil {
+			toastText = "user update failed: " + err.Error()
+			return
+		}
+
+		if response.Code != 200 && response.Code != 201 {
+			toastText = "user update failed: " + response.Message
+			log.Println(response.Message)
+			return
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = toastText
+			c.toastShow = (toastText != "")
+
+			c.buttonDisabled = false
+			c.postButtonsDisabled = false
+
+			c.user.FlowList = flowList
+		})
+	})
+}
+
 func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 
@@ -866,6 +941,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 	})
 
 	toastText := ""
+	toastType := ""
 
 	isPost := true
 
@@ -896,6 +972,11 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			if _, found := users[parts.UserFlowNick]; !found {
 				toastText = "user not found"
 			}
+
+			if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
+				toastText = "follow the user to see their posts"
+				toastType = "info"
+			}
 			isPost = false
 		}
 
@@ -917,6 +998,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			if toastText != "" {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.toastType = toastType
 			}
 
 			c.loaderShow = false
@@ -1016,8 +1098,15 @@ func (c *flowContent) Render() app.UI {
 					//app.B().Text(post.Nickname).Class("deep-orange-text"),
 				),*/
 
-				app.If(c.users[c.userFlowNick].About != "",
-					app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				//app.If(c.users[c.userFlowNick].About != "",
+				app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				//),
+				app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled).Body(
+					app.If(c.user.FlowList[c.userFlowNick],
+						app.Span().Text("unfollow"),
+					).Else(
+						app.Span().Text("follow"),
+					),
 				),
 			),
 		),
