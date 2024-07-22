@@ -90,6 +90,10 @@ func (p *FlowPage) Render() app.UI {
 func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 
+	if key == c.user.Nickname {
+		return
+	}
+
 	flowList := c.user.FlowList
 
 	if c.user.ShadeList[key] {
@@ -1122,7 +1126,7 @@ func (c *flowContent) Render() app.UI {
 				//app.If(c.users[c.userFlowNick].About != "",
 				app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 				//),
-				app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled).Body(
+				app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 					app.If(c.user.FlowList[c.userFlowNick],
 						app.Span().Text("unfollow"),
 					).Else(
