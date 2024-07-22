@@ -54,9 +54,9 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 
 	// overload flowList
 	flowList := user.FlowList
-	/*if opts.FlowList != nil {
+	if opts.FlowList != nil {
 		flowList = opts.FlowList
-	}*/
+	}
 
 	// filter out all posts for such callerID
 	for _, post := range allPosts {
@@ -152,6 +152,13 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 		/*if num > pageSize {
 			break
 		}*/
+	}
+
+	// ensure the UserFlowNick is always included too
+	if _, found := uExport[opts.UserFlowNick]; !found {
+		if _, found = allUsers[opts.UserFlowNick]; found {
+			uExport[opts.UserFlowNick] = allUsers[opts.UserFlowNick]
+		}
 	}
 
 	return pExport, uExport

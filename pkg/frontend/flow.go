@@ -894,7 +894,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 		}
 		if parts.UserFlowNick != "" && parts.UserFlow {
 			if _, found := users[parts.UserFlowNick]; !found {
-				toastText = "user not found, or not in your flow"
+				toastText = "user not found"
 			}
 			isPost = false
 		}
@@ -943,7 +943,7 @@ func (c *flowContent) sortPosts() []models.Post {
 	// fetch posts and put them in an array
 	for _, sortedPost := range posts {
 		// do not append a post that is not meant to be shown
-		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" {
+		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" && sortedPost.Nickname != c.userFlowNick {
 			continue
 		}
 

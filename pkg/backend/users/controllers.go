@@ -413,15 +413,6 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// flush email addresses
-	for key, user := range uExport {
-		if key == callerID {
-			continue
-		}
-		user.Email = ""
-		uExport[key] = user
-	}
-
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
 		resp.Message = "cannot fetch such callerID-named user"
@@ -432,6 +423,20 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		uExport[callerID] = caller
+	}
+
+	// flush email addresses
+	for key, user := range uExport {
+		user.Passphrase = ""
+		user.PassphraseHex = ""
+
+		if key == callerID {
+			uExport[key] = user
+			continue
+		}
+		user.Email = ""
+
+		uExport[key] = user
 	}
 
 	resp.Users = uExport
