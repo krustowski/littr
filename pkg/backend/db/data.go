@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 
+	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/models"
 	"go.savla.dev/swis/v5/pkg/core"
 )
@@ -38,12 +40,16 @@ func DumpAll() {
 }
 
 func loadOne[T any](cache *core.Cache, filepath string, model T) error {
+	l := common.NewLogger(nil, "data load")
+
 	rawData, err := os.ReadFile(filepath)
 	if err != nil {
+		l.Println(err.Error(), http.StatusInternalServerError)
 		return err
 	}
 
 	if string(rawData) == "" {
+		l.Println("empty data on input", http.StatusBadRequest)
 		return errors.New("empty data on input")
 	}
 
@@ -53,6 +59,7 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 
 	err = json.Unmarshal(rawData, &matrix)
 	if err != nil {
+		l.Println(err.Error(), http.StatusInternalServerError)
 		return err
 	}
 
@@ -62,7 +69,9 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 		}
 
 		if saved := SetOne(cache, key, val); !saved {
-			return fmt.Errorf("cannot load item from file '%s' (key: %s)", filepath, key)
+			msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
+			l.Println(msg, http.StatusInternalServerError)
+			return fmt.Errorf(msg)
 			//continue
 		}
 	}
@@ -71,7 +80,10 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 }
 
 func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
+	l := common.NewLogger(nil, "data dump")
+
 	if &model == nil {
+		l.Println("nil pointer on input!", http.StatusBadRequest)
 		return errors.New("nil pointer on input!")
 	}
 
@@ -102,6 +114,7 @@ func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
 
 	if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
 		msg.Message += "; cannot even dump the data to a backup file: " + err.Error()
+		l.Println(msg.Message, http.StatusInternalServerError)
 		err = nil
 	}
 
@@ -112,7 +125,8 @@ func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
 		return err
 	}
 
-	fmt.Println(string(marsh))
+	l.Println(string(marsh), http.StatusInternalServerError)
+	//fmt.Println(string(marsh))
 
 	return fmt.Errorf(msg.Message)
 }

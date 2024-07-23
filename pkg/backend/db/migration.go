@@ -94,6 +94,8 @@ func RunMigrations() bool {
 
 	for key, user := range users {
 		if helpers.Contains(bank, user.Nickname) {
+			l.Println("deleting "+user.Nickname, http.StatusProcessing)
+
 			if deleted := DeleteOne(UserCache, key); !deleted {
 				l.Println("migrateUserDeletion: cannot delete an user: "+key, http.StatusInternalServerError)
 				return false

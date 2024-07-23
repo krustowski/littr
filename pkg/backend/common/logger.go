@@ -37,8 +37,20 @@ type Logger struct {
 }
 
 func NewLogger(r *http.Request, worker string) *Logger {
-	if r == nil || worker == "" {
+	if worker == "" {
 		return nil
+	}
+
+	// little hack for data dump/load procedure
+	if r == nil {
+		return &Logger{
+			CallerID:   "",
+			IPAddress:  "127.0.0.1",
+			Method:     "",
+			Route:      "",
+			WorkerName: worker,
+			Version:    "",
+		}
 	}
 
 	callerID, _ := r.Context().Value("nickname").(string)
