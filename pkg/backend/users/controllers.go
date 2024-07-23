@@ -324,8 +324,9 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// delete user
 	if deleted := db.DeleteOne(db.UserCache, key); !deleted {
-		resp.Message = "error deleting:" + key
+		resp.Message = "error deleting from user cache:" + key
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -333,19 +334,56 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// delete all user's posts and polls
+	// delete user's subscriptions
+	if deleted := db.DeleteOne(db.SubscriptionCache, key); !deleted {
+		resp.Message = "error deleting from subscription cache:" + key
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	void := ""
+
+	// delete all user's posts and polls, and tokens
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
+	tokens, _ := db.GetAll(db.TokenCache, void)
 
+	// loop over posts and delete authored ones + linked fungures
 	for id, post := range posts {
 		if post.Nickname == key {
 			db.DeleteOne(db.FlowCache, id)
+
+			// delete associated image and thumbnail
+			if post.Figure != "" {
+				err := os.Remove("/opt/pix/thumb_" + post.Figure)
+				if err != nil {
+					// nasty bypass
+					continue
+				}
+
+				err = os.Remove("/opt/pix/" + post.Figure)
+				if err != nil {
+					// nasty bypass
+					continue
+				}
+			}
 		}
 	}
 
+	// loop over polls and delete authored ones
 	for id, poll := range polls {
 		if poll.Author == key {
 			db.DeleteOne(db.PollCache, id)
+		}
+	}
+
+	// loop over tokens and delete matching ones
+	for id, tok := range tokens {
+		if tok == key {
+			db.DeleteOne(db.TokenCache, id)
 		}
 	}
 

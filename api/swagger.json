@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.36.3"
+        "version": "0.36.4"
     },
     "host": "littr.eu",
     "basePath": "/api/v1",
@@ -1026,6 +1026,47 @@
                 }
             }
         },
+        "/users/{nickname}/localtime": {
+            "patch": {
+                "description": "toggle the local time mode",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Toggle the local time mode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{nickname}/posts": {
             "get": {
                 "description": "get user posts",
@@ -1487,6 +1528,14 @@
                 "last_login_time": {
                     "description": "LastLoginTime is an UNIX timestamp of the last user's successful log-in.",
                     "type": "string"
+                },
+                "live_mode": {
+                    "description": "LiveMode is a feature allowing to show notifications about new posts",
+                    "type": "boolean"
+                },
+                "local_time_mode": {
+                    "description": "LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.",
+                    "type": "boolean"
                 },
                 "nickname": {
                     "description": "Nickname is a login name of such user.",

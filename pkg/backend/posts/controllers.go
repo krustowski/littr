@@ -450,6 +450,29 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// delete associated image and thumbnail
+	if post.Figure != "" {
+		err := os.Remove("/opt/pix/thumb_" + post.Figure)
+		if err != nil {
+			resp.Message = "cannot remove thumbnail associated to the post"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		err = os.Remove("/opt/pix/" + post.Figure)
+		if err != nil {
+			resp.Message = "cannot remove image associated to the post"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+	}
+
 	resp.Message = "ok, post removed"
 	resp.Code = http.StatusOK
 
