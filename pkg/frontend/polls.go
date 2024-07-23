@@ -122,6 +122,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 				c.toastText = toastText
 				c.toastType = toastType
 				c.toastShow = (toastText != "")
+				c.loaderShow = false
 			})
 			return
 		}

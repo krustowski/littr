@@ -17,6 +17,29 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+type OptionsPayload struct {
+	UIDarkMode    bool   `json:"dark_mode"`
+	LiveMode      bool   `json:"live_mode"`
+	LocalTimeMode bool   `json:"local_time_mode"`
+	Private       bool   `json:"private"`
+	AboutText     string `json:"about_you"`
+	WebsiteLink   string `json:"website_link"`
+}
+
+func (c *settingsContent) prefillPayload() OptionsPayload {
+
+	payload := OptionsPayload{
+		UIDarkMode:    c.user.UIDarkMode,
+		LiveMode:      c.user.LiveMode,
+		LocalTimeMode: c.user.LocalTimeMode,
+		Private:       c.user.Private,
+		AboutText:     c.user.About,
+		WebsiteLink:   c.user.Web,
+	}
+
+	return payload
+}
+
 // onClickPass
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	toastText := ""
@@ -52,16 +75,19 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 		passHash := sha512.Sum512([]byte(passphrase + appPepper))
 
-		updatedUser := c.user
-		//updatedUser.Passphrase = string(passHash[:])
-		updatedUser.PassphraseHex = fmt.Sprintf("%x", passHash)
+		payload := struct {
+			PassphraseHex    string `json:"passphrase_hex"`
+			OldPassphraseHex string `json:"old_passphrase_hex"`
+		}{
+			PassphraseHex: fmt.Sprintf("%x", passHash),
+		}
 
 		response := struct {
 			Message string `json:"message"`
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
+		if data, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); !ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 			}
@@ -87,7 +113,13 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}
 
-		ctx.Navigate("/users")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = "passphrase updated"
+			c.toastShow = (toastText != "")
+			c.toastType = "success"
+		})
+		return
+		//ctx.Navigate("/users")
 	})
 }
 
@@ -122,10 +154,10 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		updatedUser := c.user
-		updatedUser.About = aboutText
+		payload := c.prefillPayload()
+		payload.AboutText = aboutText
 
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -135,22 +167,12 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		c.user.About = c.aboutText
-
-		var userStream []byte
-		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		ctx.LocalStorage().Set("user", userStream)
-
-		ctx.Navigate("/users")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = "about text updated"
+			c.toastShow = (toastText != "")
+			c.toastType = "success"
+		})
+		return
 	})
 }
 
@@ -201,10 +223,10 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			website = "https://" + website
 		}
 
-		updatedUser := c.user
-		updatedUser.Web = website
+		payload := c.prefillPayload()
+		payload.WebsiteLink = website
 
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+updatedUser.Nickname, updatedUser, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -216,18 +238,13 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 
 		c.user.Web = c.website
 
-		var userStream []byte
-		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		ctx.Navigate("/users")
+		//ctx.Navigate("/users")
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = "website updated"
+			c.toastShow = (toastText != "")
+			c.toastType = "success"
+		})
+		return
 	})
 	return
 }
@@ -626,7 +643,11 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 	localTime := c.user.LocalTimeMode
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/localtime", nil, c.user.Nickname, 0); !ok {
+
+		payload := c.prefillPayload()
+		payload.LocalTimeMode = !localTime
+
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -653,19 +674,19 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 
 func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	toastText := ""
-	private := c.user.Private
 
 	ctx.Async(func() {
-		// send the registration to backend
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/private", nil, c.user.Nickname, 0); !ok {
+
+		payload := c.prefillPayload()
+		payload.Private = !c.user.Private
+
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to toggle the private mode"
 				c.toastShow = toastText != ""
-
-				c.user.Private = private
 			})
 			return
 		}
@@ -676,7 +697,7 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 			c.toastShow = toastText != ""
 			c.toastType = "success"
 
-			c.user.Private = !private
+			c.user.Private = !c.user.Private
 		})
 		return
 	})
@@ -691,6 +712,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
+
 		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
