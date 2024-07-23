@@ -19,7 +19,7 @@ jobs:
 #      run: make unit
 
   build:
-    runs-on: ${{ vars.RUNNER_LABELS }}
+    runs-on: ${{ vars.RUNNER_LABELS_BUILD }}
     steps:
     - uses: actions/checkout@v4
     - name: Build new swapi image (with staging).
@@ -33,7 +33,7 @@ jobs:
       run: make build
 
   push:
-    runs-on: ${{ vars.RUNNER_LABELS }}
+    runs-on: ${{ vars.RUNNER_LABELS_BUILD }}
     needs: [ build ]
     steps:
     - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
       run: make push_to_registry
 
   generate_docs:
-    runs-on: ${{ vars.RUNNER_LABELS }}
+    runs-on: ${{ vars.RUNNER_LABELS_BUILD }}
     needs: [ build ]
     steps:
     - uses: actions/checkout@v4
