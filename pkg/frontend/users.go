@@ -202,10 +202,13 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
-		updatedData := c.user
-		updatedData.FlowList = flowList
+		payload := struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: flowList,
+		}
 
-		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, updatedData, c.user.Nickname, 0)
+		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -343,8 +346,15 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 	toastText := ""
 
 	ctx.Async(func() {
-		// update shaded user
-		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+userShaded.Nickname, userShaded, c.user.Nickname, 0)
+		payload := struct {
+			FlowList  map[string]bool `json:"flow_list"`
+			ShadeList map[string]bool `json:"shade_list"`
+		}{
+			FlowList:  userShaded.FlowList,
+			ShadeList: userShaded.ShadeList,
+		}
+
+		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+userShaded.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -372,8 +382,15 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// update user
-		respRaw, ok = litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0)
+		payload = struct {
+			FlowList  map[string]bool `json:"flow_list"`
+			ShadeList map[string]bool `json:"shade_list"`
+		}{
+			FlowList:  c.user.FlowList,
+			ShadeList: c.user.ShadeList,
+		}
+
+		respRaw, ok = litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -508,7 +525,6 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 	toastText := ""
 
 	ctx.Async(func() {
-		user := c.users[nick]
 		toastType := "error"
 
 		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname+"/request", nil, c.user.Nickname, 0); !ok {
@@ -524,19 +540,34 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 			delete(c.user.RequestList, nick)
 		}
 
-		payload := user
-		flowList := c.user.FlowList
-		flowList[nick] = true
-		payload.FlowList = flowList
+		// prepare the lists for us and the counterpart
+		fellowFlowList := make(map[string]bool)
+		fellowFlowList[nick] = true
+		fellowFlowList[c.user.Nickname] = true
 
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+payload.Nickname, payload, c.user.Nickname, 0); !ok {
+		ourFlowList := c.user.FlowList
+		ourFlowList[nick] = true
+
+		payload := struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: fellowFlowList,
+		}
+
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+nick+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
 			toastText = "user updated, request removed"
 			toastType = "success"
 		}
 
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
+		payload = struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: ourFlowList,
+		}
+
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
 			toastText = "user updated, request removed"
@@ -549,7 +580,8 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 			c.toastType = toastType
 			c.usersButtonDisabled = false
 
-			c.users[c.user.Nickname] = payload
+			c.user.FlowList = ourFlowList
+			//c.users[c.user.Nickname] = payload
 		})
 		return
 	})
@@ -581,7 +613,13 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 			delete(user.RequestList, nick)
 		}
 
-		if _, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, user, c.user.Nickname, 0); !ok {
+		payload := struct {
+			RequestList map[string]bool `json:"request_list"`
+		}{
+			RequestList: user.RequestList,
+		}
+
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
 			toastText = "user updated, request removed"

@@ -50,6 +50,9 @@ type User struct {
 	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
 
+	// AppBgMode string defines the colour mode of the app's background (light vs dark).
+	AppBgMode string `json:"app_bg_mode" default:"dark"`
+
 	// RegisteredTime is an UNIX timestamp of the user's registration.
 	RegisteredTime time.Time `json:"registered_time"`
 
