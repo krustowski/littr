@@ -5,9 +5,10 @@ import (
 	//"os"
 	"time"
 
+	//sse "github.com/tmaxmax/go-sse"
 	sse "github.com/alexandrevicenzi/go-sse"
-	chi "github.com/go-chi/chi/v5"
 	//sse "github.com/r3labs/sse/v2"
+	chi "github.com/go-chi/chi/v5"
 	cfg "go.savla.dev/littr/configs"
 )
 
@@ -24,8 +25,11 @@ var Streamer *sse.Server
 // @Failure      500  {object}  nil
 // @Router       /posts/live [get]
 func beat() {
+	// ID, data, event
+	// https://github.com/alexandrevicenzi/go-sse/blob/master/message.go#L23
 	for {
-		Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("heartbeat"))
+		//Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("heartbeat"))
+		Streamer.SendMessage("/api/v1/posts/live", sse.NewMessage("", "heartbeat", "keepalive"))
 		time.Sleep(time.Second * cfg.HEARTBEAT_SLEEP_TIME)
 	}
 }

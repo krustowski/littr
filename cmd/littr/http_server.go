@@ -20,6 +20,7 @@ import (
 	fe "go.savla.dev/littr/pkg/frontend"
 	"go.savla.dev/swis/v5/pkg/core"
 
+	sse "github.com/alexandrevicenzi/go-sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -110,6 +111,9 @@ func initServer() {
 		signal.Stop(sigs)
 
 		l.Println("caught signal '"+sig.String()+"', exiting gracefully...", http.StatusCreated)
+		if posts.Streamer != nil {
+			posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-stop"))
+		}
 
 		// TODO
 		//db.LockAll()
@@ -194,6 +198,9 @@ func initServer() {
 	server.Handler = r
 
 	l.Println("starting the server...", http.StatusOK)
+	if posts.Streamer != nil {
+		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-start"))
+	}
 
 	// TODO use http.ErrServerClosed for graceful shutdown
 	if err := server.Serve(listener); err != nil {

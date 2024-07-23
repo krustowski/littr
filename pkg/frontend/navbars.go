@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	//"go.savla.dev/littr/configs"
@@ -29,8 +30,9 @@ type header struct {
 
 	pagePath string
 
-	eventListenerMessage func()
-	lastHeartbeatTime    int64
+	eventListenerMessage   func()
+	eventListenerKeepAlive func()
+	lastHeartbeatTime      int64
 
 	toastText string
 	toastShow bool
@@ -47,8 +49,6 @@ const (
 
 func (h *header) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
-
-	//ctx.LocalStorage().Set("lastEventTime", time.Now().UnixNano())
 
 	if data == "heartbeat" {
 		return
@@ -68,17 +68,40 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		log.Println(err.Error())
 	}
 
-	if data == user.Nickname {
-		return
-	}
+	// explode the data CSV string
+	slice := strings.Split(data, ",")
+	text := ""
 
-	if _, flowed := user.FlowList[data]; !flowed {
-		return
+	switch slice[0] {
+	case "server-stop":
+		// server is stoping/restarting
+		text = "server is restarting..."
+		break
+	case "server-start":
+		// server is booting up
+		text = "server has just started"
+		break
+	case "post":
+		author := slice[1]
+		if author == user.Nickname {
+			return
+		}
+
+		if _, flowed := user.FlowList[author]; !flowed {
+			return
+		}
+
+		text = "new post added by " + author
+		break
+	case "poll":
+		text = "new poll has been added"
+		break
 	}
 
 	// show the snack bar the nasty way
 	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
+		snack.Set("innerText", text)
 		snack.Get("classList").Call("add", "active")
 	}
 
@@ -127,6 +150,7 @@ func (h *header) OnMount(ctx app.Context) {
 
 	// create event listener for SSE messages
 	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
+	h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted

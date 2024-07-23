@@ -248,7 +248,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast a new post to live subscribers
-	Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage(post.Nickname))
+	Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("post,"+post.Nickname))
 
 	posts := make(map[string]models.Post)
 	posts[key] = post

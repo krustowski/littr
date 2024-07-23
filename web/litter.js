@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.4'
+  window.LIT.version = 'LittrJS v0.6.5'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -161,14 +161,14 @@
       return
     }
 
-    let data = event.data;
+    const data = event.data;
     var event; // The custom event that will be created
 
     if (document.createEvent){
       event = document.createEvent("HTMLEvents");
       event.initEvent("message", true, true);
       event.eventName = "message";
-      event.data = data
+      event.data = data;
 
       console.log("emitting an event (createEvent)");
       //window.LIT.event = event
@@ -186,6 +186,7 @@
 
   es.addEventListener("open", listener);
   es.addEventListener("message", listener);
+  es.addEventListener("keepalive", listener);
   es.addEventListener("error", listener);
 
 

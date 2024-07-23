@@ -166,15 +166,21 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~test if dump dir writable (on init)~~ (chown included in Dockerfile)
 
 ### roadmap to v1.0.0
++ fix the code smells as scanned by `sonar-scanner`
 + resolve tikets in github and redmine (priv)
++ user activation via mail
 + write integration and e2e tests
 + [...]
 
+### roadmap to v0.37
++ improve SSE parsing on FE
++ show server is restarting notice
+
 ### roadmap to v0.36
-+ user activation via mail
++ ~~implement localTime mode switch to see post in one's timezone (by default on)~~
++ ~~improve user's flow (profiles) --- viewable in limits of following/shading/private acc~~
 
 ### roadmap to v0.35
-+ fix the code smells as scanned by `sonar-scanner`
 + ~~implement searching for flow using hashtags~~ (wip)
 + ~~fix various bugs and typos (login, register pages; texts)~~ (wip)
 

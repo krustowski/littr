@@ -7,8 +7,11 @@ import (
 
 	"go.savla.dev/littr/pkg/backend/common"
 	"go.savla.dev/littr/pkg/backend/db"
+	"go.savla.dev/littr/pkg/backend/posts"
 	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
+
+	sse "github.com/alexandrevicenzi/go-sse"
 )
 
 // getPolls get a list of polls
@@ -143,6 +146,8 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("poll"))
 
 	resp.Message = "ok, adding new poll"
 	resp.Code = http.StatusCreated
