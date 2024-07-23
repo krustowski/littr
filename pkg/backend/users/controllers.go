@@ -308,6 +308,71 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// updateUserPassphrase is the users handler that allows the user to change their passphrase.
+//
+// @Summary      Update user's passphrase
+// @Description  update user's passphrase
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      403  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /users/{nickname}/passphrase [patch]
+func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	callerID, _ := r.Context().Value("nickname").(string)
+	nick := chi.URLParam(r, "nickname")
+
+	if callerID != nick {
+		resp.Message = "access denied"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	user, found := db.GetOne(db.UserCache, callerID, models.User{})
+	if !found {
+		resp.Message = "user nout found: " + callerID
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	var options struct {
+		PassphraseHex    string `json:"passphrase_hex"`
+		OldPassphraseHex string `json:"old_passphrase_hex"`
+	}
+
+	if err := common.UnmarshalRequestData(r, &options); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	user.PassphraseHex = options.PassphraseHex
+
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+}
+
 // updateUserOption is the users handler that allows the user to change some attributes of their models.User instance.
 //
 // @Summary      Update user's option
