@@ -72,6 +72,12 @@ type User struct {
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
 	AppBgMode string `json:"app_bg_mode" default:"dark"`
 
+	// LiveMode is a feature allowing to show notifications about new posts
+	LiveMode bool `json:"live_mode" default:true`
+
+	// LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.
+	LocalTimeMode bool `json:"local_time_mode" default:true`
+
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags"`
 }

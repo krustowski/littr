@@ -1335,13 +1335,21 @@ func (c *flowContent) Render() app.UI {
 						}
 					}*/
 
+					var postTimestamp string
+
 					// use JS toLocaleString() function to reformat the timestamp
-					postLocale := app.Window().
-						Get("Date").
-						New(post.Timestamp.Format(time.RFC3339))
+					// use negated LocalTimeMode boolean as true! (HELP)
+					if !c.user.LocalTimeMode {
+						postLocale := app.Window().
+							Get("Date").
+							New(post.Timestamp.Format(time.RFC3339))
 
-					postLocaleTimestamp := postLocale.Call("toLocaleString", "en-GB").String()
+						postTimestamp = postLocale.Call("toLocaleString", "en-GB").String()
+					} else {
+						postTimestamp = post.Timestamp.Format("Jan 02, 2006 / 15:04:05")
+					}
 
+					// omit older system messages for new users
 					if post.Nickname == "system" && post.Timestamp.Before(c.user.RegisteredTime) {
 						return nil
 					}
@@ -1363,7 +1371,7 @@ func (c *flowContent) Render() app.UI {
 								app.Div().Class("row").Body(
 									app.Div().Class("max").Body(
 										//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
-										app.Text(postLocaleTimestamp),
+										app.Text(postTimestamp),
 									),
 								),
 							),
@@ -1445,7 +1453,7 @@ func (c *flowContent) Render() app.UI {
 								app.Div().Class("row").Body(
 									app.Div().Class("max").Body(
 										//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
-										app.Text(postLocaleTimestamp),
+										app.Text(postTimestamp),
 									),
 									app.If(post.Nickname != "system",
 										//app.B().Text(post.ReplyCount).Class("left-padding"),

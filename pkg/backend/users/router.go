@@ -21,6 +21,7 @@ func Router() chi.Router {
 		r.Post("/{nickname}/request", addToRequestList)
 		r.Delete("/{nickname}/request", removeFromRequestList)
 		r.Patch("/{nickname}/private", togglePrivateMode)
+		r.Patch("/{nickname}/localtime", toggleLocalTimeMode)
 	})
 
 	return r

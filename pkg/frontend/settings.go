@@ -298,6 +298,30 @@ func (c *settingsContent) Render() app.UI {
 			),
 		),
 
+		// local time infobox
+		app.Article().Class("row surface-container-highest").Body(
+			app.I().Text("lightbulb").Class("amber-text"),
+			app.P().Class("max").Body(
+				app.Span().Class("deep-orange-text").Text("the local time mode "),
+				app.Span().Text("is a feature allowing you to see any post's (or poll's) timestamp according to your device's setting (timezone etc). When disabled, server time is shown instead"),
+			),
+		),
+
+		// local time switch
+		app.Div().Class("field middle-align").Body(
+			app.Div().Class("row").Body(
+				app.Div().Class("max").Body(
+					app.Span().Text("local time mode switch"),
+				),
+				app.Label().Class("switch icon").Body(
+					app.Input().Type("checkbox").ID("local-time-mode-switch").Checked(!c.user.LocalTimeMode).OnChange(c.onLocalTimeModeSwitch).Disabled(c.settingsButtonDisabled),
+					app.Span().Body(
+						app.I().Text("schedule"),
+					),
+				),
+			),
+		),
+
 		// live infobox
 		app.Article().Class("row surface-container-highest").Body(
 			app.I().Text("lightbulb").Class("amber-text"),

@@ -72,28 +72,14 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 	var toastType string
 
 	ctx.Async(func() {
-		var enUser string
-		var user models.User
-
-		ctx.LocalStorage().Get("user", &enUser)
-
-		// decode, decrypt and unmarshal the local storage string
-		if err := prepare(enUser, &user); err != nil {
-			toastText = "frontend decoding/decryption failed: " + err.Error()
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
 		pollsRaw := struct {
 			Polls map[string]models.Poll `json:"polls"`
 			Code  int                    `json:"code"`
+			Users map[string]models.User `json:"users"`
+			Key   string                 `json:"key"`
 		}{}
 
-		if byteData, _ := litterAPI("GET", "/api/v1/polls", nil, user.Nickname, 0); byteData != nil {
+		if byteData, _ := litterAPI("GET", "/api/v1/polls", nil, "", 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -142,8 +128,8 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.loggedUser = user.Nickname
-			c.user = user
+			c.user = pollsRaw.Users[pollsRaw.Key]
+			c.loggedUser = c.user.Nickname
 
 			c.pagination = 10
 			c.pageNo = 1
@@ -461,12 +447,19 @@ func (c *pollsContent) Render() app.UI {
 						optionThreeShare = poll.OptionThree.Counter * 100 / pollCounterSum
 					}
 
-					// use JS toLocaleString() function to reformat the timestamp
-					pollLocale := app.Window().
-						Get("Date").
-						New(poll.Timestamp.Format(time.RFC3339))
+					var pollTimestamp string
 
-					pollLocaleTimestamp := pollLocale.Call("toLocaleString", "en-GB").String()
+					// use JS toLocaleString() function to reformat the timestamp
+					// use negated LocalTimeMode boolean as true! (HELP)
+					if !c.user.LocalTimeMode {
+						pollLocale := app.Window().
+							Get("Date").
+							New(poll.Timestamp.Format(time.RFC3339))
+
+						pollTimestamp = pollLocale.Call("toLocaleString", "en-GB").String()
+					} else {
+						pollTimestamp = poll.Timestamp.Format("Jan 02, 2006 / 15:04:05")
+					}
 
 					return app.Tr().Body(
 						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
@@ -534,7 +527,7 @@ func (c *pollsContent) Render() app.UI {
 							app.Div().Class("row").Body(
 								app.Div().Class("max").Body(
 									//app.Text(poll.Timestamp.Format("Jan 02, 2006; 15:04:05")),
-									app.Text(pollLocaleTimestamp),
+									app.Text(pollTimestamp),
 								),
 								app.If(poll.Author == c.user.Nickname,
 									app.B().Text(len(poll.Voted)),

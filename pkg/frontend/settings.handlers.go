@@ -621,6 +621,36 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	return
 }
 
+func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
+	toastText := ""
+	localTime := c.user.LocalTimeMode
+
+	ctx.Async(func() {
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/localtime", nil, c.user.Nickname, 0); !ok {
+			toastText = "cannot reach backend!"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				//c.toastText = toastText
+				c.toastText = "failed to toggle the local time mode"
+				c.toastShow = toastText != ""
+
+				c.user.LocalTimeMode = localTime
+			})
+			return
+		}
+
+		// dispatch the good news to client
+		ctx.Dispatch(func(ctx app.Context) {
+			c.toastText = "local time mode toggled"
+			c.toastShow = toastText != ""
+			c.toastType = "success"
+
+			c.user.LocalTimeMode = !localTime
+		})
+		return
+	})
+}
+
 func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	toastText := ""
 	private := c.user.Private

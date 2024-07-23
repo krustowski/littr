@@ -37,9 +37,41 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		polls[key] = poll
 	}
 
+	uExport := make(map[string]models.User)
+
+	// hack: include caller's models.User struct
+	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		resp.Message = "cannot fetch such callerID-named user"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	} else {
+		uExport[callerID] = caller
+	}
+
+	// TODO: use DTO
+	for key, user := range uExport {
+		user.Passphrase = ""
+		user.PassphraseHex = ""
+		user.Email = ""
+
+		if user.Nickname != callerID {
+			user.FlowList = nil
+			user.ShadeList = nil
+			user.RequestList = nil
+		}
+
+		uExport[key] = user
+	}
+
 	resp.Message = "ok, dumping polls"
 	resp.Code = http.StatusOK
 	resp.Polls = polls
+
+	resp.Users = uExport
+	resp.Key = callerID
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
