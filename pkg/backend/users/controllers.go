@@ -251,6 +251,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 // @Description  update the user's details
 // @Tags         users
 // @Accept       json
+// @Deprecated
 // @Produce      json
 // @Success      200  {object}   common.Response
 // @Failure      400  {object}   common.Response
@@ -260,12 +261,22 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")
+	callerID, _ := r.Context().Value("nickname").(string)
 
 	var user models.User
 
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		resp.Message = "input read error: " + err.Error()
 		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if user.Nickname != callerID {
+		resp.Message = "one can update theirs account only"
+		resp.Code = http.StatusForbidden
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
@@ -295,6 +306,103 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
+}
+
+// updateUserOption is the users handler that allows the user to change some attributes of their models.User instance.
+//
+// @Summary      Update user's option
+// @Description  update user's option
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      403  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /users/{nickname}/options [patch]
+func updateUserOption(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	callerID, _ := r.Context().Value("nickname").(string)
+	nick := chi.URLParam(r, "nickname")
+
+	if callerID != nick {
+		resp.Message = "access denied"
+		resp.Code = http.StatusForbidden
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	user, found := db.GetOne(db.UserCache, callerID, models.User{})
+	if !found {
+		resp.Message = "user nout found: " + callerID
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	var options struct {
+		UIDarkMode    bool   `json:"dark_mode"`
+		LiveMode      bool   `json:"live_mode"`
+		LocalTimeMode bool   `json:"local_time_mode"`
+		Private       bool   `json:"private"`
+		AboutText     string `json:"about_you"`
+		WebsiteLink   string `json:"website_link"`
+	}
+
+	if err := common.UnmarshalRequestData(r, &options); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// toggle dark mode to light mode and vice versa
+	if options.UIDarkMode != user.UIDarkMode {
+		user.UIDarkMode = !user.UIDarkMode
+	}
+
+	// toggle the live mode
+	if options.LiveMode != user.LiveMode {
+		user.LiveMode = !user.LiveMode
+	}
+
+	// toggle the local time mode
+	if options.LocalTimeMode != user.LocalTimeMode {
+		user.LocalTimeMode = !user.LocalTimeMode
+	}
+
+	// toggle the private mode
+	if options.Private != user.Private {
+		user.Private = !user.Private
+	}
+
+	// change the about text if present and differs from the current one
+	if options.AboutText != "" && options.AboutText != user.About {
+		user.About = options.AboutText
+	}
+
+	// change the website link if present and differs from the current one
+	if options.WebsiteLink != "" && options.WebsiteLink != user.Web {
+		user.Web = options.WebsiteLink
+	}
+
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 }
 
 // deleteUser is the users handler that processes and deletes given user (oneself) form the database.
@@ -620,128 +728,6 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.Message = "reset e-mail was rent"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
-	return
-}
-
-// toggleLocalTimeMode is the feature allowing one to see any post's timestamp according to their device locale settings.
-//
-// @Summary      Toggle the local time mode
-// @Description  toggle the local time mode
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      403  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
-// @Router       /users/{nickname}/localtime [patch]
-func toggleLocalTimeMode(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
-
-	nick := chi.URLParam(r, "nickname")
-	caller, _ := r.Context().Value("nickname").(string)
-
-	// disallow unauthorized access
-	if nick != caller {
-		resp.Message = "access denied"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	var user models.User
-	var found bool
-
-	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	// toggle the status
-	user.LocalTimeMode = !user.LocalTimeMode
-
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	resp.Message = "ok, local time mode toggled"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
-	return
-}
-
-// togglePrivateMode is the users' pkg handler to toggle the private status/mode of such user who requested this.
-//
-// @Summary      Toggle the private mode
-// @Description  toggle the private mode
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      403  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
-// @Router       /users/{nickname}/private [patch]
-func togglePrivateMode(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
-
-	nick := chi.URLParam(r, "nickname")
-	caller, _ := r.Context().Value("nickname").(string)
-
-	// disallow unauthorized access
-	if nick != caller {
-		resp.Message = "access denied"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	var user models.User
-	var found bool
-
-	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	// toggle the status
-	user.Private = !user.Private
-
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	resp.Message = "ok, private mode toggled"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)

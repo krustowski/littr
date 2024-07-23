@@ -13,15 +13,16 @@ func Router() chi.Router {
 		r.Patch("/passphrase", resetHandler)
 
 		r.Get("/{nickname}", getOneUser)
-		r.Put("/{nickname}", updateUser)
+		//r.Put("/{nickname}", updateUser)
 		r.Delete("/{nickname}", deleteUser)
 
 		r.Post("/{nickname}/avatar", postUsersAvatar)
 		r.Get("/{nickname}/posts", getUserPosts)
 		r.Post("/{nickname}/request", addToRequestList)
 		r.Delete("/{nickname}/request", removeFromRequestList)
-		r.Patch("/{nickname}/private", togglePrivateMode)
-		r.Patch("/{nickname}/localtime", toggleLocalTimeMode)
+		r.Patch("/{nickname}/options", updateUserOption)
+		//r.Patch("/{nickname}/private", togglePrivateMode)
+		//r.Patch("/{nickname}/localtime", toggleLocalTimeMode)
 	})
 
 	return r

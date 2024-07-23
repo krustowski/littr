@@ -70,7 +70,7 @@ type User struct {
 	GDPR bool `json:"gdpr" default:true`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	AppBgMode string `json:"app_bg_mode" default:"dark"`
+	UIDarkMode bool `json:"app_bg_mode" default:true`
 
 	// LiveMode is a feature allowing to show notifications about new posts
 	LiveMode bool `json:"live_mode" default:true`
