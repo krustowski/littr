@@ -139,13 +139,13 @@ func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 
 		toastText := ""
 
-		// do not save new flow user to local var until it is saved on backend
-		//flowRecords := append(c.flowRecords, flowName)
+		payload := struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: flowList,
+		}
 
-		updatedData := c.user
-		updatedData.FlowList = flowList
-
-		respRaw, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname, updatedData, c.user.Nickname, 0)
+		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return

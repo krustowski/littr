@@ -328,6 +328,10 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 		return
 	}
 
+	if userShaded.FlowList == nil {
+		userShaded.FlowList = make(map[string]bool)
+	}
+
 	// disable any following of such user
 	userShaded.FlowList[c.user.Nickname] = false
 	c.user.FlowList[key] = false

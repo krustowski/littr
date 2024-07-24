@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.36.4"
+        "version": "0.37.0"
     },
     "host": "littr.eu",
     "basePath": "/api/v1",
@@ -918,6 +918,7 @@
                     "users"
                 ],
                 "summary": "Update the user's details",
+                "deprecated": true,
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1026,9 +1027,9 @@
                 }
             }
         },
-        "/users/{nickname}/localtime": {
+        "/users/{nickname}/lists": {
             "patch": {
-                "description": "toggle the local time mode",
+                "description": "update user's list",
                 "consumes": [
                     "application/json"
                 ],
@@ -1038,7 +1039,7 @@
                 "tags": [
                     "users"
                 ],
-                "summary": "Toggle the local time mode",
+                "summary": "Update user's list",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1054,6 +1055,106 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{nickname}/options": {
+            "patch": {
+                "description": "update user's option",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user's option",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{nickname}/passphrase": {
+            "patch": {
+                "description": "update user's passphrase",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user's passphrase",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -1089,47 +1190,6 @@
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/{nickname}/private": {
-            "patch": {
-                "description": "toggle the private mode",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Toggle the private mode",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -1468,7 +1528,6 @@
         "models.User": {
             "type": "object",
             "required": [
-                "id",
                 "nickname"
             ],
             "properties": {
@@ -1482,8 +1541,7 @@
                 },
                 "app_bg_mode": {
                     "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "string",
-                    "default": "dark"
+                    "type": "boolean"
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
@@ -1516,10 +1574,6 @@
                 "gdpr": {
                     "description": "GDPR consent, set to true because it is noted on the registration page so. No user data should\nbe saved if the boolean is false.",
                     "type": "boolean"
-                },
-                "id": {
-                    "description": "ID is an unique identifier.",
-                    "type": "string"
                 },
                 "last_active_time": {
                     "description": "LastLoginTime is an UNIX timestamp of the last action performed by such user.",

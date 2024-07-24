@@ -371,6 +371,100 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	resp.Message = "ok, updating user's passphrase"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
+// updateUserList is the users handler that allows one to update various lists associated with such one.
+//
+// @Summary      Update user's list
+// @Description  update user's list
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.Response
+// @Failure      403  {object}   common.Response
+// @Failure      404  {object}   common.Response
+// @Failure      409  {object}   common.Response
+// @Failure      500  {object}   common.Response
+// @Router       /users/{nickname}/lists [patch]
+func updateUserList(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	//callerID, _ := r.Context().Value("nickname").(string)
+	nick := chi.URLParam(r, "nickname")
+
+	user, found := db.GetOne(db.UserCache, nick, models.User{})
+	if !found {
+		resp.Message = "user nout found: " + nick
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	lists := struct {
+		FlowList    map[string]bool `json:"flow_list"`
+		RequestList map[string]bool `json:"request_list"`
+		ShadeList   map[string]bool `json:"shade_list"`
+	}{}
+
+	if err := common.UnmarshalRequestData(r, &lists); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if lists.FlowList != nil {
+		for key, value := range lists.FlowList {
+			if user.FlowList == nil {
+				user.FlowList = make(map[string]bool)
+			}
+			user.FlowList[key] = value
+		}
+	}
+
+	if lists.RequestList != nil {
+		for key, value := range lists.RequestList {
+			if user.RequestList == nil {
+				user.RequestList = make(map[string]bool)
+			}
+			user.RequestList[key] = value
+		}
+	}
+
+	if lists.ShadeList != nil {
+		for key, value := range lists.ShadeList {
+			if user.ShadeList == nil {
+				user.ShadeList = make(map[string]bool)
+			}
+			user.ShadeList[key] = value
+		}
+	}
+
+	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+		resp.Message = "backend error: cannot update the user"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, updating user's lists"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
 }
 
 // updateUserOption is the users handler that allows the user to change some attributes of their models.User instance.
@@ -468,6 +562,12 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 		resp.Write(w)
 		return
 	}
+
+	resp.Message = "ok, updating user's options"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
 }
 
 // deleteUser is the users handler that processes and deletes given user (oneself) form the database.
