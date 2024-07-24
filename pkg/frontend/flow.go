@@ -1203,7 +1203,7 @@ func (c *flowContent) Render() app.UI {
 					//app.Label().Text("text").Class("active"),
 				),
 				app.Div().Class("field label border extra deep-orange-text").Body(
-					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
+					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/png, image/jpeg"),
 					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
 					app.Label().Text("image").Class("active deep-orange-text"),
 					app.I().Text("image"),
