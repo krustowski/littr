@@ -97,9 +97,9 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	for key, user := range users {
 		user.Passphrase = ""
 		user.PassphraseHex = ""
-		user.Email = ""
 
 		if user.Nickname != caller {
+			user.Email = ""
 			user.FlowList = nil
 			user.ShadeList = nil
 			user.RequestList = nil
