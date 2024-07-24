@@ -253,7 +253,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "nickname").TabIndex(1),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "username").TabIndex(1).Name("login"),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),

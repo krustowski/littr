@@ -200,7 +200,7 @@ func (c *resetContent) Render() app.UI {
 
 		// pwd reset credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").AutoComplete(true).AutoFocus(true).TabIndex(1),
+			app.Input().Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true).TabIndex(1),
 			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 

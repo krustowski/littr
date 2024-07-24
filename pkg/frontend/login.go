@@ -207,7 +207,7 @@ func (c *loginContent) Render() app.UI {
 
 		// login credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(configs.NicknameLengthMax).Class("active").Attr("autocomplete", "nickname"),
+			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(configs.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 
