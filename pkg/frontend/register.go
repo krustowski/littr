@@ -253,7 +253,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "nickname"),
+			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "nickname").TabIndex(1),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -269,11 +269,11 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(2),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(3),
 			app.Label().Text("passphrase again").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -289,7 +289,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email"),
+			app.Input().Type("email").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email").TabIndex(4),
 			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -309,7 +309,7 @@ func (c *registerContent) Render() app.UI {
 		// register button
 		app.Div().Class("row").Body(
 			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).Body(
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 					app.Text("register"),
 				),
 			).Else(
