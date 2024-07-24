@@ -94,7 +94,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	userClaims := UserClaims{
 		Nickname: u.Nickname,
-		User:     *u,
+		//User:     *u,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),

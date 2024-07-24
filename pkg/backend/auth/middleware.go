@@ -149,7 +149,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			userClaims := UserClaims{
 				Nickname: nickname,
-				User:     user,
 				StandardClaims: jwt.StandardClaims{
 					IssuedAt:  time.Now().Unix(),
 					ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
