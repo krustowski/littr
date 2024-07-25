@@ -146,6 +146,11 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 				nick := prePost.Nickname
 				uExport[nick] = allUsers[nick]
 
+				// mange private content
+				if value, found := user.FlowList[nick]; (!value || !found) && allUsers[nick].Private {
+					prePost.Content = ""
+				}
+
 				// increase the reply count
 				prePost.ReplyCount++
 				pExport[repKey] = prePost

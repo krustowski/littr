@@ -1244,7 +1244,11 @@ func (c *flowContent) Render() app.UI {
 					if post.ReplyToID != "" {
 						//c.posts[post.ReplyToID].ReplyCount++
 						if previous, found := c.posts[post.ReplyToID]; found {
-							previousContent = previous.Nickname + " posted: " + previous.Content
+							if value, foundU := c.user.FlowList[previous.Nickname]; (!value || !foundU) && c.users[previous.Nickname].Private {
+								previousContent = "this content is private"
+							} else {
+								previousContent = previous.Nickname + " posted: " + previous.Content
+							}
 						} else {
 							previousContent = "the post was deleted bye"
 						}
