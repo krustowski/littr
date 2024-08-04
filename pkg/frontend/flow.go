@@ -198,6 +198,12 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
+	// little hack to dismiss navbar's snackbar
+	snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("remove", "active")
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
 		if c.toastText == "" {
@@ -726,11 +732,15 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 		c.postButtonsDisabled = true
 		//c.pageNoToFetch = 0
 
-		c.toastText = ""
-
 		c.posts = nil
 		c.users = nil
 	})
+
+	// little hack to dismiss navbar's snackbar
+	snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("remove", "active")
+	}
 
 	ctx.Async(func() {
 		// nasty hotfix, TODO
@@ -767,8 +777,10 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.refreshClicked = false
 			c.postButtonsDisabled = false
 			c.contentLoadFinished = true
-		})
 
+			c.toastText = ""
+			c.toastShow = false
+		})
 	})
 }
 

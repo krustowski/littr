@@ -198,12 +198,19 @@ func initServer() {
 	server.Handler = r
 
 	l.Println("starting the server...", http.StatusOK)
-	if posts.Streamer != nil {
-		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-start"))
-	}
+	go serverStartNotif()
 
 	// TODO use http.ErrServerClosed for graceful shutdown
 	if err := server.Serve(listener); err != nil {
 		panic(err)
 	}
+}
+
+func serverStartNotif() {
+	time.Sleep(time.Second * 30)
+
+	if posts.Streamer != nil {
+		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-start"))
+	}
+
 }

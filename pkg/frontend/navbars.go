@@ -68,6 +68,11 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		log.Println(err.Error())
 	}
 
+	// do not parse the message when user has live mode disabled
+	/*if !user.LiveMode {
+		return
+	}*/
+
 	// explode the data CSV string
 	slice := strings.Split(data, ",")
 	text := ""
@@ -77,10 +82,12 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		// server is stoping/restarting
 		text = "server is restarting..."
 		break
+
 	case "server-start":
 		// server is booting up
 		text = "server has just started"
 		break
+
 	case "post":
 		author := slice[1]
 		if author == user.Nickname {
@@ -93,6 +100,7 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 
 		text = "new post added by " + author
 		break
+
 	case "poll":
 		text = "new poll has been added"
 		break
@@ -100,9 +108,9 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 
 	// show the snack bar the nasty way
 	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() {
-		snack.Set("innerText", text)
+	if !snack.IsNull() && text != "" {
 		snack.Get("classList").Call("add", "active")
+		snack.Set("innerHTML", "<i>info</i>"+text)
 	}
 
 	/*ctx.Dispatch(func(ctx app.Context) {
