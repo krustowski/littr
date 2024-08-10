@@ -1177,13 +1177,13 @@ func (c *flowContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
 						app.Text("yeah"),
 					),
-					app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
 				),
 			),
 		),

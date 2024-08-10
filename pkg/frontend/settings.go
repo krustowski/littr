@@ -414,8 +414,8 @@ func (c *settingsContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border red9 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription),
-					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription),
+					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
 				),
 			),
 		),
@@ -607,8 +607,8 @@ func (c *settingsContent) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border red9 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
-					app.Button().Class("max border deep-orange7 white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
+					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
 				),
 			),
 		),
@@ -629,7 +629,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max red9 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max red10 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
 		),
 
 		app.Div().Class("large-space"),

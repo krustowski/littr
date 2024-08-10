@@ -361,7 +361,7 @@ func (h *header) Render() app.UI {
 					app.Div().Class("space"),
 
 					app.Div().Class("row").Body(
-						app.Button().Class("max border red9 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
+						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
 						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(h.onClickModalDismiss),
 					),
 				),
