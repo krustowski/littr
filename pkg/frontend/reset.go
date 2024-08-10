@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/mail"
 	"strconv"
@@ -44,14 +45,90 @@ func (p *ResetPage) Render() app.UI {
 	)
 }
 
-func (c *resetContent) onClick(ctx app.Context, e app.Event) {
+func (c *resetContent) handleResetRequest(email, uuid string) error {
+	if email == "" && uuid == "" {
+		return fmt.Errorf("invalid payload data")
+	}
+
+	path := "request"
+
+	if uuid != "" {
+		path = "reset"
+	}
+
+	payload := struct {
+		Email string `json:"email"`
+		UUID  string `json:"uuid"`
+	}{
+		Email: email,
+		UUID:  uuid,
+	}
+
+	respRaw, ok := litterAPI("POST", "/api/v1/users/passphrase/"+path, payload, "", 0)
+
+	if !ok {
+		return fmt.Errorf("communication with backend failed")
+	}
+
+	if respRaw == nil {
+		return fmt.Errorf("no data received from backend")
+	}
+
 	response := struct {
-		Message     string                 `json:"message"`
-		AuthGranted bool                   `json:"auth_granted"`
-		Users       map[string]models.User `json:"users"`
-		Code        int                    `json:"code"`
-		//FlowRecords []string `json:"flow_records"`
+		Message string `json:"message"`
+		Code    int    `json:"code"`
 	}{}
+
+	if err := json.Unmarshal(*respRaw, &response); err != nil {
+		log.Println(err.Error())
+		return fmt.Errorf("corrupted data received from backend")
+	}
+
+	if response.Code != 200 {
+		return fmt.Errorf("%s", response.Message)
+	}
+}
+
+func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
+	toastText := ""
+
+	c.buttonsDisabled = true
+
+	ctx.Async(func() {
+		// trim the padding spaces on the extremities
+		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
+		uuid := strings.TrimSpace(c.UUID)
+
+		if uuid == "" {
+			toastText = "please insert UUID from your inbox"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		if err := handleResetRequest("", uuid); err != nil {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.buttonsDisabled = true
+				c.toastText = err.Error()
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.buttonsDisabled = true
+			c.toastText = "your passphrase has been changed, check your inbox"
+			c.toastType = "success"
+			c.toastShow = (toastText != "")
+		})
+		return
+	})
+}
+
+func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 	toastText := ""
 
 	c.buttonsDisabled = true
@@ -84,60 +161,17 @@ func (c *resetContent) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		respRaw, ok := litterAPI("PATCH", "/api/v1/users/passphrase", &models.User{
-			Nickname:   "",
-			Passphrase: "",
-			Email:      email,
-		}, "", 0)
-
-		if !ok {
-			toastText = "backend error: API call failed"
-
+		if err := handleResetRequest(email, ""); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
+				c.buttonsDisabled = true
+				c.toastText = err.Error()
 				c.toastShow = (toastText != "")
 			})
 			return
 		}
-
-		if respRaw == nil {
-			toastText = "backend error: blank response from API"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if err := json.Unmarshal(*respRaw, &response); err != nil {
-			toastText = "backend error: cannot unmarshal response: " + err.Error()
-
-			rr := *respRaw
-			log.Println(string(rr[:]))
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if response.Code != 200 {
-			code := strconv.Itoa(response.Code)
-			toastText = "backend error: code " + code
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		toastText = "reset e-mail sent"
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
+			c.toastText = "passphrase reset request sent successfully, check your inbox"
 			c.toastType = "success"
 			c.toastShow = (toastText != "")
 		})
@@ -149,6 +183,31 @@ func (c *resetContent) dismissToast(ctx app.Context, e app.Event) {
 	c.toastText = ""
 	c.toastShow = false
 	c.buttonsDisabled = false
+}
+
+func (c *resetContent) OnMount(ctx app.Context) {
+	url := strings.Split(ctx.Page().URL().Path, "/")
+
+	// autosend the UUID to the backend if present in URL
+	if len(url) > 2 && url[2] != "" {
+		c.UUID = url[2]
+
+		if err := handleResetRequest("", uuid); err != nil {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.buttonsDisabled = true
+				c.toastText = err.Error()
+				c.toastShow = (toastText != "")
+			})
+			return
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.buttonsDisabled = true
+			c.toastText = "your passphrase has been changed, check your inbox"
+			c.toastType = "success"
+			c.toastShow = (toastText != "")
+		})
+	}
 }
 
 func (c *resetContent) Render() app.UI {
