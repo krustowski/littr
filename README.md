@@ -172,9 +172,13 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + write integration and e2e tests
 + [...]
 
+### roadmap to v0.38
++ ~~add minor UI fixes (dialog buttons colouring)~~
++ ~~expand passphrase reset procedure --- add confirmation e-mail~~
+
 ### roadmap to v0.37
-+ improve SSE parsing on FE
-+ show server is restarting notice
++ ~~improve SSE parsing on FE~~
++ ~~show server is restarting notice~~
 
 ### roadmap to v0.36
 + ~~implement localTime mode switch to see post in one's timezone (by default on)~~

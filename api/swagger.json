@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.37.8"
+        "version": "0.38.0"
     },
     "host": "littr.eu",
     "basePath": "/api/v1",
@@ -824,8 +824,49 @@
                 }
             }
         },
-        "/users/passphrase": {
-            "patch": {
+        "/users/passphrase/request": {
+            "post": {
+                "description": "request the passphrase recovery link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Request the passphrase recovery link",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/passphrase/reset": {
+            "post": {
                 "description": "reset the passphrase",
                 "consumes": [
                     "application/json"
