@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/mail"
-	"strconv"
 	"strings"
-
-	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -22,6 +19,9 @@ type resetContent struct {
 	app.Compo
 
 	email string
+	uuid  string
+
+	showUUIDPage bool
 
 	toastShow bool
 	toastText string
@@ -87,6 +87,8 @@ func (c *resetContent) handleResetRequest(email, uuid string) error {
 	if response.Code != 200 {
 		return fmt.Errorf("%s", response.Message)
 	}
+
+	return nil
 }
 
 func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
@@ -97,7 +99,7 @@ func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-		uuid := strings.TrimSpace(c.UUID)
+		uuid := strings.TrimSpace(c.uuid)
 
 		if uuid == "" {
 			toastText = "please insert UUID from your inbox"
@@ -109,7 +111,7 @@ func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if err := handleResetRequest("", uuid); err != nil {
+		if err := c.handleResetRequest("", uuid); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = true
 				c.toastText = err.Error()
@@ -161,7 +163,7 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if err := handleResetRequest(email, ""); err != nil {
+		if err := c.handleResetRequest(email, ""); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = true
 				c.toastText = err.Error()
@@ -174,6 +176,7 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 			c.toastText = "passphrase reset request sent successfully, check your inbox"
 			c.toastType = "success"
 			c.toastShow = (toastText != "")
+			c.showUUIDPage = true
 		})
 		return
 	})
@@ -190,13 +193,14 @@ func (c *resetContent) OnMount(ctx app.Context) {
 
 	// autosend the UUID to the backend if present in URL
 	if len(url) > 2 && url[2] != "" {
-		c.UUID = url[2]
+		uuid := url[2]
+		c.showUUIDPage = true
 
-		if err := handleResetRequest("", uuid); err != nil {
+		if err := c.handleResetRequest("", uuid); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = true
 				c.toastText = err.Error()
-				c.toastShow = (toastText != "")
+				c.toastShow = true
 			})
 			return
 		}
@@ -205,7 +209,7 @@ func (c *resetContent) OnMount(ctx app.Context) {
 			c.buttonsDisabled = true
 			c.toastText = "your passphrase has been changed, check your inbox"
 			c.toastType = "success"
-			c.toastShow = (toastText != "")
+			c.toastShow = true
 		})
 	}
 }
@@ -229,12 +233,14 @@ func (c *resetContent) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
-				app.H5().Text("littr passphrase reset"),
+				app.If(!c.showUUIDPage,
+					app.H5().Text("littr passphrase request"),
+				).Else(
+					app.H5().Text("littr passphrase reset"),
+				),
 			),
 		),
-		/*app.P().Body(
-			app.P().Text("actual pwd is about to be yeeted"),
-		),*/
+
 		app.Div().Class("space"),
 
 		// snackbar
@@ -247,30 +253,63 @@ func (c *resetContent) Render() app.UI {
 			),
 		),
 
-		// pwd reset lightbulb
-		app.Article().Class("row surface-container-highest").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
-			app.P().Class("max").Body(
-				//app.Span().Class("deep-orange-text").Text(" "),
-				app.Span().Text("enter your e-mail address below; after that, password of the linked account will be reset, and a confirmation mail will be sent to such address if found"),
+		// passphrase request --- insert an e-mail
+		app.If(!c.showUUIDPage,
+
+			// pwd reset lightbulb
+			app.Article().Class("row surface-container-highest").Body(
+				app.I().Text("lightbulb").Class("amber-text"),
+				app.P().Class("max").Body(
+					//app.Span().Class("deep-orange-text").Text(" "),
+					app.Span().Text("to request a passphrase change, enter your registration e-mail address below, which is linked with your account; a confirmation mail will then be sent to your inbox"),
+				),
+			),
+			app.Div().Class("space"),
+
+			// pwd reset credentials fields
+			app.Div().Class("field border label deep-orange-text").Body(
+				app.Input().Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true).TabIndex(1),
+				app.Label().Text("e-mail").Class("active deep-orange-text"),
+			),
+
+			//app.Div().Class("small-space"),
+
+			// request button
+			app.Div().Class("row").Body(
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+					app.Text("request"),
+				),
+			),
+
+		// passphrase reset --- insert the UUID
+		).Else(
+
+			// pwd reset lightbulb
+			app.Article().Class("row surface-container-highest").Body(
+				app.I().Text("lightbulb").Class("amber-text"),
+				app.P().Class("max").Body(
+					//app.Span().Class("deep-orange-text").Text(" "),
+					app.Span().Text("enter the UUID code which has been sent to your inbox; if the code is correct, your passphrase will be automatically regenerated and another confirmation mail containing the passphrase will be sent to your e-mail address"),
+				),
+			),
+			app.Div().Class("space"),
+
+			// pwd reset credentials fields
+			app.Div().Class("field border label deep-orange-text").Body(
+				app.Input().Type("text").Required(true).TabIndex(1).Value("").OnChange(c.ValueTo(&c.uuid)).Class("active").AutoFocus(true).TabIndex(1),
+				app.Label().Text("UUID").Class("active deep-orange-text"),
+			),
+
+			//app.Div().Class("small-space"),
+
+			// pwd reset button
+			app.Div().Class("row").Body(
+				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+					app.Text("reset"),
+				),
 			),
 		),
-		app.Div().Class("space"),
 
-		// pwd reset credentials fields
-		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true).TabIndex(1),
-			app.Label().Text("e-mail").Class("active deep-orange-text"),
-		),
-
-		//app.Div().Class("small-space"),
-
-		// pwd reset button
-		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClick).Disabled(c.buttonsDisabled).TabIndex(2).Body(
-				app.Text("reset"),
-			),
-		),
 		app.Div().Class("space"),
 	)
 }

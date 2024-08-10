@@ -147,7 +147,7 @@ func (h *header) OnMount(ctx app.Context) {
 
 	// redirect client to the unauthorized zone
 	path := ctx.Page().URL().Path
-	if !authGranted && path != "/login" && path != "/register" && path != "/reset" && path != "/tos" {
+	if !authGranted && path != "/login" && path != "/register" && !strings.Contains(path, "/reset") && path != "/tos" {
 		ctx.Navigate("/login")
 		return
 	}

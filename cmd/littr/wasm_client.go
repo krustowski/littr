@@ -21,6 +21,7 @@ func initClient() {
 	app.Route("/post", &fe.PostPage{})
 	app.Route("/register", &fe.RegisterPage{})
 	app.Route("/reset", &fe.ResetPage{})
+	app.RouteWithRegexp("/reset/\\w+", &fe.ResetPage{})
 	app.Route("/settings", &fe.SettingsPage{})
 	app.Route("/stats", &fe.StatsPage{})
 	app.Route("/tos", &fe.ToSPage{})
