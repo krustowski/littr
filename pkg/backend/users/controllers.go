@@ -787,8 +787,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	fetch := struct {
-		Email string   `json:"email"`
-		Tags  []string `json:"tags"`
+		Email string `json:"email"`
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
@@ -895,8 +894,7 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	fetch := struct {
-		UUID string   `json:"uuid"`
-		Tags []string `json:"tags"`
+		UUID string `json:"uuid"`
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
@@ -986,6 +984,15 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if deleted := db.DeleteOne(db.RequestCache, fetch.UUID); !deleted {
+		resp.Message = "error deleting UUID from the database"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
