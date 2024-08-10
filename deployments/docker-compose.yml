@@ -4,6 +4,7 @@ name: ${PROJECT_NAME}
 networks:
   traefik:
     name: ${DOCKER_NETWORK_NAME}
+    external: true
 
 volumes:
   litter-data:
