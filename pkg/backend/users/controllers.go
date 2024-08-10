@@ -20,8 +20,16 @@ import (
 	"go.savla.dev/littr/pkg/models"
 
 	chi "github.com/go-chi/chi/v5"
+	uuid "github.com/google/uuid"
 	gomail "github.com/wneessen/go-mail"
 )
+
+type msgPayload struct {
+	Email      string
+	Type       string
+	UUID       string
+	Passphrase string
+}
 
 // getUsers is the users handler that processes and returns existing users list.
 //
@@ -152,7 +160,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	if !configs.REGISTRATION_ENABLED {
-		resp.Message = "registration disallowed at the moment"
+		resp.Message = "registration is disabled at the moment"
 		resp.Code = http.StatusForbidden
 
 		l.Println(resp.Message, resp.Code)
@@ -762,10 +770,10 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
-// resetHandler poerforms the actual passphrase regeneration and retrieval.
+// resetRequestHandler handles the passphrase recovery link generation.
 //
-// @Summary      Reset the passphrase
-// @Description  reset the passphrase
+// @Summary      Request the passphrase recovery link
+// @Description  request the passphrase recovery link
 // @Tags         users
 // @Accept       json
 // @Produce      json
@@ -773,22 +781,21 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.Response
 // @Failure      404  {object}  common.Response
 // @Failure      500  {object}  common.Response
-// @Router       /users/passphrase [patch]
-func resetHandler(w http.ResponseWriter, r *http.Request) {
+// @Router       /users/passphrase/request [post]
+func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	fetch := struct {
-		Email      string   `json:"email"`
-		Passphrase string   `json:"passphrase"`
-		Tags       []string `json:"tags"`
+		Email string   `json:"email"`
+		Tags  []string `json:"tags"`
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		resp.Message = "input read error: " + err.Error()
+		resp.Message = "could not read the input"
 		resp.Code = http.StatusBadRequest
 
-		l.Println(resp.Message, resp.Code)
+		l.Println(resp.Message+err.Error(), resp.Code)
 		resp.Write(w)
 		return
 	}
@@ -811,7 +818,129 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		resp.Message = "backend error: matching user not found"
+		resp.Message = "no match found in the database"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	randomID := uuid.New().String()
+
+	dbPayload := models.Request{
+		ID:        randomID,
+		Nickname:  user.Nickname,
+		Email:     email,
+		CreatedAt: time.Now(),
+	}
+
+	if saved := db.SetOne(db.RequestCache, randomID, dbPayload); !saved {
+		resp.Message = "error saving an UUID to database"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	mailPayload := msgPayload{
+		Email: email,
+		Type:  "request",
+		UUID:  randomID,
+	}
+
+	// compose a message to send
+	msg, err := composeResetMail(mailPayload)
+	if err != nil || msg == nil {
+		resp.Message = "failed to compose a message, try again later"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if err := sendResetMail(msg); err != nil {
+		resp.Message = "failed to send the message, try again later"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "the message was sent successfully, check your inbox"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+	return
+}
+
+// resetPassphraseHandler handles a new passphrase regeneration.
+//
+// @Summary      Reset the passphrase
+// @Description  reset the passphrase
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      404  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /users/passphrase/reset [post]
+func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "users")
+
+	fetch := struct {
+		UUID string   `json:"uuid"`
+		Tags []string `json:"tags"`
+	}{}
+
+	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
+		resp.Message = "could not read the input"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if fetch.UUID == "" {
+		resp.Message = "no UUID has been inserted"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	requestData, match := db.GetOne(db.RequestCache, fetch.UUID, models.Request{})
+	if !match {
+		resp.Message = "invalid UUID inserted"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if requestData.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
+		resp.Message = "expired UUID inserted"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	email := strings.ToLower(requestData.Email)
+
+	user, found := db.GetOne(db.UserCache, requestData.Nickname, models.User{})
+	if !found {
+		resp.Message = "no match found in the database"
 		resp.Code = http.StatusNotFound
 
 		l.Println(resp.Message, resp.Code)
@@ -820,14 +949,14 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	random := helpers.RandSeq(16)
+	randomPassphrase := helpers.RandSeq(32)
 	pepper := os.Getenv("APP_PEPPER")
 
-	passHash := sha512.Sum512([]byte(random + pepper))
+	passHash := sha512.Sum512([]byte(randomPassphrase + pepper))
 	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot update user in database"
+		resp.Message = "error updating user in database"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -835,12 +964,16 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//email := user.Email
+	mailPayload := msgPayload{
+		Email:      email,
+		Type:       "passphrase",
+		Passphrase: randomPassphrase,
+	}
 
-	// compose a mail
-	m := gomail.NewMsg()
-	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
-		resp.Message = "backend error: failed to set From address: " + err.Error()
+	// compose a message to send
+	msg, err := composeResetMail(mailPayload)
+	if err != nil || msg == nil {
+		resp.Message = "failed to compose a message, try again later"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message+err.Error(), resp.Code)
@@ -848,8 +981,8 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := m.To(email); err != nil {
-		resp.Message = "backend error: failed to set To address: " + err.Error()
+	if err := sendResetMail(msg); err != nil {
+		resp.Message = "failed to send the message, try again later"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message+err.Error(), resp.Code)
@@ -857,47 +990,74 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m.Subject("Lost password recovery")
-	m.SetBodyString(gomail.TypeTextPlain, "Someone requested the password reset for the account linked to this e-mail. \n\nNew password:\n\n"+random+"\n\nPlease change your password as soon as possible after a new log-in.")
-
-	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
-	if err != nil {
-		resp.Message = "backend error: cannot convert MAIL_PORT to int: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
-		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
-	if err != nil {
-		resp.Message = "backend error: failed to create mail client: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	//c.SetTLSPolicy(mail.TLSOpportunistic)
-
-	if err := c.DialAndSend(m); err != nil {
-		resp.Message = "backend error: failed to sent e-mail: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	resp.Message = "reset e-mail was rent"
+	resp.Message = "the message was sent successfully, check your inbox"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)
 	resp.Write(w)
 	return
+}
+
+func sendResetMail(msg *gomail.Msg) error {
+	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
+	if err != nil {
+		return err
+	}
+
+	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
+		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
+	if err != nil {
+		return err
+	}
+
+	//c.SetTLSPolicy(mail.TLSOpportunistic)
+
+	if err := c.DialAndSend(msg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func composeResetMail(payload msgPayload) (*gomail.Msg, error) {
+	m := gomail.NewMsg()
+	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
+		return nil, err
+	}
+
+	if payload.Email == "" {
+		return nil, fmt.Errorf("no new passhrase given for mail composition")
+	}
+
+	if err := m.To(payload.Email); err != nil {
+		return nil, err
+	}
+
+	switch payload.Type {
+	case "request":
+		if payload.UUID == "" {
+			return nil, fmt.Errorf("no UUID given for mail composition")
+		}
+
+		// TODO: do not hardcode this
+		resetLink := "https://www.littr.eu/reset/" + payload.UUID
+
+		m.Subject("Passphrase Reset Request")
+		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+resetLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nhttps://www.littr.eu")
+
+	case "passphrase":
+		if payload.Passphrase == "" {
+			return nil, fmt.Errorf("no new passhrase given for mail composition")
+		}
+
+		m.Subject("Your New Passphrase")
+		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nThe requested passphrase regeneration process has been successful. Please use the generated string below to log-in again.\n\nNew passphrase: "+payload.Passphrase+"\n\nPlease do not forget to change the passphrase right after logging in in settings.\n\nThank you\nhttps://www.littr.eu")
+
+	default:
+		return nil, fmt.Errorf("no mail Type specified")
+	}
+
+	return m, nil
 }
 
 // addToRequestList is a handler function to add an user to the request list of the private account called as {nickname}.

@@ -27,7 +27,8 @@ var pathExceptions []string = []string{
 	"/api/v1/auth/logout",
 	"/api/v1/dump/",
 	"/api/v1/posts/live",
-	"/api/v1/users/passphrase",
+	"/api/v1/users/passphrase/request",
+	"/api/v1/users/passphrase/reset",
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {

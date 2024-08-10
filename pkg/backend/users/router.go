@@ -10,7 +10,8 @@ func Router() chi.Router {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", getUsers)
 		r.Post("/", addNewUser)
-		r.Patch("/passphrase", resetHandler)
+		r.Post("/passphrase/request", resetRequestHandler)
+		r.Post("/passphrase/reset", resetPassphraseHandler)
 
 		r.Get("/{nickname}", getOneUser)
 		//r.Put("/{nickname}", updateUser)
