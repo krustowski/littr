@@ -10,7 +10,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine3.19 AS litter-build
+FROM golang:${GOLANG_VERSION}-alpine3.20 AS litter-build
 
 ARG APP_NAME APP_PEPPER APP_VERSION API_TOKEN VAPID_PUB_KEY
 
@@ -55,7 +55,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 # stage 1 -- release
 #
 
-FROM alpine:3.19 AS litter-release
+FROM alpine:3.20 AS litter-release
 
 ARG APP_FLAGS APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
 
