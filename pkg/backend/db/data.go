@@ -15,6 +15,7 @@ import (
 const (
 	pollsFile         = "/opt/data/polls.json"
 	postsFile         = "/opt/data/posts.json"
+	requestsFile      = "/opt/data/requests.json"
 	subscriptionsFile = "/opt/data/subscriptions.json"
 	tokensFile        = "/opt/data/tokens.json"
 	usersFile         = "/opt/data/users.json"
@@ -25,6 +26,7 @@ func LoadAll() {
 	// TODO: catch errors!
 	loadOne(PollCache, pollsFile, models.Poll{})
 	loadOne(FlowCache, postsFile, models.Post{})
+	loadOne(RequestCache, requestsFile, models.Request{})
 	loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	loadOne(TokenCache, tokensFile, void)
 	loadOne(UserCache, usersFile, models.User{})
@@ -34,6 +36,7 @@ func DumpAll() {
 	// TODO: catch errors!
 	dumpOne(PollCache, pollsFile, models.Poll{})
 	dumpOne(FlowCache, postsFile, models.Post{})
+	dumpOne(RequestCache, requestsFile, models.Request{})
 	dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{})
 	dumpOne(TokenCache, tokensFile, void)
 	dumpOne(UserCache, usersFile, models.User{})

@@ -86,6 +86,7 @@ func initServer() {
 	// initialize caches
 	db.FlowCache = &core.Cache{}
 	db.PollCache = &core.Cache{}
+	db.RequestCache = &core.Cache{}
 	db.SubscriptionCache = &core.Cache{}
 	db.TokenCache = &core.Cache{}
 	db.UserCache = &core.Cache{}
