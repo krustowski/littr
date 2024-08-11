@@ -87,7 +87,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PUT", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); !ok {
+		if data, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); !ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 			}
