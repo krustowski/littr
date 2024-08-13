@@ -171,7 +171,16 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		resp.Message = "input read error: " + err.Error()
+		resp.Message = "input error, try again"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if helpers.Contains(configs.UserDeletionList, user.Nickname) {
+		resp.Message = "this nickname is restricted"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -180,10 +189,10 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); found {
-		l.Println(
-			"user already exists",
-			http.StatusConflict,
-		)
+		resp.Message = "this nickname has been already taken"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
@@ -191,6 +200,15 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	// https://stackoverflow.com/a/38554480
 	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
 		resp.Message = "nickname can only have chars a-z, A-Z and numbers"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
+		resp.Message = "nickname is too long (>12) or too short (<3)"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)

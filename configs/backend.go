@@ -46,6 +46,12 @@ var APP_ENVIRONMENT string = func() string {
 // You would have to restart backend server for this to apply if you made changes there.
 var UserDeletionList []string = []string{
 	"admin",
+	"administrator",
+	"superuser",
+	"moderator",
+	"passphrase",
+	"user",
+	"nickname",
 }
 
 // This array is used in a procedure's loop to manually unshade listed users.
