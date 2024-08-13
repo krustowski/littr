@@ -374,12 +374,21 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var options struct {
-		PassphraseHex    string `json:"passphrase_hex"`
-		OldPassphraseHex string `json:"old_passphrase_hex"`
+		NewPassphraseHex     string `json:"new_passphrase_hex"`
+		CurrentPassphraseHex string `json:"current_passphrase_hex"`
 	}
 
 	if err := common.UnmarshalRequestData(r, &options); err != nil {
-		resp.Message = "input read error: " + err.Error()
+		resp.Message = "input error, try again"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message+err.Error(), resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if options.NewPassphraseHex == "" || options.CurrentPassphraseHex == "" {
+		resp.Message = "input error, try again"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
@@ -387,10 +396,19 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.PassphraseHex = options.PassphraseHex
+	if options.CurrentPassphraseHex != user.PassphraseHex {
+		resp.Message = "current passphrase is wrong"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	user.PassphraseHex = options.NewPassphraseHex
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot update the user"
+		resp.Message = "user couldn't be updated, passphrase unchanged"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -398,7 +416,7 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Message = "ok, updating user's passphrase"
+	resp.Message = "ok, passphrase updated"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)
@@ -1030,7 +1048,7 @@ func sendResetMail(msg *gomail.Msg) error {
 	}
 
 	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
-		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")))
+		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")), gomail.WithHELO(os.Getenv("MAIL_HELO")))
 	if err != nil {
 		return err
 	}

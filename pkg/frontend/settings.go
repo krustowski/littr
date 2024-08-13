@@ -24,10 +24,11 @@ type settingsContent struct {
 	loggedUser string
 
 	// used with forms
-	passphrase      string
-	passphraseAgain string
-	aboutText       string
-	website         string
+	passphrase        string
+	passphraseAgain   string
+	passphraseCurrent string
+	aboutText         string
+	website           string
 
 	// loaded logged user's struct
 	user models.User
@@ -529,13 +530,18 @@ func (c *settingsContent) Render() app.UI {
 		//app.Div().Class("medium-space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).AutoComplete(true).MaxLength(50),
-			app.Label().Text("passphrase").Class("active deep-orange-text"),
+			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
+			app.Label().Text("old passphrase").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).AutoComplete(true).MaxLength(50),
-			app.Label().Text("passphrase again").Class("active deep-orange-text"),
+			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Label().Text("new passphrase").Class("active deep-orange-text"),
+		),
+
+		app.Div().Class("field label border deep-orange-text").Body(
+			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Label().Text("new passphrase again").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("row").Body(

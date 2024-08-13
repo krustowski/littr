@@ -51,9 +51,10 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		passphrase := strings.TrimSpace(c.passphrase)
 		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
+		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
 
-		if passphrase == "" || passphraseAgain == "" {
-			toastText = "both passphrases need to be filled, or text changed"
+		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
+			toastText = "passphrase fields need to be filled"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -74,12 +75,14 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 
 		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 		passHash := sha512.Sum512([]byte(passphrase + appPepper))
+		passHashCurrent := sha512.Sum512([]byte(passphraseCurrent + appPepper))
 
 		payload := struct {
-			PassphraseHex    string `json:"passphrase_hex"`
-			OldPassphraseHex string `json:"old_passphrase_hex"`
+			NewPassphraseHex     string `json:"new_passphrase_hex"`
+			CurrentPassphraseHex string `json:"current_passphrase_hex"`
 		}{
-			PassphraseHex: fmt.Sprintf("%x", passHash),
+			NewPassphraseHex:     fmt.Sprintf("%x", passHash),
+			CurrentPassphraseHex: fmt.Sprintf("%x", passHashCurrent),
 		}
 
 		response := struct {
@@ -87,11 +90,23 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); !ok {
+		if data, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
+
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+				})
+				return
 			}
-			toastText = "generic backend error: " + response.Message
+		}
+
+		log.Println(response.Code)
+
+		if response.Code != 200 {
+			toastText = response.Message
+			//toastText = "passphrase updating error, try again later"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
@@ -114,9 +129,9 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
+			c.toastType = "success"
 			c.toastText = "passphrase updated"
 			c.toastShow = (toastText != "")
-			c.toastType = "success"
 		})
 		return
 		//ctx.Navigate("/users")
