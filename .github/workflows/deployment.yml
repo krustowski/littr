@@ -23,6 +23,7 @@ jobs:
         DOCKER_VOLUME_PIX_NAME: ${{ vars.DOCKER_VOLUME_PIX_NAME }}
         LOKI_LABELS: ${{ vars.LOKI_LABELS }}
         LOKI_URL: ${{ secrets.LOKI_URL }}
+        MAIL_HELO: ${{ secrets.MAIL_HELO }}
         MAIL_HOST: ${{ secrets.MAIL_HOST }}
         MAIL_PORT: ${{ secrets.MAIL_PORT }}
         MAIL_SASL_USR: ${{ secrets.MAIL_SASL_USR }}
