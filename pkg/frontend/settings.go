@@ -545,7 +545,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Text("change passphrase").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change passphrase").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
 		),
 
 		// about-you textarea
@@ -569,7 +569,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Text("change about").Style("border-radius", "8px").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change about").Style("border-radius", "8px").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
 		),
 
 		// website link
@@ -593,7 +593,7 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Text("change website").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change website").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
 		),
 
 		// acc deletion modal
@@ -635,7 +635,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max red10 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center red10 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
 		),
 
 		app.Div().Class("large-space"),

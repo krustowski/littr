@@ -275,8 +275,8 @@ func (c *resetContent) Render() app.UI {
 			//app.Div().Class("small-space"),
 
 			// request button
-			app.Div().Class("row").Body(
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+			app.Div().Class("row center-align").Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
 					app.Text("request"),
 				),
 			),
@@ -303,8 +303,8 @@ func (c *resetContent) Render() app.UI {
 			//app.Div().Class("small-space"),
 
 			// pwd reset button
-			app.Div().Class("row").Body(
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+			app.Div().Class("row center-align").Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).TabIndex(2).Body(
 					app.Text("reset"),
 				),
 			),

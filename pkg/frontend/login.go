@@ -222,33 +222,37 @@ func (c *loginContent) Render() app.UI {
 				app.Span().Text("log-in for 30 days"),
 			),
 		),
-		app.Div().Class("medium-space"),
+		app.Div().Class("space"),
 
 		// login button
-		app.Div().Class("row").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
+		app.Div().Class("row center-align").Body(
+			app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
 				app.Text("login"),
 			),
 		),
 		app.Div().Class("space"),
 
 		// reset button
-		app.Div().Class("row max").Body(
-			app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(4).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
+		app.Div().Class("row center-align").Body(
+			app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(4).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
 				app.Text("recover forgotten passphrase"),
 			),
+		),
+		app.Div().Class("space"),
 
+		// register button
+		app.Div().Class("row center-align").Body(
 			// register button
 			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
 					app.Text("register"),
 				),
 			).Else(
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(nil).Disabled(true).Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(nil).Disabled(true).Body(
 					app.Text("register"),
 				),
 			),
 		),
-		app.Div().Class("space"),
+		app.Div().Class("medium-space"),
 	)
 }

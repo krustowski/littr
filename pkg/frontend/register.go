@@ -304,21 +304,21 @@ func (c *registerContent) Render() app.UI {
 				app.P().Text("you can flush your account data and published posts simply on the settings page after a log-in"),
 			),
 		),
-		app.Div().Class("medium-space"),
+		app.Div().Class("space"),
 
 		// register button
-		app.Div().Class("row").Body(
+		app.Div().Class("row center-align").Body(
 			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 					app.Text("register"),
 				),
 			).Else(
-				app.Button().Class("max deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(nil).Disabled(true).Body(
+				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(nil).Disabled(true).Body(
 					app.Text("registration off"),
 				),
 			),
 		),
 
-		app.Div().Class("space"),
+		app.Div().Class("medium-space"),
 	)
 }

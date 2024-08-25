@@ -35,7 +35,7 @@ sub {
     main {
         max-width: 50% !important;
     }
-    /*button {
-        #max-width: 50%;
-    }*/
+    button.shrink {
+        max-width: 50%;
+    }
 }

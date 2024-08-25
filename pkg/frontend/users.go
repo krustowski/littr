@@ -989,42 +989,42 @@ func (c *usersContent) Render() app.UI {
 								),
 							),
 
-							app.Div().Class("row bottom-padding").Body(
+							app.Div().Class("row center-align bottom-padding").Body(
 								// flow list button
 
 								// make button inactive for logged user
 								app.If(user.Nickname == c.user.Nickname,
-									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
+									app.Button().Class("max shrink deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("that's you"),
 									),
 								// if system acc
 								).ElseIf(user.Nickname == "system",
-									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
+									app.Button().Class("max shrink deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("system acc"),
 									),
 								// private mode
 								).ElseIf(user.Private && !requested && !inFlow,
-									app.Button().Class("max yellow10 white-text bold").OnClick(c.onClickPrivateOn).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
-										app.Text("ask to see"),
+									app.Button().Class("max shrink yellow10 white-text bold").OnClick(c.onClickPrivateOn).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
+										app.Text("ask to follow"),
 									),
 								// private mode, requested already
 								).ElseIf(user.Private && requested && !inFlow,
-									app.Button().Class("max border gray white-text bold").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
+									app.Button().Class("max shrink border gray white-text bold").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
 										app.Text("cancel the request"),
 									),
 								// if shaded
 								).ElseIf(shaded || c.users[user.Nickname].ShadeList[c.user.Nickname],
-									app.Button().Class("max deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
+									app.Button().Class("max shrink deep-orange7 white-text bold").Disabled(true).Style("border-radius", "8px").Body(
 										app.Text("shaded"),
 									),
 								// flow toggle off
 								).ElseIf(inFlow,
-									app.Button().Class("max border gray white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
+									app.Button().Class("max shrink border gray white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("remove from flow"),
 									),
 								// flow toggle on
 								).Else(
-									app.Button().Class("max deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
+									app.Button().Class("max shrink deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
 										app.Text("add to flow"),
 									),
 								),
