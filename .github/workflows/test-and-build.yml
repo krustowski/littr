@@ -29,6 +29,8 @@ jobs:
         DOCKER_CONTAINER_NAME: ${{ secrets.DOCKER_CONTAINER_NAME }}
         DOCKER_NETWORK_NAME: ${{ secrets.DOCKER_NETWORK_NAME }}
         REGISTRY: ${{ secrets.REGISTRY }} 
+        REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+        REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         VAPID_PUB_KEY: ${{ secrets.VAPID_PUB_KEY }}
       run: make build
 
@@ -40,6 +42,8 @@ jobs:
     - name: Push the image to registry.
       env:
         REGISTRY: ${{ secrets.REGISTRY }}
+        REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+        REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
       run: make push_to_registry
 
   generate_docs:

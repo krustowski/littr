@@ -146,9 +146,13 @@ build:
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
+	@[ -n "${REGISTRY}" ] && \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdim "${REGISTRY}"
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
+	@[ -n "${REGISTRY}" ] && \
+		docker logout "${REGISTRY}"
 
 .PHONY: run-test
 run-test:	
@@ -235,5 +239,8 @@ backup: fetch_running_dump
 push_to_registry:
 	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
 	@[ -n "${REGISTRY}" ] && \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdim "${REGISTRY}" && \
                 docker push ${DOCKER_IMAGE_TAG}
+	@[ -n "${REGISTRY}" ] && \
+		docker logout ${REGISTRY}
 
