@@ -2,7 +2,6 @@ package db
 
 import (
 	"crypto/sha256"
-	//"encoding/hex"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -173,6 +172,19 @@ func RunMigrations() bool {
 		user.ShadeList = shadeList
 		if ok := SetOne(UserCache, key, user); !ok {
 			l.Println("migrateUserUnshade: cannot save an user: "+key, http.StatusInternalServerError)
+			return false
+		}
+		users[key] = user
+	}
+
+	// migrateBlankAboutText function loops over user accounts and adds "newbie" where the about-text field is blank
+	for key, user := range users {
+		if len(user.About) == 0 {
+			user.About = "newbie"
+		}
+
+		if ok := SetOne(UserCache, key, user); !ok {
+			l.Println("migrateBlankAboutText: cannot save an user: "+key, http.StatusInternalServerError)
 			return false
 		}
 		users[key] = user

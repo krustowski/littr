@@ -27,7 +27,7 @@ type User struct {
 	AvatarURL string `json:"avatar_url,omitempty"`
 
 	// About is a description string of such user.
-	About string `json:"about"`
+	About string `json:"about" default:"newbie"`
 
 	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`

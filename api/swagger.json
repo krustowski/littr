@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
         },
-        "version": "0.38.4"
+        "version": "0.38.5"
     },
     "host": "littr.eu",
     "basePath": "/api/v1",
@@ -1574,7 +1574,8 @@
             "properties": {
                 "about": {
                     "description": "About is a description string of such user.",
-                    "type": "string"
+                    "type": "string",
+                    "default": "newbie"
                 },
                 "active": {
                     "description": "Active boolean indicates an activated user's account.",
