@@ -138,6 +138,8 @@ docs: config
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
+	@[ -n "${REGISTRY}" ] && \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build \
 		|| DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} build
@@ -146,8 +148,8 @@ build:
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
-	@[ -n "${REGISTRY}" ] && \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdim "${REGISTRY}"
+#@[ -n "${REGISTRY}" ] && \
+#echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
@@ -239,7 +241,7 @@ backup: fetch_running_dump
 push_to_registry:
 	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
 	@[ -n "${REGISTRY}" ] && \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdim "${REGISTRY}" && \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
                 docker push ${DOCKER_IMAGE_TAG}
 	@[ -n "${REGISTRY}" ] && \
 		docker logout ${REGISTRY}
