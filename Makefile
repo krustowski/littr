@@ -148,8 +148,8 @@ build:
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
-#@[ -n "${REGISTRY}" ] && \
-#echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
+	@[ -n "${REGISTRY}" ] && \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
