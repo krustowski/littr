@@ -29,7 +29,7 @@ jobs:
         MAIL_SASL_USR: ${{ secrets.MAIL_SASL_USR }}
         MAIL_SASL_PWD: ${{ secrets.MAIL_SASL_PWD }}
         REGISTRATION_ENABLED: ${{ vars.REGISTRATION_ENABLED }}
-        REGISTRY: ${{ secrets.REGISTRY_URL }} 
+        REGISTRY: ${{ secrets.REGISTRY }} 
         REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
         REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         VAPID_PUB_KEY: ${{ secrets.VAPID_PUB_KEY }}
