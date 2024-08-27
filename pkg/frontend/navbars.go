@@ -446,7 +446,7 @@ func (h *header) Render() app.UI {
 							app.Text(", "),
 							app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
 							app.Text(" & "),
-							app.A().Href("https://github.com/savla-dev/swis-api").Text("swapi").Style("font-weight", "bolder"),
+							app.A().Href("https://github.com/thevxn/swis-api").Text("swapi").Style("font-weight", "bolder"),
 						),
 					),
 
