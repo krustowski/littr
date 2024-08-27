@@ -154,7 +154,7 @@ run:
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
 	@[ -n "${REGISTRY}" ] && \
-		docker logout "${REGISTRY}"
+		docker logout "${REGISTRY}" > /dev/null
 
 .PHONY: run-test
 run-test:	
@@ -244,5 +244,5 @@ push_to_registry:
 		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
                 docker push ${DOCKER_IMAGE_TAG}
 	@[ -n "${REGISTRY}" ] && \
-		docker logout ${REGISTRY}
+		docker logout ${REGISTRY} > /dev/null
 
