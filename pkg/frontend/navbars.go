@@ -78,7 +78,7 @@ func (h *header) handleDismiss(ctx app.Context, a app.Action) {
 
 func (h *header) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
-		ctx.NewAction("dismiss")
+		ctx.NewAction("dismiss-general")
 		return
 	}
 }
@@ -197,7 +197,7 @@ func (h *header) OnMount(ctx app.Context) {
 	h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
 	h.keyDownEventListener = app.Window().AddEventListener("keydown", h.onKeyDown)
 
-	ctx.Handle("dismiss", h.handleDismiss)
+	ctx.Handle("dismiss-general", h.handleDismiss)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
@@ -266,7 +266,7 @@ func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
-	ctx.NewAction("dismiss")
+	ctx.NewAction("dismiss-general")
 }
 
 func (h *header) onClickReload(ctx app.Context, e app.Event) {

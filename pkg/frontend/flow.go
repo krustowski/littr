@@ -43,6 +43,8 @@ type flowContent struct {
 	newFigFile          string
 	newFigData          []byte
 
+	escapePressed bool
+
 	deletePostModalShow        bool
 	deleteModalButtonsDisabled bool
 
@@ -200,10 +202,12 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 func (c *flowContent) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
-		if c.toastText == "" {
+		//if !toastShow && c.modalReplyActive {
+		if !c.toastShow && c.modalReplyActive {
 			c.modalReplyActive = false
 		}
 
+		c.escapePressed = false
 		c.toastShow = false
 		c.toastText = ""
 		c.toastType = ""
@@ -255,6 +259,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 				c.postButtonsDisabled = true
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
 			})
 			return
 
@@ -265,7 +270,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 				c.toastType = "success"
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
-				c.postButtonsDisabled = true
+				c.postButtonsDisabled = false
 
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
@@ -466,7 +471,7 @@ func (c *flowContent) onClickGeneric(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
-	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+	if (e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc") && !c.escapePressed {
 		ctx.NewAction("dismiss")
 		return
 	}
