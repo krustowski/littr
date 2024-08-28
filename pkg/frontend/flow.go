@@ -356,7 +356,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			toastText = "no valid reply entered"
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = true
+				c.postButtonsDisabled = false
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
 			})
@@ -397,6 +397,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 				ctx.Dispatch(func(ctx app.Context) {
 					c.toastText = toastText
 					c.toastShow = (toastText != "")
+					c.postButtonsDisabled = false
 
 					c.interactedPostKey = ""
 					c.newFigData = []byte{}
@@ -411,6 +412,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
 
 				c.interactedPostKey = ""
 				c.newFigData = []byte{}
@@ -432,6 +434,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
 
 				c.interactedPostKey = ""
 				c.newFigData = []byte{}
