@@ -343,19 +343,19 @@ func (c *postContent) Render() app.UI {
 
 		// newx poll input area
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50).TabIndex(4),
+			app.Input().ID("poll-question").Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50).TabIndex(4),
 			app.Label().Text("question").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionI)).Required(true).Class("active").MaxLength(50).TabIndex(5),
+			app.Input().ID("poll-option-i").Type("text").OnChange(c.ValueTo(&c.pollOptionI)).Required(true).Class("active").MaxLength(50).TabIndex(5),
 			app.Label().Text("option one").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionII)).Required(true).Class("active").MaxLength(50).TabIndex(6),
+			app.Input().ID("poll-option-ii").Type("text").OnChange(c.ValueTo(&c.pollOptionII)).Required(true).Class("active").MaxLength(50).TabIndex(6),
 			app.Label().Text("option two").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60).TabIndex(7),
+			app.Input().ID("poll-option-iii").Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60).TabIndex(7),
 			app.Label().Text("option three (optional)").Class("active deep-orange-text"),
 		),
 		app.Div().Class("row").Body(

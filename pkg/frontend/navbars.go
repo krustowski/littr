@@ -9,6 +9,7 @@ import (
 	"time"
 
 	//"go.savla.dev/littr/configs"
+	"go.savla.dev/littr/pkg/helpers"
 	"go.savla.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -88,6 +89,52 @@ func (h *header) onKeyDown(ctx app.Context, e app.Event) {
 	if !authGranted {
 		return
 	}
+
+	var inputs = []string{
+		"post-textarea",
+		"poll-question",
+		"poll-option-i",
+		"poll-option-ii",
+		"poll-option-iii",
+		"reply-textarea",
+		"fig-upload",
+		"search",
+		"passphrase-current",
+		"passphrase-new",
+		"passphrase-new-again",
+		"about-you-textarea",
+		"website-input",
+	}
+
+	if helpers.Contains(inputs, app.Window().Get("document").Get("activeElement").Get("id").String()) {
+		return
+	}
+
+	/*path := ctx.Page().URL().Path
+
+	if path == "/settings" {
+	}
+
+	if path == "/flow" {
+		replyTextarea := app.Window().GetElementByID("reply-textarea")
+		figureInput := app.Window().GetElementByID("fig-upload")
+
+		if !replyTextarea.IsNull() && (len(replyTextarea.Get("value").String()) > 0) {
+			return
+		}
+
+		if !figureInput.IsNull() && len(figureInput.Get("value").String()) > 0 {
+			return
+		}
+	}
+
+	if path == "/post" {
+		postTextarea := app.Window().GetElementByID("post-textarea")
+
+		if !postTextarea.IsNull() && len(postTextarea.Get("value").String()) > 0 {
+			return
+		}
+	}*/
 
 	switch e.Get("key").String() {
 	case "1":

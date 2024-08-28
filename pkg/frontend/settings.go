@@ -536,17 +536,17 @@ func (c *settingsContent) Render() app.UI {
 		//app.Div().Class("medium-space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
+			app.Input().ID("passphrase-current").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
 			app.Label().Text("old passphrase").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Input().ID("passphrase-new").Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
 			app.Label().Text("new passphrase").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
+			app.Input().ID("passphrase-new-again").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
 			app.Label().Text("new passphrase again").Class("active deep-orange-text"),
 		),
 
@@ -570,7 +570,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field textarea label border extra deep-orange-text").Body(
-			app.Textarea().Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
+			app.Textarea().ID("about-you-textarea").Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
 			app.Label().Text("about-you").Class("active deep-orange-text"),
 		),
 
@@ -594,7 +594,7 @@ func (c *settingsContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
+			app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 			app.Label().Text("website URL").Class("active deep-orange-text"),
 		),
 

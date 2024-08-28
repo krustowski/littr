@@ -905,7 +905,7 @@ func (c *usersContent) Render() app.UI {
 		app.Div().Class("field prefix round fill").Style("border-radius", "8px").Body(
 			app.I().Class("front").Text("search"),
 			//app.Input().Type("search").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
-			app.Input().Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
+			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
 		),
 
 		// users table
