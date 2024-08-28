@@ -173,8 +173,8 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + [...]
 
 ### roadmap to v0.39
-+ implement Esc key to close toasts and modals
-+ welcome page
++ ~~implement Esc key to close toasts and modals + Ctrl-Enter for other inputs~~
++ ~~welcome page~~
 
 ### roadmap to v0.38
 + ~~add minor UI fixes (dialog buttons colouring)~~
