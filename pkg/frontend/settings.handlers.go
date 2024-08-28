@@ -40,6 +40,24 @@ func (c *settingsContent) prefillPayload() OptionsPayload {
 	return payload
 }
 
+func (c *settingsContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastType = ""
+		c.toastShow = (c.toastText != "")
+		c.settingsButtonDisabled = false
+		c.deleteAccountModalShow = false
+		c.deleteSubscriptionModalShow = false
+	})
+}
+
+func (c *settingsContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+}
+
 // onClickPass
 func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 	toastText := ""
@@ -59,6 +77,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -69,6 +88,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -97,6 +117,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 				ctx.Dispatch(func(ctx app.Context) {
 					c.toastText = toastText
 					c.toastShow = (toastText != "")
+					c.settingsButtonDisabled = false
 				})
 				return
 			}
@@ -111,6 +132,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -124,6 +146,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -132,9 +155,9 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			c.toastType = "success"
 			c.toastText = "passphrase updated"
 			c.toastShow = (toastText != "")
+			c.settingsButtonDisabled = false
 		})
 		return
-		//ctx.Navigate("/users")
 	})
 }
 
@@ -155,6 +178,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -165,6 +189,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -178,6 +203,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -186,6 +212,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			c.toastText = "about text updated"
 			c.toastShow = (toastText != "")
 			c.toastType = "success"
+			c.settingsButtonDisabled = false
 		})
 		return
 	})
@@ -206,6 +233,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -217,6 +245,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -230,6 +259,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -247,6 +277,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -258,6 +289,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			c.toastText = "website updated"
 			c.toastShow = (toastText != "")
 			c.toastType = "success"
+			c.settingsButtonDisabled = false
 		})
 		return
 	})
@@ -267,6 +299,8 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 	toastText := ""
 
+	c.settingsButtonDisabled = true
+
 	uuid := c.interactedUUID
 	if uuid == "" {
 		toastText := "blank UUID string"
@@ -274,6 +308,7 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 		ctx.Dispatch(func(ctx app.Context) {
 			c.toastText = toastText
 			c.toastShow = toastText != ""
+			c.settingsButtonDisabled = false
 		})
 		return
 	}
@@ -290,9 +325,9 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
 				c.toastShow = toastText != ""
+				c.settingsButtonDisabled = false
 			})
 			return
-
 		}
 
 		devs := c.devices
@@ -310,6 +345,7 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 			c.toastText = toastText
 			c.toastShow = toastText != ""
 			c.toastType = "info"
+			c.settingsButtonDisabled = false
 
 			if uuid == c.thisDeviceUUID {
 				c.subscribed = false
@@ -361,14 +397,7 @@ func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.E
 }
 
 func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.toastText = ""
-		c.toastType = ""
-		c.toastShow = (c.toastText != "")
-		c.settingsButtonDisabled = false
-		c.deleteAccountModalShow = false
-		c.deleteSubscriptionModalShow = false
-	})
+	ctx.NewAction("dismiss")
 }
 
 func (c *settingsContent) checkTags(tags []string, tag string) []string {
@@ -391,6 +420,8 @@ func (c *settingsContent) checkTags(tags []string, tag string) []string {
 func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 	toastText := ""
 	uuid := ctx.DeviceID()
+
+	c.settingsButtonDisabled = true
 
 	payload := struct {
 		UUID string `json:"device_uuid"`
@@ -415,6 +446,7 @@ func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 				c.toastShow = toastText != ""
 
 				c.subscribed = true
+				c.settingsButtonDisabled = false
 			})
 			return
 
@@ -425,6 +457,8 @@ func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 			c.toastText = "successfully unsubscribed, notifications off"
 			c.toastShow = toastText != ""
 			c.toastType = "info"
+
+			c.settingsButtonDisabled = false
 
 			c.subscription.Mentions = false
 			c.subscription.Replies = false
@@ -480,6 +514,8 @@ func (c *settingsContent) checkPermission(ctx app.Context, checked bool) bool {
 }
 
 func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
+	c.settingsButtonDisabled = true
+
 	devs := c.devices
 	newDevs := []models.Device{}
 	for _, dev := range devs {
@@ -501,6 +537,7 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 				c.toastShow = c.toastText != ""
 
 				//c.subscribed = true
+				c.settingsButtonDisabled = false
 			})
 			return
 
@@ -521,6 +558,7 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 
 			c.thisDevice = deviceSub
 			c.devices = newDevs
+			c.settingsButtonDisabled = false
 		})
 		return
 	})
@@ -530,6 +568,8 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	tag := ""
 	source := ctx.JSSrc().Get("id").String()
+
+	c.settingsButtonDisabled = true
 
 	if strings.Contains(source, "reply") {
 		tag = "reply"
@@ -586,6 +626,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to subscribe to notifications: " + err.Error()
 				c.toastShow = c.toastText != ""
+				c.settingsButtonDisabled = false
 
 				//c.subscribed = false
 			})
@@ -619,6 +660,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 				//c.toastText = toastText
 				c.toastText = "failed to subscribe to notifications"
 				c.toastShow = toastText != ""
+				c.settingsButtonDisabled = false
 
 				c.subscribed = false
 			})
@@ -638,6 +680,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			c.toastText = "successfully subscribed"
 			c.toastShow = toastText != ""
 			c.toastType = "success"
+			c.settingsButtonDisabled = false
 
 			if tag == "mention" {
 				c.subscription.Mentions = !c.subscription.Mentions
@@ -654,6 +697,8 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
+	c.settingsButtonDisabled = true
+
 	toastText := ""
 	localTime := c.user.LocalTimeMode
 
@@ -669,6 +714,7 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 				//c.toastText = toastText
 				c.toastText = "failed to toggle the local time mode"
 				c.toastShow = toastText != ""
+				c.settingsButtonDisabled = false
 
 				c.user.LocalTimeMode = localTime
 			})
@@ -680,6 +726,7 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 			c.toastText = "local time mode toggled"
 			c.toastShow = toastText != ""
 			c.toastType = "success"
+			c.settingsButtonDisabled = false
 
 			c.user.LocalTimeMode = !localTime
 		})
@@ -688,6 +735,8 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 }
 
 func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
+	c.settingsButtonDisabled = true
+
 	toastText := ""
 
 	ctx.Async(func() {
@@ -702,6 +751,7 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 				//c.toastText = toastText
 				c.toastText = "failed to toggle the private mode"
 				c.toastShow = toastText != ""
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -711,6 +761,7 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 			c.toastText = "private mode toggled"
 			c.toastShow = toastText != ""
 			c.toastType = "success"
+			c.settingsButtonDisabled = false
 
 			c.user.Private = !c.user.Private
 		})
@@ -734,6 +785,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 		}
@@ -750,7 +802,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 
 	file := e.Get("target").Get("files").Index(0)
 
-	//c.postButtonsDisabled = true
+	c.settingsButtonDisabled = true
 
 	ctx.Async(func() {
 		if data, err := readFile(file); err != nil {
@@ -759,6 +811,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 			})
 			return
 
@@ -797,6 +850,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 					ctx.Dispatch(func(ctx app.Context) {
 						c.toastText = toastText
 						c.toastShow = (toastText != "")
+						c.settingsButtonDisabled = false
 					})
 					return
 				}
@@ -808,6 +862,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				ctx.Dispatch(func(ctx app.Context) {
 					c.toastText = toastText
 					c.toastShow = (toastText != "")
+					c.settingsButtonDisabled = false
 				})
 				return
 			}
@@ -820,6 +875,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				c.toastType = "success"
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.settingsButtonDisabled = false
 
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data

@@ -19,7 +19,8 @@ type UsersPage struct {
 type usersContent struct {
 	app.Compo
 
-	eventListener func()
+	eventListener        func()
+	keyDownEventListener func()
 
 	//polls map[string]models.Poll `json:"polls"`
 	//posts map[string]models.Post `json:"posts"`
@@ -139,12 +140,14 @@ func (c *usersContent) OnMount(ctx app.Context) {
 	ctx.Handle("search", c.handleSearch)
 	ctx.Handle("preview", c.handleUserPreview)
 	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("dismiss", c.handleDismiss)
 
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 
 	// hotfix to catch panic
 	//c.polls = make(map[string]models.Poll)
@@ -662,11 +665,24 @@ func (c *usersContent) onClick(ctx app.Context, e app.Event) {
 	c.usersButtonDisabled = true
 }
 
+func (c *usersContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+}
+
+func (c *usersContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = (c.toastText != "")
+		c.usersButtonDisabled = false
+		c.showUserPreviewModal = false
+	})
+}
+
 func (c *usersContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastShow = (c.toastText != "")
-	c.usersButtonDisabled = false
-	c.showUserPreviewModal = false
+	ctx.NewAction("dismiss")
 }
 
 func (c *usersContent) Render() app.UI {

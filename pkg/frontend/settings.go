@@ -64,6 +64,8 @@ type settingsContent struct {
 	newFigLink string
 	newFigData []byte
 	newFigFile string
+
+	keyDownEventListener func()
 }
 
 func (p *SettingsPage) Render() app.UI {
@@ -82,6 +84,10 @@ func (p *SettingsPage) OnNav(ctx app.Context) {
 
 func (c *settingsContent) OnMount(ctx app.Context) {
 	c.notificationPermission = ctx.Notifications().Permission()
+
+	ctx.Handle("dismiss", c.handleDismiss)
+
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 func (c *settingsContent) OnNav(ctx app.Context) {

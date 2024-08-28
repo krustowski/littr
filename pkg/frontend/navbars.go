@@ -51,7 +51,7 @@ const (
 )
 
 func (h *header) handleDismiss(ctx app.Context, a app.Action) {
-	deleteModal := app.Window().GetElementByID("delete-modal")
+	/*deleteModal := app.Window().GetElementByID("delete-modal")
 	if !deleteModal.IsNull() {
 		deleteModal.Get("classList").Call("remove", "active")
 	}
@@ -59,9 +59,9 @@ func (h *header) handleDismiss(ctx app.Context, a app.Action) {
 	userModal := app.Window().GetElementByID("user-modal")
 	if !userModal.IsNull() {
 		userModal.Get("classList").Call("remove", "active")
-	}
+	}*/
 
-	snack := app.Window().GetElementByID("snackbar")
+	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
 		snack.Get("classList").Call("remove", "active")
 	}
@@ -76,7 +76,7 @@ func (h *header) handleDismiss(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *header) onKeyDown(ctx app.Context, e app.Event) {
+func (h *header) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
@@ -266,6 +266,7 @@ func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
+	ctx.NewAction("dismiss")
 }
 
 func (h *header) onClickReload(ctx app.Context, e app.Event) {

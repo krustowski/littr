@@ -71,6 +71,7 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
 			})
 			return
 
@@ -100,6 +101,7 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
+				c.postButtonsDisabled = false
 			})
 			return
 
@@ -108,6 +110,11 @@ func (c *postContent) handleFigUpload(ctx app.Context, e app.Event) {
 }
 
 func (c *postContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+
 	textarea := app.Window().GetElementByID("post-textarea")
 
 	//if textarea.Get("value").IsNull() {
@@ -188,6 +195,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.postButtonsDisabled = false
 			})
 			return
 		}
@@ -236,20 +244,28 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
+			c.postButtonsDisabled = false
 		})
 		return
 	})
 }
 
+func (c *postContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = (c.toastText != "")
+		c.toastType = ""
+		//c.postButtonsDisabled = false
+	})
+}
+
 func (c *postContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastShow = (c.toastText != "")
-	c.toastType = ""
-	c.postButtonsDisabled = false
+	ctx.NewAction("dismiss")
 }
 
 func (c *postContent) OnMount(ctx app.Context) {
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	ctx.Handle("dismiss", c.handleDismiss)
 }
 
 func (c *postContent) Render() app.UI {

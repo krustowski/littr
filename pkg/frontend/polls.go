@@ -54,15 +54,28 @@ type pollsContent struct {
 	polls map[string]models.Poll
 
 	pollsButtonDisabled bool
+
+	keyDownEventListener func()
 }
 
-func (c *pollsContent) onClickDismiss(ctx app.Context, e app.Event) {
+func (c *pollsContent) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.toastText = ""
 		c.toastShow = false
 		c.pollsButtonDisabled = false
 		c.deletePollModalShow = false
 	})
+}
+
+func (c *pollsContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+}
+
+func (c *pollsContent) onClickDismiss(ctx app.Context, e app.Event) {
+	ctx.NewAction("dismiss")
 }
 
 func (c *pollsContent) OnNav(ctx app.Context) {
@@ -297,12 +310,14 @@ func (c *pollsContent) OnMount(ctx app.Context) {
 	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("dismiss", c.handleDismiss)
 
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 // contains checks if a string is present in a slice
