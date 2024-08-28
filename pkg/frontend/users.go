@@ -464,7 +464,7 @@ func (c *usersContent) onClickPrivateOff(ctx app.Context, e app.Event) {
 		if _, ok := litterAPI("DELETE", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
-			toastText = "request to see removed"
+			toastText = "request to follow removed"
 			toastType = "info"
 
 			if user.RequestList == nil {
@@ -501,7 +501,7 @@ func (c *usersContent) onClickPrivateOn(ctx app.Context, e app.Event) {
 		if _, ok := litterAPI("POST", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
-			toastText = "requested to see"
+			toastText = "requested to follow"
 			toastType = "success"
 
 			if user.RequestList == nil {

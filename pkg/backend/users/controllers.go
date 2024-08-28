@@ -472,8 +472,32 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 		for key, value := range lists.FlowList {
 			if user.FlowList == nil {
 				user.FlowList = make(map[string]bool)
+				user.FlowList["system"] = true
 			}
-			user.FlowList[key] = value
+
+			// do not allow to unfollow oneself
+			if key == user.Nickname {
+				user.FlowList[key] = true
+				continue
+			}
+
+			// remove from the flow list if already followed
+			if followed, found := user.FlowList[key]; found && followed {
+				user.FlowList[key] = false
+				continue
+			}
+
+			// check if the user is shaded by the counterpart
+			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
+				if counterpart.Private {
+					// cannot add this user to one's flow, as the following has to be requested and allowed by the counterpart
+					continue
+				}
+
+				if shaded, found := counterpart.ShadeList[user.Nickname]; !found || (found && !shaded) {
+					user.FlowList[key] = value
+				}
+			}
 		}
 	}
 
@@ -482,6 +506,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 			if user.RequestList == nil {
 				user.RequestList = make(map[string]bool)
 			}
+
 			user.RequestList[key] = value
 		}
 	}
