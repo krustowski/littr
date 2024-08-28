@@ -36,6 +36,8 @@ type registerContent struct {
 	email           string
 
 	registerButtonDisabled bool
+
+	keyDownEventListener func()
 }
 
 func (p *RegisterPage) OnNav(ctx app.Context) {
@@ -48,6 +50,12 @@ func (p *RegisterPage) Render() app.UI {
 		&footer{},
 		&registerContent{},
 	)
+}
+
+func (c *registerContent) OnMount(ctx app.Context) {
+	ctx.Handle("dismiss", c.handleDismiss)
+
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
@@ -67,6 +75,10 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		passphrase := strings.TrimSpace(c.passphrase)
 		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
 		email := strings.TrimSpace(c.email)
+
+		if email == "" {
+			email = strings.TrimSpace(app.Window().GetElementByID("email-input").Get("value").String())
+		}
 
 		// fetch the users list to compare to
 		/*resp, ok := litterAPI("GET", "/api/users", nil, nickname, 0)
@@ -96,6 +108,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -107,6 +120,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -118,6 +132,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -129,6 +144,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -142,6 +158,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -183,6 +200,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -193,6 +211,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -204,6 +223,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
 			})
 			return
 		}
@@ -215,10 +235,40 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 	})
 }
 
+func (c *registerContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = false
+		c.registerButtonDisabled = false
+	})
+}
+
 func (c *registerContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastShow = false
-	c.registerButtonDisabled = false
+	ctx.NewAction("dismiss")
+}
+
+func (c *registerContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+
+	nicknameInput := app.Window().GetElementByID("nickname-input")
+	passphraseInput := app.Window().GetElementByID("passphrase-input")
+	passphraseAgainInput := app.Window().GetElementByID("passphrase-again-input")
+	emailInput := app.Window().GetElementByID("email-input")
+
+	if nicknameInput.IsNull() || passphraseInput.IsNull() || passphraseAgainInput.IsNull() || emailInput.IsNull() {
+		return
+	}
+
+	if len(nicknameInput.Get("value").String()) == 0 || len(passphraseInput.Get("value").String()) == 0 || len(passphraseAgainInput.Get("value").String()) == 0 || len(emailInput.Get("value").String()) == 0 {
+		return
+	}
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
+		app.Window().GetElementByID("register-button").Call("click")
+	}
 }
 
 func (c *registerContent) Render() app.UI {
@@ -253,7 +303,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "username").TabIndex(1).Name("login"),
+			app.Input().ID("nickname-input").Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "username").TabIndex(1).Name("login"),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -269,11 +319,11 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(2),
+			app.Input().ID("passphrase-input").Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(2),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(3),
+			app.Input().ID("passphrase-again-input").Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(3),
 			app.Label().Text("passphrase again").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -289,7 +339,7 @@ func (c *registerContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border deep-orange-text").Body(
-			app.Input().Type("email").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email").TabIndex(4),
+			app.Input().ID("email-input").Type("email").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email").TabIndex(4),
 			app.Label().Text("e-mail").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
@@ -309,7 +359,7 @@ func (c *registerContent) Render() app.UI {
 		// register button
 		app.Div().Class("row center-align").Body(
 			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
-				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
+				app.Button().ID("register-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 					app.Text("register"),
 				),
 			).Else(

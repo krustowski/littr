@@ -28,6 +28,8 @@ type resetContent struct {
 	toastType string
 
 	buttonsDisabled bool
+
+	keyDownEventListener func()
 }
 
 func (p *ResetPage) OnMount(ctx app.Context) {
@@ -65,7 +67,6 @@ func (c *resetContent) handleResetRequest(email, uuid string) error {
 	}
 
 	respRaw, ok := litterAPI("POST", "/api/v1/users/passphrase/"+path, payload, "", 0)
-
 	if !ok {
 		return fmt.Errorf("communication with backend failed")
 	}
@@ -101,12 +102,17 @@ func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		uuid := strings.TrimSpace(c.uuid)
 
+		if uuid == "" && !app.Window().GetElementByID("uuid-input").IsNull() {
+			uuid = strings.TrimSpace(app.Window().GetElementByID("uuid-input").Get("value").String())
+		}
+
 		if uuid == "" {
 			toastText = "please insert UUID from your inbox"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.buttonsDisabled = false
 			})
 			return
 		}
@@ -116,15 +122,16 @@ func (c *resetContent) onClickReset(ctx app.Context, e app.Event) {
 				c.buttonsDisabled = true
 				c.toastText = err.Error()
 				c.toastShow = (toastText != "")
+				c.buttonsDisabled = false
 			})
 			return
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.buttonsDisabled = true
 			c.toastText = "your passphrase has been changed, check your inbox"
 			c.toastType = "success"
 			c.toastShow = (toastText != "")
+			c.buttonsDisabled = false
 		})
 		return
 	})
@@ -140,12 +147,17 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		email := strings.TrimSpace(c.email)
 
+		if email == "" && !app.Window().GetElementByID("email-input").IsNull() {
+			email = strings.TrimSpace(app.Window().GetElementByID("email-input").Get("value").String())
+		}
+
 		if email == "" {
 			toastText = "e-mail field has to be filled"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.buttonsDisabled = false
 			})
 			return
 		}
@@ -159,6 +171,7 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.buttonsDisabled = false
 			})
 			return
 		}
@@ -168,6 +181,7 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 				c.buttonsDisabled = true
 				c.toastText = err.Error()
 				c.toastShow = (toastText != "")
+				c.buttonsDisabled = false
 			})
 			return
 		}
@@ -177,18 +191,58 @@ func (c *resetContent) onClickRequest(ctx app.Context, e app.Event) {
 			c.toastType = "success"
 			c.toastShow = (toastText != "")
 			c.showUUIDPage = true
+			c.buttonsDisabled = false
 		})
 		return
 	})
 }
 
+func (c *resetContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = false
+		c.buttonsDisabled = false
+	})
+}
+
 func (c *resetContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastShow = false
-	c.buttonsDisabled = false
+	ctx.NewAction("dismiss")
+}
+
+func (c *resetContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+
+	emailInput := app.Window().GetElementByID("email-input")
+	uuidInput := app.Window().GetElementByID("uuid-input")
+
+	if (emailInput.IsNull() && !c.showUUIDPage) || (uuidInput.IsNull() && c.showUUIDPage) {
+		return
+	}
+
+	if !emailInput.IsNull() && len(emailInput.Get("value").String()) == 0 && !c.showUUIDPage {
+		return
+	}
+
+	if !uuidInput.IsNull() && len(uuidInput.Get("value").String()) == 0 && c.showUUIDPage {
+		return
+	}
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
+		if c.showUUIDPage {
+			app.Window().GetElementByID("reset-button").Call("click")
+		} else {
+			app.Window().GetElementByID("request-button").Call("click")
+		}
+	}
 }
 
 func (c *resetContent) OnMount(ctx app.Context) {
+	ctx.Handle("dismiss", c.handleDismiss)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+
 	url := strings.Split(ctx.Page().URL().Path, "/")
 
 	// autosend the UUID to the backend if present in URL
@@ -198,7 +252,7 @@ func (c *resetContent) OnMount(ctx app.Context) {
 
 		if err := c.handleResetRequest("", uuid); err != nil {
 			ctx.Dispatch(func(ctx app.Context) {
-				c.buttonsDisabled = true
+				c.buttonsDisabled = false
 				c.toastText = err.Error()
 				c.toastShow = true
 			})
@@ -206,7 +260,7 @@ func (c *resetContent) OnMount(ctx app.Context) {
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.buttonsDisabled = true
+			c.buttonsDisabled = false
 			c.toastText = "your passphrase has been changed, check your inbox"
 			c.toastType = "success"
 			c.toastShow = true
@@ -268,7 +322,7 @@ func (c *resetContent) Render() app.UI {
 
 			// pwd reset credentials fields
 			app.Div().Class("field border label deep-orange-text").Body(
-				app.Input().Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true).TabIndex(1),
+				app.Input().ID("email-input").Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true),
 				app.Label().Text("e-mail").Class("active deep-orange-text"),
 			),
 
@@ -276,7 +330,7 @@ func (c *resetContent) Render() app.UI {
 
 			// request button
 			app.Div().Class("row center-align").Body(
-				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+				app.Button().ID("request-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
 					app.Text("request"),
 				),
 			),
@@ -296,7 +350,7 @@ func (c *resetContent) Render() app.UI {
 
 			// pwd reset credentials fields
 			app.Div().Class("field border label deep-orange-text").Body(
-				app.Input().Type("text").Required(true).TabIndex(1).Value("").OnChange(c.ValueTo(&c.uuid)).Class("active").AutoFocus(true).TabIndex(1),
+				app.Input().ID("uuid-input").Type("text").Required(true).TabIndex(1).Value("").OnChange(c.ValueTo(&c.uuid)).Class("active").AutoFocus(true),
 				app.Label().Text("UUID").Class("active deep-orange-text"),
 			),
 
@@ -304,7 +358,7 @@ func (c *resetContent) Render() app.UI {
 
 			// pwd reset button
 			app.Div().Class("row center-align").Body(
-				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(1).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+				app.Button().ID("reset-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(2).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).Body(
 					app.Text("reset"),
 				),
 			),

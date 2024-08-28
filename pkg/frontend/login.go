@@ -28,6 +28,8 @@ type loginContent struct {
 	toastText string
 
 	loginButtonDisabled bool
+
+	keyDownEventListener func()
 }
 
 func (p *LoginPage) OnMount(ctx app.Context) {
@@ -55,6 +57,12 @@ func (p *LoginPage) Render() app.UI {
 		&footer{},
 		&loginContent{},
 	)
+}
+
+func (c *loginContent) OnMount(ctx app.Context) {
+	ctx.Handle("dismiss", c.handleDismiss)
+
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 func (c *loginContent) onClickRegister(ctx app.Context, e app.Event) {
@@ -85,12 +93,17 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		nickname := strings.TrimSpace(c.nickname)
 		passphrase := strings.TrimSpace(c.passphrase)
 
+		if passphrase == "" && !app.Window().GetElementByID("passphrase-input").IsNull() {
+			passphrase = strings.TrimSpace(app.Window().GetElementByID("passphrase-input").Get("value").String())
+		}
+
 		if nickname == "" || passphrase == "" {
 			toastText = "all fields need to be filled"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -102,6 +115,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -121,6 +135,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -131,6 +146,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -141,6 +157,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -151,6 +168,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -162,6 +180,7 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
+				c.loginButtonDisabled = false
 			})
 			return
 		}
@@ -177,10 +196,38 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 
 }
 
+func (c *loginContent) handleDismiss(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.toastText = ""
+		c.toastShow = false
+		c.loginButtonDisabled = false
+	})
+}
+
 func (c *loginContent) dismissToast(ctx app.Context, e app.Event) {
-	c.toastText = ""
-	c.toastShow = false
-	c.loginButtonDisabled = false
+	ctx.NewAction("dismiss")
+}
+
+func (c *loginContent) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+
+	loginInput := app.Window().GetElementByID("login-input")
+	passphraseInput := app.Window().GetElementByID("passphrase-input")
+
+	if loginInput.IsNull() || passphraseInput.IsNull() {
+		return
+	}
+
+	if len(loginInput.Get("value").String()) == 0 || len(passphraseInput.Get("value").String()) == 0 {
+		return
+	}
+
+	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
+		app.Window().GetElementByID("login-button").Call("click")
+	}
 }
 
 func (c *loginContent) Render() app.UI {
@@ -207,12 +254,12 @@ func (c *loginContent) Render() app.UI {
 
 		// login credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(configs.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
+			app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(configs.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
+			app.Input().ID("passphrase-input").Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
 		app.Article().Class("row surface-container-highest").Body(
@@ -226,7 +273,7 @@ func (c *loginContent) Render() app.UI {
 
 		// login button
 		app.Div().Class("row center-align").Body(
-			app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
+			app.Button().ID("login-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(3).OnClick(c.onClick).Disabled(c.loginButtonDisabled).Body(
 				app.Text("login"),
 			),
 		),
