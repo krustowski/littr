@@ -279,7 +279,7 @@ func (c *postContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar white-text top active "+toastColor).Body(
+				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),

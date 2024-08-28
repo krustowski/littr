@@ -32,10 +32,22 @@ sub {
 }*/
 
 @media only screen and (min-width: 993px) {
-    main {
-        max-width: 50% !important;
-    }
-    button.shrink {
-        max-width: 50%;
-    }
+  main {
+    max-width: 50% !important;
+  }
+  button.shrink {
+    max-width: 50%;
+  }
+}
+
+.overlay {
+  display: inline-block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: transparent;
+  background-size: 100% 100%;
+  cursor: pointer;
 }

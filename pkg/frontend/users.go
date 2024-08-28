@@ -847,7 +847,7 @@ func (c *usersContent) Render() app.UI {
 
 		// user info modal
 		app.If(c.showUserPreviewModal && userInModalInfo != nil,
-			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
+			app.Dialog().ID("user-modal").Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
 
 				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
 				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),

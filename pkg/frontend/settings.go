@@ -212,7 +212,7 @@ func (c *settingsContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar white-text top active "+toastColor).Body(
+				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
@@ -400,7 +400,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// subs deletion modal
 		app.If(c.deleteSubscriptionModalShow,
-			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("subscription deletion"),
 				),
@@ -598,7 +598,7 @@ func (c *settingsContent) Render() app.UI {
 
 		// acc deletion modal
 		app.If(c.deleteAccountModalShow,
-			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("account deletion"),
 				),

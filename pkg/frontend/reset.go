@@ -246,7 +246,7 @@ func (c *resetContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
+				app.Div().ID("snackbar").Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),

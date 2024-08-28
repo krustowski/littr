@@ -388,7 +388,7 @@ func (c *pollsContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.onClickDismiss).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
+				app.Div().ID("snackbar").Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
@@ -397,7 +397,7 @@ func (c *pollsContent) Render() app.UI {
 
 		// poll deletion modal
 		app.If(c.deletePollModalShow,
-			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("poll deletion"),
 				),

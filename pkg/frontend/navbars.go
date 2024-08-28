@@ -30,6 +30,7 @@ type header struct {
 
 	pagePath string
 
+	keyDownEventListener   func()
 	eventListenerMessage   func()
 	eventListenerKeepAlive func()
 	lastHeartbeatTime      int64
@@ -48,6 +49,39 @@ type footer struct {
 const (
 	headerString = "littr"
 )
+
+func (h *header) handleDismiss(ctx app.Context, a app.Action) {
+	deleteModal := app.Window().GetElementByID("delete-modal")
+	if !deleteModal.IsNull() {
+		deleteModal.Get("classList").Call("remove", "active")
+	}
+
+	userModal := app.Window().GetElementByID("user-modal")
+	if !userModal.IsNull() {
+		userModal.Get("classList").Call("remove", "active")
+	}
+
+	snack := app.Window().GetElementByID("snackbar")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("remove", "active")
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalInfoShow = false
+		h.modalLogoutShow = false
+
+		h.toastShow = false
+		h.toastText = ""
+		h.toastType = ""
+	})
+}
+
+func (c *header) onKeyDown(ctx app.Context, e app.Event) {
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss")
+		return
+	}
+}
 
 func (h *header) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
@@ -161,6 +195,9 @@ func (h *header) OnMount(ctx app.Context) {
 	// create event listener for SSE messages
 	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
 	h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
+	h.keyDownEventListener = app.Window().AddEventListener("keydown", h.onKeyDown)
+
+	ctx.Handle("dismiss", h.handleDismiss)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
@@ -229,19 +266,6 @@ func (h *header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
 }
 
 func (h *header) onClickModalDismiss(ctx app.Context, e app.Event) {
-	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() {
-		snack.Get("classList").Call("remove", "active")
-	}
-
-	ctx.Dispatch(func(ctx app.Context) {
-		h.modalInfoShow = false
-		h.modalLogoutShow = false
-
-		h.toastShow = false
-		h.toastText = ""
-		h.toastType = ""
-	})
 }
 
 func (h *header) onClickReload(ctx app.Context, e app.Event) {
@@ -347,7 +371,7 @@ func (h *header) Render() app.UI {
 
 			// app logout modal
 			app.If(h.modalLogoutShow,
-				app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+				app.Dialog().ID("logout-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
 					app.Nav().Class("center-align").Body(
 						app.H5().Text("logout"),
 					),
@@ -401,7 +425,7 @@ func (h *header) Render() app.UI {
 
 			// app info modal
 			app.If(h.modalInfoShow,
-				app.Dialog().Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
+				app.Dialog().ID("info-modal").Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
 					app.Article().Class("row center-align").Style("border-radius", "8px").Body(
 						app.Img().Src("/web/android-chrome-192x192.png"),
 						app.H4().Body(

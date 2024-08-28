@@ -198,7 +198,7 @@ func (c *loginContent) Render() app.UI {
 		// snackbar
 		app.A().OnClick(c.dismissToast).Body(
 			app.If(c.toastText != "",
-				app.Div().Class("snackbar red10 white-text top active").Body(
+				app.Div().ID("snackbar").Class("snackbar red10 white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),

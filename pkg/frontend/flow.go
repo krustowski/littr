@@ -33,6 +33,8 @@ type flowContent struct {
 	user       models.User
 	key        string
 
+	escapePressed bool
+
 	toastShow bool
 	toastText string
 	toastType string
@@ -73,6 +75,7 @@ type flowContent struct {
 
 	eventListenerMsg     func()
 	keyDownEventListener func()
+	dismissEventListener func()
 }
 
 func (p *FlowPage) OnNav(ctx app.Context) {
@@ -197,8 +200,8 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 	ctx.Navigate("/flow/post/" + key)
 }
 
-func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
-	// little hack to dismiss navbar's snackbar
+func (c *flowContent) handleDismiss(ctx app.Context, a app.Action) {
+	// generic snackbar (via navbars)
 	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
 		snack.Get("classList").Call("remove", "active")
@@ -206,10 +209,11 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
-		if c.toastText == "" {
+		if c.toastText == "" || c.escapePressed {
 			c.modalReplyActive = false
 		}
 
+		c.escapePressed = false
 		c.toastShow = false
 		c.toastText = ""
 		c.toastType = ""
@@ -217,6 +221,28 @@ func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
 		c.postButtonsDisabled = false
 		c.deletePostModalShow = false
 	})
+}
+
+func (c *flowContent) onClickDismiss(ctx app.Context, e app.Event) {
+	//ctx.NewActionWithValue("dismiss", key)
+	ctx.NewAction("dismiss")
+
+	//ctx.Dispatch(func(ctx app.Context) {
+	/*if c.escapePressed {
+		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
+		if c.toastText == "" || c.escapePressed {
+			c.modalReplyActive = false
+		}
+
+		c.escapePressed = false
+		c.toastShow = false
+		c.toastText = ""
+		c.toastType = ""
+		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+		c.deletePostModalShow = false
+		//})
+	}*/
 }
 
 // https://github.com/maxence-charriere/go-app/issues/882
@@ -443,7 +469,20 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *flowContent) onClickGeneric(ctx app.Context, e app.Event) {
+	if e.Get("target").String() == "overlay" || e.Get("srcElement").String() == "overlay" {
+		log.Println("overlay clicked")
+	}
+}
+
 func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
+	/*if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
+		c.escapePressed = true
+		ctx.NewAction("dismiss")
+		//c.onClickDismiss(ctx, e)
+		return
+	}*/
+
 	textarea := app.Window().GetElementByID("reply-textarea")
 
 	if textarea.IsNull() {
@@ -684,6 +723,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
+	ctx.Handle("dismiss", c.handleDismiss)
 	//ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
@@ -698,6 +738,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
 }
 
 func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
@@ -1151,9 +1192,9 @@ func (c *flowContent) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.A().OnClick(c.onClickDismiss).Body(
-			app.If(c.toastText != "",
-				app.Div().Class("snackbar white-text top active "+toastColor).Body(
+		app.If(c.toastText != "",
+			app.A().OnClick(c.onClickDismiss).Body(
+				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toastText),
 				),
@@ -1162,7 +1203,7 @@ func (c *flowContent) Render() app.UI {
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
-			app.Dialog().Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
@@ -1188,9 +1229,11 @@ func (c *flowContent) Render() app.UI {
 			),
 		),
 
+		//app.Div().ID("overlay").Class("overlay").OnClick(c.onClickDismiss).Style("z-index", "50"),
+
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Body(
+			app.Dialog().ID("reply-modal").Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),
