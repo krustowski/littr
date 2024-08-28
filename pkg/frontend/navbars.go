@@ -516,7 +516,7 @@ func (h *header) Render() app.UI {
 							app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 						),
 						app.P().Body(
-							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Lore and overview article"),
+							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Documentation (external)"),
 						),
 					),
 
