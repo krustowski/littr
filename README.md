@@ -172,6 +172,10 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + write integration and e2e tests
 + [...]
 
+### roadmap to v0.39
++ implement Esc key to close toasts and modals
++ welcome page
+
 ### roadmap to v0.38
 + ~~add minor UI fixes (dialog buttons colouring)~~
 + ~~expand passphrase reset procedure --- add confirmation e-mail~~
