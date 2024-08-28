@@ -81,6 +81,28 @@ func (h *header) onKeyDown(ctx app.Context, e app.Event) {
 		ctx.NewAction("dismiss-general")
 		return
 	}
+
+	var authGranted bool
+	ctx.LocalStorage().Get("authGranted", &authGranted)
+
+	if !authGranted {
+		return
+	}
+
+	switch e.Get("key").String() {
+	case "1":
+		ctx.Navigate("/stats")
+	case "2":
+		ctx.Navigate("/users")
+	case "3":
+		ctx.Navigate("/post")
+	case "4":
+		ctx.Navigate("/polls")
+	case "5":
+		ctx.Navigate("/flow")
+	case "6":
+		ctx.Navigate("/settings")
+	}
 }
 
 func (h *header) onMessage(ctx app.Context, e app.Event) {
@@ -353,7 +375,7 @@ func (h *header) Render() app.UI {
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
-			app.A().Href(settingsHref).Text("settings").Class("max").Title("settings").Aria("label", "settings").Body(
+			app.A().Href(settingsHref).Text("settings").Class("max").Title("settings [6]").Aria("label", "settings").Body(
 				app.I().Class("large").Class("deep-orange-text").Body(
 					app.Text("build")),
 			),
@@ -527,27 +549,27 @@ func (f *footer) Render() app.UI {
 
 	return app.Nav().ID("nav-top").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 		Body(
-			app.A().Href(statsHref).Text("stats").Class("max").Title("stats").Aria("label", "stats").Body(
+			app.A().Href(statsHref).Text("stats").Class("max").Title("stats [1]").Aria("label", "stats").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("query_stats")),
 			),
 
-			app.A().Href(usersHref).Text("users").Class("max").Title("users").Aria("label", "users").Body(
+			app.A().Href(usersHref).Text("users").Class("max").Title("users [2]").Aria("label", "users").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("group")),
 			),
 
-			app.A().Href(postHref).Text("post").Class("max").Title("new post/poll").Aria("label", "new post/poll").Body(
+			app.A().Href(postHref).Text("post").Class("max").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("add")),
 			),
 
-			app.A().Href(pollsHref).Text("polls").Class("max").Title("polls").Aria("label", "polls").Body(
+			app.A().Href(pollsHref).Text("polls").Class("max").Title("polls [4]").Aria("label", "polls").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("equalizer")),
 			),
 
-			app.A().Href(flowHref).Text("flow").Class("max").Title("flow").Aria("label", "flow").Body(
+			app.A().Href(flowHref).Text("flow").Class("max").Title("flow [5]").Aria("label", "flow").Body(
 				app.I().Class("large deep-orange-text").Body(
 					app.Text("tsunami")),
 			),

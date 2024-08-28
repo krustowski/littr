@@ -1178,7 +1178,7 @@ func (c *flowContent) Render() app.UI {
 			),
 
 			app.Div().Class("small-padding").Body(
-				app.Button().Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+				app.Button().Title("refresh flow [r]").Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 					app.If(c.refreshClicked,
 						app.Progress().Class("circle deep-orange-border small"),
 					),
