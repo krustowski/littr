@@ -22,8 +22,6 @@ type FlowPage struct {
 type flowContent struct {
 	app.Compo
 
-	eventListener func()
-
 	loaderShow      bool
 	loaderShowImage bool
 
@@ -32,8 +30,6 @@ type flowContent struct {
 	loggedUser string
 	user       models.User
 	key        string
-
-	escapePressed bool
 
 	toastShow bool
 	toastText string
@@ -73,6 +69,7 @@ type flowContent struct {
 
 	hashtag string
 
+	eventListener        func()
 	eventListenerMsg     func()
 	keyDownEventListener func()
 	dismissEventListener func()
@@ -201,19 +198,12 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) handleDismiss(ctx app.Context, a app.Action) {
-	// generic snackbar (via navbars)
-	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() {
-		snack.Get("classList").Call("remove", "active")
-	}
-
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
-		if c.toastText == "" || c.escapePressed {
+		if c.toastText == "" {
 			c.modalReplyActive = false
 		}
 
-		c.escapePressed = false
 		c.toastShow = false
 		c.toastText = ""
 		c.toastType = ""
@@ -476,14 +466,29 @@ func (c *flowContent) onClickGeneric(ctx app.Context, e app.Event) {
 }
 
 func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
-	/*if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
-		c.escapePressed = true
+	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
-		//c.onClickDismiss(ctx, e)
 		return
-	}*/
+	}
 
 	textarea := app.Window().GetElementByID("reply-textarea")
+
+	if e.Get("key").String() == "r" && textarea.IsNull() && !c.refreshClicked {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.loaderShow = true
+			c.loaderShowImage = true
+			c.contentLoadFinished = false
+			c.refreshClicked = true
+			c.postButtonsDisabled = true
+			//c.pageNoToFetch = 0
+
+			c.posts = nil
+			c.users = nil
+		})
+
+		ctx.NewAction("refresh")
+		return
+	}
 
 	if textarea.IsNull() {
 		return
@@ -724,6 +729,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
 	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("refresh", c.handleRefresh)
 	//ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
@@ -764,19 +770,7 @@ func (c *flowContent) OnDismount() {
 	//c.eventListener()
 }
 
-func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.loaderShow = true
-		c.loaderShowImage = true
-		c.contentLoadFinished = false
-		c.refreshClicked = true
-		c.postButtonsDisabled = true
-		//c.pageNoToFetch = 0
-
-		c.posts = nil
-		c.users = nil
-	})
-
+func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 	// little hack to dismiss navbar's snackbar
 	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
@@ -823,6 +817,23 @@ func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
 			c.toastShow = false
 		})
 	})
+}
+
+func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+		c.contentLoadFinished = false
+		c.refreshClicked = true
+		c.postButtonsDisabled = true
+		//c.pageNoToFetch = 0
+
+		c.posts = nil
+		c.users = nil
+	})
+
+	ctx.NewAction("dismiss")
+	ctx.NewAction("refresh")
 }
 
 type pageOptions struct {
