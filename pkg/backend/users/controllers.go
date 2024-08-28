@@ -110,7 +110,14 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 			user.Email = ""
 			user.FlowList = nil
 			user.ShadeList = nil
-			user.RequestList = nil
+
+			// return the caller's status in counterpart account's req. list only
+			if value, found := user.RequestList[caller]; found {
+				user.RequestList = make(map[string]bool)
+				user.RequestList[caller] = value
+			} else {
+				user.RequestList = nil
+			}
 		}
 
 		users[key] = user
@@ -1145,10 +1152,21 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	nick := chi.URLParam(r, "nickname")
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	var caller models.User
+	var found bool
+
+	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
+		resp.Message = "caller not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 
 	var user models.User
-	var found bool
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
 		resp.Message = "user not found"
@@ -1159,13 +1177,14 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// toggle the status
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
-	user.RequestList[caller] = true
 
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
+	// toggle the status for the user
+	user.RequestList[caller.Nickname] = true
+
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		resp.Message = "backend error: cannot update the user"
 		resp.Code = http.StatusInternalServerError
 
@@ -1174,7 +1193,7 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Message = "ok, request addeed to the reqeust list"
+	resp.Message = "ok, request addeed to the reqeust list(s)"
 	resp.Code = http.StatusOK
 
 	l.Println(resp.Message, resp.Code)
@@ -1199,10 +1218,21 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	nick := chi.URLParam(r, "nickname")
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	var caller models.User
+	var found bool
+
+	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
+		resp.Message = "caller not found"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
 
 	var user models.User
-	var found bool
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
 		resp.Message = "user not found"
@@ -1213,11 +1243,12 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// toggle the status
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
-	user.RequestList[caller] = false
+
+	// toggle the status
+	user.RequestList[caller.Nickname] = false
 
 	if saved := db.SetOne(db.UserCache, nick, user); !saved {
 		resp.Message = "backend error: cannot update the user"
