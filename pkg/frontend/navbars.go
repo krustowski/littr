@@ -422,9 +422,13 @@ func (h *header) Render() app.UI {
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
-			app.A().Href(settingsHref).Text("settings").Class("max").Title("settings [6]").Aria("label", "settings").Body(
-				app.I().Class("large").Class("deep-orange-text").Body(
-					app.Text("build")),
+			app.If(h.authGranted,
+				app.A().Href(settingsHref).Text("settings").Class("max").Title("settings [6]").Aria("label", "settings").Body(
+					app.I().Class("large").Class("deep-orange-text").Body(
+						app.Text("build")),
+				),
+			).Else(
+				app.Div().Class("max"),
 			),
 
 			// show intallation button if available
@@ -436,7 +440,7 @@ func (h *header) Render() app.UI {
 				),
 			// hotfix to keep the nav items' distances
 			).Else(
-				app.A().Class("max").OnClick(nil),
+				app.Div().Class("max"),
 			),
 
 			// app logout modal
@@ -592,6 +596,8 @@ func (f *footer) Render() app.UI {
 		postHref = "#"
 		pollsHref = "#"
 		flowHref = "#"
+
+		return app.Div()
 	}
 
 	return app.Nav().ID("nav-top").Class("bottom fixed-top center-align").Style("opacity", "1.0").
