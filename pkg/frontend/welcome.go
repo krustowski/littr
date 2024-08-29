@@ -50,10 +50,12 @@ func (c *welcomeContent) Render() app.UI {
 				),
 			),
 		),
+		app.Div().Class("space"),
 
 		app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent center-align").Body(
-			app.Img().Class("no-padding absolute center middle lazy").Src("https://krusty.space/littr_flow_new_post_live_v0.30.17.jpg").Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+			app.Img().Class("absolute center middle lazy").Src("https://krusty.space/littr_flow_new_post_live_v0.30.17.jpg").Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 		),
+		app.Div().Class("space"),
 
 		app.Article().Class("row large-padding").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
