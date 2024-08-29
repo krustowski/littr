@@ -190,6 +190,22 @@ func RunMigrations() bool {
 		users[key] = user
 	}
 
+	// migrateSystemFlowOn function ensures everyone has system account in the flow
+	for key, user := range users {
+		if user.FlowList == nil {
+			user.FlowList = make(map[string]bool)
+			user.FlowList[user.Nickname] = true
+		}
+
+		user.FlowList["system"] = true
+
+		if ok := SetOne(UserCache, key, user); !ok {
+			l.Println("migrateSystemFlowOn: cannot save an user: "+key, http.StatusInternalServerError)
+			return false
+		}
+		users[key] = user
+	}
+
 	l.Println("migrations done", code)
 	return true
 }

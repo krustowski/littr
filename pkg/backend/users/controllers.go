@@ -447,7 +447,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
-	//callerID, _ := r.Context().Value("nickname").(string)
+	callerID, _ := r.Context().Value("nickname").(string)
 	nick := chi.URLParam(r, "nickname")
 
 	user, found := db.GetOne(db.UserCache, nick, models.User{})
@@ -476,12 +476,11 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if lists.FlowList != nil {
-		for key, value := range lists.FlowList {
-			if user.FlowList == nil {
-				user.FlowList = make(map[string]bool)
-				user.FlowList["system"] = true
-			}
+		if user.FlowList == nil {
+			user.FlowList = make(map[string]bool)
+		}
 
+		for key, value := range lists.FlowList {
 			// do not allow to unfollow oneself
 			if key == user.Nickname {
 				user.FlowList[key] = true
@@ -496,7 +495,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 
 			// check if the user is shaded by the counterpart
 			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
-				if counterpart.Private {
+				if counterpart.Private && key != callerID {
 					// cannot add this user to one's flow, as the following has to be requested and allowed by the counterpart
 					continue
 				}
@@ -507,22 +506,24 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	user.FlowList["system"] = true
 
 	if lists.RequestList != nil {
-		for key, value := range lists.RequestList {
-			if user.RequestList == nil {
-				user.RequestList = make(map[string]bool)
-			}
+		if user.RequestList == nil {
+			user.RequestList = make(map[string]bool)
+		}
 
+		for key, value := range lists.RequestList {
 			user.RequestList[key] = value
 		}
 	}
 
 	if lists.ShadeList != nil {
+		if user.ShadeList == nil {
+			user.ShadeList = make(map[string]bool)
+		}
+
 		for key, value := range lists.ShadeList {
-			if user.ShadeList == nil {
-				user.ShadeList = make(map[string]bool)
-			}
 			user.ShadeList[key] = value
 		}
 	}

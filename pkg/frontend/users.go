@@ -199,6 +199,8 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		flowList[key] = true
 	}
 
+	flowList["system"] = true
+
 	ctx.Async(func() {
 		toastText := ""
 
@@ -530,52 +532,64 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 	}
 
 	toastText := ""
+	toastType := "error"
 
 	ctx.Async(func() {
-		toastType := "error"
+		user := c.user
 
-		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname+"/request", nil, c.user.Nickname, 0); !ok {
-			toastText = "problem calling the backend"
-		} else {
-			//toastText = "requested to see"
-			//toastType = "success"
-
-			if c.user.RequestList == nil {
-				c.user.RequestList = make(map[string]bool)
-			}
-			//c.user.RequestList[nick] = false
-			delete(c.user.RequestList, nick)
+		if user.RequestList == nil {
+			user.RequestList = make(map[string]bool)
 		}
 
-		// prepare the lists for us and the counterpart
+		user.RequestList[nick] = false
+
+		payload := struct {
+			RequestList map[string]bool `json:"request_list"`
+		}{
+			RequestList: user.RequestList,
+		}
+
+		// delete the request from one's requestList
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
+			toastText = "problem calling the backend"
+			toastType = "error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.toastType = toastType
+				c.usersButtonDisabled = false
+			})
+			return
+		} else {
+			toastText = "requested removed"
+			toastType = "success"
+		}
+
+		// prepare the lists for the counterpart
 		fellowFlowList := make(map[string]bool)
 		fellowFlowList[nick] = true
 		fellowFlowList[c.user.Nickname] = true
 
-		ourFlowList := c.user.FlowList
-		ourFlowList[nick] = true
+		//ourFlowList := c.user.FlowList
+		//ourFlowList[nick] = true
 
-		payload := struct {
+		payload2 := struct {
 			FlowList map[string]bool `json:"flow_list"`
 		}{
 			FlowList: fellowFlowList,
 		}
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+nick+"/lists", payload, c.user.Nickname, 0); !ok {
+		if _, ok := litterAPI("PATCH", "/api/v1/users/"+nick+"/lists", payload2, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
-		} else {
-			toastText = "user updated, request removed"
-			toastType = "success"
-		}
 
-		payload = struct {
-			FlowList map[string]bool `json:"flow_list"`
-		}{
-			FlowList: ourFlowList,
-		}
-
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
-			toastText = "problem calling the backend"
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.toastType = toastType
+				c.usersButtonDisabled = false
+			})
+			return
 		} else {
 			toastText = "user updated, request removed"
 			toastType = "success"
@@ -587,7 +601,7 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 			c.toastType = toastType
 			c.usersButtonDisabled = false
 
-			c.user.FlowList = ourFlowList
+			//c.user.FlowList = ourFlowList
 			//c.users[c.user.Nickname] = payload
 		})
 		return
@@ -607,18 +621,11 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 		user := c.user
 		toastType := "error"
 
-		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname+"/request", nil, c.user.Nickname, 0); !ok {
-			toastText = "problem calling the backend"
-		} else {
-			toastText = "requested removed"
-			toastType = "success"
-
-			if user.RequestList == nil {
-				user.RequestList = make(map[string]bool)
-			}
-			user.RequestList[nick] = false
-			delete(user.RequestList, nick)
+		if user.RequestList == nil {
+			user.RequestList = make(map[string]bool)
 		}
+
+		user.RequestList[nick] = false
 
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
@@ -626,17 +633,13 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 			RequestList: user.RequestList,
 		}
 
+		// delete the request from one's requestList
 		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
+			toastType = "error"
 		} else {
-			toastText = "user updated, request removed"
+			toastText = "requested removed"
 			toastType = "success"
-
-			/*if user.RequestList == nil {
-				user.RequestList = make(map[string]bool)
-			}*/
-			//user.RequestList[nick] = false
-			//delete(user.RequestList, nick)
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
@@ -645,6 +648,7 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 			c.toastType = toastType
 			c.usersButtonDisabled = false
 
+			c.user = user
 			c.users[c.user.Nickname] = user
 		})
 		return
