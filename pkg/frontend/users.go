@@ -181,7 +181,8 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		return
 	}
 
-	flowList := c.user.FlowList
+	user := c.user
+	flowList := user.FlowList
 
 	if c.user.ShadeList[key] {
 		return
@@ -189,12 +190,12 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 
 	if flowList == nil {
 		flowList = make(map[string]bool)
-		flowList[c.user.Nickname] = true
+		flowList[user.Nickname] = true
 		//c.user.FlowList = flowList
 	}
 
-	if _, found := flowList[key]; found {
-		flowList[key] = !flowList[key]
+	if value, found := flowList[key]; found {
+		flowList[key] = !value
 	} else {
 		flowList[key] = true
 	}
@@ -213,9 +214,15 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 			FlowList: flowList,
 		}
 
-		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
+		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+user.Nickname+"/lists", payload, user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.usersButtonDisabled = false
+			})
 			return
 		}
 
@@ -226,30 +233,45 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 
 		if err := json.Unmarshal(*respRaw, &response); err != nil {
 			toastText = "user update failed: " + err.Error()
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.usersButtonDisabled = false
+			})
 			return
 		}
 
 		if response.Code != 200 && response.Code != 201 {
 			toastText = "user update failed: " + response.Message
 			log.Println(response.Message)
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.usersButtonDisabled = false
+			})
 			return
 		}
 
-		var stream []byte
-		if err := reload(c.user, &stream); err != nil {
+		user.FlowList = flowList
+
+		/*var stream []byte
+		if err := reload(user, &stream); err != nil {
 			toastText = "local storage reload failed: " + err.Error()
 			return
-		}
+		}*/
 
 		ctx.Dispatch(func(ctx app.Context) {
-			ctx.LocalStorage().Set("user", stream)
+			ctx.LocalStorage().Set("user", user)
 
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 			c.usersButtonDisabled = false
 
+			c.users[user.Nickname] = user
+			c.user = user
 			c.user.FlowList = flowList
-			log.Println("dispatch ends")
 		})
 	})
 }
@@ -920,33 +942,29 @@ func (c *usersContent) Render() app.UI {
 
 					var inFlow bool = false
 					var shaded bool = false
+					var requested bool = false
+					var found bool
 
-					for key, val := range c.user.FlowList {
-						if user.Nickname == key {
-							inFlow = val
-							break
+					if c.user.FlowList != nil {
+						if inFlow, found = c.user.FlowList[user.Nickname]; found && inFlow {
+							inFlow = true
 						}
 					}
 
-					for key, val := range c.user.ShadeList {
-						if user.Nickname == key {
-							shaded = val
-							break
+					if c.user.ShadeList != nil {
+						if shaded, found = c.user.ShadeList[user.Nickname]; found && shaded {
+							shaded = true
+						}
+					}
+
+					if user.RequestList != nil {
+						if requested, found = user.RequestList[c.user.Nickname]; !found {
+							requested = false
 						}
 					}
 
 					if !user.Searched || user.Nickname == "system" {
 						return nil
-					}
-
-					var requested bool = false
-					var found bool
-
-					if user.RequestList != nil {
-						requested, found = user.RequestList[c.user.Nickname]
-						if !found {
-							requested = false
-						}
 					}
 
 					return app.Tr().Body(

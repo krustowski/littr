@@ -487,10 +487,8 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// remove from the flow list if already followed
-			if followed, found := user.FlowList[key]; found && followed {
-				user.FlowList[key] = false
-				continue
+			if _, found := user.FlowList[key]; found {
+				user.FlowList[key] = value
 			}
 
 			// check if the user is shaded by the counterpart
