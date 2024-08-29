@@ -52,11 +52,6 @@ func (c *welcomeContent) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent center-align").Body(
-			app.Img().Class("absolute center middle lazy").Src("https://krusty.space/littr_flow_new_post_live_v0.30.17.jpg").Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
-		),
-		app.Div().Class("space"),
-
 		app.Article().Class("row large-padding").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
@@ -66,7 +61,7 @@ func (c *welcomeContent) Render() app.UI {
 
 				app.Span().Text("the very main page of this platform is called"),
 				app.Span().Class("deep-orange-text").Text(" flow "),
-				app.Span().Text("(shown above); this page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow"),
+				app.Span().Text("(shown below); this page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow"),
 				app.Div().Class("small-space"),
 
 				app.Span().Text("to navigate to the login page (where the link to registration sits as well) use the icon/button in the upper right corner: "),
@@ -74,6 +69,10 @@ func (c *welcomeContent) Render() app.UI {
 					app.Text("login"),
 				),
 			),
+		),
+
+		app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent center-align").Body(
+			app.Img().Class("absolute margin-top center middle lazy").Src("https://krusty.space/littr_flow_new_post_live_v0.30.17.jpg").Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 		),
 
 		app.Div().Class("medium-space"),
