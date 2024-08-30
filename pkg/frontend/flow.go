@@ -1171,6 +1171,8 @@ func (c *flowContent) Render() app.UI {
 					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
 					app.H5().Text("single post and replies"),
+				).ElseIf(c.hashtag != "",
+					app.H5().Text("hashtag"),
 				).Else(
 					app.H5().Text("flow"),
 					//app.P().Text("exclusive content incoming frfr"),
