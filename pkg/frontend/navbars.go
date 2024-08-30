@@ -473,7 +473,7 @@ func (h *header) Render() app.UI {
 						app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
 							app.Span().Class("col").Body(
 								app.Sup().Body(
-									app.Text(" (beta) "),
+									app.Text(" (dev) "),
 								),
 							),
 						),
@@ -508,7 +508,7 @@ func (h *header) Render() app.UI {
 								app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
 									app.Span().Class("col").Body(
 										app.Sup().Body(
-											app.Text(" (beta) "),
+											app.Text(" (dev) "),
 										),
 									),
 								),

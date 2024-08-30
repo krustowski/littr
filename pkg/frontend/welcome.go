@@ -70,10 +70,11 @@ func (c *welcomeContent) Render() app.UI {
 					app.Span().Class("bold").Text("login "),
 					app.Span().Text("page (where the link to "),
 					app.Span().Class("bold").Text("registration "),
-					app.Span().Text("sits as well) use the icon/button in the upper right corner: "),
+					app.Span().Text("sits as well) use the "),
 					app.I().Class("small").Class("deep-orange-text").Body(
 						app.Text("login"),
 					),
+					app.Span().Text(" button in the upper right corner"),
 				),
 			),
 		),
