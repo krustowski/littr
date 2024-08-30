@@ -55,17 +55,23 @@ func (c *welcomeContent) Render() app.UI {
 			app.Div().Class("row no-margin  large-padding").Body(
 				//app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
-					app.Span().Class("deep-orange-text").Text("welcome to littr! "),
+					app.Span().Class("deep-orange-text").Text("welcome to "),
+					app.Span().Class("deep-orange-text bold").Text("littr"),
+					app.Span().Class("deep-orange-text").Text("! "),
 					app.Span().Text("this site acts as a simple platform for anyone who likes to post short notes, messages, daydreaming ideas and more! you can use it as a personal journal charting your journey through life that can be shared with other accounts"),
 					app.Div().Class("small-space"),
 
 					app.Span().Text("the very main page of this platform is called"),
-					app.Span().Class("deep-orange-text").Text(" flow "),
+					app.Span().Class("deep-orange-text bold").Text(" flow "),
 					app.Span().Text("(shown below); this page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow"),
 					app.Div().Class("small-space"),
 
-					app.Span().Text("to navigate to the login page (where the link to registration sits as well) use the icon/button in the upper right corner: "),
-					app.I().Class("large").Class("deep-orange-text").Body(
+					app.Span().Text("to navigate to the "),
+					app.Span().Class("bold").Text("login "),
+					app.Span().Text("page (where the link to "),
+					app.Span().Class("bold").Text("registration "),
+					app.Span().Text("sits as well) use the icon/button in the upper right corner: "),
+					app.I().Class("small").Class("deep-orange-text").Body(
 						app.Text("login"),
 					),
 				),
