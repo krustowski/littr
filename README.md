@@ -1,6 +1,6 @@
 ![](/web/android-chrome-192x192.png)
 
-# littr (formerly littr-go)
+# littr (formerly litter-go)
 
 [![Go Reference](https://pkg.go.dev/badge/go.vxn.dev/littr.svg)](https://pkg.go.dev/go.vxn.dev/littr)
 [![Go Report Card](https://goreportcard.com/badge/go.vxn.dev/littr)](https://goreportcard.com/report/go.vxn.dev/littr)
