@@ -1171,7 +1171,9 @@ func (c *flowContent) Render() app.UI {
 					),
 				).ElseIf(c.singlePostID != "" && c.isPost,
 					app.H5().Text("single post and replies"),
-				).ElseIf(c.hashtag != "",
+				).ElseIf(c.hashtag != "" && len(c.hashtag) < 20,
+					app.H5().Text("hashtag #"+c.hashtag),
+				).ElseIf(c.hashtag != "" && len(c.hashtag) >= 20,
 					app.H5().Text("hashtag"),
 				).Else(
 					app.H5().Text("flow"),
@@ -1463,9 +1465,9 @@ func (c *flowContent) Render() app.UI {
 
 								// post header (author avatar + name + link button)
 								app.Div().Class("row top-padding").Body(
-									app.Img().Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+									app.Img().Title("user's avatar").Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().Class("max").Body(
-										app.A().Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+										app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
 										//app.B().Text(post.Nickname).Class("deep-orange-text"),
 									),
 								),
@@ -1496,7 +1498,7 @@ func (c *flowContent) Render() app.UI {
 													app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 												),
 
-												app.Button().ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+												app.Button().Title("link to original post").ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
 													app.I().Text("history"),
 												),
 											),
@@ -1537,22 +1539,22 @@ func (c *flowContent) Render() app.UI {
 									),
 									app.If(post.Nickname != "system",
 										//app.B().Text(post.ReplyCount).Class("left-padding"),
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
+										app.Button().Title("reply").ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 											app.I().Text("reply"),
 										),
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+										app.Button().ID(key).Title("link to this post (to clipboard)").Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
 											app.I().Text("link"),
 										),
 									),
 									app.If(c.user.Nickname == post.Nickname,
-										app.B().Text(post.ReactionCount).Class("left-padding"),
+										app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
 										//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
+										app.Button().Title("delete this post").ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
 											app.I().Text("delete"),
 										),
 									).Else(
-										app.B().Text(post.ReactionCount).Class("left-padding"),
-										app.Button().ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
+										app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
+										app.Button().Title("increase the reaction count").ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
 											//app.I().Text("ac_unit"),
 											app.I().Text("bomb"),
 										),

@@ -481,7 +481,7 @@ func (c *pollsContent) Render() app.UI {
 						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
 							app.Div().Class("row top-padding").Body(
 								app.P().Body(
-									app.Text("Q: "),
+									app.Span().Title("question").Text("Q: "),
 									app.Span().Text(poll.Question).Class("deep-orange-text space bold"),
 								),
 							),
@@ -546,13 +546,13 @@ func (c *pollsContent) Render() app.UI {
 									app.Text(pollTimestamp),
 								),
 								app.If(poll.Author == c.user.Nickname,
-									app.B().Text(len(poll.Voted)),
-									app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Body(
+									app.B().Title("vote count").Text(len(poll.Voted)),
+									app.Button().Title("delete this poll").ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Body(
 										app.I().Text("delete"),
 									),
 								).Else(
-									app.B().Text(len(poll.Voted)),
-									app.Button().ID(key).Class("transparent circle").Disabled(true).Body(
+									app.B().Title("vote count").Text(len(poll.Voted)),
+									app.Button().Title("just voting allowed").ID(key).Class("transparent circle").Disabled(true).Body(
 										app.I().Text("how_to_vote"),
 									),
 								),

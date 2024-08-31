@@ -995,7 +995,7 @@ func (c *usersContent) Render() app.UI {
 
 								// user's stats --- post count
 								app.B().Title("post count").Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
-								app.Span().Title().Title("post count (link to their flow)").Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
+								app.Span().Title("post count (link to their flow)").Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
 									app.I().Text("news"),
 								),
 

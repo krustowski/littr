@@ -467,7 +467,7 @@ func (h *header) Render() app.UI {
 
 			// littr header
 			app.Div().Class("max row center-align").Body(
-				app.H4().Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
+				app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 					app.Span().Body(
 						app.Text(headerString),
 						app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
