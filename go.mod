@@ -1,4 +1,4 @@
-module go.savla.dev/littr
+module go.vxn.dev/littr
 
 go 1.22
 
@@ -7,10 +7,11 @@ require (
 	github.com/alexandrevicenzi/go-sse v1.6.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/uuid v1.6.0
 	github.com/maxence-charriere/go-app/v9 v9.8.0
 	github.com/prplecake/go-thumbnail v0.1.6
 	github.com/wneessen/go-mail v0.4.2
-	go.savla.dev/swis/v5 v5.16.4
+	go.vxn.dev/swis/v5 v5.17.6
 )
 
 require (
@@ -25,7 +26,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.22.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
