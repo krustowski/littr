@@ -223,26 +223,26 @@ func (c *statsContent) Render() app.UI {
 			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
 		),
 
-		app.Table().Class("border left-align").ID("table-stats-flow").Body(
+		app.Table().Class("border right-align").ID("table-stats-flow").Body(
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Class("align-left").Body(
+					app.Th().Class("left-align").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("nickname"),
 					),
-					app.Th().Class("align-left").Body(
+					app.Th().Class("right-align no-padding").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("posts"),
 					),
-					app.Th().Class("align-left").Body(
+					app.Th().Class("right-align no-padding").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("stars"),
 					),
-					app.Th().Class("align-left").Body(
+					app.Th().Class("right-align no-padding").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("flowers"),
 					),
-					app.Th().Class("align-left").Body(
+					app.Th().Class("right-align no-padding").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("shades"),
 					),
-					app.Th().Class("align-left").Body(
+					app.Th().Class("right-align no-padding").Body(
 						app.Span().Style("writing-mode", "vertical-lr").Text("ratio"),
 					),
 				),
@@ -280,7 +280,7 @@ func (c *statsContent) Render() app.UI {
 					}
 
 					return app.Tr().Body(
-						app.Td().Class("align-left").Body(
+						app.Td().Class("left-align").Body(
 							app.P().Body(
 								app.P().Body(
 									//app.B().Text(key).Class("deep-orange-text"),
@@ -289,27 +289,27 @@ func (c *statsContent) Render() app.UI {
 								),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(users[key].PostCount), 10)),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(users[key].ReactionCount), 10)),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(users[key].FlowerCount), 10)),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(users[key].ShadeCount), 10)),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatFloat(ratio, 'f', 2, 64)),
 							),
@@ -340,22 +340,22 @@ func (c *statsContent) Render() app.UI {
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
-					app.Th().Class("align-left").Text("property"),
-					app.Th().Class("align-left").Text("value"),
+					app.Th().Class("left align").Text("property"),
+					app.Th().Class("right-align").Text("value"),
 				),
 			),
 			// table body
 			app.TBody().Body(
 				app.Range(flowStats).Map(func(key string) app.UI {
 					return app.Tr().Body(
-						app.Td().Class("align-left").Body(
+						app.Td().Class("left-align").Body(
 							app.P().Body(
 								app.P().Body(
 									app.B().Text(key).Class("deep-orange-text"),
 								),
 							),
 						),
-						app.Td().Class("align-left").Body(
+						app.Td().Class("right-align").Body(
 							app.P().Body(
 								app.Text(strconv.FormatInt(int64(flowStats[key]), 10)),
 							),
