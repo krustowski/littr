@@ -987,15 +987,15 @@ func (c *usersContent) Render() app.UI {
 								),
 
 								// user's stats --- flower count
-								app.B().Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
-								app.Span().Class("bold").Body(
+								app.B().Title("flower count").Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
+								app.Span().Title("flower count").Class("bold").Body(
 									//app.I().Text("filter_vintage"),
 									app.I().Text("group"),
 								),
 
 								// user's stats --- post count
-								app.B().Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
-								app.Span().Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
+								app.B().Title("post count").Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
+								app.Span().Title().Title("post count (link to their flow)").Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
 									app.I().Text("news"),
 								),
 
@@ -1069,15 +1069,15 @@ func (c *usersContent) Render() app.UI {
 
 								// shading button
 								app.If(shaded,
-									app.Button().Class("no-padding transparent circular gray white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
+									app.Button().Class("no-padding transparent circular gray white-text border").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Title("unshade").Body(
 										app.I().Text("block"),
 									),
 								).ElseIf(user.Nickname == c.user.Nickname,
-									app.Button().Class("no-padding transparent circular grey white-text").OnClick(nil).Disabled(true).ID(user.Nickname).Style("border-radius", "8px").Body(
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(nil).Disabled(true).ID(user.Nickname).Style("border-radius", "8px").Title("shading not allowed").Body(
 										app.I().Text("block"),
 									),
 								).Else(
-									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Body(
+									app.Button().Class("no-padding transparent circular grey white-text").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Style("border-radius", "8px").Title("shade").Body(
 										app.I().Text("block"),
 									),
 								),
