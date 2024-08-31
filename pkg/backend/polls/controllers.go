@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/posts"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 
 	sse "github.com/alexandrevicenzi/go-sse"
 )

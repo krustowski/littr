@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 #
-# litter-go / Dockerfile
+# littr / Dockerfile
 #
  
 
@@ -10,7 +10,7 @@
 
 # https://hub.docker.com/_/golang
 ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine3.20 AS litter-build
+FROM golang:${GOLANG_VERSION}-alpine3.20 AS littr-build
 
 ARG APP_NAME APP_PEPPER APP_VERSION API_TOKEN VAPID_PUB_KEY
 
@@ -55,7 +55,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 # stage 1 -- release
 #
 
-FROM alpine:3.20 AS litter-release
+FROM alpine:3.20 AS littr-release
 
 ARG APP_FLAGS APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
 
@@ -73,8 +73,8 @@ COPY web/ /opt/web/
 COPY --chown=1000:1000 --chmod=700 test/data/ /opt/data/
 COPY --chown=1000:1000 --chmod=700 test/data/.gitkeep /opt/pix/
 
-COPY --from=litter-build /go/src/litter-go/littr /opt/littr
-COPY --from=litter-build /go/src/litter-go/web/app.wasm /opt/web/app.wasm
+COPY --from=littr-build /go/src/littr/littr /opt/littr
+COPY --from=littr-build /go/src/littr/web/app.wasm /opt/web/app.wasm
 
 # workaround for pix
 RUN cd /opt/web && ln -s ../pix .

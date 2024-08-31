@@ -3,7 +3,7 @@ package auth
 // https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
 
 import (
-	//"go.savla.dev/littr/pkg/models"
+	//"go.vxn.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
 )

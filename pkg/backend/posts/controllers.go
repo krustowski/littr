@@ -13,10 +13,10 @@ import (
 	chi "github.com/go-chi/chi/v5"
 	app "github.com/maxence-charriere/go-app/v9/pkg/app"
 
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/push"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/push"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 const (

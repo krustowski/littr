@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -110,7 +110,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); ok {
+		if data, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 
@@ -197,7 +197,7 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.AboutText = aboutText
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -271,7 +271,7 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.WebsiteLink = website
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -320,7 +320,7 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 	}
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
@@ -439,7 +439,7 @@ func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 	}
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
@@ -531,7 +531,7 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 	deviceSub := c.thisDevice
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("PUT", "/api/v1/push/subscription/"+ctx.DeviceID()+"/"+tag, deviceSub, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PUT", "/api/v1/push/subscription/"+ctx.DeviceID()+"/"+tag, deviceSub, c.user.Nickname, 0); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to update the subscription, try again later"
 				c.toastShow = c.toastText != ""
@@ -653,7 +653,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		// send the registration to backend
-		if _, ok := litterAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
 			toastText := "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -707,7 +707,7 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.LocalTimeMode = !localTime
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -744,7 +744,7 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.Private = !c.user.Private
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -779,7 +779,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 
-		if _, ok := litterAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -825,7 +825,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 			}*/
 
 			// add new post/poll to backend struct
-			/*if _, ok := litterAPI("POST", path, payload, user.Nickname, 0); !ok {
+			/*if _, ok := littrAPI("POST", path, payload, user.Nickname, 0); !ok {
 				toastText = "backend error: cannot add new content"
 				log.Println("cannot post new content to API!")
 			} else {
@@ -844,7 +844,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				Key string
 			}{}
 
-			if raw, ok := litterAPI("POST", path, payload, c.user.Nickname, 0); ok {
+			if raw, ok := littrAPI("POST", path, payload, c.user.Nickname, 0); ok {
 				if err := json.Unmarshal(*raw, &resp); err != nil {
 					toastText = "JSON parse error: " + err.Error()
 					ctx.Dispatch(func(ctx app.Context) {

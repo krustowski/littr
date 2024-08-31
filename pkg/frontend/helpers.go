@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -25,7 +25,7 @@ var (
 	vapidPublicKey string
 )
 
-func litterAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
+func littrAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
 	var err error

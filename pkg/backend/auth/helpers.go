@@ -3,8 +3,8 @@ package auth
 import (
 	"time"
 
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 func noteUsersActivity(caller string) bool {

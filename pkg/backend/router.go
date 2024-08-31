@@ -1,5 +1,5 @@
-// @title		litter-go
-// @version	 	0.39.11
+// @title		littr
+// @version	 	0.39.12
 // @description		nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://littr.eu/tos
 
@@ -8,7 +8,7 @@
 // @contact.email	info@littr.eu
 
 // @license.name	MIT
-// @license.url		https://github.com/krustowski/litter-go/blob/master/LICENSE
+// @license.url		https://github.com/krustowski/littr/blob/master/LICENSE
 
 // @host		littr.eu
 // @BasePath		/api/v1
@@ -27,19 +27,19 @@ import (
 
 	chi "github.com/go-chi/chi/v5"
 
-	"go.savla.dev/littr/pkg/backend/auth"
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/polls"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/backend/push"
-	"go.savla.dev/littr/pkg/backend/stats"
-	"go.savla.dev/littr/pkg/backend/users"
+	"go.vxn.dev/littr/pkg/backend/auth"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/polls"
+	"go.vxn.dev/littr/pkg/backend/posts"
+	"go.vxn.dev/littr/pkg/backend/push"
+	"go.vxn.dev/littr/pkg/backend/stats"
+	"go.vxn.dev/littr/pkg/backend/users"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{
-		Message: "litter-go API service (v" + os.Getenv("APP_VERSION") + ")",
+		Message: "littr API service (v" + os.Getenv("APP_VERSION") + ")",
 		Code:    http.StatusOK,
 	}
 	resp.Write(w)

@@ -13,12 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	be "go.savla.dev/littr/pkg/backend"
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/posts"
-	fe "go.savla.dev/littr/pkg/frontend"
-	"go.savla.dev/swis/v5/pkg/core"
+	be "go.vxn.dev/littr/pkg/backend"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/posts"
+	fe "go.vxn.dev/littr/pkg/frontend"
+	"go.vxn.dev/swis/v5/pkg/core"
 
 	sse "github.com/alexandrevicenzi/go-sse"
 	"github.com/go-chi/chi/v5"
@@ -135,7 +135,7 @@ func initServer() {
 	r.Mount("/api/v1", be.APIRouter())
 
 	appHandler := &app.Handler{
-		Name:         "litter-go",
+		Name:         "littr",
 		ShortName:    "littr",
 		Title:        "littr",
 		Description:  "A simple nanoblogging platform",
@@ -148,7 +148,9 @@ func initServer() {
 			"nanoblog",
 			"microblogging",
 			"microblog",
+			"platform",
 			"blogging",
+			"board",
 			"blog",
 			"social network",
 		},
@@ -173,25 +175,25 @@ func initServer() {
 			"VAPID_PUB_KEY":        os.Getenv("VAPID_PUB_KEY"),
 		},
 		Preconnect: []string{
-			//"https://cdn.savla.dev/",
+			//"https://cdn.vxn.dev/",
 		},
 		Fonts: []string{
-			"https://cdn.savla.dev/css/material-symbols-outlined.woff2",
+			"https://cdn.vxn.dev/css/material-symbols-outlined.woff2",
 			//"https://cdn.jsdelivr.net/npm/beercss@3.5.0/dist/cdn/material-symbols-outlined.woff2",
 		},
 		Styles: []string{
-			"https://cdn.savla.dev/css/beercss.min.css",
-			"https://cdn.savla.dev/css/sortable.min.css",
-			"/web/litter.css",
+			"https://cdn.vxn.dev/css/beercss.min.css",
+			"https://cdn.vxn.dev/css/sortable.min.css",
+			"/web/littr.css",
 		},
 		Scripts: []string{
-			"https://cdn.savla.dev/js/jquery.min.js",
-			"https://cdn.savla.dev/js/beer.nomodule.min.js",
-			"https://cdn.savla.dev/js/material-dynamic-colors.nomodule.min.js",
-			"https://cdn.savla.dev/js/sortable.min.js",
-			"/web/litter.js",
-			//"https://cdn.savla.dev/js/litter.js",
-			"https://cdn.savla.dev/js/eventsource.min.js",
+			"https://cdn.vxn.dev/js/jquery.min.js",
+			"https://cdn.vxn.dev/js/beer.nomodule.min.js",
+			"https://cdn.vxn.dev/js/material-dynamic-colors.nomodule.min.js",
+			"https://cdn.vxn.dev/js/sortable.min.js",
+			"/web/littr.js",
+			//"https://cdn.vxn.dev/js/littr.js",
+			"https://cdn.vxn.dev/js/eventsource.min.js",
 		},
 		ServiceWorkerTemplate: swTemplateString,
 	}

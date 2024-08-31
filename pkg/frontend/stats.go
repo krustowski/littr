@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -147,7 +147,7 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}{}
 
 		// fetch the stats
-		if byteData, _ := litterAPI("GET", "/api/v1/stats", nil, "", 0); byteData != nil {
+		if byteData, _ := littrAPI("GET", "/api/v1/stats", nil, "", 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &payload)
 			if err != nil {
 				log.Println(err.Error())
@@ -332,7 +332,6 @@ func (c *statsContent) Render() app.UI {
 			),
 		),
 		//app.P().Body(
-		//app.A().Class("deep-orange-text bold").Href("https://umami.gscloud.cz/share/NAA3vF0M8uBpeARj/LITTER").Text("web analytics (external link)"),
 		//),
 		app.Div().Class("space"),
 

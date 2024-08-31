@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -92,7 +92,7 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 			Key   string                 `json:"key"`
 		}{}
 
-		if byteData, _ := litterAPI("GET", "/api/v1/polls", nil, "", 0); byteData != nil {
+		if byteData, _ := littrAPI("GET", "/api/v1/polls", nil, "", 0); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -203,7 +203,7 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 			return
 		}
 
-		if _, ok := litterAPI("DELETE", "/api/v1/polls/"+interactedPoll.ID, interactedPoll, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/polls/"+interactedPoll.ID, interactedPoll, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot delete a poll"
 		}
 
@@ -292,7 +292,7 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		//var toastText string
 
-		if _, ok := litterAPI("PUT", "/api/v1/polls/"+poll.ID, poll, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PUT", "/api/v1/polls/"+poll.ID, poll, c.user.Nickname, 0); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 

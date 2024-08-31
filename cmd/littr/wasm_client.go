@@ -4,7 +4,7 @@
 package main
 
 import (
-	fe "go.savla.dev/littr/pkg/frontend"
+	fe "go.vxn.dev/littr/pkg/frontend"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )

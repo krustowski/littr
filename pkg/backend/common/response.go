@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 type Response struct {

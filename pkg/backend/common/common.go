@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	//"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/swis/v5/pkg/core"
+	//"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/swis/v5/pkg/core"
 )
 
 func UnmarshalRequestData[T any](r *http.Request, model *T) error {
@@ -26,7 +26,7 @@ func UnmarshalRequestData[T any](r *http.Request, model *T) error {
 
 /*
  *  generic service functions
- *  https://github.com/savla-dev/swis-api/blob/master/pkg/core/package.go
+ *  https://github.com/vxn-dev/swis-api/blob/master/pkg/core/package.go
  */
 
 type ServiceOpts struct {

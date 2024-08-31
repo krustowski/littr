@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	//"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	//"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -357,7 +357,7 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("authGranted", false)
 
 	ctx.Async(func() {
-		if _, ok := litterAPI("POST", "/api/v1/auth/logout", nil, "", 0); !ok {
+		if _, ok := littrAPI("POST", "/api/v1/auth/logout", nil, "", 0); !ok {
 			toastText := "cannot POST logout request"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -520,13 +520,13 @@ func (h *header) Render() app.UI {
 							app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 						),
 						app.P().Body(
-							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/litter").Text("Documentation (external)"),
+							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
 						),
 					),
 
 					app.Article().Class("center-align").Style("border-radius", "8px").Body(
 						app.Text("version: "),
-						app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/litter-go").Style("font-weight", "bolder"),
+						app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
 						app.P().Body(
 							app.Text("SSE status: "),
 							app.If(sseConnStatus == "connected",

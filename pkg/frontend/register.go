@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -81,7 +81,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// fetch the users list to compare to
-		/*resp, ok := litterAPI("GET", "/api/users", nil, nickname, 0)
+		/*resp, ok := littrAPI("GET", "/api/users", nil, nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 
@@ -193,7 +193,7 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok := litterAPI("POST", "/api/v1/users", user, user.Nickname, 0)
+		resp, ok := littrAPI("POST", "/api/v1/users", user, user.Nickname, 0)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -147,7 +147,7 @@ func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 			FlowList: flowList,
 		}
 
-		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
+		respRaw, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -388,7 +388,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}{}
 
 		// add new post/poll to backend struct
-		if resp, _ := litterAPI("POST", path, payload, c.user.Nickname, c.pageNo); resp != nil {
+		if resp, _ := littrAPI("POST", path, payload, c.user.Nickname, c.pageNo); resp != nil {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -428,7 +428,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		// create a notification
-		if _, ok := litterAPI("POST", "/api/v1/push/notification/"+c.interactedPostKey, payloadNotif, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := littrAPI("POST", "/api/v1/push/notification/"+c.interactedPostKey, payloadNotif, c.user.Nickname, c.pageNo); !ok {
 			toastText = "cannot POST new notification"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -658,7 +658,7 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 			})
 		}
 
-		if _, ok := litterAPI("DELETE", "/api/v1/posts/"+interactedPost.ID, interactedPost, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/posts/"+interactedPost.ID, interactedPost, c.user.Nickname, c.pageNo); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
 
@@ -706,7 +706,7 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		}{}
 
 		// add new post to backend struct
-		if resp, ok := litterAPI("PATCH", "/api/v1/posts/"+interactedPost.ID+"/star", interactedPost, c.user.Nickname, c.pageNo); ok {
+		if resp, ok := littrAPI("PATCH", "/api/v1/posts/"+interactedPost.ID+"/star", interactedPost, c.user.Nickname, c.pageNo); ok {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -913,7 +913,7 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 
 	}
 
-	if byteData, _ := litterAPI("GET", url, nil, c.user.Nickname, pageNo); byteData != nil {
+	if byteData, _ := littrAPI("GET", url, nil, c.user.Nickname, pageNo); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())
@@ -1409,7 +1409,7 @@ func (c *flowContent) Render() app.UI {
 						var resp *[]byte
 						var ok bool
 
-						if resp, ok = litterAPI("POST", "/api/pix", payload, c.user.Nickname); !ok {
+						if resp, ok = littrAPI("POST", "/api/pix", payload, c.user.Nickname); !ok {
 							log.Println("api failed")
 							imgSrc = "/web/android-chrome-512x512.png"
 						} else {

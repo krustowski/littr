@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/url"
 
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -106,7 +106,7 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Code       int                    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/v1/users", nil, ctx.DeviceID(), 0); ok {
+		if data, ok := littrAPI("GET", "/api/v1/users", nil, ctx.DeviceID(), 0); ok {
 			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())

@@ -9,7 +9,7 @@ import (
 	sse "github.com/alexandrevicenzi/go-sse"
 	//sse "github.com/r3labs/sse/v2"
 	chi "github.com/go-chi/chi/v5"
-	cfg "go.savla.dev/littr/configs"
+	cfg "go.vxn.dev/littr/configs"
 )
 
 var Streamer *sse.Server

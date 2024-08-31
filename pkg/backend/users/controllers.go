@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/backend/posts"
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/posts"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 
 	chi "github.com/go-chi/chi/v5"
 	uuid "github.com/google/uuid"
@@ -238,6 +238,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.LastActiveTime = time.Now()
+	user.About = "newbie"
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		resp.Message = "cannot save new user"

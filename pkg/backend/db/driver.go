@@ -1,7 +1,7 @@
 package db
 
 import (
-	"go.savla.dev/swis/v5/pkg/core"
+	"go.vxn.dev/swis/v5/pkg/core"
 )
 
 var (

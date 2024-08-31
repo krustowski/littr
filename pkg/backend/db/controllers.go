@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"go.savla.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/common"
 )
 
 // dumpHandler is the dv package controller function to process system data dump request.

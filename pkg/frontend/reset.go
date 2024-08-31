@@ -66,7 +66,7 @@ func (c *resetContent) handleResetRequest(email, uuid string) error {
 		UUID:  uuid,
 	}
 
-	respRaw, ok := litterAPI("POST", "/api/v1/users/passphrase/"+path, payload, "", 0)
+	respRaw, ok := littrAPI("POST", "/api/v1/users/passphrase/"+path, payload, "", 0)
 	if !ok {
 		return fmt.Errorf("communication with backend failed")
 	}

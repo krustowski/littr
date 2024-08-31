@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/backend/db"
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 // GetStats acts like a handler for stats page

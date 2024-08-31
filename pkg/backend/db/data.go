@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/models"
-	"go.savla.dev/swis/v5/pkg/core"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/models"
+	"go.vxn.dev/swis/v5/pkg/core"
 )
 
 const (

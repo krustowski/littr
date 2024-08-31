@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.savla.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -75,7 +75,7 @@ func (c *usersContent) OnNav(ctx app.Context) {
 			Code      int                    `json:"code"`
 		}{}
 
-		if data, ok := litterAPI("GET", "/api/v1/users", nil, "", 0); ok {
+		if data, ok := littrAPI("GET", "/api/v1/users", nil, "", 0); ok {
 			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())
@@ -214,7 +214,7 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 			FlowList: flowList,
 		}
 
-		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+user.Nickname+"/lists", payload, user.Nickname, 0)
+		respRaw, ok := littrAPI("PATCH", "/api/v1/users/"+user.Nickname+"/lists", payload, user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 
@@ -385,7 +385,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: userShaded.ShadeList,
 		}
 
-		respRaw, ok := litterAPI("PATCH", "/api/v1/users/"+userShaded.Nickname+"/lists", payload, c.user.Nickname, 0)
+		respRaw, ok := littrAPI("PATCH", "/api/v1/users/"+userShaded.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -421,7 +421,7 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: c.user.ShadeList,
 		}
 
-		respRaw, ok = litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
+		respRaw, ok = littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -485,7 +485,7 @@ func (c *usersContent) onClickPrivateOff(ctx app.Context, e app.Event) {
 		user := c.users[nick]
 		toastType := "error"
 
-		if _, ok := litterAPI("DELETE", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("DELETE", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
 			toastText = "request to follow removed"
@@ -522,7 +522,7 @@ func (c *usersContent) onClickPrivateOn(ctx app.Context, e app.Event) {
 		user := c.users[nick]
 		toastType := "error"
 
-		if _, ok := litterAPI("POST", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("POST", "/api/v1/users/"+nick+"/request", nil, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 		} else {
 			toastText = "requested to follow"
@@ -572,7 +572,7 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 		}
 
 		// delete the request from one's requestList
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 			toastType = "error"
 
@@ -602,7 +602,7 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 			FlowList: fellowFlowList,
 		}
 
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+nick+"/lists", payload2, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+nick+"/lists", payload2, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -656,7 +656,7 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 		}
 
 		// delete the request from one's requestList
-		if _, ok := litterAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0); !ok {
 			toastText = "problem calling the backend"
 			toastType = "error"
 		} else {

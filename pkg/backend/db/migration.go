@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	configs "go.savla.dev/littr/configs"
-	"go.savla.dev/littr/pkg/backend/common"
-	"go.savla.dev/littr/pkg/helpers"
-	"go.savla.dev/littr/pkg/models"
+	configs "go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
