@@ -1,5 +1,5 @@
 #
-# litter-go / Makefile
+# littr / Makefile
 #
 
 #
@@ -9,7 +9,7 @@
 include .env.example
 -include .env
 
-APP_NAME=litter-go
+APP_NAME=littr
 APP_URLS_TRAEFIK?=`${HOSTNAME}`
 PROJECT_NAME=${APP_NAME}
 TZ=Europe/Vienna
@@ -51,8 +51,8 @@ DOCKER_IMAGE_TAG?=${REGISTRY}backend:${APP_VERSION}-go${GOLANG_VERSION}
 DOCKER_INTERNAL_PORT?=8080
 DOCKER_NETWORK_NAME?=traefik
 DOCKER_USER?=littr
-DOCKER_VOLUME_DATA_NAME?=litter-data
-DOCKER_VOLUME_PIX_NAME?=litter-pix
+DOCKER_VOLUME_DATA_NAME?=littr-data
+DOCKER_VOLUME_PIX_NAME?=littr-pix
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -133,8 +133,8 @@ docs: config
 	@mv docs/swagger.json api/swagger.json
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
-		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up litter-swagger -d --force-recreate \
-		|| docker compose -f ${DOCKER_COMPOSE_FILE} up litter-swagger -d --force-recreate
+		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up littr-swagger -d --force-recreate \
+		|| docker compose -f ${DOCKER_COMPOSE_FILE} up littr-swagger -d --force-recreate
 
 .PHONY: build
 build: 
@@ -200,7 +200,7 @@ version:
 push:
 	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
 	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
-	@git push --follow-tags
+	@git push --follow-tags --set-upstream origin master
 	
 .PHONY: sh
 sh:
@@ -237,7 +237,7 @@ fetch_running_dump:
 .PHONY: backup
 backup: fetch_running_dump
 	@echo -e "\n${YELLOW} Making the backup archive... ${RESET}\n"
-	@tar czvf /mnt/backup/litter-go/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_DIR}
+	@tar czvf /mnt/backup/littr/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_DIR}
 
 .PHONY: push_to_registry
 push_to_registry:

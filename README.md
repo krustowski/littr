@@ -1,16 +1,16 @@
 ![](/web/android-chrome-192x192.png)
 
-# litter-go (littr)
+# littr (formerly littr-go)
 
-[![Go Reference](https://pkg.go.dev/badge/go.savla.dev/littr.svg)](https://pkg.go.dev/go.savla.dev/littr)
-[![Go Report Card](https://goreportcard.com/badge/go.savla.dev/littr)](https://goreportcard.com/report/go.savla.dev/littr)
+[![Go Reference](https://pkg.go.dev/badge/go.vxn.dev/littr.svg)](https://pkg.go.dev/go.vxn.dev/littr)
+[![Go Report Card](https://goreportcard.com/badge/go.vxn.dev/littr)](https://goreportcard.com/report/go.vxn.dev/littr)
 
-[![litter-go CI/CD test and build pipeline](https://github.com/krustowski/litter-go/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/litter-go/actions/workflows/test-and-build.yml)
-[![litter-go CI/CD deployment pipeline](https://github.com/krustowski/litter-go/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/litter-go/actions/workflows/deployment.yml)
+[![littr CI/CD test and build pipeline](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml)
+[![littr CI/CD deployment pipeline](https://github.com/krustowski/littr/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/deployment.yml)
 
-litter again, now in Go as a PWA --- a microblogging service without notifications (by default off) and pesky messaging, just a raw mind _flow_
+littr again, now in Go as a PWA --- a nanoblogging service without notifications (by default off) and pesky messaging, just a raw mind _flow_
 
-[read more](https://krusty.space/projects/litter/) (a blog post)
+[read more](https://krusty.space/projects/littr/) (a blog post)
 
 ## repo vademecum
 
@@ -108,7 +108,7 @@ make flush kill run
 
 ## development
 
-`litter-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime)
+`littr-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime)
 
 ```
 make dev
@@ -142,10 +142,10 @@ make fetch_running_dump
 
  Copying dumped data from the container...
 
-Successfully copied 13.8kB to /home/user/litter-go/run_data/
-Successfully copied 4.61kB to /home/user/litter-go/run_data/
-Successfully copied 26.1kB to /home/user/litter-go/run_data/
-Successfully copied 3.07kB to /home/user/litter-go/run_data/
+Successfully copied 13.8kB to /home/user/littr/run_data/
+Successfully copied 4.61kB to /home/user/littr/run_data/
+Successfully copied 26.1kB to /home/user/littr/run_data/
+Successfully copied 3.07kB to /home/user/littr/run_data/
 ```
 
 ### nice-to-have(s)
@@ -296,7 +296,7 @@ Successfully copied 3.07kB to /home/user/litter-go/run_data/
 + ~~upgrade toasts to snackbars (beercss v3.3.5)~~
 + ~~disable buttons on action to prevent multiple action fires~~
 + ~~implement system stats, add flowers (follower) count~~
-+ ~~add LitterJS external lib~~
++ ~~add littrJS external lib~~
 
 ### roadmap to v0.10
 + ~~implement search bar (`stats` and `users` pages only)~~

@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-litter-go
+#littr
 .env
 run_data/
 .scannerwork/

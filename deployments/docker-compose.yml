@@ -1,4 +1,3 @@
-#version: '3.9'
 name: ${PROJECT_NAME}
 
 networks:
@@ -7,13 +6,13 @@ networks:
     external: true
 
 volumes:
-  litter-data:
+  littr-data:
     name: ${DOCKER_VOLUME_DATA_NAME}
-  litter-pix:
+  littr-pix:
     name: ${DOCKER_VOLUME_PIX_NAME}
 
 services:
-  litter-backend:
+  littr-backend:
     image: ${DOCKER_IMAGE_TAG}
     container_name: ${DOCKER_CONTAINER_NAME}
     env_file:
@@ -38,8 +37,8 @@ services:
     mem_limit: 128m
     mem_reservation: 32m
     volumes:
-      - "litter-data:/opt/data"
-      - "litter-pix:/opt/pix"
+      - "littr-data:/opt/data"
+      - "littr-pix:/opt/pix"
     ports:
       - "${DOCKER_EXTERNAL_PORT}:${DOCKER_INTERNAL_PORT}"
     networks:
@@ -73,7 +72,7 @@ services:
       timeout: 5s
       retries: 3
 
-  litter-swagger:
+  littr-swagger:
     image: swaggerapi/swagger-ui
     container_name: ${DOCKER_SWAGGER_CONTAINER_NAME}
     ports: 

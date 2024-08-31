@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "nanoblogging platform as PWA built on go-app framework",
-        "title": "litter-go",
+        "title": "littr",
         "termsOfService": "https://littr.eu/tos",
         "contact": {
             "name": "API Support",
@@ -11,9 +11,9 @@
         },
         "license": {
             "name": "MIT",
-            "url": "https://github.com/krustowski/litter-go/blob/master/LICENSE"
+            "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.39.11"
+        "version": "0.39.12"
     },
     "host": "littr.eu",
     "basePath": "/api/v1",
