@@ -1,4 +1,4 @@
-name: litter-go CI/CD test and build pipeline
+name: littr CI/CD test and build pipeline
 
 on:
   workflow_dispatch:

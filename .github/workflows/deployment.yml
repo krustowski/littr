@@ -1,4 +1,4 @@
-name: litter-go CI/CD deployment pipeline
+name: littr CI/CD deployment pipeline
 
 on:
   workflow_dispatch:
