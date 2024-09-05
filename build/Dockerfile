@@ -40,7 +40,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 	GOARCH=wasm GOOS=js go build \
 		-o web/app.wasm \
 		-tags wasm \
-		-ldflags "-X 'go.savla.dev/littr/pkg/frontend.appVersion=$APP_VERSION' -X 'go.savla.dev/littr/pkg/frontend.appPepper=$APP_PEPPER' -X 'go.savla.dev/littr/pkg/frontend.vapidPublicKey=$VAPID_PUB_KEY'"\
+		-ldflags "-X 'go.vxn.dev/littr/pkg/frontend.appVersion=$APP_VERSION' -X 'go.vxn.dev/littr/pkg/frontend.appPepper=$APP_PEPPER' -X 'go.vxn.dev/littr/pkg/frontend.vapidPublicKey=$VAPID_PUB_KEY'"\
 		cmd/littr/
 
 # build the server (go binary)
