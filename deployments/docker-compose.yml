@@ -8,8 +8,10 @@ networks:
 volumes:
   littr-data:
     name: ${DOCKER_VOLUME_DATA_NAME}
+    external: true
   littr-pix:
     name: ${DOCKER_VOLUME_PIX_NAME}
+    external: true
 
 services:
   littr-backend:
