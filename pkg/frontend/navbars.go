@@ -591,11 +591,11 @@ func (f *footer) Render() app.UI {
 	flowHref := "/flow"
 
 	if !f.authGranted {
-		statsHref = "#"
+		/*statsHref = "#"
 		usersHref = "#"
 		postHref = "#"
 		pollsHref = "#"
-		flowHref = "#"
+		flowHref = "#"*/
 
 		return app.Div()
 	}
