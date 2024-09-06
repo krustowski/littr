@@ -1,16 +1,16 @@
 // @title		littr
-// @version	 	0.39.16
-// @description		nanoblogging platform as PWA built on go-app framework
+// @version	 	0.39.17
+// @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://littr.eu/tos
 
 // @contact.name	API Support
-// @contact.url		https://littr.eu/docs/
+// @contact.url		https://littr.eu/docs
 // @contact.email	info@littr.eu
 
 // @license.name	MIT
 // @license.url		https://github.com/krustowski/littr/blob/master/LICENSE
 
-// @host		littr.eu
+// @host		www.littr.eu
 // @BasePath		/api/v1
 
 // @supportedSubmitMethods	[]
