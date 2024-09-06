@@ -1,7 +1,7 @@
 package frontend
 
 import (
-	"log"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -229,8 +229,8 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			payload = poll
 		}
 
-		response := struct{
-			Code int `json:"code"`
+		response := struct {
+			Code    int    `json:"code"`
 			Message string `json:"message"`
 		}{}
 
@@ -241,20 +241,20 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
-				c.registerButtonDisabled = false
+				c.postButtonsDisabled = false
 			})
 			return
-		} 
+		} else {
+			if err := json.Unmarshal(*resp, &response); err != nil {
+				toastText = "cannot unmarshal response"
 
-		if err := json.Unmarshal(*resp, &response); err != nil {
-			toastText = "cannot unmarshal response"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.registerButtonDisabled = false
-			})
-			return
+				ctx.Dispatch(func(ctx app.Context) {
+					c.toastText = toastText
+					c.toastShow = (toastText != "")
+					c.postButtonsDisabled = false
+				})
+				return
+			}
 		}
 
 		if response.Code != 201 {
@@ -263,7 +263,7 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = toastText
 				c.toastShow = (toastText != "")
-				c.registerButtonDisabled = false
+				c.postButtonsDisabled = false
 			})
 			return
 		}
