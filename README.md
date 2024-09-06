@@ -173,6 +173,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.39
++ ~~fix avatar image uploading, resizing and cropping~~
 + ~~implement Esc key to close toasts and modals + Ctrl-Enter for other inputs~~
 + ~~welcome page~~
 

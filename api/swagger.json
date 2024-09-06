@@ -1,21 +1,21 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "nanoblogging platform as PWA built on go-app framework",
+        "description": "a simple nanoblogging platform as PWA built on go-app framework",
         "title": "littr",
         "termsOfService": "https://littr.eu/tos",
         "contact": {
             "name": "API Support",
-            "url": "https://littr.eu/docs/",
+            "url": "https://littr.eu/docs",
             "email": "info@littr.eu"
         },
         "license": {
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.39.17"
+        "version": "0.39.18"
     },
-    "host": "littr.eu",
+    "host": "www.littr.eu",
     "basePath": "/api/v1",
     "paths": {
         "/auth/": {
