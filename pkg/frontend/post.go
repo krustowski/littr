@@ -229,24 +229,50 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			payload = poll
 		}
 
+		response := struct{
+			Code int `json:"code"`
+			Message string `json:"message"`
+		}{}
+
 		// add new post/poll to backend struct
-		if _, ok := littrAPI("POST", path, payload, user.Nickname, 0); !ok {
+		if resp, ok := littrAPI("POST", path, payload, user.Nickname, 0); !ok {
 			toastText = "backend error: cannot add new content"
-			log.Println("cannot post new content to API!")
-		} else {
-			if postType == "poll" {
-				ctx.Navigate("/polls")
-			} else {
-				ctx.Navigate("/flow")
-			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
+			})
+			return
+		} 
+
+		if err := json.Unmarshal(*resp, &response); err != nil {
+			toastText = "cannot unmarshal response"
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
+			})
+			return
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.postButtonsDisabled = false
-		})
-		return
+		if response.Code != 201 {
+			toastText = response.Message
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.toastText = toastText
+				c.toastShow = (toastText != "")
+				c.registerButtonDisabled = false
+			})
+			return
+		}
+
+		if postType == "poll" {
+			ctx.Navigate("/polls")
+		} else {
+			ctx.Navigate("/flow")
+		}
 	})
 }
 

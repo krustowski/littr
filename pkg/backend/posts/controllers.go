@@ -152,6 +152,10 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if post.Nickname == "" {
+		post.Nickname = caller
+	}
+
 	// check the post forgery possibility
 	if caller != post.Nickname {
 		resp.Message = "invalid author spotted --- one can post under their authenticated name only"

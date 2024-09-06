@@ -1,5 +1,5 @@
 // @title		littr
-// @version	 	0.39.15
+// @version	 	0.39.16
 // @description		nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://littr.eu/tos
 
