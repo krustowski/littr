@@ -1333,9 +1333,36 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 
 		content = key + "." + extension
 
+		//
+		// use image magic
+		//
+		img, format, err := decodeImage(fetch.Data)
+		if err != nil {
+			resp.Message = "backend error: cannot decode given byte stream"
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// crop the image
+		squareImg := cropToSquare(img)
+
+		// encode cropped image back to []byte
+		croppedImgData, err := encodeImage(squareImg, format)
+		if err != nil {
+			resp.Message = "backend error: cannot encode image back to byte stream"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
 		// upload to local storage
 		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-		if err := os.WriteFile("/opt/pix/"+content, fetch.Data, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/"+content, croppedImgData, 0600); err != nil {
 			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
