@@ -1372,8 +1372,22 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbanils
-		if err := posts.GenThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content); err != nil {
-			resp.Message = "backend error: cannot generate the image thumbnail"
+		thumbImg := resizeImage(img, 150, 150)
+
+		// encode the thumbnail back to []byte
+		thumbImgData, err := encodeImage(thumbImg, format)
+		if err != nil {
+			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// write the thumbnail byte stream to a file
+		if err := os.WriteFile("/opt/pix/thumb_"+content, thumbImgData, 0600); err != nil {
+			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)

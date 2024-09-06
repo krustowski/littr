@@ -6,7 +6,20 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+
+	"golang.org/x/image/draw"
 )
+
+// ResizeImage resizes an image to a target width and height while maintaining aspect ratio
+func resizeImage(img image.Image, targetWidth, targetHeight int) image.Image {
+	// Create a new image with the target size
+	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
+
+	// Perform high-quality image resizing
+	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
+
+	return thumb
+}
 
 // CropToSquare crops an image to a 1:1 aspect ratio (square)
 func cropToSquare(img image.Image) image.Image {
