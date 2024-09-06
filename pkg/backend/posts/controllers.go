@@ -179,6 +179,17 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 		content := key + "." + extension
 
+		// image pkg magic
+		img, format, err := decodeImage(post.Data)
+		if err != nil {
+			resp.Message = "backend error: cannot decode given byte stream"
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
 		// upload to local storage
 		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
 		if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
@@ -191,8 +202,22 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbanils
-		if err := GenThumbnails("/opt/pix/"+content, "/opt/pix/thumb_"+content); err != nil {
-			resp.Message = "backend error: cannot generate the image thumbnail"
+		thumbImg := resizeImage(img, 350)
+
+		// encode the thumbnail back to []byte
+		thumbImgData, err := encodeImage(thumbImg, format)
+		if err != nil {
+			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// write the thumbnail byte stream to a file
+		if err := os.WriteFile("/opt/pix/thumb_"+content, thumbImgData, 0600); err != nil {
+			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)
