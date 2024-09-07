@@ -168,9 +168,12 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 ### roadmap to v1.0.0
 + fix the code smells as scanned by `sonar-scanner`
 + resolve tikets in github and redmine (priv)
-+ user activation via mail
 + write integration and e2e tests
 + [...]
+
+### roadmap to v0.40
++ e-mail duplicity check for registration
++ user activation via mail
 
 ### roadmap to v0.39
 + ~~fix avatar image uploading, resizing and cropping~~
