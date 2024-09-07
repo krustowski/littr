@@ -201,6 +201,17 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// fix the image orientation for thumbnail
+		img, err = fixOrientation(img, post.Data)
+		if err != nil {
+			resp.Message = "backend error: cannot fix image's oriantation: " + err.Error()
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
 		// generate thumbanils
 		thumbImg := resizeImage(img, 350)
 
