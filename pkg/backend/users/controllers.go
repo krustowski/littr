@@ -229,13 +229,29 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	// validate e-mail struct
 	// https://stackoverflow.com/a/66624104
 	if _, err := mail.ParseAddress(email); err != nil {
-		resp.Message = "e-mail address has wrong format"
+		resp.Message = "e-mail address is in the wrong format"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	}
+
+	// check for the already registred e-mail
+	allUsers, _ := db.GetAll(db.UserCache, models.User{})
+
+	for _, u := range allUsers {
+		if strings.ToLower(u.Email) == user.Email {
+			resp.Message = "e-mail address has been already used for registration"
+			resp.Code = http.StatusConflict
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+	}
+
+	// validation end = new user can be added
 
 	user.LastActiveTime = time.Now()
 	user.About = "newbie"
