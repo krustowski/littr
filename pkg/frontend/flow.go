@@ -488,7 +488,7 @@ func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
 
 	textarea := app.Window().GetElementByID("reply-textarea")
 
-	if e.Get("key").String() == "r" && textarea.IsNull() && !c.refreshClicked {
+	if (e.Get("key").String() == "r" || e.Get("key").String() == "R") && textarea.IsNull() && !c.refreshClicked {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.loaderShow = true
 			c.loaderShowImage = true
@@ -526,9 +526,9 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 		_, height := app.Window().Size()
 
-		// limit the fire rate to 1/5 Hz
+		// limit the fire rate to 1 Hz
 		now := time.Now().Unix()
-		if now-c.lastFire < 2 {
+		if now-c.lastFire < 1 {
 			return
 		}
 
@@ -591,7 +591,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 
 				// no more posts, fetching another page does not make sense
 				if len(posts) == postControlCount {
-					updated = false
+					//updated = false
 					lastPageFetched = true
 
 				}
@@ -614,7 +614,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 				c.contentLoadFinished = true
 				c.lastPageFetched = lastPageFetched
 
-				log.Println("new content page request fired")
+				//log.Println("new content page request fired")
 			})
 			return
 		}
@@ -737,31 +737,6 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *flowContent) OnMount(ctx app.Context) {
-	ctx.Handle("delete", c.handleDelete)
-	ctx.Handle("image", c.handleImage)
-	ctx.Handle("reply", c.handleReply)
-	ctx.Handle("scroll", c.handleScroll)
-	ctx.Handle("star", c.handleStar)
-	ctx.Handle("dismiss", c.handleDismiss)
-	ctx.Handle("refresh", c.handleRefresh)
-	//ctx.Handle("message", c.handleNewPost)
-
-	c.paginationEnd = false
-	c.pagination = 0
-	c.pageNo = 1
-	c.pageNoToFetch = 0
-	c.lastPageFetched = false
-
-	c.deletePostModalShow = false
-	c.deleteModalButtonsDisabled = false
-
-	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
-	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
-}
-
 func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
 	log.Println("msg event: data:" + data)
@@ -780,11 +755,6 @@ func (c *flowContent) onMessage(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *flowContent) OnDismount() {
-	// https://go-app.dev/reference#BrowserWindow
-	//c.eventListener()
-}
-
 func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 	// little hack to dismiss navbar's snackbar
 	snack := app.Window().GetElementByID("snackbar-general")
@@ -794,12 +764,13 @@ func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 
 	ctx.Async(func() {
 		// nasty hotfix, TODO
-		c.pageNoToFetch = 0
+		//c.pageNoToFetch = 0
 
 		//parts := c.parseFlowURI(ctx)
 
 		opts := pageOptions{
-			PageNo:   c.pageNoToFetch,
+			//PageNo:   c.pageNoToFetch,
+			PageNo:   0,
 			Context:  ctx,
 			CallerID: c.user.Nickname,
 
@@ -1022,6 +993,36 @@ func (c *flowContent) parseFlowURI(ctx app.Context) URIParts {
 	})
 
 	return parts
+}
+
+func (c *flowContent) OnMount(ctx app.Context) {
+	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("image", c.handleImage)
+	ctx.Handle("reply", c.handleReply)
+	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("star", c.handleStar)
+	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("refresh", c.handleRefresh)
+	//ctx.Handle("message", c.handleNewPost)
+
+	c.paginationEnd = false
+	c.pagination = 0
+	c.pageNo = 1
+	c.pageNoToFetch = 0
+	c.lastPageFetched = false
+
+	c.deletePostModalShow = false
+	c.deleteModalButtonsDisabled = false
+
+	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
+	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
+}
+
+func (c *flowContent) OnDismount() {
+	// https://go-app.dev/reference#BrowserWindow
+	//c.eventListener()
 }
 
 func (c *flowContent) OnNav(ctx app.Context) {

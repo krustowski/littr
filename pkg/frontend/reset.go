@@ -232,9 +232,13 @@ func (c *resetContent) onKeyDown(ctx app.Context, e app.Event) {
 
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
 		if c.showUUIDPage {
-			app.Window().GetElementByID("reset-button").Call("click")
+			if !app.Window().GetElementByID("reset-button").IsNull() {
+				app.Window().GetElementByID("reset-button").Call("click")
+			}
 		} else {
-			app.Window().GetElementByID("request-button").Call("click")
+			if !app.Window().GetElementByID("request-button").IsNull() {
+				app.Window().GetElementByID("request-button").Call("click")
+			}
 		}
 	}
 }
