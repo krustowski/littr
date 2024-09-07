@@ -348,8 +348,15 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		postType := "post"
 
 		// trim the spaces on the extremites
-		textarea := app.Window().GetElementByID("reply-textarea").Get("value").String()
-		replyPost := strings.TrimSpace(textarea)
+		replyPost := c.replyPostContent
+
+		if replyPost == "" {
+			textarea := app.Window().GetElementByID("reply-textarea")
+
+			if !textarea.IsNull() {
+				replyPost = strings.TrimSpace(textarea.Get("reply-textarea").String())
+			}
+		}
 
 		// allow picture-only posting
 		if replyPost == "" && c.newFigFile == "" {
@@ -400,6 +407,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 					c.postButtonsDisabled = false
 
 					c.interactedPostKey = ""
+					c.replyPostContent = ""
 					c.newFigData = []byte{}
 					c.newFigFile = ""
 				})
@@ -415,6 +423,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 				c.postButtonsDisabled = false
 
 				c.interactedPostKey = ""
+				c.replyPostContent = ""
 				c.newFigData = []byte{}
 				c.newFigFile = ""
 			})
@@ -437,6 +446,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 				c.postButtonsDisabled = false
 
 				c.interactedPostKey = ""
+				c.replyPostContent = ""
 				c.newFigData = []byte{}
 				c.newFigFile = ""
 			})
@@ -461,6 +471,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			c.buttonDisabled = false
 
 			c.interactedPostKey = ""
+			c.replyPostContent = ""
 			c.newFigData = []byte{}
 			c.newFigFile = ""
 		})
@@ -1276,7 +1287,7 @@ func (c *flowContent) Render() app.UI {
 
 				app.Div().Class("field label textarea border extra deep-orange-text").Body(
 					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
-					app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea"),
+					app.Textarea().Class("active").Name("replyPost").Text(c.replyPostContent).OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea"),
 					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
 					//app.Label().Text("text").Class("active"),
 				),
