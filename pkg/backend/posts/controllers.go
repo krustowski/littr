@@ -179,7 +179,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 		content := key + "." + extension
 
-		// image pkg magic
+		// decode image from []byte stream
 		img, format, err := decodeImage(post.Data)
 		if err != nil {
 			resp.Message = "backend error: cannot decode given byte stream"
@@ -190,10 +190,10 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// upload to local storage
-		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-		if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+		// fix the image orientation for decoded image
+		img, err = fixOrientation(img, post.Data)
+		if err != nil {
+			resp.Message = "backend error: cannot fix image's oriantation: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)
@@ -201,10 +201,32 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// fix the image orientation for thumbnail
-		img, err = fixOrientation(img, post.Data)
+		// re-encode the image
+		newBytes, err := encodeImage(img, format)
 		if err != nil {
-			resp.Message = "backend error: cannot fix image's oriantation: " + err.Error()
+			resp.Message = "backend error: cannot re-encode the novel image"
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// remove EXIF metadata
+		_, newBytes, err = removeExif(newBytes, format)
+		if err != nil {
+			resp.Message = "backend error: cannot remove EXIF metadata"
+			resp.Code = http.StatusBadRequest
+
+			l.Println(resp.Message, resp.Code)
+			resp.Write(w)
+			return
+		}
+
+		// upload to local storage
+		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/"+content, newBytes, 0600); err != nil {
+			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
 			l.Println(resp.Message, resp.Code)

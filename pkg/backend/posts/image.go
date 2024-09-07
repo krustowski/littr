@@ -14,6 +14,33 @@ import (
 	_ "image/png"
 )
 
+func removeExif(imgBytes []byte, format string) (image.Image, []byte, error) {
+	// Decode the image
+	img, _, err := image.Decode(bytes.NewReader(imgBytes))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create a buffer to hold the new image data (without EXIF metadata)
+	var buf bytes.Buffer
+
+	// Encode the image without EXIF metadata
+	switch format {
+	case "jpeg":
+		err = jpeg.Encode(&buf, img, nil)
+	case "png":
+		err = png.Encode(&buf, img)
+	default:
+		return nil, nil, err
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return img, buf.Bytes(), nil
+}
+
 // ResizeImage resizes an image to a target width and height while maintaining aspect ratio
 /*func resizeImage(img image.Image, targetWidth, targetHeight int) image.Image {
 	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
@@ -121,7 +148,7 @@ func fixOrientation(img image.Image, imgBytes []byte) (image.Image, error) {
 	// Find the Orientation tag
 	for _, entry := range entries {
 		if entry.TagName == "Orientation" {
-			fmt.Printf("orientation: entry.Value: %v\n", entry.Value)
+			//fmt.Printf("orientation: entry.Value: %v\n", entry.Value)
 			orientationRaw := entry.Value.([]uint16) // Orientation should be a uint16 value
 			orientation := orientationRaw[0]
 
