@@ -1327,7 +1327,6 @@ func (c *flowContent) Render() app.UI {
 
 					// prepare reply parameters to render
 					if post.ReplyToID != "" {
-						//c.posts[post.ReplyToID].ReplyCount++
 						if previous, found := c.posts[post.ReplyToID]; found {
 							if value, foundU := c.user.FlowList[previous.Nickname]; (!value || !foundU) && c.users[previous.Nickname].Private {
 								previousContent = "this content is private"
@@ -1545,7 +1544,9 @@ func (c *flowContent) Render() app.UI {
 										app.Text(postTimestamp),
 									),
 									app.If(post.Nickname != "system",
-										//app.B().Text(post.ReplyCount).Class("left-padding"),
+										app.If(post.ReplyCount > 0,
+											app.B().Title("reply count").Text(post.ReplyCount).Class("left-padding"),
+										),
 										app.Button().Title("reply").ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 											app.I().Text("reply"),
 										),
