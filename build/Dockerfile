@@ -46,7 +46,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 # build the server (go binary)
 RUN --mount=type=cache,target="$GOMODCACHE" \
 	--mount=type=cache,target="$GOCACHE" \
-	CGO_ENABLED=0 GOOS=linux GOARCH=$GOARCH go build \
+	CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build \
 		-o littr \
 		cmd/littr/
 
