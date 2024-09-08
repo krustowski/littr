@@ -422,161 +422,163 @@ func (h *header) Render() app.UI {
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
-			app.If(h.authGranted,
-				app.A().Href(settingsHref).Text("settings").Class("max").Title("settings [6]").Aria("label", "settings").Body(
-					app.I().Class("large").Class("deep-orange-text").Body(
-						app.Text("build")),
-				),
-			).Else(
-				app.Div().Class("max"),
-			),
-
-			// show intallation button if available
-			app.If(h.appInstallable,
-				app.A().Class("max").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
-					app.I().Class("large").Class("deep-orange-text").Body(
-						app.Text("download"),
+			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
+				app.If(h.authGranted,
+					app.A().Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
+						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Text("build")),
 					),
+				).Else(
+					app.Div().Class(""),
 				),
-			// hotfix to keep the nav items' distances
-			).Else(
-				app.Div().Class("max"),
-			),
 
-			// app logout modal
-			app.If(h.modalLogoutShow,
-				app.Dialog().ID("logout-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
-					app.Nav().Class("center-align").Body(
-						app.H5().Text("logout"),
-					),
-
-					app.Article().Class("row surface-container-highest").Body(
-						app.I().Text("warning").Class("amber-text"),
-						app.P().Class("max").Body(
-							app.Span().Text("are you sure you want to end this session and log out?"),
+				// show intallation button if available
+				app.If(h.appInstallable,
+					app.A().Class("").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
+						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Text("download"),
 						),
 					),
-					app.Div().Class("space"),
-
-					app.Div().Class("row").Body(
-						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
-						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(h.onClickModalDismiss),
-					),
+				// hotfix to keep the nav items' distances
+				).Else(
+					app.Div().Class(""),
 				),
-			),
 
-			// littr header
-			app.Div().Class("max row center-align").Body(
-				app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
-					app.Span().Body(
-						app.Text(headerString),
-						app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
-							app.Span().Class("col").Body(
-								app.Sup().Body(
-									app.Text(" (dev) "),
-								),
+				// app logout modal
+				app.If(h.modalLogoutShow,
+					app.Dialog().ID("logout-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
+						app.Nav().Class("center-align").Body(
+							app.H5().Text("logout"),
+						),
+
+						app.Article().Class("row surface-container-highest").Body(
+							app.I().Text("warning").Class("amber-text"),
+							app.P().Class("max").Body(
+								app.Span().Text("are you sure you want to end this session and log out?"),
 							),
 						),
+						app.Div().Class("space"),
+
+						app.Div().Class("row").Body(
+							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("yeah").OnClick(h.onClickLogout),
+							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("nope").OnClick(h.onClickModalDismiss),
+						),
 					),
 				),
 
-				// snackbar offline mode
-				app.If(!h.onlineState,
-					app.Div().OnClick(h.onClickModalDismiss).Class("snackbar red10 white-text top active").Body(
-						app.I().Text("warning").Class("amber-text"),
-						app.Span().Text("no internet connection"),
-					),
-				),
-
-				// snackbar toast
-				//app.If(h.toastText != "",
-				app.Div().ID("snackbar-general").OnClick(h.onClickModalDismiss).Class("snackbar white-text top "+toastColor).Body(
-					app.I().Text("error"),
-					app.Span().Text(toastText),
-				),
-				//),
-			),
-
-			// app info modal
-			app.If(h.modalInfoShow,
-				app.Dialog().ID("info-modal").Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
-					app.Article().Class("row center-align").Style("border-radius", "8px").Body(
-						app.Img().Src("/web/android-chrome-192x192.png"),
-						app.H4().Body(
-							app.Span().Body(
-								app.Text("littr"),
-								app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
-									app.Span().Class("col").Body(
-										app.Sup().Body(
-											app.Text(" (dev) "),
-										),
+				// littr header
+				app.Div().Class("row center-align").Body(
+					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
+						app.Span().Body(
+							app.Text(headerString),
+							app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
+								app.Span().Class("col").Body(
+									app.Sup().Body(
+										app.Text(" (dev) "),
 									),
 								),
 							),
 						),
 					),
-					app.Article().Class("center-align large-text").Style("border-radius", "8px").Body(
-						app.P().Body(
-							app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
-						),
-						app.P().Body(
-							app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
+
+					// snackbar offline mode
+					app.If(!h.onlineState,
+						app.Div().OnClick(h.onClickModalDismiss).Class("snackbar red10 white-text top active").Body(
+							app.I().Text("warning").Class("amber-text"),
+							app.Span().Text("no internet connection"),
 						),
 					),
 
-					app.Article().Class("center-align").Style("border-radius", "8px").Body(
-						app.Text("version: "),
-						app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
-						app.P().Body(
-							app.Text("SSE status: "),
-							app.If(sseConnStatus == "connected",
-								app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold"),
-							).Else(
-								app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold"),
+					// snackbar toast
+					//app.If(h.toastText != "",
+					app.Div().ID("snackbar-general").OnClick(h.onClickModalDismiss).Class("snackbar white-text top "+toastColor).Body(
+						app.I().Text("error"),
+						app.Span().Text(toastText),
+					),
+					//),
+				),
+
+				// app info modal
+				app.If(h.modalInfoShow,
+					app.Dialog().ID("info-modal").Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
+						app.Article().Class("row center-align").Style("border-radius", "8px").Body(
+							app.Img().Src("/web/android-chrome-192x192.png"),
+							app.H4().Body(
+								app.Span().Body(
+									app.Text("littr"),
+									app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
+										app.Span().Class("col").Body(
+											app.Sup().Body(
+												app.Text(" (dev) "),
+											),
+										),
+									),
+								),
 							),
 						),
-					),
+						app.Article().Class("center-align large-text").Style("border-radius", "8px").Body(
+							app.P().Body(
+								app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
+							),
+							app.P().Body(
+								app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
+							),
+						),
 
-					app.Nav().Class("center-align").Body(
-						app.P().Body(
-							app.Text("powered by "),
-							app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
-							app.Text(", "),
-							app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
-							app.Text(" & "),
-							app.A().Href("https://github.com/thevxn/swis-api").Text("swapi").Style("font-weight", "bolder"),
+						app.Article().Class("center-align").Style("border-radius", "8px").Body(
+							app.Text("version: "),
+							app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
+							app.P().Body(
+								app.Text("SSE status: "),
+								app.If(sseConnStatus == "connected",
+									app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold"),
+								).Else(
+									app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold"),
+								),
+							),
+						),
+
+						app.Nav().Class("center-align").Body(
+							app.P().Body(
+								app.Text("powered by "),
+								app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
+								app.Text(", "),
+								app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
+								app.Text(" & "),
+								app.A().Href("https://github.com/thevxn/swis-api").Text("swapi").Style("font-weight", "bolder"),
+							),
+						),
+
+						app.Div().Class("row").Body(
+							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("reload").OnClick(h.onClickReload),
+							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("close").OnClick(h.onClickModalDismiss),
 						),
 					),
+				),
 
-					app.Div().Class("row").Body(
-						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("reload").OnClick(h.onClickReload),
-						app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").Text("close").OnClick(h.onClickModalDismiss),
+				// update button
+				app.If(h.updateAvailable,
+					app.A().Class("").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
+						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Text("update"),
+						),
 					),
+				// hotfix to keep the nav items' distances
+				).Else(
+					app.A().Class("").OnClick(nil),
 				),
-			),
 
-			// update button
-			app.If(h.updateAvailable,
-				app.A().Class("max").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
-					app.I().Class("large").Class("deep-orange-text").Body(
-						app.Text("update"),
+				// login/logout button
+				app.If(h.authGranted,
+					app.A().Text("logout").Class("").OnClick(h.onClickShowLogoutModal).Title("logout").Aria("label", "logout").Body(
+						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Text("logout")),
 					),
-				),
-			// hotfix to keep the nav items' distances
-			).Else(
-				app.A().Class("max").OnClick(nil),
-			),
-
-			// login/logout button
-			app.If(h.authGranted,
-				app.A().Text("logout").Class("max").OnClick(h.onClickShowLogoutModal).Title("logout").Aria("label", "logout").Body(
-					app.I().Class("large").Class("deep-orange-text").Body(
-						app.Text("logout")),
-				),
-			).Else(
-				app.A().Href("/login").Text("login").Class("max").Title("login").Aria("label", "login").Body(
-					app.I().Class("large").Class("deep-orange-text").Body(
-						app.Text("login")),
+				).Else(
+					app.A().Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
+						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Text("login")),
+					),
 				),
 			),
 		)
@@ -600,31 +602,34 @@ func (f *footer) Render() app.UI {
 		return app.Div()
 	}
 
-	return app.Nav().ID("nav-top").Class("bottom fixed-top center-align").Style("opacity", "1.0").
+	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
+	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
-			app.A().Href(statsHref).Text("stats").Class("max").Title("stats [1]").Aria("label", "stats").Body(
-				app.I().Class("large deep-orange-text").Body(
-					app.Text("query_stats")),
-			),
+			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
+				app.A().Href(statsHref).Text("stats").Class("").Title("stats [1]").Aria("label", "stats").Body(
+					app.I().Class("large deep-orange-text").Body(
+						app.Text("query_stats")),
+				),
 
-			app.A().Href(usersHref).Text("users").Class("max").Title("users [2]").Aria("label", "users").Body(
-				app.I().Class("large deep-orange-text").Body(
-					app.Text("group")),
-			),
+				app.A().Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
+					app.I().Class("large deep-orange-text").Body(
+						app.Text("group")),
+				),
 
-			app.A().Href(postHref).Text("post").Class("max").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
-				app.I().Class("large deep-orange-text").Body(
-					app.Text("add")),
-			),
+				app.A().Href(postHref).Text("post").Class("").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
+					app.I().Class("large deep-orange-text").Body(
+						app.Text("add")),
+				),
 
-			app.A().Href(pollsHref).Text("polls").Class("max").Title("polls [4]").Aria("label", "polls").Body(
-				app.I().Class("large deep-orange-text").Body(
-					app.Text("equalizer")),
-			),
+				app.A().Href(pollsHref).Text("polls").Class("").Title("polls [4]").Aria("label", "polls").Body(
+					app.I().Class("large deep-orange-text").Body(
+						app.Text("equalizer")),
+				),
 
-			app.A().Href(flowHref).Text("flow").Class("max").Title("flow [5]").Aria("label", "flow").Body(
-				app.I().Class("large deep-orange-text").Body(
-					app.Text("tsunami")),
+				app.A().Href(flowHref).Text("flow").Class("").Title("flow [5]").Aria("label", "flow").Body(
+					app.I().Class("large deep-orange-text").Body(
+						app.Text("tsunami")),
+				),
 			),
 		)
 }

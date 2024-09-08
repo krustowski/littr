@@ -38,6 +38,9 @@ sub {
   button.shrink {
     max-width: 50%;
   }
+  div.shrink {
+    max-width: 50% !important;
+  }
 }
 
 .overlay {
