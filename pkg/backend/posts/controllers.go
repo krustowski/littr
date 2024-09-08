@@ -177,15 +177,13 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		fileExplode := strings.Split(post.Figure, ".")
 		extension := fileExplode[len(fileExplode)-1]
 
-		content := key + "." + extension
-
 		// decode image from []byte stream
-		img, format, err := decodeImage(post.Data)
+		img, format, err := decodeImage(post.Data, extension)
 		if err != nil {
-			resp.Message = "backend error: cannot decode given byte stream"
+			resp.Message = "cannot decode given byte stream: probably an unsupported format was sent"
 			resp.Code = http.StatusBadRequest
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
@@ -193,77 +191,71 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		// fix the image orientation for decoded image
 		img, err = fixOrientation(img, post.Data)
 		if err != nil {
-			resp.Message = "backend error: cannot fix image's oriantation: " + err.Error()
+			resp.Message = "cannot fix image's oriantation"
 			resp.Code = http.StatusInternalServerError
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
 
 		// re-encode the image
+		// flush EXIF metadata
 		newBytes, err := encodeImage(img, format)
 		if err != nil {
-			resp.Message = "backend error: cannot re-encode the novel image"
+			resp.Message = "cannot re-encode the novel image"
 			resp.Code = http.StatusBadRequest
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
 
-		// remove EXIF metadata
-		_, newBytes, err = removeExif(newBytes, format)
-		if err != nil {
-			resp.Message = "backend error: cannot remove EXIF metadata"
-			resp.Code = http.StatusBadRequest
+		// prepare the novel image's filename
+		content := key + "." + format
 
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
-			return
-		}
-
-		// upload to local storage
+		// upload the novel image to local storage
 		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
 		if err := os.WriteFile("/opt/pix/"+content, newBytes, 0600); err != nil {
-			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+			resp.Message = "couldn't write the novel image to file"
 			resp.Code = http.StatusInternalServerError
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
 
-		// generate thumbanils
+		// generate thumbnails --- keep aspect ratio
 		thumbImg := resizeImage(img, 350)
 
 		// encode the thumbnail back to []byte
 		thumbImgData, err := encodeImage(thumbImg, format)
 		if err != nil {
-			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
+			resp.Message = "cannot encode thumbnail back to byte stream"
 			resp.Code = http.StatusInternalServerError
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
 
 		// write the thumbnail byte stream to a file
 		if err := os.WriteFile("/opt/pix/thumb_"+content, thumbImgData, 0600); err != nil {
-			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+			resp.Message = "couldn't write the thumbnail to file"
 			resp.Code = http.StatusInternalServerError
 
-			l.Println(resp.Message, resp.Code)
+			l.Println(resp.Message+err.Error(), resp.Code)
 			resp.Write(w)
 			return
 		}
 
+		// flush post's image-related fields
 		post.Figure = content
 		post.Data = []byte{}
 	}
 
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
-		resp.Message = "backend error: cannot save new post (cache error)"
+		resp.Message = "couldn't save new post (try again)"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)

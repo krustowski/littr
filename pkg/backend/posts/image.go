@@ -4,68 +4,110 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"strings"
 
 	"github.com/dsoprea/go-exif/v3"
 	//"github.com/dsoprea/go-exif/v3/common"
 	"golang.org/x/image/draw"
-	_ "image/gif"
-	_ "image/png"
+	//"golang.org/x/image/webp" --- only implements a decoder, not an encoder (Sep 2024)
+	"github.com/chai2010/webp"
 )
 
-func removeExif(imgBytes []byte, format string) (image.Image, []byte, error) {
-	// Decode the image
-	img, _, err := image.Decode(bytes.NewReader(imgBytes))
+//
+//  []byte input handling
+//
+
+func convertGifToWebp(gifData []byte) ([]byte, error) {
+	// Decode the GIF image from the byte stream
+	gifImg, err := gif.Decode(bytes.NewReader(gifData))
 	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("error decoding GIF: %w", err)
 	}
 
-	// Create a buffer to hold the new image data (without EXIF metadata)
-	var buf bytes.Buffer
+	// Create a buffer to store the WebP data
+	var webpBuffer bytes.Buffer
 
-	// Encode the image without EXIF metadata
-	switch format {
-	case "jpeg":
-		err = jpeg.Encode(&buf, img, nil)
-	case "png":
-		err = png.Encode(&buf, img)
-	default:
-		return nil, nil, err
-	}
-
+	// Encode the image to WebP format and write to the buffer
+	err = webp.Encode(&webpBuffer, gifImg, &webp.Options{Lossless: true})
 	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("error encoding to WebP: %w", err)
 	}
 
-	return img, buf.Bytes(), nil
+	// Return the encoded WebP byte slice
+	return webpBuffer.Bytes(), nil
 }
 
-// ResizeImage resizes an image to a target width and height while maintaining aspect ratio
-/*func resizeImage(img image.Image, targetWidth, targetHeight int) image.Image {
-	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
-	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
+// DecodeImage decodes a byte stream to an image
+func decodeImage(imgData []byte, extInput string) (image.Image, string, error) {
+	var img image.Image
+	var format string
+	var err error
 
-	return thumb
-}*/
+	extension := strings.ToLower(extInput)
 
-// ResizeImage resizes an image to a target width and height while maintaining aspect ratio
-func resizeImage(img image.Image, targetWidth int) image.Image {
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
+	switch extension {
+	case "png", "jpg", "jpeg":
+		img, format, err = image.Decode(bytes.NewReader(imgData))
+		if err != nil {
+			return nil, "", err
+		}
+		return img, format, nil
 
-	// Calculate aspect ratio and determine target height
-	aspectRatio := float64(height) / float64(width)
-	targetHeight := int(float64(targetWidth) * aspectRatio)
+	case "gif":
+		// this is to be used for the novel image's/thumbnail's extension, and for the encoder
+		// we want to decrease the file's size (to convert it to WebP), and GIFs be thicc...
+		format = "webp"
+		img, err = gif.Decode(bytes.NewReader(imgData))
+		if err != nil {
+			return nil, "", err
+		}
 
-	// Create a new image with the target size
-	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
+	case "webp":
+		format = "webp"
+		img, err = webp.Decode(bytes.NewReader(imgData))
+		if err != nil {
+			return nil, "", err
+		}
+	default:
+		return nil, "", fmt.Errorf("unsupported format: %s", extension)
+	}
 
-	// Perform high-quality image resizing
-	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
+	return img, format, nil
+}
 
-	return thumb
+//
+//  image.Image input handling
+//
+
+// EncodeImage encodes an image back to byte stream (JPEG or PNG)
+func encodeImage(img image.Image, format string) ([]byte, error) {
+	var buf bytes.Buffer
+
+	// Encode depending on the format
+	switch format {
+	case "jpeg":
+		err := jpeg.Encode(&buf, img, nil)
+		if err != nil {
+			return nil, err
+		}
+	case "png":
+		err := png.Encode(&buf, img)
+		if err != nil {
+			return nil, err
+		}
+	case "gif", "webp":
+		err := webp.Encode(&buf, img, &webp.Options{Lossless: true})
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unsupported format: %s", format)
+	}
+
+	return buf.Bytes(), nil
 }
 
 // CropToSquare crops an image to a 1:1 aspect ratio (square)
@@ -95,38 +137,6 @@ func cropToSquare(img image.Image) image.Image {
 	}).SubImage(cropRect)
 
 	return croppedImg
-}
-
-// DecodeImage decodes a byte stream to an image
-func decodeImage(imgData []byte) (image.Image, string, error) {
-	img, format, err := image.Decode(bytes.NewReader(imgData))
-	if err != nil {
-		return nil, "", err
-	}
-	return img, format, nil
-}
-
-// EncodeImage encodes an image back to byte stream (JPEG or PNG)
-func encodeImage(img image.Image, format string) ([]byte, error) {
-	var buf bytes.Buffer
-
-	// Encode depending on the format
-	switch format {
-	case "jpeg":
-		err := jpeg.Encode(&buf, img, nil)
-		if err != nil {
-			return nil, err
-		}
-	case "png":
-		err := png.Encode(&buf, img)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("unknown format")
-	}
-
-	return buf.Bytes(), nil
 }
 
 // FixOrientation checks the EXIF orientation tag and corrects the image's orientation if necessary
@@ -209,4 +219,31 @@ func rotate270(img image.Image) image.Image {
 	}
 
 	return rotated
+}
+
+// ResizeImage resizes an image to a target width and height while maintaining aspect ratio
+/*func resizeImage(img image.Image, targetWidth, targetHeight int) image.Image {
+	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
+	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
+
+	return thumb
+}*/
+
+// ResizeImage resizes an image to a target width and height while maintaining aspect ratio
+func resizeImage(img image.Image, targetWidth int) image.Image {
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	// Calculate aspect ratio and determine target height
+	aspectRatio := float64(height) / float64(width)
+	targetHeight := int(float64(targetWidth) * aspectRatio)
+
+	// Create a new image with the target size
+	thumb := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
+
+	// Perform high-quality image resizing
+	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
+
+	return thumb
 }
