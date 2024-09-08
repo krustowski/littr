@@ -5,12 +5,12 @@ go 1.22
 require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
 	github.com/alexandrevicenzi/go-sse v1.6.0
-	github.com/chai2010/webp v1.1.1
 	github.com/dsoprea/go-exif/v3 v3.0.1
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/maxence-charriere/go-app/v9 v9.8.0
+	github.com/sizeofint/webpanimation v0.0.0-20210809145948-1d2b32119882
 	github.com/wneessen/go-mail v0.4.4
 	go.vxn.dev/swis/v5 v5.17.6
 	golang.org/x/image v0.20.0
