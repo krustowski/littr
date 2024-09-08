@@ -13,31 +13,112 @@ import (
 	//"github.com/dsoprea/go-exif/v3/common"
 	"golang.org/x/image/draw"
 	//"golang.org/x/image/webp" --- only implements a decoder, not an encoder (Sep 2024)
-	"github.com/chai2010/webp"
+	//"github.com/chai2010/webp" --- incompatible with sozeofint/webpanimation
+	wan "github.com/sizeofint/webpanimation"
 )
 
 //
 //  []byte input handling
 //
 
+// Decode reads and analyzes the given reader as a GIF image
+// https://stackoverflow.com/a/33296596
+/*func splitAnimatedGIF(gifData []byte) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error while decoding: %s", r)
+		}
+	}()
+
+	gif, err := gif.DecodeAll(bytes.NewReader(gifData))
+
+	if err != nil {
+		return err
+	}
+
+	imgWidth, imgHeight := getGifDimensions(gif)
+
+	overpaintImage := image.NewRGBA(image.Rect(0, 0, imgWidth, imgHeight))
+	draw.Draw(overpaintImage, overpaintImage.Bounds(), gif.Image[0], image.ZP, draw.Src)
+
+	for i, srcImg := range gif.Image {
+		draw.Draw(overpaintImage, overpaintImage.Bounds(), srcImg, image.ZP, draw.Over)
+
+		// save current frame "stack". This will overwrite an existing file with that name
+		file, err := os.Create(fmt.Sprintf("%s%d%s", "/opt/pix/", i, ".webp"))
+		if err != nil {
+			return err
+		}
+
+		//err = png.Encode(file, overpaintImage)
+		err = webp.Encode(file, overpaintImage, &webp.Options{Lossless: true})
+		if err != nil {
+			return err
+		}
+
+		file.Close()
+	}
+
+	return nil
+}*/
+
+// https://github.com/sizeofint/webpanimation/blob/master/examples/gif-to-webp/main.go
 func convertGifToWebp(gifData []byte) ([]byte, error) {
-	// Decode the GIF image from the byte stream
-	gifImg, err := gif.Decode(bytes.NewReader(gifData))
+	var err error
+
+	// GIFs from the Internet are often broken somehow, therefore the decoder may panic a lot
+	// source: https://stackoverflow.com/a/33296596
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error while decoding: %s", r)
+			//return nil, err
+		}
+	}()
+
+	gif, err := gif.DecodeAll(bytes.NewReader(gifData))
 	if err != nil {
-		return nil, fmt.Errorf("error decoding GIF: %w", err)
+		return nil, err
 	}
 
-	// Create a buffer to store the WebP data
-	var webpBuffer bytes.Buffer
+	// utilize git-to-webp lib
+	webpan := wan.NewWebpAnimation(gif.Config.Width, gif.Config.Height, gif.LoopCount)
+	webpan.WebPAnimEncoderOptions.SetKmin(9)
+	webpan.WebPAnimEncoderOptions.SetKmax(17)
 
-	// Encode the image to WebP format and write to the buffer
-	err = webp.Encode(&webpBuffer, gifImg, &webp.Options{Lossless: true})
-	if err != nil {
-		return nil, fmt.Errorf("error encoding to WebP: %w", err)
+	// don't forget call this or you will have memory leaks
+	defer webpan.ReleaseMemory()
+
+	wconf := wan.NewWebpConfig()
+	wconf.SetLossless(1)
+
+	timeline := 0
+
+	// loop over all decoded GIF frames
+	for i, img := range gif.Image {
+		err = webpan.AddFrame(img, timeline, wconf)
+		if err != nil {
+			//log.Fatal(err)
+			return nil, err
+		}
+		timeline += gif.Delay[i] * 10
 	}
 
-	// Return the encoded WebP byte slice
-	return webpBuffer.Bytes(), nil
+	err = webpan.AddFrame(nil, timeline, wconf)
+	if err != nil {
+		//log.Fatal(err)
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+
+	// encode animation and write result bytes in buffer
+	err = webpan.Encode(&buf)
+	if err != nil {
+		//log.Fatal(err)
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // DecodeImage decodes a byte stream to an image
@@ -57,20 +138,21 @@ func decodeImage(imgData []byte, extInput string) (image.Image, string, error) {
 		return img, format, nil
 
 	case "gif":
-		// this is to be used for the novel image's/thumbnail's extension, and for the encoder
-		// we want to decrease the file's size (to convert it to WebP), and GIFs be thicc...
-		format = "webp"
+		// this is to be used for the novel image's/thumbnail's extension, and for the encoder itself
+		// we want to decrease the file's size (to convert it to WebP), as GIFs be thicc...
+		//format = "webp"
+		format = "gif"
 		img, err = gif.Decode(bytes.NewReader(imgData))
 		if err != nil {
 			return nil, "", err
 		}
 
-	case "webp":
-		format = "webp"
-		img, err = webp.Decode(bytes.NewReader(imgData))
-		if err != nil {
-			return nil, "", err
-		}
+	/*case "webp":
+	format = "webp"
+	img, err = webp.Decode(bytes.NewReader(imgData))
+	if err != nil {
+		return nil, "", err
+	}*/
 	default:
 		return nil, "", fmt.Errorf("unsupported format: %s", extension)
 	}
@@ -99,10 +181,40 @@ func encodeImage(img image.Image, format string) ([]byte, error) {
 			return nil, err
 		}
 	case "gif", "webp":
-		err := webp.Encode(&buf, img, &webp.Options{Lossless: true})
+		bounds := img.Bounds()
+		width := bounds.Dx()
+		height := bounds.Dy()
+		targetWidth := 350
+
+		// Calculate aspect ratio and determine target height
+		aspectRatio := float64(height) / float64(width)
+		targetHeight := int(float64(targetWidth) * aspectRatio)
+
+		wanim := wan.NewWebpAnimation(targetWidth, targetHeight, 0)
+		wanim.WebPAnimEncoderOptions.SetKmin(9)
+		wanim.WebPAnimEncoderOptions.SetKmax(17)
+
+		// don't forget call this or you will have memory leaks
+		defer wanim.ReleaseMemory()
+
+		wconf := wan.NewWebpConfig()
+		wconf.SetLossless(0)
+
+		err := wanim.AddFrame(img, 0, wconf)
+		if err != nil {
+			//log.Fatal(err)
+			return nil, err
+		}
+
+		err = wanim.Encode(&buf)
 		if err != nil {
 			return nil, err
 		}
+	//case "gif", "webp":
+	/*err := webp.Encode(&buf, img, &webp.Options{Lossless: true})
+	if err != nil {
+		return nil, err
+	}*/
 	default:
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
@@ -246,4 +358,33 @@ func resizeImage(img image.Image, targetWidth int) image.Image {
 	draw.CatmullRom.Scale(thumb, thumb.Bounds(), img, img.Bounds(), draw.Over, nil)
 
 	return thumb
+}
+
+//
+//  gif.GIF input handling
+//
+
+// https://stackoverflow.com/a/33296596
+func getGifDimensions(gif *gif.GIF) (x, y int) {
+	var lowestX int
+	var lowestY int
+	var highestX int
+	var highestY int
+
+	for _, img := range gif.Image {
+		if img.Rect.Min.X < lowestX {
+			lowestX = img.Rect.Min.X
+		}
+		if img.Rect.Min.Y < lowestY {
+			lowestY = img.Rect.Min.Y
+		}
+		if img.Rect.Max.X > highestX {
+			highestX = img.Rect.Max.X
+		}
+		if img.Rect.Max.Y > highestY {
+			highestY = img.Rect.Max.Y
+		}
+	}
+
+	return highestX - lowestX, highestY - lowestY
 }

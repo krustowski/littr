@@ -2,6 +2,7 @@ package posts
 
 import (
 	"encoding/json"
+	"image"
 	"net/http"
 	"os"
 	"regexp"
@@ -174,11 +175,16 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// uploadedFigure handling
 	if post.Data != nil && post.Figure != "" {
+		var newBytes []byte
+		var err error
+		var img image.Image
+		var format string
+
 		fileExplode := strings.Split(post.Figure, ".")
 		extension := fileExplode[len(fileExplode)-1]
 
 		// decode image from []byte stream
-		img, format, err := decodeImage(post.Data, extension)
+		img, format, err = decodeImage(post.Data, extension)
 		if err != nil {
 			resp.Message = "cannot decode given byte stream: probably an unsupported format was sent"
 			resp.Code = http.StatusBadRequest
@@ -188,25 +194,48 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// fix the image orientation for decoded image
-		img, err = fixOrientation(img, post.Data)
-		if err != nil {
-			resp.Message = "cannot fix image's oriantation"
-			resp.Code = http.StatusInternalServerError
+		switch extension {
+		case "png", "jpg", "jpeg":
+			// fix the image orientation for decoded image
+			img, err = fixOrientation(img, post.Data)
+			if err != nil {
+				resp.Message = "cannot fix image's orientation"
+				resp.Code = http.StatusInternalServerError
 
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
-			return
-		}
+				l.Println(resp.Message+err.Error(), resp.Code)
+				resp.Write(w)
+				return
+			}
 
-		// re-encode the image
-		// flush EXIF metadata
-		newBytes, err := encodeImage(img, format)
-		if err != nil {
-			resp.Message = "cannot re-encode the novel image"
+			// re-encode the image to flush EXIF metadata header
+			newBytes, err = encodeImage(img, format)
+			if err != nil {
+				resp.Message = "cannot re-encode the novel image"
+				resp.Code = http.StatusBadRequest
+
+				l.Println(resp.Message+err.Error(), resp.Code)
+				resp.Write(w)
+				return
+			}
+
+		case "gif":
+			format = "webp"
+
+			newBytes, err = convertGifToWebp(post.Data)
+			if err != nil {
+				resp.Message = "cannot convert given GIF to WebP"
+				resp.Code = http.StatusInternalServerError
+
+				l.Println(resp.Message+err.Error(), resp.Code)
+				resp.Write(w)
+				return
+			}
+
+		default:
+			resp.Message = "unsupported imafe format: " + format
 			resp.Code = http.StatusBadRequest
 
-			l.Println(resp.Message+err.Error(), resp.Code)
+			l.Println(resp.Message, resp.Code)
 			resp.Write(w)
 			return
 		}
