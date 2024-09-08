@@ -264,7 +264,7 @@ func (c *flowContent) handleFigUpload(ctx app.Context, e app.Event) {
 			return
 
 		} else {
-			toastText = "image uploaded"
+			toastText = "image is ready"
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastType = "success"
@@ -1289,7 +1289,7 @@ func (c *flowContent) Render() app.UI {
 					//app.Label().Text("text").Class("active"),
 				),
 				app.Div().Class("field label border extra deep-orange-text").Body(
-					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/png, image/jpeg"),
+					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/*"),
 					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
 					app.Label().Text("image").Class("active deep-orange-text"),
 					app.I().Text("image"),
