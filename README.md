@@ -172,7 +172,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.40
-+ convert GIFs to WEBPs
++ ~~convert GIFs to WebPs~~
 + ~~e-mail duplicity check for registration~~
 + user activation via mail
 
