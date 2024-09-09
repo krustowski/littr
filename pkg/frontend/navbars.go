@@ -199,7 +199,7 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if _, flowed := user.FlowList[author]; !flowed {
+		if flowed, found := user.FlowList[author]; !flowed || !found {
 			return
 		}
 
