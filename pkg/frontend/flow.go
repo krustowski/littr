@@ -1452,7 +1452,7 @@ func (c *flowContent) Render() app.UI {
 						// special system post
 						app.If(post.Nickname == "system",
 							app.Td().Class("post align-left").Attr("touch-action", "none").Body(
-								app.Article().Class("responsive center-align").Body(
+								app.Article().Class("responsive margin-top center-align").Body(
 									app.A().Href(systemLink).Body(
 										app.Span().Class("bold").Text(post.Content),
 									),
@@ -1474,14 +1474,19 @@ func (c *flowContent) Render() app.UI {
 								app.Div().Class("row top-padding").Body(
 									app.Img().Title("user's avatar").Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().Class("max").Body(
-										app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(c.onClickUserFlow).Text(post.Nickname).ID(post.Nickname),
+										app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(c.onClickUserFlow).ID(post.Nickname).Body(
+											app.Span().Class("large-text bold deep-orange-text").Text(post.Nickname),
+										),
 										//app.B().Text(post.Nickname).Class("deep-orange-text"),
+									),
+									app.Button().ID(key).Title("link to this post (to clipboard)").Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+										app.I().Text("link"),
 									),
 								),
 
 								// pic post
 								app.If(post.Type == "fig",
-									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent").Body(
+									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent medium no-margin").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -1527,7 +1532,7 @@ func (c *flowContent) Render() app.UI {
 									),
 
 									app.If(post.Figure != "",
-										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("transparent").Body(
+										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("transparent medium medium").Body(
 											app.If(c.loaderShowImage,
 												app.Div().Class("small-space"),
 												app.Div().Class("loader center large deep-orange active"),
@@ -1550,9 +1555,6 @@ func (c *flowContent) Render() app.UI {
 										),
 										app.Button().Title("reply").ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
 											app.I().Text("reply"),
-										),
-										app.Button().ID(key).Title("link to this post (to clipboard)").Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-											app.I().Text("link"),
 										),
 									),
 									app.If(c.user.Nickname == post.Nickname,

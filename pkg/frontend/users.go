@@ -976,14 +976,18 @@ func (c *usersContent) Render() app.UI {
 
 								app.If(user.Private,
 									// nasty hack to ensure the padding lock icon is next to nickname
-									app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser),
+									app.P().ID(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser).Body(
+										app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
+									),
 
 									// show private mode
 									app.Span().Class("bold max").Body(
 										app.I().Text("lock"),
 									),
 								).Else(
-									app.P().ID(user.Nickname).Text(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
+									app.P().ID(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser).Body(
+										app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
+									),
 								),
 
 								// user's stats --- flower count

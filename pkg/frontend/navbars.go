@@ -424,7 +424,7 @@ func (h *header) Render() app.UI {
 		Body(
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted,
-					app.A().Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
+					app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("build")),
 					),
@@ -434,7 +434,7 @@ func (h *header) Render() app.UI {
 
 				// show intallation button if available
 				app.If(h.appInstallable,
-					app.A().Class("").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
+					app.A().Class("button circle transparent").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("download"),
 						),
@@ -558,7 +558,7 @@ func (h *header) Render() app.UI {
 
 				// update button
 				app.If(h.updateAvailable,
-					app.A().Class("").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
+					app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("update"),
 						),
@@ -570,12 +570,12 @@ func (h *header) Render() app.UI {
 
 				// login/logout button
 				app.If(h.authGranted,
-					app.A().Text("logout").Class("").OnClick(h.onClickShowLogoutModal).Title("logout").Aria("label", "logout").Body(
+					app.A().Class("button circle transparent").Text("logout").Class("").OnClick(h.onClickShowLogoutModal).Title("logout").Aria("label", "logout").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("logout")),
 					),
 				).Else(
-					app.A().Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
+					app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("login")),
 					),
@@ -606,27 +606,27 @@ func (f *footer) Render() app.UI {
 	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
-				app.A().Href(statsHref).Text("stats").Class("").Title("stats [1]").Aria("label", "stats").Body(
+				app.A().Class("button circle transparent").Href(statsHref).Text("stats").Class("").Title("stats [1]").Aria("label", "stats").Body(
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("query_stats")),
 				),
 
-				app.A().Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
+				app.A().Class("button circle transparent").Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("group")),
 				),
 
-				app.A().Href(postHref).Text("post").Class("").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
+				app.A().Class("button circle transparent").Href(postHref).Text("post").Class("").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("add")),
 				),
 
-				app.A().Href(pollsHref).Text("polls").Class("").Title("polls [4]").Aria("label", "polls").Body(
+				app.A().Class("button circle transparent").Href(pollsHref).Text("polls").Class("").Title("polls [4]").Aria("label", "polls").Body(
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("equalizer")),
 				),
 
-				app.A().Href(flowHref).Text("flow").Class("").Title("flow [5]").Aria("label", "flow").Body(
+				app.A().Class("button circle transparent").Href(flowHref).Text("flow").Class("").Title("flow [5]").Aria("label", "flow").Body(
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("tsunami")),
 				),
