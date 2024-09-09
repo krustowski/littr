@@ -107,6 +107,10 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if poll.Author == "" {
+		poll.Author = callerID
+	}
+
 	key := poll.ID
 
 	if poll.Author != callerID {
