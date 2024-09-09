@@ -1309,7 +1309,7 @@ func (c *flowContent) Render() app.UI {
 		),
 
 		// flow posts/articles
-		app.Table().Class("left-align").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
+		app.Table().Class("left-aligni border").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
@@ -1481,7 +1481,7 @@ func (c *flowContent) Render() app.UI {
 
 								// pic post
 								app.If(post.Type == "fig",
-									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -1527,7 +1527,7 @@ func (c *flowContent) Render() app.UI {
 									),
 
 									app.If(post.Figure != "",
-										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("medium no-padding transparent").Body(
+										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("transparent").Body(
 											app.If(c.loaderShowImage,
 												app.Div().Class("small-space"),
 												app.Div().Class("loader center large deep-orange active"),

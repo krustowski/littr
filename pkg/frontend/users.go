@@ -840,7 +840,7 @@ func (c *usersContent) Render() app.UI {
 			app.Div().Class("space"),
 
 			// requests table
-			app.Table().Class("").ID("table-users").Style("width", "100%").Body(
+			app.Table().Class("border").ID("table-users").Style("width", "100%").Body(
 				app.TBody().Body(
 					app.Range(c.user.RequestList).Map(func(key string) app.UI {
 						if !c.user.RequestList[key] {
@@ -935,7 +935,7 @@ func (c *usersContent) Render() app.UI {
 		),
 
 		// users table
-		app.Table().Class("").ID("table-users").Style("width", "100%").Body(
+		app.Table().Class("border").ID("table-users").Style("width", "100%").Style("border-spacing", "0.1em").Style("padding", "0 0 2em 0").Body(
 			app.TBody().Body(
 				app.Range(pagedUsers).Slice(func(idx int) app.UI {
 					user := pagedUsers[idx]
