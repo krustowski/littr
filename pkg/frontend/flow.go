@@ -25,6 +25,8 @@ type flowContent struct {
 	loaderShow      bool
 	loaderShowImage bool
 
+	hideReplies bool
+
 	contentLoadFinished bool
 
 	loggedUser string
@@ -488,8 +490,13 @@ func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
 
 	textarea := app.Window().GetElementByID("reply-textarea")
 
-	if (e.Get("key").String() == "r" || e.Get("key").String() == "R") && textarea.IsNull() && !c.refreshClicked {
+	if (e.Get("key").String() == "x" || e.Get("key").String() == "X" || e.Get("key").String() == "r" || e.Get("key").String() == "R") && textarea.IsNull() && !c.refreshClicked {
 		ctx.Dispatch(func(ctx app.Context) {
+			// experimental feature to toggle show/hide reply posts on flow
+			if e.Get("key").String() == "x" || e.Get("key").String() == "X" {
+				c.hideReplies = !c.hideReplies
+			}
+
 			c.loaderShow = true
 			c.loaderShowImage = true
 			c.contentLoadFinished = false
@@ -504,6 +511,10 @@ func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
 		ctx.NewAction("refresh")
 		return
 	}
+
+	/*
+	 *  autosubmit via ctrl+enter
+	 */
 
 	if textarea.IsNull() {
 		return
@@ -566,6 +577,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 					UserFlowNick: c.userFlowNick,
 
 					Hashtag: c.hashtag,
+					HideReplies: c.hideReplies,
 				}
 
 				newPosts, newUsers = c.fetchFlowPage(opts)
@@ -783,6 +795,7 @@ func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 			//UserFlowNick: parts.UserFlowNick,
 			UserFlowNick: c.userFlowNick,
 			Hashtag:      c.hashtag,
+			HideReplies: c.hideReplies,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
@@ -827,13 +840,15 @@ type pageOptions struct {
 	Context  app.Context
 	CallerID string
 
-	SinglePost bool `default:false`
-	UserFlow   bool `default:false`
+	SinglePost bool `default:"false"`
+	UserFlow   bool `default:"false"`
 
 	SinglePostID string `default:""`
 	UserFlowNick string `default:""`
 
 	Hashtag string `default:""`
+
+	HideReplies bool `default:"false"`
 }
 
 func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
@@ -1055,6 +1070,7 @@ func (c *flowContent) OnNav(ctx app.Context) {
 			UserFlow:     parts.UserFlow,
 			UserFlowNick: parts.UserFlowNick,
 			Hashtag:      parts.Hashtag,
+			HideReplies:  c.hideReplies,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
@@ -1328,6 +1344,10 @@ func (c *flowContent) Render() app.UI {
 
 					// prepare reply parameters to render
 					if post.ReplyToID != "" {
+						if c.hideReplies {
+							return nil
+						}
+
 						if previous, found := c.posts[post.ReplyToID]; found {
 							if value, foundU := c.user.FlowList[previous.Nickname]; (!value || !foundU) && c.users[previous.Nickname].Private {
 								previousContent = "this content is private"
