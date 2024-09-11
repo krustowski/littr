@@ -84,7 +84,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pExport, uExport := GetOnePage(opts)
 	if pExport == nil || uExport == nil {
-		resp.Message = "error while requesting more page, one exported map is nil!"
+		resp.Message = "error while requesting more pages, one exported map is nil!"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)

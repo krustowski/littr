@@ -59,17 +59,22 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 		flowList = opts.FlowList
 	}
 
+	// assign reply count to each post
+	for _, post := range allPosts {
+		if post.ReplyToID == "" {
+			continue
+		}
+
+		// calculate the reply count for each post
+		origo, found := allPosts[post.ReplyToID]
+		if found {
+			origo.ReplyCount++
+			allPosts[origo.ID] = origo
+		}
+	}
+
 	// filter out all posts for such callerID
 	for _, post := range allPosts {
-		// calculate the reply count for each post
-		/*if post.ReplyToID != "" {
-			origo, found := allPosts[post.ReplyToID]
-			if found {
-				origo.ReplyCount++
-				allPosts[post.ReplyToID] = origo
-			}
-		}*/
-
 		// check the caller's flow list, skip on unfollowed, or unknown user
 		if value, found := flowList[post.Nickname]; !found || !value {
 			continue
