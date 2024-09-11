@@ -25,14 +25,19 @@ const (
 func LoadAll() string {
 	polls := makeLoadReport("polls", wrapLoadOutput(
 		loadOne(PollCache, pollsFile, models.Poll{})))
+
 	posts := makeLoadReport("posts", wrapLoadOutput(
 		loadOne(FlowCache, postsFile, models.Post{})))
+
 	reqs := makeLoadReport("requests", wrapLoadOutput(
 		loadOne(RequestCache, requestsFile, models.Request{})))
+
 	subs := makeLoadReport("subscriptions", wrapLoadOutput(
 		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
+
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
 		loadOne(TokenCache, tokensFile, void)))
+
 	users := makeLoadReport("users", wrapLoadOutput(
 		loadOne(UserCache, usersFile, models.User{})))
 
