@@ -26,6 +26,7 @@ var (
 )
 
 type callInput struct {
+	Method string
 	Url string
 	Data interface{}
 	CallerID string
@@ -51,13 +52,13 @@ func littrAPI(input callInput) (*[]byte, bool) {
 
 		bodyReader = bytes.NewReader([]byte(payload))
 
-		req, err = http.NewRequest(method, input.Url, bodyReader)
+		req, err = http.NewRequest(input.Method, input.Url, bodyReader)
 		if err != nil {
 			log.Println(err.Error())
 			return nil, false
 		}
 	} else {
-		req, err = http.NewRequest(method, input.Url, nil)
+		req, err = http.NewRequest(input.Method, input.Url, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return nil, false

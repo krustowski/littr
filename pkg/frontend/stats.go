@@ -146,8 +146,17 @@ func (c *statsContent) OnNav(ctx app.Context) {
 			Code      int                    `json:"code"`
 		}{}
 
+		input := callInput{
+			Method: "GET",
+			Url: "/api/v1/stats",
+			Data: nil,
+			CallerID: "",
+			PageNo: 0,
+			HideReplies: false,
+		}
+
 		// fetch the stats
-		if byteData, _ := littrAPI("GET", "/api/v1/stats", nil, "", 0); byteData != nil {
+		if byteData, _ := littrAPI(input); byteData != nil {
 			err := json.Unmarshal(*byteData, &payload)
 			if err != nil {
 				log.Println(err.Error())

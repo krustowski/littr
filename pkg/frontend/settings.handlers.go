@@ -110,7 +110,16 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		if data, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/passphrase", payload, c.user.Nickname, 0); ok {
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/passphrase",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if data, ok := littrAPI(input); ok {
 			if err := json.Unmarshal(*data, &response); err != nil {
 				toastText = "JSON parse error: " + err.Error()
 
@@ -197,7 +206,16 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.AboutText = aboutText
 
-		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/options",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -271,7 +289,16 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.WebsiteLink = website
 
-		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/options",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -320,7 +347,16 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 	}
 
 	ctx.Async(func() {
-		if _, ok := littrAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "DELETE",
+			Url: "/api/v1/push/subscription/"+ctx.DeviceID(),
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
@@ -439,7 +475,16 @@ func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 	}
 
 	ctx.Async(func() {
-		if _, ok := littrAPI("DELETE", "/api/v1/push/subscription/"+ctx.DeviceID(), payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "DELETE",
+			Url: "/api/v1/push/subscription/"+ctx.DeviceID(),
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.toastText = toastText
 				c.toastText = "failed to unsubscribe, try again later"
@@ -531,7 +576,16 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 	deviceSub := c.thisDevice
 
 	ctx.Async(func() {
-		if _, ok := littrAPI("PUT", "/api/v1/push/subscription/"+ctx.DeviceID()+"/"+tag, deviceSub, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PUT",
+			Url: "/api/v1/push/subscription/"+ctx.DeviceID()+"/"+tag,
+			Data: deviceSub,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.toastText = "failed to update the subscription, try again later"
 				c.toastShow = c.toastText != ""
@@ -653,7 +707,16 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		// send the registration to backend
-		if _, ok := littrAPI("POST", "/api/v1/push/subscription", deviceSub, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "POST",
+			Url: "/api/v1/push/subscription",
+			Data: deviceSub,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText := "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -707,7 +770,16 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.LocalTimeMode = !localTime
 
-		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/options",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -744,7 +816,16 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.Private = !c.user.Private
 
-		if _, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/options", payload, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/options",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "cannot reach backend!"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -778,8 +859,16 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
+		input := callInput{
+			Method: "DELETE",
+			Url: "/api/v1/users/"+c.user.Nickname,
+			Data: c.user,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
 
-		if _, ok := littrAPI("DELETE", "/api/v1/users/"+c.user.Nickname, c.user, c.user.Nickname, 0); !ok {
+		if _, ok := littrAPI(input); !ok {
 			toastText = "generic backend error"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -844,7 +933,16 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				Key string
 			}{}
 
-			if raw, ok := littrAPI("POST", path, payload, c.user.Nickname, 0); ok {
+		input := callInput{
+			Method: "POST",
+			Url: path,
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+			if raw, ok := littrAPI(input); ok {
 				if err := json.Unmarshal(*raw, &resp); err != nil {
 					toastText = "JSON parse error: " + err.Error()
 					ctx.Dispatch(func(ctx app.Context) {

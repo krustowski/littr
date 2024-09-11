@@ -193,7 +193,16 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		resp, ok := littrAPI("POST", "/api/v1/users", user, user.Nickname, 0)
+		input := callInput{
+			Method: "POST",
+			Url: "/api/v1/users",
+			Data: user,
+			CallerID: user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		resp, ok := littrAPI(input)
 		if !ok {
 			toastText = "cannot send API request (backend error)"
 

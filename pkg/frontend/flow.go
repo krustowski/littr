@@ -149,7 +149,16 @@ func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 			FlowList: flowList,
 		}
 
-		respRaw, ok := littrAPI("PATCH", "/api/v1/users/"+c.user.Nickname+"/lists", payload, c.user.Nickname, 0)
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/users/"+c.user.Nickname+"/lists",
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: c.hideReplies,
+		}
+
+		respRaw, ok := littrAPI(input)
 		if !ok {
 			toastText = "generic backend error"
 			return
@@ -392,8 +401,17 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			Posts map[string]models.Post `posts`
 		}{}
 
+		input := callInput{
+			Method: "POST",
+			Url: path,
+			Data: payload,
+			CallerID: c.user.Nickname,
+			PageNo: c.pageNo,
+			HideReplies: c.hideReplies,
+		}
+
 		// add new post/poll to backend struct
-		if resp, _ := littrAPI("POST", path, payload, c.user.Nickname, c.pageNo); resp != nil {
+		if resp, _ := littrAPI(input); resp != nil {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -434,8 +452,17 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			OriginalPost: c.interactedPostKey,
 		}
 
+		input := callInput{
+			Method: "POST",
+			Url: "/api/v1/push/notification/"+c.interactedPostKey,
+			Data: payloadNotif,
+			CallerID: c.user.Nickname,
+			PageNo: c.pageNo,
+			HideReplies: c.hideReplies,
+		}
+
 		// create a notification
-		if _, ok := littrAPI("POST", "/api/v1/push/notification/"+c.interactedPostKey, payloadNotif, c.user.Nickname, c.pageNo); !ok {
+		if _, ok := littrAPI(input); !ok {
 			toastText = "cannot POST new notification"
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -677,7 +704,16 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 			})
 		}
 
-		if _, ok := littrAPI("DELETE", "/api/v1/posts/"+interactedPost.ID, interactedPost, c.user.Nickname, c.pageNo); !ok {
+		input := callInput{
+			Method: "DELETE",
+			Url: "/api/v1/posts/"+c.interactedPost.ID,
+			Data: interactedPost,
+			CallerID: c.user.Nickname,
+			PageNo: c.pageNo,
+			HideReplies: c.hideReplies,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "backend error: cannot delete a post"
 		}
 
@@ -724,8 +760,17 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 			Posts map[string]models.Post `json:"posts"`
 		}{}
 
+		input := callInput{
+			Method: "PATCH",
+			Url: "/api/v1/posts/"+c.interactedPost.ID+"/star",
+			Data: interactedPost,
+			CallerID: c.user.Nickname,
+			PageNo: c.pageNo,
+			HideReplies: c.hideReplies,
+		}
+
 		// add new post to backend struct
-		if resp, ok := littrAPI("PATCH", "/api/v1/posts/"+interactedPost.ID+"/star", interactedPost, c.user.Nickname, c.pageNo); ok {
+		if resp, ok := littrAPI(input); ok {
 			err := json.Unmarshal(*resp, &postsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -906,7 +951,16 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 
 	}
 
-	if byteData, _ := littrAPI("GET", url, nil, c.user.Nickname, pageNo); byteData != nil {
+		input := callInput{
+			Method: "GET",
+			Url: url,
+			Data: nil,
+			CallerID: c.user.Nickname,
+			PageNo: pageNo,
+			HideReplies: c.hideReplies,
+		}
+
+	if byteData, _ := littrAPI(input); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)
 		if err != nil {
 			log.Println(err.Error())

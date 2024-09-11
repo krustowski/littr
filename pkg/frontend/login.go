@@ -123,12 +123,22 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
 		passHash := sha512.Sum512([]byte(passphrase + appPepper))
 
-		respRaw, ok := littrAPI("POST", "/api/v1/auth/", &models.User{
+		payload := &models.User{
 			Nickname:      nickname,
 			Passphrase:    string(passHash[:]),
 			PassphraseHex: fmt.Sprintf("%x", passHash),
-		}, nickname, 0)
+		}
 
+		input := callInput{
+			Method: "POST",
+			Url: "/api/v1/auth/",
+			Data: payload,
+			CallerID: nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		respRaw, ok := littrAPI(input)
 		if !ok {
 			toastText = "backend error: API call failed"
 

@@ -235,8 +235,17 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 			Message string `json:"message"`
 		}{}
 
+		input := callInput{
+			Method: "POST",
+			Url: path,
+			Data: payload,
+			CallerID: user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
 		// add new post/poll to backend struct
-		if resp, ok := littrAPI("POST", path, payload, user.Nickname, 0); !ok {
+		if resp, ok := littrAPI(input); !ok {
 			toastText = "backend error: cannot add new content"
 
 			ctx.Dispatch(func(ctx app.Context) {

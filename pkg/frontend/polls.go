@@ -92,7 +92,16 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 			Key   string                 `json:"key"`
 		}{}
 
-		if byteData, _ := littrAPI("GET", "/api/v1/polls", nil, "", 0); byteData != nil {
+		input := callInput{
+			Method: "GET",
+			Url: "/api/v1/polls",
+			Data: nil,
+			CallerID: "",
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if byteData, _ := littrAPI(input); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -203,7 +212,16 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 			return
 		}
 
-		if _, ok := littrAPI("DELETE", "/api/v1/polls/"+interactedPoll.ID, interactedPoll, c.user.Nickname, c.pageNo); !ok {
+		input := callInput{
+			Method: "DELETE",
+			Url: "/api/v1/polls/"+interactedPoll.ID,
+			Data: interactedPoll,
+			CallerID: c.user.Nickname,
+			PageNo: c.pageNo,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "backend error: cannot delete a poll"
 		}
 
@@ -292,7 +310,16 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		//var toastText string
 
-		if _, ok := littrAPI("PUT", "/api/v1/polls/"+poll.ID, poll, c.user.Nickname, 0); !ok {
+		input := callInput{
+			Method: "PUT",
+			Url: "/api/v1/polls/"+poll.ID,
+			Data: poll,
+			CallerID: c.user.Nickname,
+			PageNo: 0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 
