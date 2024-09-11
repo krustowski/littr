@@ -357,7 +357,16 @@ func (h *header) onClickLogout(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("authGranted", false)
 
 	ctx.Async(func() {
-		if _, ok := littrAPI("POST", "/api/v1/auth/logout", nil, "", 0); !ok {
+		input := callInput{
+			Method:      "POST",
+			Url:         "/api/v1/auth/logout",
+			Data:        nil,
+			CallerID:    "",
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		if _, ok := littrAPI(input); !ok {
 			toastText := "cannot POST logout request"
 
 			ctx.Dispatch(func(ctx app.Context) {

@@ -147,11 +147,11 @@ func (c *statsContent) OnNav(ctx app.Context) {
 		}{}
 
 		input := callInput{
-			Method: "GET",
-			Url: "/api/v1/stats",
-			Data: nil,
-			CallerID: "",
-			PageNo: 0,
+			Method:      "GET",
+			Url:         "/api/v1/stats",
+			Data:        nil,
+			CallerID:    "",
+			PageNo:      0,
 			HideReplies: false,
 		}
 

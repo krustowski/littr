@@ -76,11 +76,11 @@ func (c *usersContent) OnNav(ctx app.Context) {
 		}{}
 
 		input := callInput{
-			Method: "GET",
-			Url: "/api/v1/users",
-			Data: nil,
-			CallerID: "",
-			PageNo: 0,
+			Method:      "GET",
+			Url:         "/api/v1/users",
+			Data:        nil,
+			CallerID:    "",
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -224,11 +224,11 @@ func (c *usersContent) handleToggle(ctx app.Context, a app.Action) {
 		}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+user.Nickname+"/lists",
-			Data: payload,
-			CallerID: user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + user.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -404,11 +404,11 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 		}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+userShaded.Nickname+"/lists",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + userShaded.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -448,12 +448,12 @@ func (c *usersContent) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: c.user.ShadeList,
 		}
 
-		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/lists",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+		input = callInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -522,11 +522,11 @@ func (c *usersContent) onClickPrivateOff(ctx app.Context, e app.Event) {
 		toastType := "error"
 
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/users/"+nick+"/request",
-			Data: nil,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "DELETE",
+			Url:         "/api/v1/users/" + nick + "/request",
+			Data:        nil,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -568,11 +568,11 @@ func (c *usersContent) onClickPrivateOn(ctx app.Context, e app.Event) {
 		toastType := "error"
 
 		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/users/"+nick+"/request",
-			Data: nil,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "POST",
+			Url:         "/api/v1/users/" + nick + "/request",
+			Data:        nil,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -626,11 +626,11 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 		}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/request",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/request",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -666,11 +666,11 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 		}
 
 		input2 := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/lists",
-			Data: payload2,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Data:        payload2,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -728,11 +728,11 @@ func (c *usersContent) onClickCancel(ctx app.Context, e app.Event) {
 		}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/lists",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 

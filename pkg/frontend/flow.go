@@ -150,11 +150,11 @@ func (c *flowContent) onClickFollow(ctx app.Context, e app.Event) {
 		}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/lists",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: c.hideReplies,
 		}
 
@@ -402,11 +402,11 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		}{}
 
 		input := callInput{
-			Method: "POST",
-			Url: path,
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: c.pageNo,
+			Method:      "POST",
+			Url:         path,
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      c.pageNo,
 			HideReplies: c.hideReplies,
 		}
 
@@ -452,12 +452,12 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 			OriginalPost: c.interactedPostKey,
 		}
 
-		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/push/notification/"+c.interactedPostKey,
-			Data: payloadNotif,
-			CallerID: c.user.Nickname,
-			PageNo: c.pageNo,
+		input = callInput{
+			Method:      "POST",
+			Url:         "/api/v1/push/notification/" + c.interactedPostKey,
+			Data:        payloadNotif,
+			CallerID:    c.user.Nickname,
+			PageNo:      c.pageNo,
 			HideReplies: c.hideReplies,
 		}
 
@@ -603,7 +603,7 @@ func (c *flowContent) handleScroll(ctx app.Context, a app.Action) {
 					//UserFlowNick: parts.UserFlowNick,
 					UserFlowNick: c.userFlowNick,
 
-					Hashtag: c.hashtag,
+					Hashtag:     c.hashtag,
 					HideReplies: c.hideReplies,
 				}
 
@@ -705,11 +705,11 @@ func (c *flowContent) handleDelete(ctx app.Context, a app.Action) {
 		}
 
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/posts/"+c.interactedPost.ID,
-			Data: interactedPost,
-			CallerID: c.user.Nickname,
-			PageNo: c.pageNo,
+			Method:      "DELETE",
+			Url:         "/api/v1/posts/" + interactedPost.ID,
+			Data:        interactedPost,
+			CallerID:    c.user.Nickname,
+			PageNo:      c.pageNo,
 			HideReplies: c.hideReplies,
 		}
 
@@ -761,11 +761,11 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 		}{}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/posts/"+c.interactedPost.ID+"/star",
-			Data: interactedPost,
-			CallerID: c.user.Nickname,
-			PageNo: c.pageNo,
+			Method:      "PATCH",
+			Url:         "/api/v1/posts/" + interactedPost.ID + "/star",
+			Data:        interactedPost,
+			CallerID:    c.user.Nickname,
+			PageNo:      c.pageNo,
 			HideReplies: c.hideReplies,
 		}
 
@@ -840,7 +840,7 @@ func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 			//UserFlowNick: parts.UserFlowNick,
 			UserFlowNick: c.userFlowNick,
 			Hashtag:      c.hashtag,
-			HideReplies: c.hideReplies,
+			HideReplies:  c.hideReplies,
 		}
 
 		posts, users := c.fetchFlowPage(opts)
@@ -951,14 +951,14 @@ func (c *flowContent) fetchFlowPage(opts pageOptions) (map[string]models.Post, m
 
 	}
 
-		input := callInput{
-			Method: "GET",
-			Url: url,
-			Data: nil,
-			CallerID: c.user.Nickname,
-			PageNo: pageNo,
-			HideReplies: c.hideReplies,
-		}
+	input := callInput{
+		Method:      "GET",
+		Url:         url,
+		Data:        nil,
+		CallerID:    c.user.Nickname,
+		PageNo:      pageNo,
+		HideReplies: c.hideReplies,
+	}
 
 	if byteData, _ := littrAPI(input); byteData != nil {
 		err := json.Unmarshal(*byteData, &resp)

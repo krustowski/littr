@@ -236,11 +236,11 @@ func (c *postContent) onClick(ctx app.Context, e app.Event) {
 		}{}
 
 		input := callInput{
-			Method: "POST",
-			Url: path,
-			Data: payload,
-			CallerID: user.Nickname,
-			PageNo: 0,
+			Method:      "POST",
+			Url:         path,
+			Data:        payload,
+			CallerID:    user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 

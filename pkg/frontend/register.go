@@ -194,11 +194,11 @@ func (c *registerContent) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList["system"] = true
 
 		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/users",
-			Data: user,
-			CallerID: user.Nickname,
-			PageNo: 0,
+			Method:      "POST",
+			Url:         "/api/v1/users",
+			Data:        user,
+			CallerID:    user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 

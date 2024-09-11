@@ -93,11 +93,11 @@ func (c *pollsContent) OnNav(ctx app.Context) {
 		}{}
 
 		input := callInput{
-			Method: "GET",
-			Url: "/api/v1/polls",
-			Data: nil,
-			CallerID: "",
-			PageNo: 0,
+			Method:      "GET",
+			Url:         "/api/v1/polls",
+			Data:        nil,
+			CallerID:    "",
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -213,11 +213,11 @@ func (c *pollsContent) handleDelete(ctx app.Context, a app.Action) {
 		}
 
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/polls/"+interactedPoll.ID,
-			Data: interactedPoll,
-			CallerID: c.user.Nickname,
-			PageNo: c.pageNo,
+			Method:      "DELETE",
+			Url:         "/api/v1/polls/" + interactedPoll.ID,
+			Data:        interactedPoll,
+			CallerID:    c.user.Nickname,
+			PageNo:      c.pageNo,
 			HideReplies: false,
 		}
 
@@ -311,11 +311,11 @@ func (c *pollsContent) handleVote(ctx app.Context, a app.Action) {
 		//var toastText string
 
 		input := callInput{
-			Method: "PUT",
-			Url: "/api/v1/polls/"+poll.ID,
-			Data: poll,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PUT",
+			Url:         "/api/v1/polls/" + poll.ID,
+			Data:        poll,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 

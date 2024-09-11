@@ -66,14 +66,14 @@ func (c *resetContent) handleResetRequest(email, uuid string) error {
 		UUID:  uuid,
 	}
 
-		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/users/passphrase/"+path,
-			Data: payload,
-			CallerID: "",
-			PageNo: 0,
-			HideReplies: false,
-		}
+	input := callInput{
+		Method:      "POST",
+		Url:         "/api/v1/users/passphrase/" + path,
+		Data:        payload,
+		CallerID:    "",
+		PageNo:      0,
+		HideReplies: false,
+	}
 
 	respRaw, ok := littrAPI(input)
 	if !ok {

@@ -106,7 +106,16 @@ func (c *settingsContent) OnNav(ctx app.Context) {
 			Code       int                    `json:"code"`
 		}{}
 
-		if data, ok := littrAPI("GET", "/api/v1/users", nil, ctx.DeviceID(), 0); ok {
+		input := callInput{
+			Method:      "GET",
+			Url:         "/api/v1/users",
+			Data:        nil,
+			CallerID:    ctx.DeviceID(),
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		if data, ok := littrAPI(input); ok {
 			err := json.Unmarshal(*data, &payload)
 			if err != nil {
 				log.Println(err.Error())

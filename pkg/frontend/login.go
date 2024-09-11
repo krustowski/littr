@@ -130,11 +130,11 @@ func (c *loginContent) onClick(ctx app.Context, e app.Event) {
 		}
 
 		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/auth/",
-			Data: payload,
-			CallerID: nickname,
-			PageNo: 0,
+			Method:      "POST",
+			Url:         "/api/v1/auth/",
+			Data:        payload,
+			CallerID:    nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 

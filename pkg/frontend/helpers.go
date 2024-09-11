@@ -26,15 +26,15 @@ var (
 )
 
 type callInput struct {
-	Method string
-	Url string
-	Data interface{}
-	CallerID string
-	PageNo int
+	Method      string
+	Url         string
+	Data        interface{}
+	CallerID    string
+	PageNo      int
 	HideReplies bool
 }
 
-//func littrAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
+// func littrAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
 func littrAPI(input callInput) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
@@ -79,9 +79,9 @@ func littrAPI(input callInput) (*[]byte, bool) {
 	}
 
 	req.Header.Set("X-API-Caller-ID", input.CallerID)
-	req.Header.Set("X-App-Version",   input.Version)
-	req.Header.Set("X-Flow-Page-No",  input.PageNoString)
-	req.Header.Set("X-Hide-Replies",  input.HideReplies)
+	req.Header.Set("X-App-Version", version)
+	req.Header.Set("X-Flow-Page-No", pageNoString)
+	req.Header.Set("X-Hide-Replies", fmt.Sprintf("%t", input.HideReplies))
 
 	client := http.Client{}
 

@@ -111,11 +111,11 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		}{}
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/passphrase",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/passphrase",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -207,11 +207,11 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		payload.AboutText = aboutText
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/options",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -290,11 +290,11 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		payload.WebsiteLink = website
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/options",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -348,11 +348,11 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 
 	ctx.Async(func() {
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/push/subscription/"+ctx.DeviceID(),
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "DELETE",
+			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -476,11 +476,11 @@ func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
 
 	ctx.Async(func() {
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/push/subscription/"+ctx.DeviceID(),
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "DELETE",
+			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -577,11 +577,11 @@ func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
 
 	ctx.Async(func() {
 		input := callInput{
-			Method: "PUT",
-			Url: "/api/v1/push/subscription/"+ctx.DeviceID()+"/"+tag,
-			Data: deviceSub,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PUT",
+			Url:         "/api/v1/push/subscription/" + ctx.DeviceID() + "/" + tag,
+			Data:        deviceSub,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -708,11 +708,11 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 
 		// send the registration to backend
 		input := callInput{
-			Method: "POST",
-			Url: "/api/v1/push/subscription",
-			Data: deviceSub,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "POST",
+			Url:         "/api/v1/push/subscription",
+			Data:        deviceSub,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -771,11 +771,11 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		payload.LocalTimeMode = !localTime
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/options",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -817,11 +817,11 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		payload.Private = !c.user.Private
 
 		input := callInput{
-			Method: "PATCH",
-			Url: "/api/v1/users/"+c.user.Nickname+"/options",
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -860,11 +860,11 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		input := callInput{
-			Method: "DELETE",
-			Url: "/api/v1/users/"+c.user.Nickname,
-			Data: c.user,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
+			Method:      "DELETE",
+			Url:         "/api/v1/users/" + c.user.Nickname,
+			Data:        c.user,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
 			HideReplies: false,
 		}
 
@@ -933,14 +933,14 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				Key string
 			}{}
 
-		input := callInput{
-			Method: "POST",
-			Url: path,
-			Data: payload,
-			CallerID: c.user.Nickname,
-			PageNo: 0,
-			HideReplies: false,
-		}
+			input := callInput{
+				Method:      "POST",
+				Url:         path,
+				Data:        payload,
+				CallerID:    c.user.Nickname,
+				PageNo:      0,
+				HideReplies: false,
+			}
 
 			if raw, ok := littrAPI(input); ok {
 				if err := json.Unmarshal(*raw, &resp); err != nil {
