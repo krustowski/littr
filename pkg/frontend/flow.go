@@ -1224,6 +1224,10 @@ func (c *flowContent) Render() app.UI {
 
 	// order posts by timestamp DESC
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
+		if c.singlePostID != "" {
+			return sortedPosts[i].Timestamp.Before(sortedPosts[j].Timestamp)
+		}
+
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
 
@@ -1578,10 +1582,10 @@ func (c *flowContent) Render() app.UI {
 													app.Details().Class("max").Body(
 														app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 														app.Div().Class("space"),
-														app.Span().Class("italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+														app.Span().Class("bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 													),
 												).Else(
-													app.Span().Class("max italic").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+													app.Span().Class("max bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 												),
 
 												app.Button().Title("link to original post").ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
