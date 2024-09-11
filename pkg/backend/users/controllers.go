@@ -186,7 +186,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if helpers.Contains(configs.UserDeletionList, user.Nickname) {
+	// block restricted nicknames, use lowercase for comparsion
+	if helpers.Contains(configs.UserDeletionList, strings.ToLower(user.Nickname)) {
 		resp.Message = "this nickname is restricted"
 		resp.Code = http.StatusBadRequest
 
@@ -214,6 +215,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check the nick's lenght contrictions limits
 	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
 		resp.Message = "nickname is too long (>12) or too short (<3)"
 		resp.Code = http.StatusBadRequest
