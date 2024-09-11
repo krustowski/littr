@@ -25,13 +25,22 @@ var (
 	vapidPublicKey string
 )
 
-func littrAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
+type callInput struct {
+	Url string
+	Data interface{}
+	CallerID string
+	PageNo int
+	HideReplies bool
+}
+
+//func littrAPI(method, url string, data interface{}, caller string, pageNo int) (*[]byte, bool) {
+func littrAPI(input callInput) (*[]byte, bool) {
 	var bodyReader *bytes.Reader
 	var req *http.Request
 	var err error
 
-	if data != nil {
-		jsonData, err := json.Marshal(data)
+	if input.Data != nil {
+		jsonData, err := json.Marshal(input.Data)
 		if err != nil {
 			log.Println("cannot marshal data")
 			log.Println(err.Error())
@@ -42,13 +51,13 @@ func littrAPI(method, url string, data interface{}, caller string, pageNo int) (
 
 		bodyReader = bytes.NewReader([]byte(payload))
 
-		req, err = http.NewRequest(method, url, bodyReader)
+		req, err = http.NewRequest(method, input.Url, bodyReader)
 		if err != nil {
 			log.Println(err.Error())
 			return nil, false
 		}
 	} else {
-		req, err = http.NewRequest(method, url, nil)
+		req, err = http.NewRequest(method, input.Url, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return nil, false
@@ -61,16 +70,17 @@ func littrAPI(method, url string, data interface{}, caller string, pageNo int) (
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	pageNoString := strconv.FormatInt(int64(pageNo), 10)
+	pageNoString := strconv.FormatInt(int64(input.PageNo), 10)
 
 	version := app.Getenv("APP_VERSION")
 	if version == "" {
 		version = appVersion
 	}
 
-	req.Header.Set("X-API-Caller-ID", caller)
-	req.Header.Set("X-App-Version", version)
-	req.Header.Set("X-Flow-Page-No", pageNoString)
+	req.Header.Set("X-API-Caller-ID", input.CallerID)
+	req.Header.Set("X-App-Version",   input.Version)
+	req.Header.Set("X-Flow-Page-No",  input.PageNoString)
+	req.Header.Set("X-Hide-Replies",  input.HideReplies)
 
 	client := http.Client{}
 
