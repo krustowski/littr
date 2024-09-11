@@ -52,6 +52,8 @@ var UserDeletionList []string = []string{
 	"passphrase",
 	"user",
 	"nickname",
+	"test",
+	"tester",
 }
 
 // This array is used in a procedure's loop to manually unshade listed users.

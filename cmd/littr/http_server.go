@@ -96,7 +96,8 @@ func initServer() {
 
 	// load up data from local dumps (/opt/data/)
 	// TODO: catch an error there!
-	db.LoadAll()
+	loadReport := db.LoadAll()
+	l.Println(loadReport, http.StatusOK)
 
 	l.Println("dumped data loaded", http.StatusOK)
 
@@ -156,12 +157,14 @@ func initServer() {
 		},
 		AutoUpdateInterval: time.Minute * 1,
 		Icon: app.Icon{
+			//Maskable:   "/web/android-chrome-192x192.png",
 			Default:    "/web/android-chrome-192x192.png",
 			SVG:        "/web/android-chrome-512x512.svg",
 			Large:      "/web/android-chrome-512x512.png",
 			AppleTouch: "/web/apple-touch-icon.png",
 		},
 		Image: "/web/android-chrome-512x512.svg",
+		//Domain: "www.littr.eu",
 		Body: func() app.HTMLBody {
 			return app.Body().Class("dark")
 		},

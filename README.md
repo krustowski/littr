@@ -171,10 +171,13 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + write integration and e2e tests
 + [...]
 
+### roadmap to v0.41
++ user activation via mail
+
 ### roadmap to v0.40
 + ~~convert GIFs to WebPs~~
 + ~~e-mail duplicity check for registration~~
-+ user activation via mail
++ ~~introduce the hideReplies feature~~
 
 ### roadmap to v0.39
 + ~~fix avatar image uploading, resizing and cropping~~
