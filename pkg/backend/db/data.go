@@ -22,14 +22,21 @@ const (
 	void              = ""
 )
 
-func LoadAll() {
-	// TODO: catch errors!
-	loadOne(PollCache, pollsFile, models.Poll{})
-	loadOne(FlowCache, postsFile, models.Post{})
-	loadOne(RequestCache, requestsFile, models.Request{})
-	loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})
-	loadOne(TokenCache, tokensFile, void)
-	loadOne(UserCache, usersFile, models.User{})
+func LoadAll() string {
+	polls := makeLoadReport("polls", wrapLoadOutput(
+		loadOne(PollCache, pollsFile, models.Poll{})))
+	posts := makeLoadReport("posts", wrapLoadOutput(
+		loadOne(FlowCache, postsFile, models.Post{})))
+	reqs := makeLoadReport("requests", wrapLoadOutput(
+		loadOne(RequestCache, requestsFile, models.Request{})))
+	subs := makeLoadReport("subscriptions", wrapLoadOutput(
+		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
+	tokens := makeLoadReport("tokens", wrapLoadOutput(
+		loadOne(TokenCache, tokensFile, void)))
+	users := makeLoadReport("users", wrapLoadOutput(
+		loadOne(UserCache, usersFile, models.User{})))
+
+	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s, %s", polls, posts, reqs, subs, tokens, users)
 }
 
 func DumpAll() {
@@ -42,18 +49,53 @@ func DumpAll() {
 	dumpOne(UserCache, usersFile, models.User{})
 }
 
-func loadOne[T any](cache *core.Cache, filepath string, model T) error {
+type load struct {
+	count int
+	total int
+	err   error
+}
+
+func makeLoadReport(name string, ld load) string {
+	var prct float64
+
+	if ld.total == 0 {
+		prct = 0
+	} else {
+		prct = float64(ld.count) / float64(ld.total) * 100
+	}
+
+	report := fmt.Sprintf("%d/%d %s (%.0f%%)", ld.count, ld.total, name, prct)
+
+	if ld.err == nil {
+		return report
+	} else {
+		return fmt.Sprintf("%s but err: %s", report, ld.err.Error())
+	}
+}
+
+func wrapLoadOutput(count, total int, err error) load {
+	return load{
+		count: count,
+		total: total,
+		err:   err,
+	}
+}
+
+func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, error) {
 	l := common.NewLogger(nil, "data load")
+
+	var count int
+	var total int
 
 	rawData, err := os.ReadFile(filepath)
 	if err != nil {
 		l.Println(err.Error(), http.StatusInternalServerError)
-		return err
+		return count, total, err
 	}
 
 	if string(rawData) == "" {
 		l.Println("empty data on input", http.StatusBadRequest)
-		return errors.New("empty data on input")
+		return count, total, errors.New("empty data on input")
 	}
 
 	matrix := struct {
@@ -63,8 +105,10 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 	err = json.Unmarshal(rawData, &matrix)
 	if err != nil {
 		l.Println(err.Error(), http.StatusInternalServerError)
-		return err
+		return count, total, err
 	}
+
+	total = len(matrix.Items)
 
 	for key, val := range matrix.Items {
 		if key == "" || &val == nil {
@@ -74,12 +118,14 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) error {
 		if saved := SetOne(cache, key, val); !saved {
 			msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
 			l.Println(msg, http.StatusInternalServerError)
-			return fmt.Errorf(msg)
+			return count, total, fmt.Errorf(msg)
 			//continue
 		}
+
+		count++
 	}
 
-	return nil
+	return count, total, nil
 }
 
 func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
