@@ -22,7 +22,8 @@ type PageOptions struct {
 	SinglePostID string `json:"single_post_id"`
 	UserFlowNick string `json:"user_Flow_nick"`
 
-	Hashtag string `json:"hashtag" default:""`
+	Hashtag     string `json:"hashtag" default:""`
+	HideReplies bool   `json:"hide_replies" default:"false"`
 }
 
 // for now, let us use it for posts/flow exclusively only
@@ -78,6 +79,11 @@ func GetOnePage(opts PageOptions) (map[string]models.Post, map[string]models.Use
 			if strings.Contains(post.Content, "#"+opts.Hashtag) {
 				posts = append(posts, post)
 			}
+			continue
+		}
+
+		// filter replies out
+		if opts.HideReplies && post.ReplyToID != "" {
 			continue
 		}
 

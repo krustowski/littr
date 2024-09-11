@@ -64,10 +64,21 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hideReplies, err := strconv.ParseBool(r.Header.Get("X-Hide-Replies"))
+	if err != nil {
+		resp.Message = "invalid X-Hide-Replies"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	opts := PageOptions{
-		CallerID: callerID,
-		PageNo:   pageNo,
-		FlowList: nil,
+		CallerID:    callerID,
+		PageNo:      pageNo,
+		FlowList:    nil,
+		HideReplies: hideReplies,
 	}
 
 	// fetch page according to the logged user
