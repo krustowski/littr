@@ -786,8 +786,13 @@ func (c *flowContent) handleStar(ctx app.Context, a app.Action) {
 			toastText = "backend error: cannot rate a post"
 		}
 
+		// keep the reply count!
+		oldPost := c.posts[key]
+		newPost := postsRaw.Posts[key]
+		newPost.ReplyCount = oldPost.ReplyCount
+
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts[key] = postsRaw.Posts[key]
+			c.posts[key] = newPost
 			c.toastText = toastText
 			c.toastShow = (toastText != "")
 		})
