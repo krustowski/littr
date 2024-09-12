@@ -177,6 +177,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 
+	// decode raw bytes
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		resp.Message = "input error, try again"
 		resp.Code = http.StatusBadRequest

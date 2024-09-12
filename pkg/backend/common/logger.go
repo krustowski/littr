@@ -9,13 +9,13 @@ import (
 
 type Logger struct {
 	// CallerID is a nickname of the user calling the API.
-	CallerID string `json:"caller_id" validation:"required"`
+	CallerID string `json:"-"`
 
 	// Code integer is a HTTP return code.
 	Code int `json:"code" validation:"required"`
 
 	// IPAddress string is basically an user's IPv4/IPv6 address (beware of proxies).
-	IPAddress string `json:"ip_address"`
+	IPAddress string `json:"-"`
 
 	// Message string holds a custom message returned by a various HTTP handler.
 	Message string `json:"message" validation:"required"`
