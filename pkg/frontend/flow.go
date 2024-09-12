@@ -361,8 +361,12 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		// trim the spaces on the extremites
 		replyPost := c.replyPostContent
 
-		if replyPost == "" && !app.Window().GetElementByID("reply-textarea").IsNull() {
-			replyPost = strings.TrimSpace(app.Window().GetElementByID("reply-textarea").Get("value").String())
+		if !app.Window().GetElementByID("reply-textarea").IsNull() {
+			replyPostFull = strings.TrimSpace(app.Window().GetElementByID("reply-textarea").Get("value").String())
+
+			if len(replyPost) < len(replyPostFull) {
+				replyPost = replyPostFull
+			}
 		}
 
 		// allow picture-only posting
