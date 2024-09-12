@@ -362,7 +362,7 @@ func (c *flowContent) handleReply(ctx app.Context, a app.Action) {
 		replyPost := c.replyPostContent
 
 		if !app.Window().GetElementByID("reply-textarea").IsNull() {
-			replyPostFull = strings.TrimSpace(app.Window().GetElementByID("reply-textarea").Get("value").String())
+			replyPostFull := strings.TrimSpace(app.Window().GetElementByID("reply-textarea").Get("value").String())
 
 			if len(replyPost) < len(replyPostFull) {
 				replyPost = replyPostFull
