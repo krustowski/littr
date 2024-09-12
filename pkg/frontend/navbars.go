@@ -218,6 +218,13 @@ func (h *header) onMessage(ctx app.Context, e app.Event) {
 		snack.Set("innerHTML", "<i>info</i>"+text)
 	}
 
+	// change title to indicate a new event
+	title := app.Window().Get("document")
+	if !title.IsNull() && !strings.Contains(title.Get("title").String(), "(*)") {
+		prevTitle := title.Get("title").String()
+		title.Set("title", "(*) "+prevTitle)
+	}
+
 	/*ctx.Dispatch(func(ctx app.Context) {
 		// won't trigger the render for some reason...
 		//h.toastText = "new post added above"
