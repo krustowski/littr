@@ -66,12 +66,13 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	hideReplies, err := strconv.ParseBool(r.Header.Get("X-Hide-Replies"))
 	if err != nil {
-		resp.Message = "invalid X-Hide-Replies"
+		/*resp.Message = "invalid X-Hide-Replies"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
-		return
+		return*/
+		hideReplies = false
 	}
 
 	opts := PageOptions{
