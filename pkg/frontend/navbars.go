@@ -67,6 +67,13 @@ func (h *header) handleDismiss(ctx app.Context, a app.Action) {
 		snack.Get("classList").Call("remove", "active")
 	}
 
+	// change title back to the clean one
+	title := app.Window().Get("document")
+	if !title.IsNull() && strings.Contains(title.Get("title").String(), "(*)") {
+		prevTitle := title.Get("title").String()
+		title.Set("title", prevTitle[4:])
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalInfoShow = false
 		h.modalLogoutShow = false
