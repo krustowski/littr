@@ -210,6 +210,21 @@ func (c *flowContent) onClickLink(ctx app.Context, e app.Event) {
 	ctx.Navigate("/flow/post/" + key)
 }
 
+func (c *flowContent) handleClear(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loaderShow = true
+		c.loaderShowImage = true
+		c.contentLoadFinished = false
+		c.refreshClicked = true
+		c.postButtonsDisabled = true
+		//c.pageNoToFetch = 0
+
+		c.posts = nil
+		c.users = nil
+	})
+	return
+}
+
 func (c *flowContent) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
@@ -873,19 +888,8 @@ func (c *flowContent) handleRefresh(ctx app.Context, a app.Action) {
 }
 
 func (c *flowContent) onClickRefresh(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.loaderShow = true
-		c.loaderShowImage = true
-		c.contentLoadFinished = false
-		c.refreshClicked = true
-		c.postButtonsDisabled = true
-		//c.pageNoToFetch = 0
-
-		c.posts = nil
-		c.users = nil
-	})
-
 	ctx.NewAction("dismiss")
+	ctx.NewAction("clear")
 	ctx.NewAction("refresh")
 }
 
@@ -1079,6 +1083,7 @@ func (c *flowContent) OnMount(ctx app.Context) {
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
+	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("dismiss", c.handleDismiss)
 	ctx.Handle("refresh", c.handleRefresh)
 	//ctx.Handle("message", c.handleNewPost)
@@ -1273,7 +1278,7 @@ func (c *flowContent) Render() app.UI {
 			),
 
 			app.Div().Class("small-padding").Body(
-				app.Button().Title("refresh flow [R]").Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 					app.If(c.refreshClicked,
 						app.Progress().Class("circle deep-orange-border small"),
 					),
