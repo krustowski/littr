@@ -627,7 +627,7 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 
 		input := callInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/users/" + c.user.Nickname + "/request",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
 			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
@@ -667,7 +667,7 @@ func (c *usersContent) onClickAllow(ctx app.Context, e app.Event) {
 
 		input2 := callInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Url:         "/api/v1/users/" + nick + "/lists",
 			Data:        payload2,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
