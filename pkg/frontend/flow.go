@@ -554,6 +554,8 @@ func (c *flowContent) onKeyDown(ctx app.Context, e app.Event) {
 			c.users = nil
 		})
 
+		ctx.NewAction("dismiss")
+		ctx.NewAction("clear")
 		ctx.NewAction("refresh")
 		return
 	}
