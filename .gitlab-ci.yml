@@ -7,11 +7,10 @@ workflow:
     - when: never
 
 stages:         
-  - test
   - build
   - deploy
 
-build:  
+build-image:  
   stage: build
   rules:
     - if: $APP_PEPPER != null
@@ -29,7 +28,7 @@ deploy-stage:
   environment: 
     name: stage
   needs:
-    - build
+    - build-image
   when: manual
   script:
     - echo "Deploying application..."
@@ -40,7 +39,7 @@ deploy-prod:
   environment: 
     name: prod
   needs:
-    - build
+    - build-image
   when: manual
   script:
     - echo "Deploying application..."
