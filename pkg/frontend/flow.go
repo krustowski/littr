@@ -226,6 +226,13 @@ func (c *flowContent) handleClear(ctx app.Context, a app.Action) {
 }
 
 func (c *flowContent) handleDismiss(ctx app.Context, a app.Action) {
+	// change title back to the clean one
+	title := app.Window().Get("document")
+	if !title.IsNull() && strings.Contains(title.Get("title").String(), "(*)") {
+		prevTitle := title.Get("title").String()
+		title.Set("title", prevTitle[4:])
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		// hotfix which ensures reply modal is not closed if there is also a snackbar/toast active
 		//if !toastShow && c.modalReplyActive {
