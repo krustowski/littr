@@ -42,6 +42,7 @@ deploy-prod:
   variables:
     APP_ENVIRONMENT: $CI_JOB_STAGE
   before_script:
+    - eval $(ssh-agent -s)
     - chmod 400 "$DOCKER_SSH_KEY"
     - ssh-add "$DOCKER_SSH_KEY"
   script:
