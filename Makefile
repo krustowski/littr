@@ -242,9 +242,8 @@ backup: fetch_running_dump
 .PHONY: push_to_registry
 push_to_registry:
 	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
-	@[ -n "${REGISTRY}" ] && \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
-                docker push ${DOCKER_IMAGE_TAG}
-	@[ -n "${REGISTRY}" ] && \
-		docker logout ${REGISTRY} > /dev/null
+	@[ -n "${REGISTRY}" ] || exit 10
+	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
+		docker push ${DOCKER_IMAGE_TAG}
+	@docker logout ${REGISTRY} > /dev/null
 
