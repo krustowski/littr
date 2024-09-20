@@ -39,7 +39,7 @@ deploy-prod:
   needs:
     - build-image
   when: manual
-  variable:
+  variables:
     APP_ENVIRONMENT: $CI_JOB_STAGE
   before_script:
     - chmod 400 "$DOCKER_SSH_KEY"
