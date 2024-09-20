@@ -14,8 +14,6 @@ build-image:
   stage: build
   rules:
     - if: $APP_PEPPER != null
-    - if: $DOCKER_CONTAINER_NAME != null
-    - if: $DOCKER_NETWORK_NAME != null
     - if: $VAPID_PUBLIC_KEY != null
   variables:
     APP_VERSION: $CI_COMMIT_TAG
@@ -41,6 +39,12 @@ deploy-prod:
   needs:
     - build-image
   when: manual
+  variable:
+    APP_ENVIRONMENT: $CI_JOB_STAGE
+  before_script:
+    - chmod 400 "$DOCKER_SSH_KEY"
+    - ssh-add "$DOCKER_SSH_KEY"
   script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - export DOCKER_HOST=ssh://docker@$DEPLOY_TARGET
+    - make run
+
