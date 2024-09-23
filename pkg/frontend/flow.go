@@ -1668,7 +1668,8 @@ func (c *flowContent) Render() app.UI {
 										app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
 										app.Button().Title("increase the reaction count").ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
 											//app.I().Text("ac_unit"),
-											app.I().Text("bomb"),
+											//app.I().Text("bomb"),
+											app.I().Text("nest_eco_leaf"),
 										),
 									),
 								),
