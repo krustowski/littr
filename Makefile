@@ -9,9 +9,10 @@
 include .env.example
 -include .env
 
+APP_ENVIRONMENT?=dev
 APP_NAME=littr
 APP_URLS_TRAEFIK?=`${HOSTNAME}`
-PROJECT_NAME=${APP_NAME}
+PROJECT_NAME=${APP_NAME}-${APP_ENVIRONMENT}
 TZ=Europe/Vienna
 
 LOKI_URL?=""
@@ -19,7 +20,6 @@ LOKI_URL?=""
 APP_PEPPER?=""
 API_TOKEN?=""
 
-APP_ENVIRONMENT?=dev
 REGISTRATION_ENABLED?=true
 
 VAPID_PUB_KEY?=""
