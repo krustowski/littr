@@ -20,13 +20,9 @@ build-image:
     - make build
     - make push_to_registry
 
-deploy-stage:    
+.deploy_common:
   stage: deploy
-  environment: 
-    name: stage
   when: manual
-  variables:
-    APP_ENVIRONMENT: 'stage'
   before_script:
     - eval $(ssh-agent -s)
     - chmod 400 "$DEPLOY_SSH_KEY"
@@ -35,18 +31,17 @@ deploy-stage:
     - export DOCKER_HOST=ssh://$DEPLOY_USER@$DEPLOY_TARGET
     - make run
 
+deploy-stage:    
+  environment: 
+    name: stage
+  variables:
+    APP_ENVIRONMENT: 'stage'
+  extends: .deploy_common
+
 deploy-prod: 
-  stage: deploy
   environment: 
     name: prod
-  when: manual
   variables:
     APP_ENVIRONMENT: 'prod'
-  before_script:
-    - eval $(ssh-agent -s)
-    - chmod 400 "$DEPLOY_SSH_KEY"
-    - ssh-add "$DEPLOY_SSH_KEY"
-  script:
-    - export DOCKER_HOST=ssh://$DEPLOY_USER@$DEPLOY_TARGET
-    - make run
+  extends: .deploy_common
 
