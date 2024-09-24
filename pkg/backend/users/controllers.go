@@ -1377,12 +1377,9 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// crop the image
-		squareImg := image.CropToSquare(img)
-
 		// encode cropped image back to []byte
 		// re-encode the image to flush EXIF metadata header
-		croppedImgData, err := image.EncodeImage(squareImg, format)
+		/*croppedImgData, err := image.EncodeImage(squareImg, format)
 		if err != nil {
 			resp.Message = "backend error: cannot encode image back to byte stream"
 			resp.Code = http.StatusInternalServerError
@@ -1401,10 +1398,13 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 			l.Println(resp.Message, resp.Code)
 			resp.Write(w)
 			return
-		}
+		}*/
+
+		// crop the image
+		squareImg := image.CropToSquare(img)
 
 		// generate thumbanils
-		thumbImg := image.ResizeImage(img, 200)
+		thumbImg := image.ResizeImage(squareImg, 200)
 
 		// encode the thumbnail back to []byte
 		thumbImgData, err := image.EncodeImage(thumbImg, format)
