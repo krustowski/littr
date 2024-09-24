@@ -15,6 +15,7 @@ import (
 	"go.vxn.dev/littr/configs"
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/image"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
@@ -1355,7 +1356,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		//
 		// use image magic
 		//
-		img, format, err := decodeImage(fetch.Data)
+		img, format, err := image.DecodeImage(fetch.Data, extension)
 		if err != nil {
 			resp.Message = "backend error: cannot decode given byte stream"
 			resp.Code = http.StatusBadRequest
@@ -1366,10 +1367,22 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// crop the image
-		squareImg := cropToSquare(img)
+		img = image.CropToSquare(img)
+
+		// fix the image orientation for decoded image
+		img, err = image.FixOrientation(img, fetch.Data)
+		if err != nil {
+			resp.Message = "cannot fix image's orientation"
+			resp.Code = http.StatusInternalServerError
+
+			l.Println(resp.Message+err.Error(), resp.Code)
+			resp.Write(w)
+			return
+		}
 
 		// encode cropped image back to []byte
-		croppedImgData, err := encodeImage(squareImg, format)
+		// re-encode the image to flush EXIF metadata header
+		croppedImgData, err := image.EncodeImage(img, format)
 		if err != nil {
 			resp.Message = "backend error: cannot encode image back to byte stream"
 			resp.Code = http.StatusInternalServerError
@@ -1391,10 +1404,10 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbanils
-		thumbImg := resizeImage(img, 150, 150)
+		thumbImg := image.ResizeImage(img, 200)
 
 		// encode the thumbnail back to []byte
-		thumbImgData, err := encodeImage(thumbImg, format)
+		thumbImgData, err := image.EncodeImage(thumbImg, format)
 		if err != nil {
 			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
 			resp.Code = http.StatusInternalServerError
