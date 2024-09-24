@@ -14,8 +14,9 @@ build-image:
   stage: build
   rules:
     - if: $APP_PEPPER != null
-    - if: $APP_VERSION != null
     - if: $VAPID_PUBLIC_KEY != null
+  variables:
+    APP_VERSION: $CI_COMMIT_TAG
   script:
     - make build
     - make push_to_registry
