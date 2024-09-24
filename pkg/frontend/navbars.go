@@ -515,7 +515,7 @@ func (h *header) Render() app.UI {
 					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 						app.Span().Body(
 							app.Text(headerString),
-							app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
+							app.If(app.Getenv("APP_ENVIRONMENT") != "prod",
 								app.Span().Class("col").Body(
 									app.Sup().Body(
 										app.Text(" (dev) "),
@@ -550,7 +550,7 @@ func (h *header) Render() app.UI {
 							app.H4().Body(
 								app.Span().Body(
 									app.Text("littr"),
-									app.If(app.Getenv("APP_ENVIRONMENT") == "dev",
+									app.If(app.Getenv("APP_ENVIRONMENT") != "prod",
 										app.Span().Class("col").Body(
 											app.Sup().Body(
 												app.Text(" (dev) "),

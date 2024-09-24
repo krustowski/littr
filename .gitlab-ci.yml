@@ -26,7 +26,7 @@ deploy-stage:
     name: stage
   when: manual
   variables:
-    APP_ENVIRONMENT: $CI_JOB_STAGE
+    APP_ENVIRONMENT: 'stage'
   before_script:
     - eval $(ssh-agent -s)
     - chmod 400 "$DEPLOY_SSH_KEY"
@@ -41,7 +41,7 @@ deploy-prod:
     name: prod
   when: manual
   variables:
-    APP_ENVIRONMENT: $CI_JOB_STAGE
+    APP_ENVIRONMENT: 'prod'
   before_script:
     - eval $(ssh-agent -s)
     - chmod 400 "$DEPLOY_SSH_KEY"
