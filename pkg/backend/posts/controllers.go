@@ -267,7 +267,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbnails --- keep aspect ratio
-		thumbImg := resizeImage(img, 350)
+		thumbImg := resizeImage(img, 450)
 
 		// encode the thumbnail back to []byte
 		thumbImgData, err := encodeImage(thumbImg, format)

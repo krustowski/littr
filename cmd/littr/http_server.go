@@ -58,7 +58,7 @@ func initServer() {
 	compressor := middleware.NewCompressor(
 		//flate.DefaultCompression,
 		flate.BestCompression,
-		"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif",
+		"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
 	)
 	r.Use(compressor.Handler)
 
@@ -206,7 +206,7 @@ func initServer() {
 	r.Handle("/*", appHandler)
 	server.Handler = r
 
-	l.Println("starting the server...", http.StatusOK)
+	l.Println("starting the server (v"+os.Getenv("APP_VERSION")+")...", http.StatusOK)
 	go serverStartNotif()
 
 	// TODO use http.ErrServerClosed for graceful shutdown
