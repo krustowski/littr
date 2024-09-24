@@ -14,9 +14,8 @@ build-image:
   stage: build
   rules:
     - if: $APP_PEPPER != null
+    - if: $APP_VERSION != null
     - if: $VAPID_PUBLIC_KEY != null
-  variables:
-    APP_VERSION: $CI_COMMIT_TAG
   script:
     - make build
     - make push_to_registry
@@ -25,8 +24,6 @@ deploy-stage:
   stage: deploy
   environment: 
     name: stage
-  needs:
-    - build-image
   when: manual
   variables:
     APP_ENVIRONMENT: $CI_JOB_STAGE
@@ -42,8 +39,6 @@ deploy-prod:
   stage: deploy
   environment: 
     name: prod
-  needs:
-    - build-image
   when: manual
   variables:
     APP_ENVIRONMENT: $CI_JOB_STAGE
@@ -54,3 +49,4 @@ deploy-prod:
   script:
     - export DOCKER_HOST=ssh://$DEPLOY_USER@$DEPLOY_TARGET
     - make run
+
