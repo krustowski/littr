@@ -1,4 +1,4 @@
-package posts
+package image
 
 import (
 	"bytes"
@@ -63,7 +63,7 @@ import (
 }*/
 
 // https://github.com/sizeofint/webpanimation/blob/master/examples/gif-to-webp/main.go
-func convertGifToWebp(gifData []byte) ([]byte, error) {
+func ConvertGifToWebp(gifData []byte) ([]byte, error) {
 	var err error
 
 	// GIFs from the Internet are often broken somehow, therefore the decoder may panic a lot
@@ -122,7 +122,7 @@ func convertGifToWebp(gifData []byte) ([]byte, error) {
 }
 
 // DecodeImage decodes a byte stream to an image
-func decodeImage(imgData []byte, extInput string) (image.Image, string, error) {
+func DecodeImage(imgData []byte, extInput string) (image.Image, string, error) {
 	var img image.Image
 	var format string
 	var err error
@@ -165,7 +165,7 @@ func decodeImage(imgData []byte, extInput string) (image.Image, string, error) {
 //
 
 // EncodeImage encodes an image back to byte stream (JPEG or PNG)
-func encodeImage(img image.Image, format string) ([]byte, error) {
+func EncodeImage(img image.Image, format string) ([]byte, error) {
 	var buf bytes.Buffer
 
 	// Encode depending on the format
@@ -223,7 +223,7 @@ func encodeImage(img image.Image, format string) ([]byte, error) {
 }
 
 // CropToSquare crops an image to a 1:1 aspect ratio (square)
-func cropToSquare(img image.Image) image.Image {
+func CropToSquare(img image.Image) image.Image {
 	bounds := img.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()
@@ -252,7 +252,7 @@ func cropToSquare(img image.Image) image.Image {
 }
 
 // FixOrientation checks the EXIF orientation tag and corrects the image's orientation if necessary
-func fixOrientation(img image.Image, imgBytes []byte) (image.Image, error) {
+func FixOrientation(img image.Image, imgBytes []byte) (image.Image, error) {
 	rawExif, err := exif.SearchAndExtractExif(imgBytes)
 	if err != nil {
 		if err == exif.ErrNoExif {
@@ -342,7 +342,7 @@ func rotate270(img image.Image) image.Image {
 }*/
 
 // ResizeImage resizes an image to a target width and height while maintaining aspect ratio
-func resizeImage(img image.Image, targetWidth int) image.Image {
+func ResizeImage(img image.Image, targetWidth int) image.Image {
 	bounds := img.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()

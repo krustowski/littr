@@ -2,7 +2,7 @@ package posts
 
 import (
 	"encoding/json"
-	"image"
+	pic "image"
 	"net/http"
 	"os"
 	"regexp"
@@ -16,6 +16,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/image"
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -189,14 +190,14 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	if post.Data != nil && post.Figure != "" {
 		var newBytes []byte
 		var err error
-		var img image.Image
+		var img pic.Image
 		var format string
 
 		fileExplode := strings.Split(post.Figure, ".")
 		extension := fileExplode[len(fileExplode)-1]
 
 		// decode image from []byte stream
-		img, format, err = decodeImage(post.Data, extension)
+		img, format, err = image.DecodeImage(post.Data, extension)
 		if err != nil {
 			resp.Message = "cannot decode given byte stream: probably an unsupported format was sent"
 			resp.Code = http.StatusBadRequest
@@ -209,7 +210,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		switch extension {
 		case "png", "jpg", "jpeg":
 			// fix the image orientation for decoded image
-			img, err = fixOrientation(img, post.Data)
+			img, err = image.FixOrientation(img, post.Data)
 			if err != nil {
 				resp.Message = "cannot fix image's orientation"
 				resp.Code = http.StatusInternalServerError
@@ -220,7 +221,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// re-encode the image to flush EXIF metadata header
-			newBytes, err = encodeImage(img, format)
+			newBytes, err = image.EncodeImage(img, format)
 			if err != nil {
 				resp.Message = "cannot re-encode the novel image"
 				resp.Code = http.StatusBadRequest
@@ -233,7 +234,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		case "gif":
 			format = "webp"
 
-			newBytes, err = convertGifToWebp(post.Data)
+			newBytes, err = image.ConvertGifToWebp(post.Data)
 			if err != nil {
 				resp.Message = "cannot convert given GIF to WebP"
 				resp.Code = http.StatusInternalServerError
@@ -267,10 +268,10 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// generate thumbnails --- keep aspect ratio
-		thumbImg := resizeImage(img, 450)
+		thumbImg := image.ResizeImage(img, 450)
 
 		// encode the thumbnail back to []byte
-		thumbImgData, err := encodeImage(thumbImg, format)
+		thumbImgData, err := image.EncodeImage(thumbImg, format)
 		if err != nil {
 			resp.Message = "cannot encode thumbnail back to byte stream"
 			resp.Code = http.StatusInternalServerError
