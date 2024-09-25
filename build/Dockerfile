@@ -70,6 +70,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
 RUN adduser -D -h /opt -s /bin/sh ${DOCKER_USER}
 
 COPY web/ /opt/web/
+COPY api/swagger.json /opt/web/
 COPY --chown=1000:1000 --chmod=700 test/data/ /opt/data/
 COPY --chown=1000:1000 --chmod=700 test/data/.gitkeep /opt/pix/
 

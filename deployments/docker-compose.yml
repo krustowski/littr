@@ -85,12 +85,12 @@ services:
         protocol: tcp
     environment: 
       BASE_URL: "/docs/"
-      BASE_PATH: "/api"
-      SWAGGER_JSON: "/tmp/swagger.json"
+      #BASE_PATH: "/api"
+      SWAGGER_JSON: "https://${APP_URL_MAIN}/web/swagger.json"
     networks: 
       - traefik
-    volumes: 
-      - "../api/swagger.json:/tmp/swagger.json"
+    #volumes: 
+    #  - "../api/swagger.json:/tmp/swagger.json"
     labels:
       - "traefik.http.routers.${APP_NAME}-swagger.rule=Host(${APP_URLS_TRAEFIK}) && PathPrefix(`/docs`)"
       - "traefik.http.services.${APP_NAME}-swagger.loadbalancer.server.port=8080"
