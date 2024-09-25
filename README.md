@@ -1,4 +1,4 @@
-![](/web/android-chrome-192x192.png)
+![littr logo](/web/android-chrome-192x192.png)
 
 # littr (formerly litter-go)
 
@@ -8,9 +8,62 @@
 [![littr CI/CD test and build pipeline](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml)
 [![littr CI/CD deployment pipeline](https://github.com/krustowski/littr/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/deployment.yml)
 
-littr again, now in Go as a PWA --- a nanoblogging service without notifications (by default off) and pesky messaging, just a raw mind _flow_
+a simple nanoblogging platform for a raw mind _flow ~_
 
-[read more](https://krusty.space/projects/littr/) (a blog post)
+[read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post)
+
+
+## features
+
++ in-memory runtime cache(s)
++ data persistence on container restart (on `SIGINT`) in Docker volumes
++ flow posts filtering using the FlowList --- simply choose who to follow
++ shade function to block other accounts from following you and reading your posts
++ webpush notification management --- choose which notifications (reply/mention) is one's device willing to accept
++ private acccount --- others have to file a follow request to such account (and have to approved by the acc's owner)
++ swift client side (a WebAssebmly binary)
++ safe photo sharing --- EXIF metadata are removed while image file is uploading
++ passphrase reset via e-mail
++ dark/light mode switch
++ live in-app event notifications --- get alerted when a new post/poll is added to your flow
+
+
+## REST API service
+
++ API documentation is stored in the `api/` root directory as Swagger JSON-formatted file
++ the service is reachable via (`/api/v1`) route
++ [swagger live docs](https://www.littr.eu/docs/)
+
+
+## how it should work
+
++ users must register (`/register`) or existed users must login (`/login`)
++ users can navigate to the flow (`/flow`) and read other's mind _flows_
++ users can modify their FlowList (list of followed accounts, `/users`)
++ users can change their passphrase, the _about_ (bio) description and many more (`/settings`)
++ polls/posts can be written and sent (`/post`) by any logged-in user
++ users can logout (`/logout`)
+
+
+## how to run (docker, to-be-reviewed)
+
+```shell
+# create env file copy and modify it
+cp .env.example .env
+vi .env
+
+# build docker image (Docker engine mandatory)
+make build
+
+# run docker-compose stack, start up the stack
+make run
+
+# Makefile helper print
+make info
+
+# flush app data --- copy empty files from 'data/' to the container
+make flush kill run
+```
 
 ## repo vademecum
 
@@ -44,7 +97,7 @@ littr again, now in Go as a PWA --- a nanoblogging service without notifications
 + service is used by WASM client for the app's running data fetch
 
 `pkg/frontend`
-+ frontend pages
++ frontend pages/views
 + go-app framework usecase
 
 `pkg/models`
@@ -57,54 +110,7 @@ littr again, now in Go as a PWA --- a nanoblogging service without notifications
 + static web files, logos, web manifest
 
 
-## how it should work
-
-+ users must register (`/register`) or existed users login (`/login`)
-+ users can navigate to the flow (`/flow`) and read other's mind _flows_
-+ users can modify their flow-list (list of followed accounts, `/users`)
-+ users can change their passphrase or the _about_ description in settings (`/settings`)
-+ posts can be written and sent (`/post`) by any logged-in user
-+ users can logout (`/logout`)
-
-
-## features
-
-+ ~~switchable end-to-end encryption (JSON/octet-stream REST API and LocalStorage for service worker)~~
-+ in-memory runtime cache(s)
-+ data persistence on container restart (on `SIGINT`)
-+ flow posts filtering using the FlowList --- simply choose who to follow
-+ can (partially) run offline
-+ shade function to block other accounts from following and reading their posts
-+ webpush notification management --- chose which notifications (reply/mention) is one's device willing to accept
-+ private acccount --- others have to file a followw request to such account (and have to approved by the acc's owner)
-
-
-## REST API service
-
-+ API documentation is stored in `api/` root directory
-+ the service is reachable via (`/api/v1`) endpoint
-+ [swagger live docs](https://littr.n0p.cz/docs/)
-
-
-## how to run (docker)
-
-```bash
-# create env file copy and modify it
-cp .env.example .env
-vi .env
-
-# build docker image (Docker engine mandatory)
-make build
-
-# run docker-compose stack, start up the stack
-make run
-
-# Makefile helper print
-make info
-
-# flush app data --- copy empty files from 'data/' to the container
-make flush kill run
-```
+----
 
 ## development
 
@@ -172,6 +178,8 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.41
++ pagination for polls
++ single poll referenced by ID (singlePoll subpage)
 + user activation via mail
 
 ### roadmap to v0.40
