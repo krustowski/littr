@@ -4,17 +4,14 @@ import (
 	"sort"
 	"strings"
 
-	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePageFlow(opts PageOptions, ptrMaps *maps) {
-
+func onePageFlow(opts PageOptions, ptrMaps *rawMaps) PagePointers {
 	// BTW those variables are both of type map[string]T
-	var allPolls map[string]models.Poll
-	var allPosts map[string]models.Post
-	var allUsers map[string]models.User
+	//var allPolls map[string]models.Poll
+	var allPosts *map[string]models.Post = ptrMaps.Posts
+	var allUsers *map[string]models.User = ptrMaps.Users
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
@@ -25,58 +22,58 @@ func onePageFlow(opts PageOptions, ptrMaps *maps) {
 	num := 0
 
 	// overload flowList
-	flowList := caller.FlowList
+	flowList := opts.Caller.FlowList
 	if opts.FlowList != nil {
 		flowList = opts.FlowList
 	}
 
 	// assign reply count to each post
-	for _, post := range allPosts {
+	for _, post := range *allPosts {
 		if post.ReplyToID == "" {
 			continue
 		}
 
 		// calculate the reply count for each post
-		origo, found := allPosts[post.ReplyToID]
+		origo, found := (*allPosts)[post.ReplyToID]
 		if found {
 			origo.ReplyCount++
-			allPosts[origo.ID] = origo
+			(*allPosts)[origo.ID] = origo
 		}
 	}
 
 	// filter out all posts for such callerID
-	for _, post := range allPosts {
+	for _, post := range *allPosts {
 		// check the caller's flow list, skip on unfollowed, or unknown user
 		if value, found := flowList[post.Nickname]; !found || !value {
 			continue
 		}
 
-		if opts.Hashtag != "" {
-			if strings.Contains(post.Content, "#"+opts.Hashtag) {
+		if opts.Flow.Hashtag != "" {
+			if strings.Contains(post.Content, "#"+opts.Flow.Hashtag) {
 				posts = append(posts, post)
 			}
 			continue
 		}
 
 		// filter replies out
-		if opts.HideReplies && post.ReplyToID != "" {
+		if opts.Flow.HideReplies && post.ReplyToID != "" {
 			continue
 		}
 
 		// exctract replies to the single post
-		if opts.SinglePost && opts.SinglePostID != "" {
-			if post.ReplyToID == opts.SinglePostID || post.ID == opts.SinglePostID {
+		if opts.Flow.SinglePost && opts.Flow.SinglePostID != "" {
+			if post.ReplyToID == opts.Flow.SinglePostID || post.ID == opts.Flow.SinglePostID {
 				posts = append(posts, post)
 			}
 			continue
 		}
 
-		if opts.UserFlow && opts.UserFlowNick != "" {
-			if value, found := user.FlowList[opts.UserFlowNick]; (!value || !found) && allUsers[opts.UserFlowNick].Private {
+		if opts.Flow.UserFlow && opts.Flow.UserFlowNick != "" {
+			if value, found := opts.Caller.FlowList[opts.Flow.UserFlowNick]; (!value || !found) && (*allUsers)[opts.Flow.UserFlowNick].Private {
 				continue
 			}
 
-			if post.Nickname == opts.UserFlowNick {
+			if post.Nickname == opts.Flow.UserFlowNick {
 				posts = append(posts, post)
 			}
 			continue
@@ -90,7 +87,7 @@ func onePageFlow(opts PageOptions, ptrMaps *maps) {
 		return posts[i].Timestamp.After(posts[j].Timestamp)
 	})
 
-	// cut the <pageSize>*2 number of posts only
+	// cut the PAGE_SIZE*2 number of posts only
 	var part []models.Post
 
 	pageNo := opts.PageNo
@@ -125,20 +122,20 @@ func onePageFlow(opts PageOptions, ptrMaps *maps) {
 
 		// export one (1) post
 		pExport[post.ID] = post
-		uExport[post.Nickname] = allUsers[post.Nickname]
+		uExport[post.Nickname] = (*allUsers)[post.Nickname]
 
 		// we can have multiple keys from a single post -> its interractions
 		repKey := post.ReplyToID
 		if repKey != "" {
-			if prePost, found := allPosts[repKey]; found {
+			if prePost, found := (*allPosts)[repKey]; found {
 				num++
 
 				// export previous user too
 				nick := prePost.Nickname
-				uExport[nick] = allUsers[nick]
+				uExport[nick] = (*allUsers)[nick]
 
 				// mange private content
-				if value, found := user.FlowList[nick]; (!value || !found) && allUsers[nick].Private {
+				if value, found := opts.Caller.FlowList[nick]; (!value || !found) && (*allUsers)[nick].Private {
 					prePost.Content = ""
 				}
 
@@ -155,11 +152,11 @@ func onePageFlow(opts PageOptions, ptrMaps *maps) {
 	}
 
 	// ensure the UserFlowNick is always included too
-	if _, found := uExport[opts.UserFlowNick]; !found {
-		if _, found = allUsers[opts.UserFlowNick]; found {
-			uExport[opts.UserFlowNick] = allUsers[opts.UserFlowNick]
+	if _, found := uExport[opts.Flow.UserFlowNick]; !found {
+		if _, found = (*allUsers)[opts.Flow.UserFlowNick]; found {
+			uExport[opts.Flow.UserFlowNick] = (*allUsers)[opts.Flow.UserFlowNick]
 		}
 	}
 
-	return pExport, uExport
+	return PagePointers{Posts: &pExport, Users: &uExport}
 }

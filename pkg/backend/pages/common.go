@@ -17,13 +17,13 @@ type PageOptions struct {
 	FlowList map[string]bool `json:"folow_list"`
 
 	// data compartments' specifications
-	Flow  flowOptions `json:"flow_options"`
+	Flow  FlowOptions `json:"flow_options"`
 	Polls pollOptions `json:"poll_options"`
 	Users userOptions `json:"user_options"`
 }
 
 // flow subviews' options
-type flowOptions struct {
+type FlowOptions struct {
 	Plain        bool   `json:"plain"`
 	SinglePost   bool   `json:"single_post"`
 	UserFlow     bool   `json:"user_flow"`
@@ -47,28 +47,28 @@ type userOptions struct {
 	SingleUserID string `json:"single_user_id"`
 }
 
-// DTO for fillDataMaps output aggregation
-type maps struct {
-	Polls map[string]models.Poll
-	Posts map[string]models.Post
-	Users map[string]models.User
+// DTO for fillDataMaps pointer output aggregation
+type rawMaps struct {
+	Polls *map[string]models.Poll
+	Posts *map[string]models.Post
+	Users *map[string]models.User
 }
 
 // DTO for GetOnePage pointer output aggregation
 type PagePointers struct {
-	PtrPolls *map[string]models.Poll
-	PtrPosts *map[string]models.Post
-	PtrUsers *map[string]models.User
+	Polls *map[string]models.Poll
+	Posts *map[string]models.Post
+	Users *map[string]models.User
 }
 
 // fillDataMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
-func fillDataMaps(opts PageOptions) *maps {
+func fillDataMaps(opts PageOptions) *rawMaps {
 	// prepare data maps for a flow page
-	if opts.Flow != (flowOptions{}) {
+	if opts.Flow != (FlowOptions{}) {
 		posts, _ := db.GetAll(db.FlowCache, models.Post{})
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &maps{Posts: posts, Users: users}
+		return &rawMaps{Posts: &posts, Users: &users}
 	}
 
 	// prepare data map for a polls page
@@ -77,34 +77,36 @@ func fillDataMaps(opts PageOptions) *maps {
 		// users are not needed necessarily there for now...
 		//users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &maps{Polls: polls}
+		return &rawMaps{Polls: &polls}
 	}
 
 	// prepare data map for a users page
 	if opts.Users != (userOptions{}) {
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &maps{Users: users}
+		return &rawMaps{Users: &users}
 	}
 
 	return nil
 }
 
-func GetOnePage(opts PageOptions) PagePointers {
+func GetOnePage(opts PageOptions) (ptrs PagePointers) {
+	var ok bool
+
 	// validate the callerID is a legitimate user's ID
-	if opts.Caller, ok := db.GetOne(db.UserCache, opts.CallerID, models.User{}); !ok {
+	if opts.Caller, ok = db.GetOne(db.UserCache, opts.CallerID, models.User{}); !ok {
 		// unregistred caller
-		return nil
+		return ptrs
 	}
 
 	// pointer to maps of all items (based on and related to the opts input)
 	ptrMaps := fillDataMaps(opts)
 	if ptrMaps == nil {
 		// invalid input options = resulted in empty maps only
-		return ptrMaps
+		return ptrs
 	}
 
-	if opts.Flow != (flowOptions{}) {
+	if opts.Flow != (FlowOptions{}) {
 		return onePageFlow(opts, ptrMaps)
 	}
 
@@ -118,5 +120,5 @@ func GetOnePage(opts PageOptions) PagePointers {
 		//return onePageUsers(opts, ptrMaps)
 	}
 
-	return nil
+	return ptrs
 }

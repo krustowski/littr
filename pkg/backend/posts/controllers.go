@@ -17,6 +17,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -76,16 +77,21 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	opts := PageOptions{
-		CallerID:    callerID,
-		PageNo:      pageNo,
-		FlowList:    nil,
-		HideReplies: hideReplies,
+	opts := pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Flow: pages.FlowOptions{
+			HideReplies: hideReplies,
+			Plain:       hideReplies == false,
+		},
 	}
 
 	// fetch page according to the logged user
-	pExport, uExport := GetOnePage(opts)
-	if pExport == nil || uExport == nil {
+	pagePtrs := pages.GetOnePage(opts)
+	//pExport, uExport := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
 		resp.Message = "error while requesting more pages, one exported map is nil!"
 		resp.Code = http.StatusInternalServerError
 
@@ -94,23 +100,20 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Message = "ok, dumping posts"
-	resp.Code = http.StatusOK
-
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-named user"
+		resp.Message = "cannot fetch such callerID-referenced user"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
 		resp.Write(w)
 		return
 	} else {
-		uExport[callerID] = caller
+		(*pagePtrs.Users)[callerID] = caller
 	}
 
 	// TODO: use DTO
-	for key, user := range uExport {
+	for key, user := range *pagePtrs.Users {
 		user.Passphrase = ""
 		user.PassphraseHex = ""
 		user.Email = ""
@@ -121,16 +124,19 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 			user.RequestList = nil
 		}
 
-		uExport[key] = user
+		(*pagePtrs.Users)[key] = user
 	}
 
-	resp.Posts = pExport
-	resp.Users = uExport
+	resp.Message = "ok, dumping posts"
+	resp.Code = http.StatusOK
+
+	resp.Posts = *pagePtrs.Posts
+	resp.Users = *pagePtrs.Users
 
 	resp.Key = callerID
 
-	// pageSize is a constant -> see backend/pagination.go
-	resp.Count = PageSize
+	// a constant -> see backend/pages/common.go
+	resp.Count = pages.PAGE_SIZE
 
 	// write Response and logs
 	l.Println(resp.Message, resp.Code)
