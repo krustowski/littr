@@ -8,7 +8,7 @@
 [![littr CI/CD test and build pipeline](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml)
 [![littr CI/CD deployment pipeline](https://github.com/krustowski/littr/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/deployment.yml)
 
-a simple nanoblogging platform for a raw mind _flow ~_
+a simple nanoblogging platform for a raw mind _flow_
 
 [read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post)
 
@@ -25,7 +25,7 @@ a simple nanoblogging platform for a raw mind _flow ~_
 + safe photo sharing --- EXIF metadata are removed while image file is uploading
 + passphrase reset via e-mail
 + dark/light mode switch
-+ live in-app event notifications --- get alerted when a new post/poll is added to your flow
++ live in-app event (SSE) notifications --- get alerted when a new post/poll is added to your flow
 
 
 ## REST API service
