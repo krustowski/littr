@@ -1,3 +1,4 @@
+// universal cache pagination tooling
 package pages
 
 import (
@@ -27,19 +28,19 @@ type flowOptions struct {
 	UserFlow     bool   `json:"user_flow"`
 	SinglePostID string `json:"single_post_id"`
 	UserFlowNick string `json:"user_Flow_nick"`
-	Hashtag     string `json:"hashtag" default:""`
-	HideReplies bool   `json:"hide_replies"`
+	Hashtag      string `json:"hashtag" default:""`
+	HideReplies  bool   `json:"hide_replies"`
 }
 
 type pollOptions struct {
 	// polls
-	SinglePoll bool `json:"single_poll"`
+	SinglePoll   bool   `json:"single_poll"`
 	SinglePollID string `json:"single_poll_id"`
 }
 
 type userOptions struct {
 	// users
-	SingleUser bool `json:"single_user"`
+	SingleUser   bool   `json:"single_user"`
 	SingleUserID string `json:"single_user_id"`
 }
 
@@ -50,8 +51,15 @@ type maps struct {
 	Users map[string]models.User
 }
 
+// DTO for GetOnePage pointer output aggregation
+type PagePointers struct {
+	PtrPolls *map[string]models.Poll
+	PtrPosts *map[string]models.Post
+	PtrUsers *map[string]models.User
+}
+
 // fillMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
-func fillMaps(opts PageOptions) (*maps) {
+func fillMaps(opts PageOptions) *maps {
 	if opts.Flow != nil {
 		posts, _ := db.GetAll(db.FlowCache, models.Post{})
 		users, _ := db.GetAll(db.UserCache, models.User{})
@@ -76,18 +84,41 @@ func fillMaps(opts PageOptions) (*maps) {
 	return nil
 }
 
-func GetOnePage(opts PageOptions) (map[string]models.Poll, map[string]models.Post, map[string]models.User) {
+func GetOnePage(opts PageOptions) PagePointers { 
 	// validate the callerID is a legitimate user's ID
-	user, ok := db.GetOne(db.UserCache, opts.CallerID, models.User{})
+	caller, ok := db.GetOne(db.UserCache, opts.CallerID, models.User{})
 	if !ok {
 		// unregistred caller
-		return nil, nil
+		return nil
 	}
+
+	// pointer to maps of all items (based on and related to the opts input)
+	ptrMaps := fillMaps(opts)
+	if ptrMaps == nil {
+		// invalid input options = resulted in empty maps only
+		return ptrMaps
+	}
+
+	if opts.Flow != nil {
+		return onePageFlow(opts, ptrMaps)
+	}
+
+	if opts.Polls != nil {
+		return onePagePolls(opts, ptrMaps)
+	}
+
+	if opts.Users != nil {
+		return onePageUsers(opts, ptrMaps)
+	}
+
+	return nil
+}
 
 	// BTW those variables are both of type map[string]T
 	var allPolls map[string]models.Poll
 	var allPosts map[string]models.Post
 	var allUsers map[string]models.User
+
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
@@ -97,15 +128,8 @@ func GetOnePage(opts PageOptions) (map[string]models.Poll, map[string]models.Pos
 	posts := []models.Post{}
 	num := 0
 
-	// extract requested post
-	/*if opts.SinglePost && opts.SinglePostID != "" {
-		if single, found := posts[opts.SinglePostID]; found {
-			posts = append(posts, single)
-		}
-	}*/
-
 	// overload flowList
-	flowList := user.FlowList
+	flowList := caller.FlowList
 	if opts.FlowList != nil {
 		flowList = opts.FlowList
 	}
@@ -243,4 +267,3 @@ func GetOnePage(opts PageOptions) (map[string]models.Poll, map[string]models.Pos
 
 	return pExport, uExport
 }
-
