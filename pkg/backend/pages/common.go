@@ -24,27 +24,30 @@ type PageOptions struct {
 
 // flow subviews' options
 type flowOptions struct {
+	Plain        bool   `json:"plain"`
 	SinglePost   bool   `json:"single_post"`
 	UserFlow     bool   `json:"user_flow"`
 	SinglePostID string `json:"single_post_id"`
 	UserFlowNick string `json:"user_Flow_nick"`
-	Hashtag      string `json:"hashtag" default:""`
+	Hashtag      string `json:"hashtag"`
 	HideReplies  bool   `json:"hide_replies"`
 }
 
 // polls subviews' options
 type pollOptions struct {
+	Plain        bool   `json:"plain"`
 	SinglePoll   bool   `json:"single_poll"`
 	SinglePollID string `json:"single_poll_id"`
 }
 
 // users subviews' options
 type userOptions struct {
+	Plain        bool   `json:"plain"`
 	SingleUser   bool   `json:"single_user"`
 	SingleUserID string `json:"single_user_id"`
 }
 
-// DTO for fillMaps output aggregation
+// DTO for fillDataMaps output aggregation
 type maps struct {
 	Polls map[string]models.Poll
 	Posts map[string]models.Post
@@ -101,16 +104,16 @@ func GetOnePage(opts PageOptions) PagePointers {
 		return ptrMaps
 	}
 
-	if opts.Flow != nil {
+	if opts.Flow != (flowOptions{}) {
 		return onePageFlow(opts, ptrMaps)
 	}
 
-	if opts.Polls != nil {
+	if opts.Polls != (pollOptions{}) {
 		// NYI
 		//return onePagePolls(opts, ptrMaps)
 	}
 
-	if opts.Users != nil {
+	if opts.Users != (userOptions{}) {
 		// NYI
 		//return onePageUsers(opts, ptrMaps)
 	}
