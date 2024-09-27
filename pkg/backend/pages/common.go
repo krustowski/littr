@@ -18,8 +18,8 @@ type PageOptions struct {
 
 	// data compartments' specifications
 	Flow  FlowOptions `json:"flow_options"`
-	Polls pollOptions `json:"poll_options"`
-	Users userOptions `json:"user_options"`
+	Polls PollOptions `json:"poll_options"`
+	Users UserOptions `json:"user_options"`
 }
 
 // flow subviews' options
@@ -34,14 +34,14 @@ type FlowOptions struct {
 }
 
 // polls subviews' options
-type pollOptions struct {
+type PollOptions struct {
 	Plain        bool   `json:"plain"`
 	SinglePoll   bool   `json:"single_poll"`
 	SinglePollID string `json:"single_poll_id"`
 }
 
 // users subviews' options
-type userOptions struct {
+type UserOptions struct {
 	Plain        bool   `json:"plain"`
 	SingleUser   bool   `json:"single_user"`
 	SingleUserID string `json:"single_user_id"`
@@ -72,7 +72,7 @@ func fillDataMaps(opts PageOptions) *rawMaps {
 	}
 
 	// prepare data map for a polls page
-	if opts.Polls != (pollOptions{}) {
+	if opts.Polls != (PollOptions{}) {
 		polls, _ := db.GetAll(db.PollCache, models.Poll{})
 		// users are not needed necessarily there for now...
 		//users, _ := db.GetAll(db.UserCache, models.User{})
@@ -81,7 +81,7 @@ func fillDataMaps(opts PageOptions) *rawMaps {
 	}
 
 	// prepare data map for a users page
-	if opts.Users != (userOptions{}) {
+	if opts.Users != (UserOptions{}) {
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
 		return &rawMaps{Users: &users}
@@ -110,12 +110,11 @@ func GetOnePage(opts PageOptions) (ptrs PagePointers) {
 		return onePageFlow(opts, ptrMaps)
 	}
 
-	if opts.Polls != (pollOptions{}) {
-		// NYI
-		//return onePagePolls(opts, ptrMaps)
+	if opts.Polls != (PollOptions{}) {
+		return onePagePolls(opts, ptrMaps)
 	}
 
-	if opts.Users != (userOptions{}) {
+	if opts.Users != (UserOptions{}) {
 		// NYI
 		//return onePageUsers(opts, ptrMaps)
 	}

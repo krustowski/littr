@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.40.22"
+        "version": "0.40.23"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1449,6 +1449,10 @@
                     "description": "Author is the back key to the user originally posting that poll.",
                     "type": "string"
                 },
+                "hidden": {
+                    "description": "Experimental fields.",
+                    "type": "boolean"
+                },
                 "id": {
                     "description": "ID is an unique poll's identifier.",
                     "type": "string"
@@ -1477,6 +1481,9 @@
                         }
                     ]
                 },
+                "private": {
+                    "type": "boolean"
+                },
                 "question": {
                     "description": "Question is to describe the main purpose of such poll.",
                     "type": "string"
@@ -1484,6 +1491,12 @@
                 "reaction_count": {
                     "description": "ReactionCount counts the number of item's reactions.",
                     "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "timestamp": {
                     "description": "Timestamp is an UNIX timestamp indication the poll's creation time; should be identical to the upstream post's Timestamp.",

@@ -31,6 +31,11 @@ type Poll struct {
 
 	// ReactionCount counts the number of item's reactions.
 	ReactionCount int `json:"reaction_count"`
+
+	// Experimental fields.
+	Hidden  bool     `json:"hidden"`
+	Private bool     `json:"private"`
+	Tags    []string `json:"tags"`
 }
 
 type PollOption struct {
