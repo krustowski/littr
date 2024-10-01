@@ -1360,7 +1360,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		//
 		// use image magic
 		//
-		img, format, err := image.DecodeImage(fetch.Data, extension)
+		img, format, err := image.DecodeImage(&fetch.Data, extension)
 		if err != nil {
 			resp.Message = "backend error: cannot decode given byte stream"
 			resp.Code = http.StatusBadRequest
@@ -1371,7 +1371,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// fix the image orientation for decoded image
-		img, err = image.FixOrientation(img, fetch.Data)
+		img, err = image.FixOrientation(img, &fetch.Data)
 		if err != nil {
 			resp.Message = "cannot fix image's orientation"
 			resp.Code = http.StatusInternalServerError
@@ -1409,9 +1409,10 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 
 		// generate thumbanils
 		thumbImg := image.ResizeImage(squareImg, 200)
+		*squareImg = nil
 
 		// encode the thumbnail back to []byte
-		thumbImgData, err := image.EncodeImage(thumbImg, format)
+		thumbImgData, err := image.EncodeImage(&thumbImg, format)
 		if err != nil {
 			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
 			resp.Code = http.StatusInternalServerError
@@ -1422,7 +1423,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// write the thumbnail byte stream to a file
-		if err := os.WriteFile("/opt/pix/thumb_"+content, thumbImgData, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
 			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
 			resp.Code = http.StatusInternalServerError
 
@@ -1430,6 +1431,8 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 			resp.Write(w)
 			return
 		}
+
+		*thumbImgData = []byte{}
 
 		fetch.Figure = content
 		fetch.Data = []byte{}

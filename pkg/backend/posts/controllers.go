@@ -194,16 +194,16 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// uploadedFigure handling
 	if post.Data != nil && post.Figure != "" {
-		var newBytes []byte
+		var newBytes *[]byte
 		var err error
-		var img pic.Image
+		var img *pic.Image
 		var format string
 
 		fileExplode := strings.Split(post.Figure, ".")
 		extension := fileExplode[len(fileExplode)-1]
 
 		// decode image from []byte stream
-		img, format, err = image.DecodeImage(post.Data, extension)
+		img, format, err = image.DecodeImage(&post.Data, extension)
 		if err != nil {
 			resp.Message = "cannot decode given byte stream: probably an unsupported format was sent"
 			resp.Code = http.StatusBadRequest
@@ -216,7 +216,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		switch extension {
 		case "png", "jpg", "jpeg":
 			// fix the image orientation for decoded image
-			img, err = image.FixOrientation(img, post.Data)
+			img, err = image.FixOrientation(img, &post.Data)
 			if err != nil {
 				resp.Message = "cannot fix image's orientation"
 				resp.Code = http.StatusInternalServerError
@@ -240,7 +240,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		case "gif":
 			format = "webp"
 
-			newBytes, err = image.ConvertGifToWebp(post.Data)
+			newBytes, err = image.ConvertGifToWebp(&post.Data)
 			if err != nil {
 				resp.Message = "cannot convert given GIF to WebP"
 				resp.Code = http.StatusInternalServerError
@@ -264,7 +264,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 		// upload the novel image to local storage
 		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-		if err := os.WriteFile("/opt/pix/"+content, newBytes, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/"+content, *newBytes, 0600); err != nil {
 			resp.Message = "couldn't write the novel image to file"
 			resp.Code = http.StatusInternalServerError
 
@@ -277,7 +277,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		thumbImg := image.ResizeImage(img, 450)
 
 		// encode the thumbnail back to []byte
-		thumbImgData, err := image.EncodeImage(thumbImg, format)
+		thumbImgData, err := image.EncodeImage(&thumbImg, format)
 		if err != nil {
 			resp.Message = "cannot encode thumbnail back to byte stream"
 			resp.Code = http.StatusInternalServerError
@@ -288,7 +288,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// write the thumbnail byte stream to a file
-		if err := os.WriteFile("/opt/pix/thumb_"+content, thumbImgData, 0600); err != nil {
+		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
 			resp.Message = "couldn't write the thumbnail to file"
 			resp.Code = http.StatusInternalServerError
 
