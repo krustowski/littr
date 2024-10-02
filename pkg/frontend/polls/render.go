@@ -1,8 +1,6 @@
 package polls
 
 import (
-	"encoding/json"
-	"log"
 	"sort"
 	"strconv"
 	"time"

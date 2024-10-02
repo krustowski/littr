@@ -1,6 +1,10 @@
 package polls
 
 import (
+	"encoding/json"
+	"log"
+
+	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -50,7 +54,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			Key   string                 `json:"key"`
 		}{}
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "GET",
 			Url:         "/api/v1/polls",
 			Data:        nil,
@@ -59,7 +63,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			HideReplies: false,
 		}
 
-		if byteData, _ := littrAPI(input); byteData != nil {
+		if byteData, _ := common.CallAPI(input); byteData != nil {
 			err := json.Unmarshal(*byteData, &pollsRaw)
 			if err != nil {
 				log.Println(err.Error())
@@ -137,4 +141,3 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
-

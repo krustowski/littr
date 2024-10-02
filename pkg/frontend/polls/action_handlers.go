@@ -1,6 +1,10 @@
 package polls
 
 import (
+	"log"
+
+	"go.vxn.dev/littr/pkg/frontend/common"
+
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -33,7 +37,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			return
 		}
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/polls/" + interactedPoll.ID,
 			Data:        interactedPoll,
@@ -42,7 +46,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
+		if _, ok := common.CallAPI(input); !ok {
 			toastText = "backend error: cannot delete a poll"
 		}
 
@@ -67,6 +71,7 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	})
 }
 
+// handleScroll()
 func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		elem := app.Window().GetElementByID("page-end-anchor")
@@ -129,7 +134,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		//var toastText string
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PUT",
 			Url:         "/api/v1/polls/" + poll.ID,
 			Data:        poll,
@@ -138,7 +143,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
+		if _, ok := common.CallAPI(input); !ok {
 			toastText = "backend error: cannot update a poll"
 		}
 
@@ -151,4 +156,3 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		})
 	})
 }
-

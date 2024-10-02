@@ -10,4 +10,3 @@ func contains(s []string, str string) bool {
 	}
 	return false
 }
-

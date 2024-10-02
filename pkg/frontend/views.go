@@ -25,4 +25,3 @@ func (p *PollsView) Render() app.UI {
 		&polls.Content{},
 	)
 }
-

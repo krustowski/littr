@@ -53,4 +53,3 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 func (c *Content) onScroll(ctx app.Context, e app.Event) {
 	ctx.NewAction("scroll")
 }
-
