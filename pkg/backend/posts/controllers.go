@@ -44,7 +44,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get("X-Flow-Page-No")
+	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		resp.Message = "page No has to be specified as integer/number"
@@ -604,7 +604,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get("X-Flow-Page-No")
+	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		resp.Message = "page No has to be specified as integer/number"
@@ -693,7 +693,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	// check if diff page has been requested
 	hashtag := chi.URLParam(r, "hashtag")
 
-	pageNoString := r.Header.Get("X-Flow-Page-No")
+	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		resp.Message = "page No has to be specified as integer/number"

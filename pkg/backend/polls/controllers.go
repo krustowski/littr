@@ -7,6 +7,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
@@ -21,63 +22,84 @@ import (
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Router       /polls/ [get]
+// @Success      200  {object}   polls.getPolls.response
+// @Failure      400  {object}   polls.getPolls.response{polls=nil,user=nil}
+// @Failure      500  {object}   polls.getPolls.response{polls=nil,user=nil}
+// @Router       /polls [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
+	//resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 	callerID, _ := r.Context().Value("nickname").(string)
 
-	polls, _ := db.GetAll(db.PollCache, models.Poll{})
+	type response struct {
+		Code    int                    `json:"code"`
+		Message string                 `json:"message"`
+		Polls   map[string]models.Poll `json:"polls,omitempty"`
+		User    models.User            `json:"user,omitempty"`
+	}
+	resp := new(response)
 
-	// hide poll's author
-	for key, poll := range polls {
+	pageNoString := r.Header.Get("X-Page-No")
+	pageNo, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	opts := pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Polls: pages.PollOptions{
+			Plain: true,
+		},
+	}
+
+	// fetch page according to the logged user
+	pagePtrs := pages.GetOnePage(opts)
+	//pExport, uExport := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Polls == nil || (*pagePtrs.Polls) == nil {
+		resp.Message = "error while requesting more pages, one exported map is nil!"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	// hide foreign poll authors
+	for key, poll := range *pagePtrs.Polls {
 		if poll.Author == callerID {
 			continue
 		}
 
 		poll.Author = ""
-		polls[key] = poll
+		(*pagePtrs.Polls)[key] = poll
 	}
 
-	uExport := make(map[string]models.User)
+	var ok bool
 
 	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+	if resp.User, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
 		resp.Message = "cannot fetch such callerID-named user"
 		resp.Code = http.StatusBadRequest
 
 		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		common.WriteResponse(w, resp, resp.Code)
 		return
-	} else {
-		uExport[callerID] = caller
-	}
-
-	// TODO: use DTO
-	for key, user := range uExport {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-		user.Email = ""
-
-		if user.Nickname != callerID {
-			user.FlowList = nil
-			user.ShadeList = nil
-			user.RequestList = nil
-		}
-
-		uExport[key] = user
 	}
 
 	resp.Message = "ok, dumping polls"
 	resp.Code = http.StatusOK
-	resp.Polls = polls
-
-	resp.Users = uExport
-	resp.Key = callerID
+	resp.Polls = *pagePtrs.Polls
 
 	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	common.WriteResponse(w, resp, resp.Code)
 }
 
 // addNewPoll ensures a new polls is created and saved
@@ -90,7 +112,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 // @Success      201  {object}  common.Response
 // @Failure      400  {object}  common.Response
 // @Failure      500  {object}  common.Response
-// @Router       /polls/ [post]
+// @Router       /polls [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
@@ -160,6 +182,87 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	resp.Write(w)
 }
 
+// getSinglePoll
+//
+// @Summary      Get single poll
+// @Description  get single poll
+// @Tags         polls
+// @Accept       json
+// @Produce      json
+// @Param        pollID path string true "poll ID"
+// @Success      200  {object}  common.Response
+// @Failure      400  {object}  common.Response
+// @Failure      500  {object}  common.Response
+// @Router       /polls/{pollID} [get]
+func getSinglePoll(w http.ResponseWriter, r *http.Request) {
+	resp := common.Response{}
+	l := common.NewLogger(r, "polls")
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	var payload models.Poll
+
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		resp.Message = "input read error: " + err.Error()
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	key := payload.ID
+
+	var poll models.Poll
+	var found bool
+
+	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
+		resp.Message = "unknown poll update requested"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if poll.Author == callerID {
+		resp.Message = "you cannot vote on your own poll"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	if helpers.Contains(poll.Voted, callerID) {
+		resp.Message = "this user already voted on such poll"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	poll.Voted = append(poll.Voted, l.CallerID)
+	poll.OptionOne = payload.OptionOne
+	poll.OptionTwo = payload.OptionTwo
+	poll.OptionThree = payload.OptionThree
+
+	if saved := db.SetOne(db.PollCache, key, poll); !saved {
+		resp.Message = "cannot update poll"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	resp.Message = "ok, poll updated"
+	resp.Code = http.StatusOK
+
+	l.Println(resp.Message, resp.Code)
+	resp.Write(w)
+}
+
 // updatePoll updates a given poll
 //
 // @Summary      Update a poll
@@ -167,6 +270,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Accept       json
 // @Produce      json
+// @Param        pollID path string true "poll ID"
 // @Success      200  {object}  common.Response
 // @Failure      400  {object}  common.Response
 // @Failure      500  {object}  common.Response
@@ -225,7 +329,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	poll.OptionThree = payload.OptionThree
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
-		resp.Message = "cannot update post"
+		resp.Message = "cannot update poll"
 		resp.Code = http.StatusInternalServerError
 
 		l.Println(resp.Message, resp.Code)
@@ -242,11 +346,12 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 
 // deletePoll removes a poll
 //
-// @Summary      Delete a poll
-// @Description  delete a poll
+// @Summary      Delete a poll by ID
+// @Description  delete a poll by ID
 // @Tags         polls
 // @Accept       json
 // @Produce      json
+// @Param        pollID path string true "poll ID"
 // @Success      200  {object}  common.Response
 // @Failure      400  {object}  common.Response
 // @Failure      500  {object}  common.Response

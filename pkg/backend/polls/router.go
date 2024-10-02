@@ -10,6 +10,7 @@ func Router() chi.Router {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", getPolls)
 		r.Post("/", addNewPoll)
+		r.Get("/{pollID}", getSinglePoll)
 		r.Put("/{pollID}", updatePoll)
 		r.Delete("/{pollID}", deletePoll)
 	})
