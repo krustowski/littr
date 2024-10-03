@@ -61,3 +61,19 @@ func (r *Response) WritePix(w http.ResponseWriter) error {
 
 	return nil
 }
+
+func WriteResponse(w http.ResponseWriter, resp interface{}, code int) error {
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	//w.WriteHeader(resp.Code)
+	w.WriteHeader(code)
+
+	io.WriteString(w, fmt.Sprintf("%s", jsonData))
+
+	return nil
+}

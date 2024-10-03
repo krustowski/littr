@@ -62,7 +62,6 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 
 	// fetch page according to the logged user
 	pagePtrs := pages.GetOnePage(opts)
-	//pExport, uExport := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Polls == nil || (*pagePtrs.Polls) == nil {
 		resp.Message = "error while requesting more pages, one exported map is nil!"
 		resp.Code = http.StatusInternalServerError
@@ -72,8 +71,20 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// hide foreign poll authors
+	// hide foreign poll's authors and voters
 	for key, poll := range *pagePtrs.Polls {
+		var votedList []string
+
+		for _, voter := range poll.Voted {
+			if voter == callerID {
+				votedList = append(votedList, callerID)
+			} else {
+				votedList = append(votedList, "voter")
+			}
+		}
+
+		poll.Voted = votedList
+
 		if poll.Author == callerID {
 			continue
 		}
