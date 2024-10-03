@@ -17,7 +17,7 @@ func initClient() {
 	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowPage{})
 	app.Route("/login", &fe.LoginPage{})
 	app.Route("/logout", &fe.LoginPage{})
-	app.Route("/polls", &fe.PollsPage{})
+	app.Route("/polls", &fe.PollsView{})
 	app.Route("/post", &fe.PostPage{})
 	app.Route("/register", &fe.RegisterPage{})
 	app.Route("/reset", &fe.ResetPage{})
