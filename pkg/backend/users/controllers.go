@@ -784,7 +784,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get("X-Flow-Page-No")
+	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		resp.Message = "page No has to be specified as integer/number"

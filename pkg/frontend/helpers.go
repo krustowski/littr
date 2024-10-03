@@ -80,7 +80,7 @@ func littrAPI(input callInput) (*[]byte, bool) {
 
 	req.Header.Set("X-API-Caller-ID", input.CallerID)
 	req.Header.Set("X-App-Version", version)
-	req.Header.Set("X-Flow-Page-No", pageNoString)
+	req.Header.Set("X-Page-No", pageNoString)
 	req.Header.Set("X-Hide-Replies", fmt.Sprintf("%t", input.HideReplies))
 
 	client := http.Client{}
