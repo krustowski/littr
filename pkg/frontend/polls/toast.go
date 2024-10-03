@@ -6,9 +6,9 @@ import (
 
 type Toast struct {
 	AppContext *app.Context
-	ToastLink  string
-	ToastText  string
-	ToastType  string
+	TLink      string
+	TText      string
+	TType      string
 }
 
 func (t *Toast) Context(ctx *app.Context) *Toast {
@@ -17,17 +17,17 @@ func (t *Toast) Context(ctx *app.Context) *Toast {
 }
 
 func (t *Toast) Link(link string) *Toast {
-	t.ToastLink = link
+	t.TLink = link
 	return t
 }
 
 func (t *Toast) Text(text string) *Toast {
-	t.ToastText = text
+	t.TText = text
 	return t
 }
 
 func (t *Toast) Type(typ string) *Toast {
-	t.ToastType = typ
+	t.TType = typ
 	return t
 }
 
@@ -37,11 +37,6 @@ func (t *Toast) Dispatch(c *Content) {
 	}
 
 	(*t.AppContext).Dispatch(func(ctx app.Context) {
-		c.toastText = t.ToastText
-		c.toastShow = (t.ToastText != "")
-		c.toastType = t.ToastType
-		//c.toastLink = t.Link
-
 		c.toast = *t
 	})
 	return

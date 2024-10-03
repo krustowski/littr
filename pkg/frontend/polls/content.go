@@ -17,10 +17,7 @@ type Content struct {
 
 	loaderShow bool
 
-	toastShow bool
-	toastText string
-	toastType string
-	toast     Toast
+	toast Toast
 
 	paginationEnd bool
 	pagination    int
@@ -73,11 +70,11 @@ func (c *Content) OnNav(ctx app.Context) {
 		}
 
 		if len(response.Polls) < 1 {
-			toast.Text("there is no poll yet, be the first to create one!").Type("info").Link("/post").Dispatch(c)
-
 			ctx.Dispatch(func(ctx app.Context) {
 				c.loaderShow = false
 			})
+
+			toast.Text("there is no poll yet, be the first to create one!").Type("info").Link("/post").Dispatch(c)
 			return
 		}
 

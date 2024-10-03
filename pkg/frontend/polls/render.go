@@ -13,7 +13,7 @@ import (
 func (c *Content) Render() app.UI {
 	toastColor := ""
 
-	switch c.toastType {
+	switch c.toast.TType {
 	case "success":
 		toastColor = "green10"
 		break
@@ -24,6 +24,11 @@ func (c *Content) Render() app.UI {
 
 	default:
 		toastColor = "red10"
+	}
+
+	toastLink := ""
+	if c.toast.TLink != "" {
+		toastLink = c.toast.TLink
 	}
 
 	var sortedPolls []models.Poll
@@ -80,11 +85,11 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.A().OnClick(c.onClickDismiss).Body(
-			app.If(c.toastText != "",
+		app.If(c.toast.TText != "",
+			app.A().Href(toastLink).OnClick(c.onClickDismiss).Body(
 				app.Div().ID("snackbar").Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
-					app.Span().Text(c.toastText),
+					app.Span().Text(c.toast.TText),
 				),
 			),
 		),

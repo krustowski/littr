@@ -1,19 +1,25 @@
 {
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "a simple nanoblogging platform as PWA built on go-app framework",
         "title": "littr",
-        "termsOfService": "https://littr.eu/tos",
+        "termsOfService": "https://www.littr.eu/tos",
         "contact": {
             "name": "API Support",
-            "url": "https://littr.eu/docs",
+            "url": "https://www.littr.eu/docs",
             "email": "info@littr.eu"
         },
         "license": {
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.40.23"
+        "version": "0.41.0"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -136,7 +142,7 @@
                 }
             }
         },
-        "/polls/": {
+        "/polls": {
             "get": {
                 "description": "get a list of polls",
                 "consumes": [
@@ -153,7 +159,49 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.Response"
+                            "$ref": "#/definitions/polls.getPolls.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/polls.getPolls.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "polls": {
+                                            "type": "object"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/polls.getPolls.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "polls": {
+                                            "type": "object"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -193,6 +241,48 @@
             }
         },
         "/polls/{pollID}": {
+            "get": {
+                "description": "get single poll",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Get single poll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "poll ID",
+                        "name": "pollID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "update a poll",
                 "consumes": [
@@ -205,6 +295,15 @@
                     "polls"
                 ],
                 "summary": "Update a poll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "poll ID",
+                        "name": "pollID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -227,7 +326,7 @@
                 }
             },
             "delete": {
-                "description": "delete a poll",
+                "description": "delete a poll by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -237,7 +336,16 @@
                 "tags": [
                     "polls"
                 ],
-                "summary": "Delete a poll",
+                "summary": "Delete a poll by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "poll ID",
+                        "name": "pollID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1715,6 +1823,26 @@
                 "shadeCount": {
                     "description": "ShadeCount is basically a number of blockers.",
                     "type": "integer"
+                }
+            }
+        },
+        "polls.getPolls.response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "polls": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Poll"
+                    }
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
                 }
             }
         },

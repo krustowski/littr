@@ -75,9 +75,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 // handleDismiss()
 func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
-		c.toast.ToastText = ""
-		c.toastText = ""
-		c.toastShow = false
+		c.toast.TText = ""
 
 		c.pollsButtonDisabled = false
 		c.deletePollModalShow = false
@@ -106,6 +104,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 // handleVote()
 func (c *Content) handleVote(ctx app.Context, a app.Action) {
+	// fetch the action's value
 	keys, ok := a.Value.([]string)
 	if !ok {
 		return
@@ -115,7 +114,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 	option := keys[1]
 
 	poll := c.polls[key]
-	toastText := ""
+	toast := Toast{AppContext: &ctx}
 
 	poll.Voted = append(poll.Voted, c.user.Nickname)
 
@@ -142,12 +141,10 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 			break
 		}
 	} else {
-		toastText = "option not associated to the poll well"
+		toast.Text("option is not associated to the poll").Dispatch(c)
 	}
 
 	ctx.Async(func() {
-		//var toastText string
-
 		input := common.CallInput{
 			Method:      "PUT",
 			Url:         "/api/v1/polls/" + poll.ID,
@@ -158,15 +155,12 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		}
 
 		if ok := common.CallAPI(input, &struct{}{}); !ok {
-			toastText = "backend error: cannot update a poll"
+			toast.Text("backend error: cannot update a poll").Dispatch(c)
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.polls[key] = poll
-
 			c.pollsButtonDisabled = false
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
 		})
 	})
 }
