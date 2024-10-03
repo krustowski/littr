@@ -1,9 +1,6 @@
 package polls
 
 import (
-	"encoding/json"
-	"log"
-
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -13,7 +10,7 @@ import (
 type Content struct {
 	app.Compo
 
-	eventListener func()
+	scrollEventListener func()
 
 	loggedUser string
 	user       models.User
@@ -23,6 +20,7 @@ type Content struct {
 	toastShow bool
 	toastText string
 	toastType string
+	toast     Toast
 
 	paginationEnd bool
 	pagination    int
@@ -41,19 +39,9 @@ type Content struct {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
-	// show loader
-	c.loaderShow = true
-	var toastText string
-	var toastType string
+	toast := Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		pollsRaw := struct {
-			Polls map[string]models.Poll `json:"polls"`
-			Code  int                    `json:"code"`
-			Users map[string]models.User `json:"users"`
-			Key   string                 `json:"key"`
-		}{}
-
 		input := common.CallInput{
 			Method:      "GET",
 			Url:         "/api/v1/polls",
@@ -63,63 +51,45 @@ func (c *Content) OnNav(ctx app.Context) {
 			HideReplies: false,
 		}
 
-		if byteData, _ := common.CallAPI(input); byteData != nil {
-			err := json.Unmarshal(*byteData, &pollsRaw)
-			if err != nil {
-				log.Println(err.Error())
+		response := &struct {
+			Polls map[string]models.Poll `json:"polls"`
+			Code  int                    `json:"code"`
+			User  models.User            `json:"user"`
+		}{}
 
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = err.Error()
-					c.toastShow = (toastText != "")
-				})
-				return
-			}
-		} else {
-			toastText = "cannot fetch polls list"
-			log.Println(toastText)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
+		// call the API to fetch the data
+		if ok := common.CallAPI(input, response); !ok {
+			toast.Text("cannot fetch polls list").Dispatch(c)
 			return
 		}
 
-		if pollsRaw.Code == 401 {
-			toastText = "please log-in again"
-
+		if response.Code == 401 {
+			// void user's session indicators in LocalStorage
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
+			toast.Text("please log-in again").Dispatch(c)
 			return
 		}
 
-		if len(pollsRaw.Polls) < 1 {
-			toastText = "there is nothing here yet, be the first to create a poll!"
-			toastType = "info"
+		if len(response.Polls) < 1 {
+			toast.Text("there is no poll yet, be the first to create one!").Type("info").Link("/post").Dispatch(c)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastType = toastType
-				c.toastShow = (toastText != "")
 				c.loaderShow = false
 			})
 			return
 		}
 
-		// Storing HTTP response in component field:
+		// storing the HTTP response in Content fields:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = pollsRaw.Users[pollsRaw.Key]
-			c.loggedUser = c.user.Nickname
+			c.user = response.User
+			//c.loggedUser = c.user.Nickname
 
 			c.pagination = 10
 			c.pageNo = 1
 
-			c.polls = pollsRaw.Polls
+			c.polls = response.Polls
 
 			c.pollsButtonDisabled = false
 			c.loaderShow = false
@@ -129,15 +99,21 @@ func (c *Content) OnNav(ctx app.Context) {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	// action handlers
 	ctx.Handle("vote", c.handleVote)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("dismiss", c.handleDismiss)
 
+	// show loader
+	c.loaderShow = true
+
+	// pagination
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
 
-	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	// tweaked EventListeners (may cause memory leaks when not closed properly!)
+	c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }

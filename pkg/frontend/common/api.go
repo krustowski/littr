@@ -34,40 +34,30 @@ type CallInput struct {
 	HideReplies bool
 }
 
-func CallAPI(input CallInput) (*[]byte, bool) {
-	var bodyReader *bytes.Reader
+func CallAPI[T any](input CallInput, output *T) bool {
 	var req *http.Request
 	var err error
 
 	if input.Data != nil {
 		jsonData, err := json.Marshal(input.Data)
 		if err != nil {
-			log.Println("cannot marshal data")
 			log.Println(err.Error())
-			return nil, false
+			return false
 		}
 
-		payload := configs.Encrypt([]byte(app.Getenv("APP_PEPPER")), jsonData)
+		payload := bytes.NewReader(jsonData)
 
-		bodyReader = bytes.NewReader([]byte(payload))
-
-		req, err = http.NewRequest(input.Method, input.Url, bodyReader)
+		req, err = http.NewRequest(input.Method, input.Url, payload)
 		if err != nil {
 			log.Println(err.Error())
-			return nil, false
+			return false
 		}
 	} else {
 		req, err = http.NewRequest(input.Method, input.Url, nil)
 		if err != nil {
 			log.Println(err.Error())
-			return nil, false
+			return false
 		}
-	}
-
-	if configs.EncryptionEnabled {
-		req.Header.Set("Content-Type", "application/octet-stream")
-	} else {
-		req.Header.Set("Content-Type", "application/json")
 	}
 
 	pageNoString := strconv.FormatInt(int64(input.PageNo), 10)
@@ -77,6 +67,7 @@ func CallAPI(input CallInput) (*[]byte, bool) {
 		version = appVersion
 	}
 
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Caller-ID", input.CallerID)
 	req.Header.Set("X-App-Version", version)
 	req.Header.Set("X-Page-No", pageNoString)
@@ -87,7 +78,7 @@ func CallAPI(input CallInput) (*[]byte, bool) {
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
-		return nil, false
+		return false
 	}
 
 	defer res.Body.Close()
@@ -95,15 +86,21 @@ func CallAPI(input CallInput) (*[]byte, bool) {
 	respData, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Print(err)
-		return nil, false
+		return false
 	}
 
-	// decrypt the data
-	//decrData := configs.Decrypt([]byte(app.Getenv("APP_PEPPER")), respData)
-	decrData := configs.Decrypt([]byte(appPepper), respData)
+	err = json.Unmarshal(respData, output)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
 
-	return &decrData, true
+	return true
 }
+
+//
+//  prolly to be deleted soon
+//
 
 func prepare[T any](localStorageInput string, model *T) error {
 	if localStorageInput == "" {
