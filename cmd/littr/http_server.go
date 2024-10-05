@@ -42,7 +42,7 @@ func initClient() {
 	app.Route("/settings", &fe.SettingsPage{})
 	app.Route("/stats", &fe.StatsPage{})
 	app.Route("/tos", &fe.ToSPage{})
-	app.Route("/users", &fe.UsersPage{})
+	app.Route("/users", &fe.UsersView{})
 
 	app.RunWhenOnBrowser()
 }
