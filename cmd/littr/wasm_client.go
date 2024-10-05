@@ -11,10 +11,10 @@ import (
 
 func initClient() {
 	app.Route("/", &fe.WelcomeView{})
-	app.Route("/flow", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowPage{})
+	app.Route("/flow", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowView{})
 	app.Route("/login", &fe.LoginView{})
 	app.Route("/logout", &fe.LoginView{})
 	app.Route("/polls", &fe.PollsView{})
@@ -30,5 +30,6 @@ func initClient() {
 	app.RunWhenOnBrowser()
 }
 
-// function initServer() is blanked here to reduce the final WASM binary file size, which is used on the client's side (see build at the top of this file)
-func initServer() {}
+func initServer() {
+	// function initServer() is blanked here to reduce the final WASM binary file size, which is used on the client's side (see build at the top of this file)
+}

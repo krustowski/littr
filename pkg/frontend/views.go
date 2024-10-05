@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"go.vxn.dev/littr/pkg/frontend/flow"
 	"go.vxn.dev/littr/pkg/frontend/login"
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/post"
@@ -14,6 +15,26 @@ import (
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
+
+/*
+ *  flow
+ */
+
+type FlowView struct {
+	app.Compo
+}
+
+func (v *FlowView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("flow / littr")
+}
+
+func (v *FlowView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&flow.Content{},
+	)
+}
 
 /*
  *  login

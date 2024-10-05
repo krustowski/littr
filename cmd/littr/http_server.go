@@ -28,10 +28,10 @@ import (
 
 func initClient() {
 	app.Route("/", &fe.WelcomeView{})
-	app.Route("/flow", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowPage{})
-	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowPage{})
+	app.Route("/flow", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowView{})
+	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowView{})
 	app.Route("/login", &fe.LoginView{})
 	app.Route("/logout", &fe.LoginView{})
 	app.Route("/polls", &fe.PollsView{})
