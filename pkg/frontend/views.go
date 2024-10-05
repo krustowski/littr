@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
+	"go.vxn.dev/littr/pkg/frontend/reset"
 	"go.vxn.dev/littr/pkg/frontend/settings"
 	"go.vxn.dev/littr/pkg/frontend/stats"
 	"go.vxn.dev/littr/pkg/frontend/tos"
@@ -28,6 +29,30 @@ func (v *PollsView) Render() app.UI {
 		&header{},
 		&footer{},
 		&polls.Content{},
+	)
+}
+
+/*
+ *  reset
+ */
+
+type ResetView struct {
+	app.Compo
+	userLogged bool
+}
+
+func (v *ResetView) OnMount(ctx app.Context) {
+}
+
+func (v *ResetView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("reset / littr")
+}
+
+func (v *ResetView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&reset.Content{},
 	)
 }
 
