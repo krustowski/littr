@@ -1,37 +1,17 @@
 package polls
 
 import (
+	"go.vxn.dev/littr/pkg/frontend/common"
+
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type Toast struct {
-	AppContext *app.Context
-	TLink      string
-	TText      string
-	TType      string
-}
+func dispatch(t *common.Toast, ic interface{}) {
+	c, ok := ic.(*Content)
+	if !ok {
+		return
+	}
 
-func (t *Toast) Context(ctx *app.Context) *Toast {
-	t.AppContext = ctx
-	return t
-}
-
-func (t *Toast) Link(link string) *Toast {
-	t.TLink = link
-	return t
-}
-
-func (t *Toast) Text(text string) *Toast {
-	t.TText = text
-	return t
-}
-
-func (t *Toast) Type(typ string) *Toast {
-	t.TType = typ
-	return t
-}
-
-func (t *Toast) Dispatch(c *Content) {
 	if t.AppContext == nil {
 		return
 	}
@@ -39,5 +19,4 @@ func (t *Toast) Dispatch(c *Content) {
 	(*t.AppContext).Dispatch(func(ctx app.Context) {
 		c.toast = *t
 	})
-	return
 }

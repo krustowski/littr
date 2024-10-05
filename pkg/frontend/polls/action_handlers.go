@@ -23,14 +23,14 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 	}
 
 	// fetch the struct of page's toast
-	toast := Toast{AppContext: &ctx}
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		//key := c.pollKey
 		interactedPoll := c.polls[key]
 
 		if interactedPoll.Author != c.user.Nickname {
-			toast.Text("you only can delete your own polls!").Dispatch(c)
+			toast.Text("you only can delete your own polls!").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.deletePollModalShow = false
@@ -54,12 +54,12 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		}{}
 
 		if ok := common.CallAPI(input, output); !ok {
-			toast.Text("backend error: cannot delete a poll").Type("error").Dispatch(c)
+			toast.Text("backend error: cannot delete a poll").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c)
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -114,7 +114,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 	option := keys[1]
 
 	poll := c.polls[key]
-	toast := Toast{AppContext: &ctx}
+	toast := common.Toast{AppContext: &ctx}
 
 	poll.Voted = append(poll.Voted, c.user.Nickname)
 
@@ -141,7 +141,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 			break
 		}
 	} else {
-		toast.Text("option is not associated to the poll").Dispatch(c)
+		toast.Text("option is not associated to the poll").Dispatch(c, dispatch)
 	}
 
 	ctx.Async(func() {
@@ -155,7 +155,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		}
 
 		if ok := common.CallAPI(input, &struct{}{}); !ok {
-			toast.Text("backend error: cannot update a poll").Dispatch(c)
+			toast.Text("backend error: cannot update a poll").Dispatch(c, dispatch)
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {

@@ -17,7 +17,7 @@ type Content struct {
 
 	loaderShow bool
 
-	toast Toast
+	toast common.Toast
 
 	paginationEnd bool
 	pagination    int
@@ -36,7 +36,7 @@ type Content struct {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
-	toast := Toast{AppContext: &ctx}
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		input := common.CallInput{
@@ -56,7 +56,7 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// call the API to fetch the data
 		if ok := common.CallAPI(input, response); !ok {
-			toast.Text("cannot fetch polls list").Dispatch(c)
+			toast.Text("cannot fetch polls list").Dispatch(c, dispatch)
 			return
 		}
 
@@ -65,7 +65,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			toast.Text("please log-in again").Dispatch(c)
+			toast.Text("please log-in again").Dispatch(c, dispatch)
 			return
 		}
 
@@ -74,7 +74,7 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.loaderShow = false
 			})
 
-			toast.Text("there is no poll yet, be the first to create one!").Type("info").Link("/post").Dispatch(c)
+			toast.Text("there is no poll yet, be the first to create one!").Type("info").Link("/post").Dispatch(c, dispatch)
 			return
 		}
 
