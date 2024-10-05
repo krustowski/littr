@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
+	"go.vxn.dev/littr/pkg/frontend/post"
 	"go.vxn.dev/littr/pkg/frontend/register"
 	"go.vxn.dev/littr/pkg/frontend/reset"
 	"go.vxn.dev/littr/pkg/frontend/settings"
@@ -30,6 +31,26 @@ func (v *PollsView) Render() app.UI {
 		&header{},
 		&footer{},
 		&polls.Content{},
+	)
+}
+
+/*
+ *  posts
+ */
+
+type PostView struct {
+	app.Compo
+}
+
+func (v *PostView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("post / littr")
+}
+
+func (v *PostView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&post.Content{},
 	)
 }
 

@@ -35,7 +35,7 @@ func initClient() {
 	app.Route("/login", &fe.LoginPage{})
 	app.Route("/logout", &fe.LoginPage{})
 	app.Route("/polls", &fe.PollsView{})
-	app.Route("/post", &fe.PostPage{})
+	app.Route("/post", &fe.PostView{})
 	app.Route("/register", &fe.RegisterView{})
 	app.Route("/reset", &fe.ResetView{})
 	app.RouteWithRegexp("/reset/\\w+", &fe.ResetView{})
