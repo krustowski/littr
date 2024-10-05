@@ -177,10 +177,14 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + write integration and e2e tests
 + [...]
 
-### roadmap to v0.41
-+ pagination for polls
-+ single poll referenced by ID (singlePoll subpage)
+### roadmap to v0.42
 + user activation via mail
+
+### roadmap to v0.41
++ ~~pagination for polls~~
++ refactor FE (wip)
++ single poll referenced by ID (singlePoll subpage/view)
++ ~~universal paginator on BE~~
 
 ### roadmap to v0.40
 + ~~convert GIFs to WebPs~~
