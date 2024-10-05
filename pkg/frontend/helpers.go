@@ -173,6 +173,7 @@ func verifyUser(encodedUser string) bool {
 	return false
 }
 
+// --> common/image.go
 func readFile(file app.Value) (data []byte, err error) {
 	done := make(chan bool)
 

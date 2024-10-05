@@ -36,7 +36,7 @@ func (t *Toast) Type(typ string) *Toast {
 }
 
 func (t *Toast) Dispatch(c interface{}, f func(*Toast, interface{})) {
-	if f == nil {
+	if f == nil || c == nil {
 		return
 	}
 

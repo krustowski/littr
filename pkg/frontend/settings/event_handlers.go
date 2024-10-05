@@ -1,67 +1,35 @@
-package frontend
+package settings
 
 import (
 	"crypto/sha512"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
-	"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type OptionsPayload struct {
-	UIDarkMode    bool   `json:"dark_mode"`
-	LiveMode      bool   `json:"live_mode"`
-	LocalTimeMode bool   `json:"local_time_mode"`
-	Private       bool   `json:"private"`
-	AboutText     string `json:"about_you"`
-	WebsiteLink   string `json:"website_link"`
-}
+type stub struct{}
 
-func (c *settingsContent) prefillPayload() OptionsPayload {
-
-	payload := OptionsPayload{
-		UIDarkMode:    c.user.UIDarkMode,
-		LiveMode:      c.user.LiveMode,
-		LocalTimeMode: c.user.LocalTimeMode,
-		Private:       c.user.Private,
-		AboutText:     c.user.About,
-		WebsiteLink:   c.user.Web,
-	}
-
-	return payload
-}
-
-func (c *settingsContent) handleDismiss(ctx app.Context, a app.Action) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.toastText = ""
-		c.toastType = ""
-		c.toastShow = (c.toastText != "")
-		c.settingsButtonDisabled = false
-		c.deleteAccountModalShow = false
-		c.deleteSubscriptionModalShow = false
-	})
-}
-
-func (c *settingsContent) onKeyDown(ctx app.Context, e app.Event) {
+// onKeyDown()
+func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
 	}
 }
 
-// onClickPass
-func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
-	toastText := ""
+// onClickPass()
+func (c *Content) onClickPass(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
+	// nasty
 	c.settingsButtonDisabled = true
 
 	ctx.Async(func() {
@@ -72,30 +40,26 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
 
 		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
-			toastText = "passphrase fields need to be filled"
+			toast.Text("passphrase fields need to be filled").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
 		if passphrase != passphraseAgain {
-			toastText = "passphrases do not match"
+			toast.Text("passphrases do not match").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
 		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
-		passHash := sha512.Sum512([]byte(passphrase + appPepper))
-		passHashCurrent := sha512.Sum512([]byte(passphraseCurrent + appPepper))
+		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
+		passHashCurrent := sha512.Sum512([]byte(passphraseCurrent + common.AppPepper))
 
 		payload := struct {
 			NewPassphraseHex     string `json:"new_passphrase_hex"`
@@ -110,7 +74,7 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			Code    int    `json:"code"`
 		}{}
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/passphrase",
 			Data:        payload,
@@ -119,28 +83,15 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if data, ok := littrAPI(input); ok {
-			if err := json.Unmarshal(*data, &response); err != nil {
-				toastText = "JSON parse error: " + err.Error()
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
-					c.settingsButtonDisabled = false
-				})
-				return
-			}
+		if ok := common.CallAPI(input, &response); !ok {
+			toast.Text("connection error").Type("error").Dispatch(c, dispatch)
+			return
 		}
 
-		log.Println(response.Code)
-
 		if response.Code != 200 {
-			toastText = response.Message
-			//toastText = "passphrase updating error, try again later"
+			toast.Text(response.Message).Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -148,31 +99,28 @@ func (c *settingsContent) onClickPass(ctx app.Context, e app.Event) {
 
 		c.user.Passphrase = string(passHash[:])
 
-		var userStream []byte
+		/*var userStream []byte
 		if err := reload(c.user, &userStream); err != nil {
-			toastText = "cannot update local storage"
+			toast.Text("cannot update local storage").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
-		}
+		}*/
+
+		toast.Text("passphrase updated").Type("success").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastType = "success"
-			c.toastText = "passphrase updated"
-			c.toastShow = (toastText != "")
 			c.settingsButtonDisabled = false
 		})
 		return
 	})
 }
 
-// onClickAbout
-func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
-	toastText := ""
+// onClickAbout()
+func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
 
@@ -182,31 +130,28 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 		aboutText := strings.TrimSpace(c.aboutText)
 
 		if aboutText == "" {
-			toastText = "about textarea needs to be filled, or you prolly haven't changed the text"
+			toast.Text("about textarea needs to be filled, or you prolly haven't changed the text").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
 		if len(aboutText) > 100 {
-			toastText = "about text has to be shorter than 100 chars"
+			toast.Text("about text has to be shorter than 100 chars").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
+		// see options.go
 		payload := c.prefillPayload()
 		payload.AboutText = aboutText
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -215,29 +160,27 @@ func (c *settingsContent) onClickAbout(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText = "generic backend error"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
+		toast.Text("about text updated").Type("success").Dispatch(c, dispatch)
+
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = "about text updated"
-			c.toastShow = (toastText != "")
-			c.toastType = "success"
 			c.settingsButtonDisabled = false
 		})
 		return
 	})
 }
 
-func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
-	toastText := ""
+// onClickWebsite()
+func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
 
@@ -246,11 +189,9 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 
 		// check the trimmed version of website string
 		if website == "" {
-			toastText = "website URL has to be filled, or changed"
+			toast.Text("website URL has to be filled, or changed").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -258,11 +199,9 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 
 		// check the URL/URI format
 		if _, err := url.ParseRequestURI(website); err != nil {
-			toastText = "website prolly not a valid URL"
+			toast.Text("website prolly not a valid URL").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -271,12 +210,9 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 		// create a regex object
 		regex, err := regexp.Compile("^(http|https)://")
 		if err != nil {
-			toastText := "failed to check the website (regex object fail)"
-			log.Println(toastText)
+			toast.Text("failed to check the website (regex object fail)").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -286,10 +222,11 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			website = "https://" + website
 		}
 
+		// see options.go
 		payload := c.prefillPayload()
 		payload.WebsiteLink = website
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -298,24 +235,21 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText = "generic backend error"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
+		// update user's struct in memory
 		c.user.Web = c.website
 
-		//ctx.Navigate("/users")
+		toast.Text("website updated").Type("success").Dispatch(c, dispatch)
+
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = "website updated"
-			c.toastShow = (toastText != "")
-			c.toastType = "success"
 			c.settingsButtonDisabled = false
 		})
 		return
@@ -323,31 +257,30 @@ func (c *settingsContent) onClickWebsite(ctx app.Context, e app.Event) {
 	return
 }
 
-func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event) {
-	toastText := ""
+// onClickDeleteSubscription()
+func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
 
 	uuid := c.interactedUUID
 	if uuid == "" {
-		toastText := "blank UUID string"
+		toast.Text("blank UUID string").Type("error").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = toastText != ""
 			c.settingsButtonDisabled = false
 		})
 		return
 	}
 
-	payload := struct {
-		UUID string `json:"device_uuid"`
-	}{
-		UUID: uuid,
-	}
-
 	ctx.Async(func() {
-		input := callInput{
+		payload := struct {
+			UUID string `json:"device_uuid"`
+		}{
+			UUID: uuid,
+		}
+
+		input := common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
 			Data:        payload,
@@ -356,11 +289,10 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("failed to unsubscribe, try again later").Type("error").Dispatch(c, dispatch)
+
 			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to unsubscribe, try again later"
-				c.toastShow = toastText != ""
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -375,12 +307,9 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 			newDevs = append(newDevs, dev)
 		}
 
-		toastText = "device successfully unsubscribed"
+		toast.Text("device successfully unsubscribed").Type("success").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = toastText != ""
-			c.toastType = "info"
 			c.settingsButtonDisabled = false
 
 			if uuid == c.thisDeviceUUID {
@@ -399,7 +328,8 @@ func (c *settingsContent) onClickDeleteSubscription(ctx app.Context, e app.Event
 	return
 }
 
-func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
+// onDarkModeSwitch()
+func (c *Content) onDarkModeSwitch(ctx app.Context, e app.Event) {
 	//m := ctx.JSSrc().Get("checked").Bool()
 
 	ctx.Dispatch(func(ctx app.Context) {
@@ -415,7 +345,8 @@ func (c *settingsContent) onDarkModeSwitch(ctx app.Context, e app.Event) {
 	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
 }
 
-func (c *settingsContent) onClickDeleteSubscriptionModalShow(ctx app.Context, e app.Event) {
+// onCliclDeleteSubscriptionModalShow()
+func (c *Content) onClickDeleteSubscriptionModalShow(ctx app.Context, e app.Event) {
 	uuid := ctx.JSSrc().Get("id").String()
 
 	ctx.Dispatch(func(ctx app.Context) {
@@ -425,201 +356,21 @@ func (c *settingsContent) onClickDeleteSubscriptionModalShow(ctx app.Context, e 
 	})
 }
 
-func (c *settingsContent) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
+// onClickDeleteAccountModalShow()
+func (c *Content) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.deleteAccountModalShow = true
 		c.settingsButtonDisabled = true
 	})
 }
 
-func (c *settingsContent) dismissToast(ctx app.Context, e app.Event) {
+// onDismissToast
+func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
 	ctx.NewAction("dismiss")
 }
 
-func (c *settingsContent) checkTags(tags []string, tag string) []string {
-	// delete the tag if tags contain it
-	if helpers.Contains(tags, tag) {
-		newTags := []string{}
-		for _, t := range tags {
-			if t == tag {
-				continue
-			}
-			newTags = append(newTags, t)
-		}
-		return newTags
-	}
-
-	// add the tag if missing
-	return append(tags, tag)
-}
-
-func (c *settingsContent) deleteSubscription(ctx app.Context, tag string) {
-	toastText := ""
-	uuid := ctx.DeviceID()
-
-	c.settingsButtonDisabled = true
-
-	payload := struct {
-		UUID string `json:"device_uuid"`
-	}{
-		UUID: uuid,
-	}
-
-	devs := c.devices
-	newDevs := []models.Device{}
-	for _, dev := range devs {
-		if dev.UUID == ctx.DeviceID() {
-			continue
-		}
-		newDevs = append(newDevs, dev)
-	}
-
-	ctx.Async(func() {
-		input := callInput{
-			Method:      "DELETE",
-			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
-			Data:        payload,
-			CallerID:    c.user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		if _, ok := littrAPI(input); !ok {
-			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to unsubscribe, try again later"
-				c.toastShow = toastText != ""
-
-				c.subscribed = true
-				c.settingsButtonDisabled = false
-			})
-			return
-
-		}
-
-		ctx.Dispatch(func(ctx app.Context) {
-			//c.toastText = toastText
-			c.toastText = "successfully unsubscribed, notifications off"
-			c.toastShow = toastText != ""
-			c.toastType = "info"
-
-			c.settingsButtonDisabled = false
-
-			c.subscription.Mentions = false
-			c.subscription.Replies = false
-
-			c.subscribed = false
-			c.thisDevice = models.Device{}
-			c.devices = newDevs
-		})
-		return
-	})
-	return
-}
-
-func (c *settingsContent) checkPermission(ctx app.Context, checked bool) bool {
-	toastText := ""
-
-	// notify user that their browser does not support notifications and therefore they cannot
-	// use notifications service
-	if c.notificationPermission == app.NotificationNotSupported && checked {
-		toastText = "notifications are not supported in this browser"
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.toastType = "error"
-
-			c.replyNotifOn = false
-			c.subscribed = false
-		})
-		return false
-	}
-
-	// request the permission on default when switch is toggled
-	if (c.notificationPermission == app.NotificationDefault && checked) ||
-		(c.notificationPermission == app.NotificationDenied) {
-		c.notificationPermission = ctx.Notifications().RequestPermission()
-	}
-
-	// fail on denied permission
-	if c.notificationPermission != app.NotificationGranted {
-		toastText = "notification permission denied by user"
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-
-			c.replyNotifOn = false
-			c.subscribed = false
-		})
-		return false
-	}
-	return true
-}
-
-func (c *settingsContent) updateSubscriptionTag(ctx app.Context, tag string) {
-	c.settingsButtonDisabled = true
-
-	devs := c.devices
-	newDevs := []models.Device{}
-	for _, dev := range devs {
-		if dev.UUID == ctx.DeviceID() {
-			if len(c.checkTags(dev.Tags, tag)) == 0 {
-				continue
-			}
-			dev.Tags = c.checkTags(dev.Tags, tag)
-		}
-		newDevs = append(newDevs, dev)
-	}
-
-	deviceSub := c.thisDevice
-
-	ctx.Async(func() {
-		input := callInput{
-			Method:      "PUT",
-			Url:         "/api/v1/push/subscription/" + ctx.DeviceID() + "/" + tag,
-			Data:        deviceSub,
-			CallerID:    c.user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		if _, ok := littrAPI(input); !ok {
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "failed to update the subscription, try again later"
-				c.toastShow = c.toastText != ""
-
-				//c.subscribed = true
-				c.settingsButtonDisabled = false
-			})
-			return
-
-		}
-
-		deviceSub.Tags = c.checkTags(c.thisDevice.Tags, tag)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = "subscription updated"
-			c.toastShow = c.toastText != ""
-			c.toastType = "info"
-
-			if tag == "mention" {
-				c.subscription.Mentions = !c.subscription.Mentions
-			} else if tag == "reply" {
-				c.subscription.Replies = !c.subscription.Replies
-			}
-
-			c.thisDevice = deviceSub
-			c.devices = newDevs
-			c.settingsButtonDisabled = false
-		})
-		return
-	})
-	return
-}
-
-func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
+// onClickNotifSwitch()
+func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	tag := ""
 	source := ctx.JSSrc().Get("id").String()
 
@@ -632,7 +383,8 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	}
 
 	checked := ctx.JSSrc().Get("checked").Bool()
-	toastText := ""
+
+	toast := common.Toast{AppContext: &ctx}
 
 	// unsubscribe
 	if !checked {
@@ -670,18 +422,17 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 
 		vapidPubKey := c.VAPIDpublic
 		if vapidPubKey == "" {
-			// compiled into frontend/helpers.vapidPublicKey variable in wasm binary (see Dockerfile for more info)
-			vapidPubKey = vapidPublicKey
+			// compiled into frontend/common/api.VapidPublicKey variable in wasm binary (see Dockerfile for more info)
+			vapidPubKey = common.VapidPublicKey
 		}
 
 		// register the subscription
 		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
 		if err != nil {
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = "failed to subscribe to notifications: " + err.Error()
-				c.toastShow = c.toastText != ""
-				c.settingsButtonDisabled = false
+			toast.Text("failed to subscribe to notifications: "+err.Error()).Type("error").Dispatch(c, dispatch)
 
+			ctx.Dispatch(func(ctx app.Context) {
+				c.settingsButtonDisabled = false
 				//c.subscribed = false
 			})
 			return
@@ -707,7 +458,7 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		// send the registration to backend
-		input := callInput{
+		input := common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/push/subscription",
 			Data:        deviceSub,
@@ -716,13 +467,10 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText := "cannot reach backend!"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("backend connection failed").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to subscribe to notifications"
-				c.toastShow = toastText != ""
 				c.settingsButtonDisabled = false
 
 				c.subscribed = false
@@ -735,14 +483,13 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			devs = append(devs, deviceSub)
 		}
 
+		toast.Text("successfully subscribed to notifs").Type("success").Dispatch(c, dispatch)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
 			//c.user = user
 			c.subscribed = true
 
-			c.toastText = "successfully subscribed"
-			c.toastShow = toastText != ""
-			c.toastType = "success"
 			c.settingsButtonDisabled = false
 
 			if tag == "mention" {
@@ -759,18 +506,19 @@ func (c *settingsContent) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	return
 }
 
-func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
+// onLocalTimeModeSwitch()
+func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 	c.settingsButtonDisabled = true
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 	localTime := c.user.LocalTimeMode
 
 	ctx.Async(func() {
-
+		// see options.go
 		payload := c.prefillPayload()
 		payload.LocalTimeMode = !localTime
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -779,13 +527,10 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText = "cannot reach backend!"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to toggle the local time mode"
-				c.toastShow = toastText != ""
 				c.settingsButtonDisabled = false
 
 				c.user.LocalTimeMode = localTime
@@ -793,11 +538,10 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 			return
 		}
 
+		toast.Text("local time mode toggled").Type("success").Dispatch(c, dispatch)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = "local time mode toggled"
-			c.toastShow = toastText != ""
-			c.toastType = "success"
 			c.settingsButtonDisabled = false
 
 			c.user.LocalTimeMode = !localTime
@@ -806,17 +550,18 @@ func (c *settingsContent) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
+// onClickPrivateSwitch()
+func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	c.settingsButtonDisabled = true
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-
+		// see options.go
 		payload := c.prefillPayload()
 		payload.Private = !c.user.Private
 
-		input := callInput{
+		input := common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -825,23 +570,19 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText = "cannot reach backend!"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				//c.toastText = toastText
-				c.toastText = "failed to toggle the private mode"
-				c.toastShow = toastText != ""
 				c.settingsButtonDisabled = false
 			})
 			return
 		}
 
+		toast.Text("private mode toggled").Type("success").Dispatch(c, dispatch)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = "private mode toggled"
-			c.toastShow = toastText != ""
-			c.toastType = "success"
 			c.settingsButtonDisabled = false
 
 			c.user.Private = !c.user.Private
@@ -850,8 +591,9 @@ func (c *settingsContent) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
-	toastText := ""
+// onClickDeleteAccount()
+func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
 
@@ -859,7 +601,7 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
-		input := callInput{
+		input := common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/users/" + c.user.Nickname,
 			Data:        c.user,
@@ -868,12 +610,10 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if _, ok := littrAPI(input); !ok {
-			toastText = "generic backend error"
+		if ok := common.CallAPI(input, &stub{}); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -886,20 +626,19 @@ func (c *settingsContent) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	return
 }
 
-func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
-	var toastText string
+// handleFigUpload() --> common/image.go TODO
+func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
+	toast := common.Toast{AppContext: &ctx}
 
 	file := e.Get("target").Get("files").Index(0)
 
 	c.settingsButtonDisabled = true
 
 	ctx.Async(func() {
-		if data, err := readFile(file); err != nil {
-			toastText = err.Error()
+		if data, err := common.ReadFile(file); err != nil {
+			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 			})
 			return
@@ -933,7 +672,7 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				Key string
 			}{}
 
-			input := callInput{
+			input := common.CallInput{
 				Method:      "POST",
 				Url:         path,
 				Data:        payload,
@@ -942,37 +681,20 @@ func (c *settingsContent) handleFigUpload(ctx app.Context, e app.Event) {
 				HideReplies: false,
 			}
 
-			if raw, ok := littrAPI(input); ok {
-				if err := json.Unmarshal(*raw, &resp); err != nil {
-					toastText = "JSON parse error: " + err.Error()
-					ctx.Dispatch(func(ctx app.Context) {
-						c.toastText = toastText
-						c.toastShow = (toastText != "")
-						c.settingsButtonDisabled = false
-					})
-					return
-				}
-
-			} else {
-				//ctx.Navigate("/flow")
-				toastText = "generic backend error: cannot process the request"
+			if ok := common.CallAPI(input, &resp); ok {
+				toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 
 				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
 					c.settingsButtonDisabled = false
 				})
 				return
 			}
 
-			toastText = "avatar successfully updated"
+			toast.Text("avatar successfully updated").Type("success").Dispatch(c, dispatch)
 
 			avatar := "/web/pix/thumb_" + resp.Key
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.toastType = "success"
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
 				c.settingsButtonDisabled = false
 
 				c.newFigFile = file.Get("name").String()

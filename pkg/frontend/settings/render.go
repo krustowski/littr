@@ -1,208 +1,16 @@
-package frontend
+package settings
 
 import (
-	"encoding/json"
 	"log"
 	"net/url"
-
-	"go.vxn.dev/littr/pkg/helpers"
-	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type SettingsPage struct {
-	app.Compo
-
-	mode string
-}
-
-type settingsContent struct {
-	app.Compo
-
-	// TODO: review this
-	loggedUser string
-
-	// used with forms
-	passphrase        string
-	passphraseAgain   string
-	passphraseCurrent string
-	aboutText         string
-	website           string
-
-	// loaded logged user's struct
-	user models.User
-
-	// message toast vars
-	toastShow bool
-	toastText string
-	toastType string
-
-	darkModeOn   bool
-	replyNotifOn bool
-
-	notificationPermission app.NotificationPermission
-	subscribed             bool
-	subscription           struct {
-		Replies  bool
-		Mentions bool
-	}
-	mentionNotificationEnabled bool
-
-	settingsButtonDisabled bool
-
-	deleteAccountModalShow      bool
-	deleteSubscriptionModalShow bool
-
-	VAPIDpublic string
-	devices     []models.Device
-	thisDevice  models.Device
-
-	thisDeviceUUID string
-	interactedUUID string
-
-	newFigLink string
-	newFigData []byte
-	newFigFile string
-
-	keyDownEventListener func()
-}
-
-func (p *SettingsPage) Render() app.UI {
-	return app.Div().Body(
-		&header{},
-		&footer{},
-		&settingsContent{},
-	)
-}
-
-func (p *SettingsPage) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("settings / littr")
-
-	ctx.LocalStorage().Get("mode", &p.mode)
-}
-
-func (c *settingsContent) OnMount(ctx app.Context) {
-	c.notificationPermission = ctx.Notifications().Permission()
-
-	ctx.Handle("dismiss", c.handleDismiss)
-
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
-}
-
-func (c *settingsContent) OnNav(ctx app.Context) {
-	toastText := ""
-	ctx.Dispatch(func(ctx app.Context) {
-		c.settingsButtonDisabled = true
-	})
-
-	ctx.Async(func() {
-		payload := struct {
-			Key        string                 `json:"key"`
-			PublicKey  string                 `json:"public_key"`
-			Users      map[string]models.User `json:"users"`
-			Subscribed bool                   `json:"subscribed"`
-			Devices    []models.Device        `json:"devices"`
-			Code       int                    `json:"code"`
-		}{}
-
-		input := callInput{
-			Method:      "GET",
-			Url:         "/api/v1/users",
-			Data:        nil,
-			CallerID:    ctx.DeviceID(),
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		if data, ok := littrAPI(input); ok {
-			err := json.Unmarshal(*data, &payload)
-			if err != nil {
-				log.Println(err.Error())
-				toastText = "JSON parse error: " + err.Error()
-
-				ctx.Dispatch(func(ctx app.Context) {
-					c.toastText = toastText
-					c.toastShow = (toastText != "")
-				})
-				return
-			}
-		} else {
-			toastText = "cannot fetch users list"
-			log.Println(toastText)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		if payload.Code == 401 {
-			toastText = "please log-in again"
-
-			ctx.LocalStorage().Set("user", "")
-			ctx.LocalStorage().Set("authGranted", false)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-			})
-			return
-		}
-
-		user := payload.Users[payload.Key]
-
-		var thisDevice models.Device
-		for _, dev := range payload.Devices {
-			if dev.UUID == ctx.DeviceID() {
-				thisDevice = dev
-				break
-			}
-		}
-
-		subscription := c.subscription
-		if helpers.Contains(thisDevice.Tags, "reply") {
-			subscription.Replies = true
-		}
-		if helpers.Contains(thisDevice.Tags, "mention") {
-			subscription.Mentions = true
-		}
-
-		// get the mode
-		var mode string
-		ctx.LocalStorage().Get("mode", &mode)
-		//ctx.LocalStorage().Set("mode", user.AppBgMode)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
-			c.loggedUser = user.Nickname
-			c.devices = payload.Devices
-
-			c.subscribed = payload.Subscribed
-			c.subscription = subscription
-
-			c.darkModeOn = mode == "dark"
-			//c.darkModeOn = user.AppBgMode == "dark"
-
-			c.VAPIDpublic = payload.PublicKey
-			c.thisDeviceUUID = ctx.DeviceID()
-			c.thisDevice = thisDevice
-
-			c.replyNotifOn = c.notificationPermission == app.NotificationGranted
-			//c.replyNotifOn = user.ReplyNotificationOn
-
-			c.settingsButtonDisabled = false
-		})
-		return
-	})
-	return
-}
-
-func (c *settingsContent) Render() app.UI {
+func (c *Content) Render() app.UI {
 	toastColor := ""
 
-	switch c.toastType {
+	switch c.toast.TType {
 	case "success":
 		toastColor = "green10"
 		break
@@ -225,11 +33,11 @@ func (c *settingsContent) Render() app.UI {
 		),
 
 		// snackbar
-		app.A().OnClick(c.dismissToast).Body(
-			app.If(c.toastText != "",
+		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
+			app.If(c.toast.TText != "",
 				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
-					app.Span().Text(c.toastText),
+					app.Span().Text(c.toast.TText),
 				),
 			),
 		),
@@ -431,7 +239,7 @@ func (c *settingsContent) Render() app.UI {
 
 				app.Div().Class("row").Body(
 					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription),
-					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.onDismissToast),
 				),
 			),
 		),
@@ -629,7 +437,7 @@ func (c *settingsContent) Render() app.UI {
 
 				app.Div().Class("row").Body(
 					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
-					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.dismissToast),
+					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.onDismissToast),
 				),
 			),
 		),

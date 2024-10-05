@@ -20,9 +20,9 @@ import (
 
 var (
 	// those vars are used during the build --- linker (ld) bakes the values in
-	appVersion     string
-	appPepper      string
-	vapidPublicKey string
+	AppVersion     string
+	AppPepper      string
+	VapidPublicKey string
 )
 
 type CallInput struct {
@@ -64,7 +64,7 @@ func CallAPI[T any](input CallInput, output *T) bool {
 
 	version := app.Getenv("APP_VERSION")
 	if version == "" {
-		version = appVersion
+		version = AppVersion
 	}
 
 	req.Header.Set("Content-Type", "application/json")
