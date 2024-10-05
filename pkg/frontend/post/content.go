@@ -23,10 +23,6 @@ type Content struct {
 
 	toast common.Toast
 
-	toastShow bool
-	toastText string
-	toastType string
-
 	postButtonsDisabled bool
 
 	keyDownEventListener func()

@@ -172,6 +172,15 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if post.Content == "" && post.Figure == "" && post.Data == nil {
+		resp.Message = "post with no content"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
 	if post.Nickname == "" {
 		post.Nickname = caller
 	}

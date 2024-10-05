@@ -29,11 +29,11 @@ func (c *Content) Render() app.UI {
 		),
 
 		// snackbar
-		app.A().OnClick(c.dismissToast).Body(
+		app.A().OnClick(c.onDismissToast).Body(
 			app.If(c.toast.TText != "",
 				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
-					app.Span().Text(c.toastText),
+					app.Span().Text(c.toast.TText),
 				),
 			),
 		),

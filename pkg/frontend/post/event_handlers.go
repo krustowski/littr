@@ -40,6 +40,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
 				toast.Text("poll question and at least two options have to be filled").Type("error").Dispatch(c, dispatch)
+				return
 				break
 			}
 
@@ -65,6 +66,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			// allow just picture posting
 			if newPost == "" && c.newFigFile == "" {
 				toast.Text("post textarea must be filled").Type("error").Dispatch(c, dispatch)
+				return
 				break
 			}
 
@@ -86,22 +88,21 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		//author := user.Nickname
 		path := "/api/v1/posts"
 
 		if postType == "post" {
 			payload = models.Post{
-				//Nickname: author,
-				Type:    postType,
-				Content: content,
-				PollID:  poll.ID,
-				Figure:  c.newFigFile,
-				Data:    c.newFigData,
+				Nickname: user.Nickname,
+				Type:     postType,
+				Content:  content,
+				PollID:   poll.ID,
+				Figure:   c.newFigFile,
+				Data:     c.newFigData,
 				//Timestamp: time.Now(),
 			}
 		} else if postType == "poll" {
 			path = "/api/v1/polls"
-			//poll.Author = user.Nickname
+			poll.Author = user.Nickname
 			payload = poll
 		}
 
@@ -138,7 +139,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *Content) dismissToast(ctx app.Context, e app.Event) {
+func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
 	ctx.NewAction("dismiss")
 }
 
