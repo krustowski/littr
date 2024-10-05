@@ -1,38 +1,20 @@
-package frontend
+package welcome
 
 import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type WelcomePage struct {
-	app.Compo
-
-	mode string
-}
-
-type welcomeContent struct {
+type Content struct {
 	app.Compo
 }
 
-func (p *WelcomePage) Render() app.UI {
-	return app.Div().Body(
-		&header{},
-		&footer{},
-		&welcomeContent{},
-	)
+func (c *Content) OnMount(ctx app.Context) {
 }
 
-func (p *WelcomePage) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("welcome / littr")
+func (c *Content) OnNav(ctx app.Context) {
 }
 
-func (c *welcomeContent) OnMount(ctx app.Context) {
-}
-
-func (c *welcomeContent) OnNav(ctx app.Context) {
-}
-
-func (c *welcomeContent) Render() app.UI {
+func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.Article().Body(
 			app.Div().Class("").Body(

@@ -4,6 +4,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/settings"
 	"go.vxn.dev/littr/pkg/frontend/users"
+	"go.vxn.dev/littr/pkg/frontend/welcome"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -70,4 +71,26 @@ func (v *UsersView) Render() app.UI {
 		&footer{},
 		&users.Content{},
 	)
+}
+
+/*
+ *  welcome view
+ */
+
+type WelcomeView struct {
+	app.Compo
+
+	mode string
+}
+
+func (p *WelcomeView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&welcome.Content{},
+	)
+}
+
+func (p *WelcomeView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("welcome / littr")
 }
