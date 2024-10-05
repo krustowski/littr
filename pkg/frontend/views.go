@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"go.vxn.dev/littr/pkg/frontend/login"
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/post"
 	"go.vxn.dev/littr/pkg/frontend/register"
@@ -13,6 +14,42 @@ import (
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
+
+/*
+ *  login
+ */
+
+type LoginView struct {
+	app.Compo
+	userLogged bool
+}
+
+func (v *LoginView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("login / littr")
+}
+
+func (v *LoginView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&login.Content{},
+	)
+}
+
+func (v *LoginView) OnMount(ctx app.Context) {
+	if ctx.Page().URL().Path == "/logout" {
+		// destroy auth manually without API
+		//ctx.LocalStorage().Set("userLogged", false)
+		//ctx.LocalStorage().Set("userName", "")
+		//ctx.LocalStorage().Set("flowRecords", nil)
+		ctx.SetState("user", "")
+		ctx.SetState("authGranted", false)
+
+		v.userLogged = false
+
+		ctx.Navigate("/login")
+	}
+}
 
 /*
  *  polls view
