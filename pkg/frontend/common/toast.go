@@ -6,6 +6,7 @@ import (
 
 type ToastInterface interface {
 	Dispatch() func(interface{})
+	False() func(interface{})
 }
 
 type Toast struct {
