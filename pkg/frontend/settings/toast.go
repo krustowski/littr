@@ -1,4 +1,4 @@
-package users
+package settings
 
 import (
 	"go.vxn.dev/littr/pkg/frontend/common"
