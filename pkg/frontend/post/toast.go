@@ -1,4 +1,4 @@
-package users
+package post
 
 import (
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -15,6 +15,6 @@ func dispatch(t *common.Toast, ic interface{}) {
 
 	(*t.AppContext).Dispatch(func(ctx app.Context) {
 		c.toast = *t
-		c.usersButtonDisabled = false
+		c.postButtonsDisabled = false
 	})
 }

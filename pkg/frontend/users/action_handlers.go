@@ -11,8 +11,7 @@ import (
 
 func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
-		c.toastText = ""
-		c.toastShow = (c.toastText != "")
+		c.toast.TText = ""
 		c.usersButtonDisabled = false
 		c.showUserPreviewModal = false
 	})
@@ -98,9 +97,9 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 
 	flowList["system"] = true
 
-	ctx.Async(func() {
-		toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
+	ctx.Async(func() {
 		// do not save new flow user to local var until it is saved on backend
 		//flowRecords := append(c.flowRecords, flowName)
 
@@ -125,41 +124,19 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		}{}
 
 		if ok := common.CallAPI(input, &response); !ok {
-			toastText = "generic backend error"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.usersButtonDisabled = false
-			})
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		if response.Code != 200 && response.Code != 201 {
-			toastText = "user update failed: " + response.Message
-			log.Println(response.Message)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.usersButtonDisabled = false
-			})
+			toast.Text("user update failed: "+response.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		user.FlowList = flowList
-
-		/*var stream []byte
-		if err := reload(user, &stream); err != nil {
-			toastText = "local storage reload failed: " + err.Error()
-			return
-		}*/
+		ctx.LocalStorage().Set("user", user)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			ctx.LocalStorage().Set("user", user)
-
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
 			c.usersButtonDisabled = false
 
 			c.users[user.Nickname] = user

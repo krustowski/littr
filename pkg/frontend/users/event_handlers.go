@@ -1,8 +1,6 @@
 package users
 
 import (
-	"log"
-
 	"go.vxn.dev/littr/pkg/frontend/common"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -22,8 +20,7 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		return
 	}
 
-	toastText := ""
-	toastType := "error"
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.user
@@ -51,20 +48,11 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 
 		// delete the request from one's requestList
 		if ok := common.CallAPI(input, &stub{}); !ok {
-			toastText = "problem calling the backend"
-			toastType = "error"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.toastType = toastType
-				c.usersButtonDisabled = false
-			})
+			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 			return
-		} else {
-			toastText = "requested removed"
-			toastType = "success"
 		}
+
+		toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
 
 		// prepare the lists for the counterpart
 		fellowFlowList := make(map[string]bool)
@@ -90,26 +78,13 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		}
 
 		if ok := common.CallAPI(input2, &payload2); !ok {
-			toastText = "problem calling the backend"
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.toastType = toastType
-				c.usersButtonDisabled = false
-			})
+			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 			return
-		} else {
-			toastText = "user updated, request removed"
-			toastType = "success"
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.toastType = toastType
-			c.usersButtonDisabled = false
+		toast.Text("user updated, request removed").Type("success").Dispatch(c, dispatch)
 
+		ctx.Dispatch(func(ctx app.Context) {
 			//c.user.FlowList = ourFlowList
 			//c.users[c.user.Nickname] = payload
 		})
@@ -124,11 +99,10 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 		return
 	}
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.user
-		toastType := "error"
 
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
@@ -153,19 +127,12 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 
 		// delete the request from one's requestList
 		if ok := common.CallAPI(input, &stub{}); !ok {
-			toastText = "problem calling the backend"
-			toastType = "error"
-		} else {
-			toastText = "requested removed"
-			toastType = "success"
+			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.toastType = toastType
-			c.usersButtonDisabled = false
+		toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
 
+		ctx.Dispatch(func(ctx app.Context) {
 			c.user = user
 			c.users[c.user.Nickname] = user
 		})
@@ -180,11 +147,10 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		return
 	}
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.users[nick]
-		toastType := "error"
 
 		input := common.CallInput{
 			Method:      "DELETE",
@@ -196,23 +162,17 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		}
 
 		if ok := common.CallAPI(input, &stub{}); !ok {
-			toastText = "problem calling the backend"
-		} else {
-			toastText = "request to follow removed"
-			toastType = "info"
-
-			if user.RequestList == nil {
-				user.RequestList = make(map[string]bool)
-			}
-			user.RequestList[c.user.Nickname] = false
+			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.toastType = toastType
-			c.usersButtonDisabled = false
+		if user.RequestList == nil {
+			user.RequestList = make(map[string]bool)
+		}
+		user.RequestList[c.user.Nickname] = false
 
+		toast.Text("request to follow removed").Type("info").Dispatch(c, dispatch)
+
+		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
 		})
 		return
@@ -226,11 +186,10 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		return
 	}
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.users[nick]
-		toastType := "error"
 
 		input := common.CallInput{
 			Method:      "POST",
@@ -242,23 +201,17 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		}
 
 		if ok := common.CallAPI(input, &stub{}); !ok {
-			toastText = "problem calling the backend"
-		} else {
-			toastText = "requested to follow"
-			toastType = "success"
-
-			if user.RequestList == nil {
-				user.RequestList = make(map[string]bool)
-			}
-			user.RequestList[c.user.Nickname] = true
+			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.toastType = toastType
-			c.usersButtonDisabled = false
+		if user.RequestList == nil {
+			user.RequestList = make(map[string]bool)
+		}
+		user.RequestList[c.user.Nickname] = true
 
+		toast.Text("requested to follow").Type("success").Dispatch(c, dispatch)
+
+		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
 		})
 		return
@@ -269,8 +222,12 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 func (c *Content) onClickUser(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("preview", key)
-	c.usersButtonDisabled = true
-	c.showUserPreviewModal = true
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.usersButtonDisabled = true
+		c.showUserPreviewModal = true
+	})
+	return
 }
 
 func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
@@ -334,7 +291,7 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 		c.user.ShadeList[key] = !shadeListItem
 	}
 
-	toastText := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		payload := struct {
@@ -360,13 +317,12 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 		}{}
 
 		if ok := common.CallAPI(input, &response); !ok {
-			toastText = "generic backend error"
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		if response.Code != 200 && response.Code != 201 {
-			toastText = "user update failed: " + response.Message
-			log.Println(response.Message)
+			toast.Text("user update failed: "+response.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -394,19 +350,11 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 		}
 
 		if ok := common.CallAPI(input, &response); !ok {
-			toastText = "generic backend error"
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			//ctx.LocalStorage().Set("user", stream)
-
-			c.toastText = toastText
-			c.toastShow = (toastText != "")
-			c.usersButtonDisabled = false
-
-			log.Println("dispatch ends")
-		})
+		ctx.LocalStorage().Set("user", c.user)
 	})
 
 	c.userButtonDisabled = false
