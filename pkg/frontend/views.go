@@ -3,6 +3,7 @@ package frontend
 import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/settings"
+	"go.vxn.dev/littr/pkg/frontend/stats"
 	"go.vxn.dev/littr/pkg/frontend/tos"
 	"go.vxn.dev/littr/pkg/frontend/users"
 	"go.vxn.dev/littr/pkg/frontend/welcome"
@@ -52,6 +53,26 @@ func (v *SettingsView) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
 
 	ctx.LocalStorage().Get("mode", &v.mode)
+}
+
+/*
+ *  stats
+ */
+
+type StatsView struct {
+	app.Compo
+}
+
+func (v *StatsView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("stats / littr")
+}
+
+func (v *StatsView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&stats.Content{},
+	)
 }
 
 /*

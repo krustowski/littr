@@ -23,7 +23,7 @@ func initClient() {
 	app.Route("/reset", &fe.ResetPage{})
 	app.RouteWithRegexp("/reset/\\w+", &fe.ResetPage{})
 	app.Route("/settings", &fe.SettingsView{})
-	app.Route("/stats", &fe.StatsPage{})
+	app.Route("/stats", &fe.StatsView{})
 	app.Route("/tos", &fe.ToSView{})
 	app.Route("/users", &fe.UsersView{})
 
