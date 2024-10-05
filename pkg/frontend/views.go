@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
+	"go.vxn.dev/littr/pkg/frontend/register"
 	"go.vxn.dev/littr/pkg/frontend/reset"
 	"go.vxn.dev/littr/pkg/frontend/settings"
 	"go.vxn.dev/littr/pkg/frontend/stats"
@@ -29,6 +30,26 @@ func (v *PollsView) Render() app.UI {
 		&header{},
 		&footer{},
 		&polls.Content{},
+	)
+}
+
+/*
+ *  register
+ */
+
+type RegisterView struct {
+	app.Compo
+}
+
+func (v *RegisterView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("register / littr")
+}
+
+func (v *RegisterView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&register.Content{},
 	)
 }
 
