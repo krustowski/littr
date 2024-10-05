@@ -1,38 +1,10 @@
-package frontend
+package tos
 
 import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type ToSPage struct {
-	app.Compo
-}
-
-type tosContent struct {
-	app.Compo
-
-	toastText string
-	toastShow bool
-}
-
-func (p *ToSPage) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("ToS / littr")
-}
-
-func (p *ToSPage) Render() app.UI {
-	return app.Div().Body(
-		&header{},
-		&footer{},
-		&tosContent{},
-	)
-}
-
-func (c *tosContent) onClickDismiss(ctx app.Context, e app.Event) {
-	c.toastShow = false
-	//c.buttonDisabled = false
-}
-
-func (c *tosContent) Render() app.UI {
+func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
@@ -43,10 +15,10 @@ func (c *tosContent) Render() app.UI {
 
 		// snackbar
 		app.A().OnClick(c.onClickDismiss).Body(
-			app.If(c.toastText != "",
+			app.If(c.toast.TText != "",
 				app.Div().Class("snackbar red10 white-text top active").Body(
 					app.I().Text("error"),
-					app.Span().Text(c.toastText),
+					app.Span().Text(c.toast.TText),
 				),
 			),
 		),

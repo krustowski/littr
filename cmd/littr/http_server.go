@@ -41,7 +41,7 @@ func initClient() {
 	app.RouteWithRegexp("/reset/\\w+", &fe.ResetPage{})
 	app.Route("/settings", &fe.SettingsView{})
 	app.Route("/stats", &fe.StatsPage{})
-	app.Route("/tos", &fe.ToSPage{})
+	app.Route("/tos", &fe.ToSView{})
 	app.Route("/users", &fe.UsersView{})
 
 	app.RunWhenOnBrowser()

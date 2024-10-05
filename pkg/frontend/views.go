@@ -3,6 +3,7 @@ package frontend
 import (
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/settings"
+	"go.vxn.dev/littr/pkg/frontend/tos"
 	"go.vxn.dev/littr/pkg/frontend/users"
 	"go.vxn.dev/littr/pkg/frontend/welcome"
 
@@ -51,6 +52,26 @@ func (v *SettingsView) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("settings / littr")
 
 	ctx.LocalStorage().Get("mode", &v.mode)
+}
+
+/*
+ *  ToS
+ */
+
+type ToSView struct {
+	app.Compo
+}
+
+func (p *ToSView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("ToS / littr")
+}
+
+func (p *ToSView) Render() app.UI {
+	return app.Div().Body(
+		&header{},
+		&footer{},
+		&tos.Content{},
+	)
 }
 
 /*
