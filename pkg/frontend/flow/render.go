@@ -41,7 +41,7 @@ func (c *Content) sortPosts() []models.Post {
 func (c *Content) Render() app.UI {
 	toastColor := ""
 
-	switch c.toastType {
+	switch c.toast.TType {
 	case "success":
 		toastColor = "green10"
 		break
@@ -133,11 +133,11 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.If(c.toastText != "",
-			app.A().OnClick(c.onClickDismiss).Body(
+		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
+			app.If(c.toast.TText != "",
 				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
-					app.Span().Text(c.toastText),
+					app.Span().Text(c.toast.TText),
 				),
 			),
 		),

@@ -21,10 +21,7 @@ type Content struct {
 	user       models.User
 	key        string
 
-	toast     common.Toast
-	toastShow bool
-	toastText string
-	toastType string
+	toast common.Toast
 
 	buttonDisabled      bool
 	postButtonsDisabled bool
@@ -105,14 +102,13 @@ func (c *Content) OnNav(ctx app.Context) {
 		c.loaderShowImage = true
 		c.contentLoadFinished = false
 
-		c.toastText = ""
+		c.toast.TText = ""
 
 		c.posts = nil
 		c.users = nil
 	})
 
-	toastText := ""
-	toastType := ""
+	toast := common.Toast{AppContext: &ctx}
 
 	isPost := true
 
@@ -137,17 +133,16 @@ func (c *Content) OnNav(ctx app.Context) {
 		// try the singlePostID/userFlowNick var if present
 		if parts.SinglePostID != "" && parts.SinglePost {
 			if _, found := posts[parts.SinglePostID]; !found {
-				toastText = "post not found"
+				toast.Text("post not found").Type("error").Dispatch(c, dispatch)
 			}
 		}
 		if parts.UserFlowNick != "" && parts.UserFlow {
 			if _, found := users[parts.UserFlowNick]; !found {
-				toastText = "user not found"
+				toast.Text("user not found").Type("error").Dispatch(c, dispatch)
 			}
 
 			if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
-				toastText = "follow the user to see their posts"
-				toastType = "info"
+				toast.Text("follow the user to see their posts").Type("info").Dispatch(c, dispatch)
 			}
 			isPost = false
 		}
@@ -166,12 +161,6 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.userFlowNick = parts.UserFlowNick
 			c.isPost = isPost
 			c.hashtag = parts.Hashtag
-
-			if toastText != "" {
-				c.toastText = toastText
-				c.toastShow = (toastText != "")
-				c.toastType = toastType
-			}
 
 			c.loaderShow = false
 			c.loaderShowImage = false
