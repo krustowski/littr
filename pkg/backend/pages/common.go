@@ -115,8 +115,7 @@ func GetOnePage(opts PageOptions) (ptrs PagePointers) {
 	}
 
 	if opts.Users != (UserOptions{}) {
-		// NYI
-		//return onePageUsers(opts, ptrMaps)
+		return onePageUsers(opts, ptrMaps)
 	}
 
 	return ptrs
