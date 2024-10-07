@@ -15,6 +15,8 @@ import (
 	sse "github.com/alexandrevicenzi/go-sse"
 )
 
+type stub struct{}
+
 // getPolls get a list of polls
 //
 // @Summary      Get a list of polls
@@ -23,8 +25,8 @@ import (
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   polls.getPolls.response
-// @Failure      400  {object}   polls.getPolls.response{polls=nil,user=nil}
-// @Failure      500  {object}   polls.getPolls.response{polls=nil,user=nil}
+// @Failure      400  {object}   polls.getPolls.response{polls=stub,user=stub}
+// @Failure      500  {object}   polls.getPolls.response{polls=stub,user=stub}
 // @Router       /polls [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	//resp := common.Response{}
