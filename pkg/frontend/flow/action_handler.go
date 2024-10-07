@@ -244,7 +244,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 		// limit the fire rate to 1 Hz
 		now := time.Now().Unix()
-		if now-c.lastFire < 1 {
+		if now-c.lastFire < 1/1 {
 			return
 		}
 

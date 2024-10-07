@@ -32,6 +32,8 @@ type Content struct {
 
 	pollsButtonDisabled bool
 
+	processingScroll bool
+
 	keyDownEventListener func()
 }
 
@@ -83,7 +85,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.user = response.User
 			//c.loggedUser = c.user.Nickname
 
-			c.pagination = 10
+			c.pagination = 25
 			c.pageNo = 1
 
 			c.polls = response.Polls

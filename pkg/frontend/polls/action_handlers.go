@@ -1,9 +1,8 @@
 package polls
 
 import (
-	"log"
-
 	"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -84,6 +83,8 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 
 // handleScroll()
 func (c *Content) handleScroll(ctx app.Context, a app.Action) {
+	toast := common.Toast{AppContext: &ctx}
+
 	ctx.Async(func() {
 		elem := app.Window().GetElementByID("page-end-anchor")
 		boundary := elem.JSValue().Call("getBoundingClientRect")
@@ -91,12 +92,52 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 		_, height := app.Window().Size()
 
-		if bottom-height < 0 && !c.paginationEnd {
+		if bottom-height < 0 && !c.paginationEnd && !c.processingScroll {
 			ctx.Dispatch(func(ctx app.Context) {
-				c.pageNo++
+				c.processingScroll = true
 			})
 
-			log.Println("new content page request fired")
+			pageNo := c.pageNo
+			pageNo++
+
+			input := common.CallInput{
+				Method: "GET",
+				Url:    "/api/v1/polls",
+				Data:   nil,
+				PageNo: pageNo,
+			}
+
+			response := &struct {
+				Polls map[string]models.Poll `json:"polls"`
+				Code  int                    `json:"code"`
+				User  models.User            `json:"user"`
+			}{}
+
+			// call the API to fetch the data
+			if ok := common.CallAPI(input, response); !ok {
+				toast.Text("cannot fetch polls list").Dispatch(c, dispatch)
+				return
+			}
+
+			if response.Code == 401 {
+				toast.Text("please log-in again").Link("/logout").Dispatch(c, dispatch)
+				return
+			}
+
+			polls := c.polls
+			if polls == nil {
+				polls = make(map[string]models.Poll)
+			}
+
+			for key, poll := range response.Polls {
+				polls[key] = poll
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				c.pageNo++
+				c.polls = polls
+				c.processingScroll = false
+			})
 			return
 		}
 	})

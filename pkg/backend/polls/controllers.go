@@ -29,10 +29,10 @@ type stub struct{}
 // @Failure      500  {object}   polls.getPolls.response{polls=stub,user=stub}
 // @Router       /polls [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
-	//resp := common.Response{}
 	l := common.NewLogger(r, "polls")
 	callerID, _ := r.Context().Value("nickname").(string)
 
+	//resp := common.Response{}
 	type response struct {
 		Code    int                    `json:"code"`
 		Message string                 `json:"message"`

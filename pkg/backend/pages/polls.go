@@ -40,8 +40,10 @@ func onePagePolls(opts PageOptions, ptrMaps *rawMaps) PagePointers {
 	var part []models.Poll
 
 	pageNo := opts.PageNo
-	start := (PAGE_SIZE * 2) * pageNo
-	end := (PAGE_SIZE * 2) * (pageNo + 1)
+	//start := (PAGE_SIZE * 2) * pageNo
+	start := (PAGE_SIZE) * pageNo
+	//end := (PAGE_SIZE * 2) * (pageNo + 1)
+	end := (PAGE_SIZE) * (pageNo + 1)
 
 	if len(polls) > start {
 		// only valid for the very first page
