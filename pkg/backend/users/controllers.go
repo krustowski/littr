@@ -32,6 +32,35 @@ type msgPayload struct {
 	Passphrase string
 }
 
+func flushUserData(users *map[string]models.User, callerID string) *map[string]models.User {
+	if users == nil || callerID == "" {
+		return nil
+	}
+
+	// flush unwanted properties
+	for key, user := range *users {
+		user.Passphrase = ""
+		user.PassphraseHex = ""
+
+		if user.Nickname != callerID {
+			user.Email = ""
+			user.FlowList = nil
+			user.ShadeList = nil
+
+			// return the caller's status in counterpart account's req. list only
+			if value, found := user.RequestList[callerID]; found {
+				user.RequestList = make(map[string]bool)
+				user.RequestList[callerID] = value
+			} else {
+				user.RequestList = nil
+			}
+		}
+
+		(*users)[key] = user
+	}
+	return users
+}
+
 // getUsers is the users handler that processes and returns existing users list.
 //
 // @Summary      Get a list of users
@@ -46,13 +75,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 	stats := make(map[string]models.UserStat)
 
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, _ := r.Context().Value("nickname").(string)
 	uuid := r.Header.Get("X-API-Caller-ID")
 
 	// fetch all data for the calculations
 	users, _ := db.GetAll(db.UserCache, models.User{})
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
-	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
+	devs, _ := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
 
 	// check the subscription
 	//devSubscribed := false
@@ -103,32 +132,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// flush unwanted properties
-	for key, user := range users {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-
-		if user.Nickname != caller {
-			user.Email = ""
-			user.FlowList = nil
-			user.ShadeList = nil
-
-			// return the caller's status in counterpart account's req. list only
-			if value, found := user.RequestList[caller]; found {
-				user.RequestList = make(map[string]bool)
-				user.RequestList[caller] = value
-			} else {
-				user.RequestList = nil
-			}
-		}
-
-		users[key] = user
-	}
+	users = *flushUserData(&users, callerID)
 
 	resp.Message = "ok, dumping users"
 	resp.Code = http.StatusOK
 	resp.Users = users
 	resp.UserStats = stats
-	resp.Key = caller
+	resp.Key = callerID
 	resp.PublicKey = os.Getenv("VAPID_PUB_KEY")
 	resp.Devices = devs
 
@@ -141,15 +151,57 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get the user's details
 // @Description  get the user's details
 // @Tags         users
-// @Deprecated
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      400  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Router       /users/{nickname} [get]
-func getOneUser(w http.ResponseWriter, r *http.Request) {}
+// @Success      200  {object}   users.getOneUser.response{code=200}
+// @Failure      404  {object}   users.getOneUser.response{code=404}
+// @Router       /users/caller [get]
+func getOneUser(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, "users")
+	callerID, _ := r.Context().Value("nickname").(string)
+
+	type response struct {
+		Message   string          `json:"message"`
+		Code      int             `json:"code"`
+		User      models.User     `json:"user"`
+		Devices   []models.Device `json:"devices"`
+		PublicKey string          `json:"public_key"`
+	}
+
+	resp := response{
+		PublicKey: os.Getenv("VAPID_PUB_KEY"),
+	}
+
+	// check the callerID record in the database
+	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
+	if !ok {
+		resp.Message = "this user does not exist in the database"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	// fetch user's devices
+	devs, _ := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+
+	// helper struct for the data flush
+	users := make(map[string]models.User)
+	users[callerID] = caller
+	users = *flushUserData(&users, callerID)
+
+	// return response
+	resp.Devices = devs
+	resp.User = users[callerID]
+
+	resp.Code = http.StatusOK
+	resp.Message = "ok, returning callerID's record"
+
+	l.Println(resp.Message, resp.Code)
+	common.WriteResponse(w, resp, resp.Code)
+	return
+}
 
 // addNewUser is the users handler that processes input and creates a new user.
 //

@@ -70,7 +70,6 @@ func WriteResponse(w http.ResponseWriter, resp interface{}, code int) error {
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	//w.WriteHeader(resp.Code)
 	w.WriteHeader(code)
 
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))

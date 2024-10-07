@@ -14,6 +14,7 @@ func Router() chi.Router {
 		r.Post("/passphrase/reset", resetPassphraseHandler)
 
 		r.Get("/{nickname}", getOneUser)
+		r.Get("/caller", getOneUser)
 		//r.Put("/{nickname}", updateUser)
 		r.Delete("/{nickname}", deleteUser)
 

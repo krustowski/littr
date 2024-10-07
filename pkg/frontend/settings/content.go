@@ -77,21 +77,17 @@ func (c *Content) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		output := struct {
-			Key        string                 `json:"key"`
-			PublicKey  string                 `json:"public_key"`
-			Users      map[string]models.User `json:"users"`
-			Subscribed bool                   `json:"subscribed"`
-			Devices    []models.Device        `json:"devices"`
-			Code       int                    `json:"code"`
+			PublicKey string          `json:"public_key"`
+			User      models.User     `json:"user"`
+			Devices   []models.Device `json:"devices"`
+			Code      int             `json:"code"`
+			Message   string          `json:"message"`
 		}{}
 
 		input := common.CallInput{
-			Method:      "GET",
-			Url:         "/api/v1/users",
-			Data:        nil,
-			CallerID:    ctx.DeviceID(),
-			PageNo:      0,
-			HideReplies: false,
+			Method: "GET",
+			Url:    "/api/v1/users/caller",
+			PageNo: 0,
 		}
 
 		if ok := common.CallAPI(input, &output); !ok {
@@ -106,8 +102,6 @@ func (c *Content) OnNav(ctx app.Context) {
 			toast.Text("please log-in again").Type("info").Dispatch(c, dispatch)
 			return
 		}
-
-		user := output.Users[output.Key]
 
 		var thisDevice models.Device
 		for _, dev := range output.Devices {
@@ -131,11 +125,11 @@ func (c *Content) OnNav(ctx app.Context) {
 		//ctx.LocalStorage().Set("mode", user.AppBgMode)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
-			c.loggedUser = user.Nickname
+			c.user = output.User
+			c.loggedUser = output.User.Nickname
 			c.devices = output.Devices
 
-			c.subscribed = output.Subscribed
+			//c.subscribed = output.Subscribed
 			c.subscription = subscription
 
 			c.darkModeOn = mode == "dark"
