@@ -178,12 +178,13 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.42
++ single poll referenced by ID (singlePoll subpage/view)
 + user activation via mail
 
 ### roadmap to v0.41
 + ~~pagination for polls~~
-+ refactor FE (wip) --- polls, users, settings, register, reset, tos, welcome, login, flow, post
-+ single poll referenced by ID (singlePoll subpage/view)
++ ~~pagination for users~~
++ ~~refactor FE (wip) --- polls, users, settings, register, reset, tos, welcome, login, flow, post~~
 + ~~universal paginator on BE~~
 
 ### roadmap to v0.40
