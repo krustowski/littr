@@ -12,7 +12,7 @@ import (
 func (c *Content) Render() app.UI {
 	toastColor := ""
 
-	switch c.toastType {
+	switch c.toast.TType {
 	case "success":
 		toastColor = "green10"
 		break
@@ -67,6 +67,7 @@ func (c *Content) Render() app.UI {
 
 	// prepare posts according to the actual pagination and pageNo
 	pagedUsers := []models.User{}
+	//pagedUsers := sortedUsers
 
 	end := len(sortedUsers)
 	start := 0
@@ -236,7 +237,9 @@ func (c *Content) Render() app.UI {
 		app.Table().Class("border").ID("table-users").Style("width", "100%").Style("border-spacing", "0.1em").Style("padding", "0 0 2em 0").Body(
 			app.TBody().Body(
 				app.Range(pagedUsers).Slice(func(idx int) app.UI {
+					//app.Range(c.users).Map(func(idx string) app.UI {
 					user := pagedUsers[idx]
+					//user := c.users[idx]
 
 					var inFlow bool = false
 					var shaded bool = false

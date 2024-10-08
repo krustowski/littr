@@ -98,7 +98,6 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 			})
 
 			pageNo := c.pageNo
-			pageNo++
 
 			input := common.CallInput{
 				Method: "GET",

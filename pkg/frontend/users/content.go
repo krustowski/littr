@@ -33,13 +33,12 @@ type Content struct {
 	pagination    int
 	pageNo        int
 
-	toast     common.Toast
-	toastShow bool
-	toastText string
-	toastType string
+	toast common.Toast
 
 	usersButtonDisabled  bool
 	showUserPreviewModal bool
+
+	processingScroll bool
 }
 
 func (c *Content) OnNav(ctx app.Context) {
@@ -49,18 +48,16 @@ func (c *Content) OnNav(ctx app.Context) {
 
 	ctx.Async(func() {
 		input := common.CallInput{
-			Method:      "GET",
-			Url:         "/api/v1/users",
-			Data:        nil,
-			CallerID:    "",
-			PageNo:      0,
-			HideReplies: false,
+			Method: "GET",
+			Url:    "/api/v1/users",
+			Data:   nil,
+			PageNo: 0,
 		}
 
 		response := struct {
+			User      models.User                `json:"user"`
 			Users     map[string]models.User     `json:"users"`
 			UserStats map[string]models.UserStat `json:"user_stats"`
-			Key       string                     `json:"key"`
 			Code      int                        `json:"code"`
 		}{}
 
@@ -85,13 +82,13 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = response.Users[response.Key]
+			c.user = response.User
 			c.users = response.Users
 			c.userStats = response.UserStats
 
 			//c.posts = postsPre.Posts
 
-			c.pagination = 20
+			c.pagination = 25
 			c.pageNo = 1
 
 			//c.flowStats, c.userStats = c.calculateStats()

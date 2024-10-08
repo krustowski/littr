@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -18,6 +19,8 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleScroll(ctx app.Context, a app.Action) {
+	toast := common.Toast{AppContext: &ctx}
+
 	ctx.Async(func() {
 		elem := app.Window().GetElementByID("page-end-anchor")
 		boundary := elem.JSValue().Call("getBoundingClientRect")
@@ -25,10 +28,65 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 		_, height := app.Window().Size()
 
-		if bottom-height < 0 && !c.paginationEnd {
+		if bottom-height < 0 && !c.paginationEnd && !c.processingScroll {
+			ctx.Dispatch(func(ctx app.Context) {
+				c.processingScroll = true
+			})
+
+			pageNo := c.pageNo
+
+			input := common.CallInput{
+				Method: "GET",
+				Url:    "/api/v1/users",
+				Data:   nil,
+				PageNo: pageNo,
+			}
+
+			response := &struct {
+				Users     map[string]models.User     `json:"users"`
+				Code      int                        `json:"code"`
+				User      models.User                `json:"user"`
+				UserStats map[string]models.UserStat `json:"user_stats"`
+			}{}
+
+			// call the API to fetch the data
+			if ok := common.CallAPI(input, response); !ok {
+				toast.Text("cannot fetch users list").Dispatch(c, dispatch)
+				return
+			}
+
+			if response.Code == 401 {
+				toast.Text("please log-in again").Link("/logout").Dispatch(c, dispatch)
+				return
+			}
+
+			log.Printf("c.users: %d\n", len(c.users))
+			log.Printf("response.Users: %d\n", len(response.Users))
+
+			// manually toggle all users to be "searched for" on init
+			for k, u := range response.Users {
+				u.Searched = true
+				response.Users[k] = u
+			}
+
+			users := c.users
+			if users == nil {
+				users = make(map[string]models.User)
+			}
+
+			for key, user := range response.Users {
+				if _, found := users[key]; found {
+					continue
+				}
+
+				users[key] = user
+			}
+
 			ctx.Dispatch(func(ctx app.Context) {
 				c.pageNo++
-				log.Println("new content page request fired")
+				c.users = users
+				c.userStats = response.UserStats
+				c.processingScroll = false
 			})
 			return
 		}

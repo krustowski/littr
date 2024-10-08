@@ -16,6 +16,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
@@ -68,40 +69,74 @@ func flushUserData(users *map[string]models.User, callerID string) *map[string]m
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Router       /users/ [get]
+// @Success      200  {object}   users.getUsers.response
+// @Router       /users [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
+	//resp := common.Response{}
 	l := common.NewLogger(r, "users")
 	stats := make(map[string]models.UserStat)
 
+	type response struct {
+		Message   string                     `json:"message"`
+		Code      int                        `json:"code"`
+		Users     map[string]models.User     `json:"users"`
+		User      models.User                `json:"user"`
+		UserStats map[string]models.UserStat `json:"user_stats"`
+	}
+
+	resp := response{}
 	callerID, _ := r.Context().Value("nickname").(string)
-	uuid := r.Header.Get("X-API-Caller-ID")
+
+	// check the callerID record in the database
+	_, ok := db.GetOne(db.UserCache, callerID, models.User{})
+	if !ok {
+		resp.Message = "this user does not exist in the database"
+		resp.Code = http.StatusNotFound
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	pageNoString := r.Header.Get("X-Page-No")
+	pageNo, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		resp.Message = "page No has to be specified as integer/number"
+		resp.Code = http.StatusBadRequest
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	opts := pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Users: pages.UserOptions{
+			Plain: true,
+		},
+	}
+
+	// fetch one (1) users page
+	pagePtrs := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
+		resp.Message = "error while requesting more pages, one exported map is nil!"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		common.WriteResponse(w, resp, resp.Code)
+		return
+	}
+
+	//(*pagePtrs.Users)[callerID] = caller
 
 	// fetch all data for the calculations
-	users, _ := db.GetAll(db.UserCache, models.User{})
+	//users, _ := db.GetAll(db.UserCache, models.User{})
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
-	devs, _ := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
 
-	// check the subscription
-	//devSubscribed := false
-	var devTags []string = nil
-	for _, dev := range devs {
-		if dev.UUID == uuid {
-			devTags = dev.Tags
-			//devSubscribed = true
-			break
-		}
-	}
-
-	// assign the result of looping through devices
-	if helpers.Contains(devTags, "reply") {
-		resp.Subscription.Replies = true
-	}
-	if helpers.Contains(devTags, "mention") {
-		resp.Subscription.Mentions = true
-	}
-
+	// calculate the post count
 	for _, post := range posts {
 		nick := post.Nickname
 
@@ -115,8 +150,8 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		stats[nick] = stat
 	}
 
-	// calculate the users stats
-	for nick, user := range users {
+	// calculate the flower/follower count
+	for nick, user := range *pagePtrs.Users {
 		flowList := user.FlowList
 		if flowList == nil {
 			continue
@@ -131,19 +166,17 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// flush unwanted properties
-	users = *flushUserData(&users, callerID)
-
 	resp.Message = "ok, dumping users"
 	resp.Code = http.StatusOK
-	resp.Users = users
+
+	// flush unwanted properties
+	resp.Users = *flushUserData(pagePtrs.Users, callerID)
+	resp.User = resp.Users[callerID]
 	resp.UserStats = stats
-	resp.Key = callerID
-	resp.PublicKey = os.Getenv("VAPID_PUB_KEY")
-	resp.Devices = devs
 
 	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	common.WriteResponse(w, resp, resp.Code)
+	return
 }
 
 // getOneUser is the users handler that processes and returns existing user's details.

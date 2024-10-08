@@ -10,11 +10,16 @@ func onePageUsers(opts PageOptions, ptrMaps *rawMaps) PagePointers {
 	var allUsers *map[string]models.User = ptrMaps.Users
 
 	users := []models.User{}
+	caller := models.User{}
 
 	for key, user := range *allUsers {
 		// check and correct the corresponding item's key
 		if key != user.Nickname {
 			user.Nickname = key
+		}
+
+		if key == opts.CallerID {
+			caller = user
 		}
 
 		users = append(users, user)
@@ -45,7 +50,10 @@ func onePageUsers(opts PageOptions, ptrMaps *rawMaps) PagePointers {
 		}
 	} else {
 		// the very single page
-		part = users
+		//part = users[len(users)-PAGE_SIZE-1 : len(users)-1]
+		if len(users) > PAGE_SIZE*(pageNo-1) {
+			part = users[PAGE_SIZE*(pageNo-1):]
+		}
 	}
 
 	uExport := make(map[string]models.User)
@@ -53,6 +61,8 @@ func onePageUsers(opts PageOptions, ptrMaps *rawMaps) PagePointers {
 	for _, user := range part {
 		uExport[user.Nickname] = user
 	}
+
+	uExport[opts.CallerID] = caller
 
 	return PagePointers{Users: &uExport}
 }
