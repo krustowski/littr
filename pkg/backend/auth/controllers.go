@@ -21,30 +21,6 @@ type UserAuth struct {
 
 type RefreshToken string
 
-func authUser(aUser models.User) (*models.User, bool) {
-	// fetch one user from cache according to the login credential
-	user, ok := db.GetOne(db.UserCache, aUser.Nickname, models.User{})
-	if !ok {
-		// not found
-		return nil, false
-	}
-
-	// check the passhash
-	if user.Passphrase == aUser.Passphrase || user.PassphraseHex == aUser.PassphraseHex {
-		// update user's hexadecimal passphrase form, as the binary form is broken and cannot be used on BE
-		if user.PassphraseHex == "" && aUser.PassphraseHex != "" {
-			user.PassphraseHex = aUser.PassphraseHex
-			_ = db.SetOne(db.UserCache, user.Nickname, user)
-		}
-
-		// auth granted
-		return &user, true
-	}
-
-	// auth failed
-	return nil, false
-}
-
 // authHandler
 //
 // @Summary 		Auth an user
@@ -52,25 +28,26 @@ func authUser(aUser models.User) (*models.User, bool) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	common.Response
-// @Failure		400	{object}	common.Response
-// @Failure		404	{object}	common.Response
-// @Failure		500	{object}	common.Response
+// @Success		200	{object}	common.APIResponse
+// @Failure		400	{object}	common.APIResponse
+// @Failure		404	{object}	common.APIResponse
+// @Failure		500	{object}	common.APIResponse
 // @Router		/auth/ [post]
 // @security            []
 func authHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "auth")
-	resp.AuthGranted = false
+
+	pl := struct {
+		AuthGranted bool                   `json:"auth_granted"`
+		Users       map[string]models.User `json:"users"`
+	}{
+		AuthGranted: false,
+	}
 
 	var user models.User
 
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -79,11 +56,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	// try to authenticate given user
 	u, ok := authUser(user)
 	if !ok {
-		resp.Message = "user not found, or wrong passphrase entered"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_AUTH_FAIL).Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -103,11 +76,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedAccessToken, err := NewAccessToken(userClaims, secret)
 	if err != nil {
-		resp.Message = "error when generating the access token occurred"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_AUTH_ACC_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -118,11 +87,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedRefreshToken, err := NewRefreshToken(refreshClaims, secret)
 	if err != nil {
-		resp.Message = "error when generating the refresh token occurred"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_AUTH_REF_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -131,11 +96,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
 	if saved := db.TokenCache.Set(sum, u.Nickname); !saved {
-		resp.Message = "new refresh token couldn't be saved on backend"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -149,6 +110,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
 	}
+
 	refreshCookie := &http.Cookie{
 		Name:     "refresh-token",
 		Value:    signedRefreshToken,
@@ -163,19 +125,12 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
 
-	resp.Users = make(map[string]models.User)
-	resp.Users[u.Nickname] = *u
-	resp.AuthGranted = ok
+	pl.Users = make(map[string]models.User)
+	pl.Users[u.Nickname] = *u
+	pl.Users = *common.FlushUserData(&pl.Users, u.Nickname)
+	pl.AuthGranted = true
 
-	//resp.AccessToken = signedAccessToken
-	//resp.RefreshToken = signedRefreshToken
-
-	resp.Message = "auth granted"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-
-	resp.Write(w)
+	l.Msg("auth granted").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }
 
@@ -186,28 +141,33 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	common.Response
-// @Failure		404	{object}	common.Response
-// @Failure		500	{object}	common.Response
+// @Success		200	{object}	common.APIResponse
+// @Failure		404	{object}	common.APIResponse
+// @Failure		500	{object}	common.APIResponse
 // @Router		/auth/logout [post]
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "auth")
-	resp.AuthGranted = false
+
+	pl := struct {
+		AuthGranted bool
+	}{
+		AuthGranted: false,
+	}
 
 	voidAccessCookie := &http.Cookie{
 		Name:     "access-token",
 		Value:    "",
-		Expires:  time.Now().Add(time.Second * -30),
+		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	}
+
 	voidRefreshCookie := &http.Cookie{
 		Name:     "refresh-token",
 		Value:    "",
-		Expires:  time.Now().Add(time.Second * -30),
+		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
 		Path:     "/",
 		HttpOnly: true,
@@ -217,10 +177,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, voidAccessCookie)
 	http.SetCookie(w, voidRefreshCookie)
 
-	resp.Message = "void cookies sent (logout)"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }

@@ -10,6 +10,12 @@ const (
 	ERR_PAGE_EXPORT_NIL  = "could not get more pages, one exported map is nil!"
 	ERR_INPUT_DATA_FAIL  = "could not process the input data, try again"
 
+	// auth-related error messages
+	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
+	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
+	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
+	ERR_TOKEN_SAVE_FAIL     = "could not save new token to database"
+
 	// post-related error messages
 	ERR_POST_BLANK          = "post has got no content"
 	ERR_POSTER_INVALID      = "you can add yours posts only"

@@ -49,7 +49,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			PassphraseHex: fmt.Sprintf("%x", passHash),
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/auth/",
 			Data:        payload,
@@ -58,24 +58,36 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		response := struct {
-			Message     string `json:"message"`
-			AuthGranted bool   `json:"auth_granted"`
+		type dataModel struct {
+			AuthGranted bool `json:"auth_granted"`
 			//FlowRecords []string `json:"flow_records"`
 			Users map[string]models.User `json:"users"`
-		}{}
+		}
 
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("backend error: API call failed").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{Data: &dataModel{}}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if !response.AuthGranted {
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if !data.AuthGranted {
 			toast.Text("wrong credentials passed").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		user, err := json.Marshal(response.Users[nickname])
+		user, err := json.Marshal(data.Users[nickname])
 		if err != nil {
 			toast.Text("frontend error: user marshal failed").Type("error").Dispatch(c, dispatch)
 			return
@@ -85,7 +97,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		ctx.LocalStorage().Set("user", user)
 		ctx.LocalStorage().Set("authGranted", true)
 
-		if response.AuthGranted {
+		if data.AuthGranted {
 			ctx.Navigate("/flow")
 		}
 	})

@@ -97,7 +97,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		ctx.LocalStorage().Set("user", "")
 		ctx.LocalStorage().Set("authGranted", false)
 
-		toast.Text("please log-in again").Type("info").Dispatch(c, dispatch)
+		toast.Text("please log-in again").Type("info").Link("/logout").Dispatch(c, dispatch)
 		return nil, nil
 	}
 
