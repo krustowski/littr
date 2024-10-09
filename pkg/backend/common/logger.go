@@ -37,6 +37,8 @@ type Logger struct {
 	WorkerName string `json:"worker_name" validation:"required"`
 
 	Response *APIResponse `json:"-"`
+
+	Err error `json:"-"`
 }
 
 func NewLogger(r *http.Request, worker string) *Logger {
@@ -72,7 +74,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 func (l *Logger) encode() string {
 	jsonString, err := json.Marshal(l)
 	if err != nil {
-		fmt.Println("error marshalling Logger struct -", err.Error())
+		fmt.Println("error marshalling Logger struct (", err.Error(), ")")
 		return err.Error()
 	}
 
@@ -105,6 +107,11 @@ func (l *Logger) Status(code int) *Logger {
 	return l
 }
 
+func (l *Logger) Error(err error) *Logger {
+	l.Err = err
+	return l
+}
+
 func (l *Logger) Log() *Logger {
 	l.Time = time.Now()
 
@@ -112,15 +119,16 @@ func (l *Logger) Log() *Logger {
 		l.IPAddress = "127.0.0.1"
 	}
 
+	if l.Err != nil {
+		l.Message += " (" + l.Err.Error() + ")"
+	}
+
 	fmt.Println(l.encode())
 
 	return l
 }
-func (l *Logger) Payload(pl interface{}) *Logger {
-	if pl == nil {
-		return l
-	}
 
+func (l *Logger) Payload(pl interface{}) *Logger {
 	// construct the generic API response
 	l.Response = &APIResponse{
 		Message:   l.Message,

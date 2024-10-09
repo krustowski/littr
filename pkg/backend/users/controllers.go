@@ -23,7 +23,6 @@ import (
 
 	chi "github.com/go-chi/chi/v5"
 	uuid "github.com/google/uuid"
-	gomail "github.com/wneessen/go-mail"
 )
 
 type msgPayload struct {
@@ -43,40 +42,30 @@ type msgPayload struct {
 // @Success      200  {object}   users.getUsers.response
 // @Router       /users [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	//resp := common.Response{}
-	l := common.NewLogger(r, "users")
 	stats := make(map[string]models.UserStat)
 
-	type response struct {
-		Message   string                     `json:"message"`
-		Code      int                        `json:"code"`
+	type payload struct {
 		Users     map[string]models.User     `json:"users"`
 		User      models.User                `json:"user"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 	}
 
-	resp := response{}
 	callerID, _ := r.Context().Value("nickname").(string)
+
+	l := common.NewLogger(r, "users")
+	pl := payload{}
 
 	// check the callerID record in the database
 	_, ok := db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		resp.Message = "this user does not exist in the database"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
 		return
 	}
 
 	pageNoString := r.Header.Get("X-Page-No")
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg("pageNo has to be specified as integer/number").Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -93,11 +82,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	// fetch one (1) users page
 	pagePtrs := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
-		resp.Message = "error while requesting more pages, one exported map is nil!"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg("cannot request more pages, one export map is nil!").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -111,9 +96,8 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	for _, post := range posts {
 		nick := post.Nickname
 
-		var stat models.UserStat
-		var found bool
-		if stat, found = stats[nick]; !found {
+		stat, found := stats[nick]
+		if !found {
 			stat = models.UserStat{}
 		}
 
@@ -137,16 +121,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp.Message = "ok, dumping users"
-	resp.Code = http.StatusOK
+	// flush unwanted properties in users map
+	pl.Users = *flushUserData(pagePtrs.Users, callerID)
+	pl.User = pl.Users[callerID]
+	pl.UserStats = stats
 
-	// flush unwanted properties
-	resp.Users = *flushUserData(pagePtrs.Users, callerID)
-	resp.User = resp.Users[callerID]
-	resp.UserStats = stats
-
-	l.Println(resp.Message, resp.Code)
-	common.WriteResponse(w, resp, resp.Code)
+	l.Msg("ok, dumping users").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }
 
@@ -178,8 +158,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	// check the callerID record in the database
 	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).
-			Log().Payload(&pl).Write(w)
+		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
 		return
 
 	}
@@ -196,8 +175,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	pl.Devices = devs
 	pl.User = users[callerID]
 
-	l.Status(http.StatusOK).Msg("ok, returning callerID's record").
-		Log().Payload(&pl).Write(w)
+	l.Status(http.StatusOK).Msg("ok, returning callerID's record").Log().Payload(&pl).Write(w)
 	return
 }
 
@@ -208,21 +186,16 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      400  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
 // @Router       /users/ [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	if !configs.REGISTRATION_ENABLED {
-		resp.Message = "registration is disabled at the moment"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("registration is disabled at the moment").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -230,50 +203,30 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// decode raw bytes
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		resp.Message = "input error, try again"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// block restricted nicknames, use lowercase for comparison
 	if helpers.Contains(configs.UserDeletionList, strings.ToLower(user.Nickname)) {
-		resp.Message = "this nickname is restricted"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("this nickname is restricted").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); found {
-		resp.Message = "this nickname has been already taken"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("this nickname has been already taken").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// https://stackoverflow.com/a/38554480
 	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
-		resp.Message = "nickname can only have chars a-z, A-Z and numbers"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("nickname can consist of chars a-z, A-Z and numbers only").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check the nick's length limits
 	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
-		resp.Message = "nickname is too long (>12) or too short (<3)"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("nickname is too long (>12 chars), or too short (<3 chars)").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -283,11 +236,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	// validate e-mail struct
 	// https://stackoverflow.com/a/66624104
 	if _, err := mail.ParseAddress(email); err != nil {
-		resp.Message = "e-mail address is in the wrong format"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("e-mail address is of a wrong format").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -296,11 +245,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	for _, u := range allUsers {
 		if strings.ToLower(u.Email) == user.Email {
-			resp.Message = "e-mail address has been already used for registration"
-			resp.Code = http.StatusConflict
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("this e-mail address has been already used").Status(http.StatusConflict).Log().Payload(nil).Write(w)
 			return
 		}
 	}
@@ -311,11 +256,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	user.About = "newbie"
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "cannot save new user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not save new user, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -334,19 +275,12 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
-		resp.Message = "backend error: cannot create a new post about new user adition"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not create a new post about new registration").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, adding user"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, adding new user").Status(http.StatusCreated).Log().Payload(nil).Write(w)
+	return
 }
 
 // updateUser is the users handler function that processes and updates given user in the database.
@@ -357,59 +291,39 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Deprecated
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      400  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
 // @Router       /users/{nickname} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 	callerID, _ := r.Context().Value("nickname").(string)
 
 	var user models.User
 
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not create process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if user.Nickname != callerID {
-		resp.Message = "one can update theirs account only"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("you can update yours account only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, user updated"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // updateUserPassphrase is the users handler that allows the user to change their passphrase.
@@ -419,35 +333,26 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      403  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/passphrase [patch]
 func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
-
 	callerID, _ := r.Context().Value("nickname").(string)
 	nick := chi.URLParam(r, "nickname")
 
-	if callerID != nick {
-		resp.Message = "access denied"
-		resp.Code = http.StatusForbidden
+	l := common.NewLogger(r, "users")
 
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if callerID != nick {
+		l.Msg("you can update yours passphrase only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	user, found := db.GetOne(db.UserCache, callerID, models.User{})
 	if !found {
-		resp.Message = "user nout found: " + callerID
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -457,48 +362,29 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := common.UnmarshalRequestData(r, &options); err != nil {
-		resp.Message = "input error, try again"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if options.NewPassphraseHex == "" || options.CurrentPassphraseHex == "" {
-		resp.Message = "input error, try again"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("empty data received, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if options.CurrentPassphraseHex != user.PassphraseHex {
-		resp.Message = "current passphrase is wrong"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("current passhrase is wrong").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	user.PassphraseHex = options.NewPassphraseHex
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "user couldn't be updated, passphrase unchanged"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, passphrase updated"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, passphrase updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // updateUserList is the users handler that allows one to update various lists associated with such one.
@@ -508,26 +394,21 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      403  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/lists [patch]
 func updateUserList(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
-
 	callerID, _ := r.Context().Value("nickname").(string)
 	nick := chi.URLParam(r, "nickname")
 
+	l := common.NewLogger(r, "users")
+
 	user, found := db.GetOne(db.UserCache, nick, models.User{})
 	if !found {
-		resp.Message = "user nout found: " + nick
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -538,14 +419,11 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &lists); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// process FlowList if not empty
 	if lists.FlowList != nil {
 		if user.FlowList == nil {
 			user.FlowList = make(map[string]bool)
@@ -565,7 +443,8 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 			// check if the user is shaded by the counterpart
 			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
 				if counterpart.Private && key != callerID {
-					// cannot add this user to one's flow, as the following has to be requested and allowed by the counterpart
+					// cannot add this user to one's flow, as the following
+					// has to be requested and allowed by the counterpart
 					continue
 				}
 
@@ -577,6 +456,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 	user.FlowList["system"] = true
 
+	// process RequestList if not empty
 	if lists.RequestList != nil {
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
@@ -587,6 +467,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// process ShadeList if not empty
 	if lists.ShadeList != nil {
 		if user.ShadeList == nil {
 			user.ShadeList = make(map[string]bool)
@@ -598,19 +479,12 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, updating user's lists"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, updating user's lists").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // updateUserOption is the users handler that allows the user to change some attributes of their models.User instance.
@@ -620,35 +494,26 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      403  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/options [patch]
 func updateUserOption(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
-
 	callerID, _ := r.Context().Value("nickname").(string)
 	nick := chi.URLParam(r, "nickname")
 
-	if callerID != nick {
-		resp.Message = "access denied"
-		resp.Code = http.StatusForbidden
+	l := common.NewLogger(r, "users")
 
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if callerID != nick {
+		l.Msg("you can update yours data only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	user, found := db.GetOne(db.UserCache, callerID, models.User{})
 	if !found {
-		resp.Message = "user nout found: " + callerID
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -662,11 +527,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := common.UnmarshalRequestData(r, &options); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not process input data, try again").Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -701,19 +562,12 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, updating user's options"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, updating user's options").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // deleteUser is the users handler that processes and deletes given user (oneself) form the database.
@@ -723,43 +577,30 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      404  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
+	nick, _ := r.Context().Value("nickname").(string)
+
 	l := common.NewLogger(r, "users")
 
-	key, _ := r.Context().Value("nickname").(string)
-
-	if _, found := db.GetOne(db.UserCache, key, models.User{}); !found {
-		resp.Message = "user nout found: " + key
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if _, found := db.GetOne(db.UserCache, nick, models.User{}); !found {
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// delete user
-	if deleted := db.DeleteOne(db.UserCache, key); !deleted {
-		resp.Message = "error deleting from user cache:" + key
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if deleted := db.DeleteOne(db.UserCache, nick); !deleted {
+		l.Msg("could not delete the user from user database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// delete user's subscriptions
-	if deleted := db.DeleteOne(db.SubscriptionCache, key); !deleted {
-		resp.Message = "error deleting from subscription cache:" + key
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if deleted := db.DeleteOne(db.SubscriptionCache, nick); !deleted {
+		l.Msg("could not delete the user from subscription database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -772,20 +613,20 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	// loop over posts and delete authored ones + linked fungures
 	for id, post := range posts {
-		if post.Nickname == key {
+		if post.Nickname == nick {
 			db.DeleteOne(db.FlowCache, id)
 
 			// delete associated image and thumbnail
 			if post.Figure != "" {
 				err := os.Remove("/opt/pix/thumb_" + post.Figure)
 				if err != nil {
-					// nasty bypass
+					// TODO catch error
 					continue
 				}
 
 				err = os.Remove("/opt/pix/" + post.Figure)
 				if err != nil {
-					// nasty bypass
+					// TODO catch error
 					continue
 				}
 			}
@@ -794,23 +635,22 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	// loop over polls and delete authored ones
 	for id, poll := range polls {
-		if poll.Author == key {
+		if poll.Author == nick {
+			// TODO catch error
 			db.DeleteOne(db.PollCache, id)
 		}
 	}
 
 	// loop over tokens and delete matching ones
 	for id, tok := range tokens {
-		if tok == key {
+		if tok == nick {
+			// TODO catch error
 			db.DeleteOne(db.TokenCache, id)
 		}
 	}
 
-	resp.Message = "ok, deleting user: " + key
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, deleting user " + nick).Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // getUserPosts fetches posts only from specified user
@@ -820,13 +660,13 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
 // @Router       /users/{nickname}/posts [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	l := common.NewLogger(r, "users")
 	callerID, _ := r.Context().Value("nickname").(string)
+
+	l := common.NewLogger(r, "users")
 
 	// parse the URI's path
 	// check if diff page has been requested
@@ -837,11 +677,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("pageNo has to be specified as integer/number").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -862,50 +698,30 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pExport, uExport := posts.GetOnePage(opts)
 	if pExport == nil || uExport == nil {
-		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not request more pages, one exported map is nil!").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-named user"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not get the user from database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	} else {
 		uExport[callerID] = caller
 	}
 
-	// flush email addresses
-	for key, user := range uExport {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-
-		if key == callerID {
-			uExport[key] = user
-			continue
-		}
-		user.Email = ""
-
-		uExport[key] = user
+	pl := struct {
+		Users map[string]models.User
+		Posts map[string]models.Post
+		Key   string
+	}{
+		Users: *flushUserData(&uExport, callerID),
+		Posts: pExport,
+		Key:   callerID,
 	}
 
-	resp.Users = uExport
-	resp.Posts = pExport
-
-	resp.Key = callerID
-
-	resp.Message = "ok, dumping user's flow posts"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, dumping user's flow posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	return
 }
 
 // resetRequestHandler handles the passphrase recovery link generation.
@@ -915,13 +731,12 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /users/passphrase/request [post]
 func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	fetch := struct {
@@ -929,11 +744,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		resp.Message = "could not read the input"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not process the input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -955,11 +766,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		resp.Message = "no match found in the database"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("no match found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -973,11 +780,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.RequestCache, randomID, dbPayload); !saved {
-		resp.Message = "error saving an UUID to database"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not save the UUID to database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -990,28 +793,16 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// compose a message to send
 	msg, err := composeResetMail(mailPayload)
 	if err != nil || msg == nil {
-		resp.Message = "failed to compose a message, try again later"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not compose the mail body, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if err := sendResetMail(msg); err != nil {
-		resp.Message = "failed to send the message, try again later"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not send the mail, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "the message was sent successfully, check your inbox"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("the message has been sent, check your e-mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -1022,13 +813,12 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /users/passphrase/reset [post]
 func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	fetch := struct {
@@ -1036,39 +826,26 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		resp.Message = "could not read the input"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not process tbe input data, try again").Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if fetch.UUID == "" {
-		resp.Message = "no UUID has been inserted"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("no UUID has been entered").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	requestData, match := db.GetOne(db.RequestCache, fetch.UUID, models.Request{})
 	if !match {
-		resp.Message = "invalid UUID inserted"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("invalid UUID inserted").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if requestData.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
-		resp.Message = "expired UUID inserted"
-		resp.Code = http.StatusBadRequest
+		// delete the request from database
+		db.DeleteOne(db.RequestCache, requestData.Nickname)
 
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("entered UUID expired").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1076,27 +853,21 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, found := db.GetOne(db.UserCache, requestData.Nickname, models.User{})
 	if !found {
-		resp.Message = "no match found in the database"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("no match has been found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// reset the passphrase - generete a new one (32 chars)
 	rand.Seed(time.Now().UnixNano())
 	randomPassphrase := helpers.RandSeq(32)
 	pepper := os.Getenv("APP_PEPPER")
 
+	// convert new passphrase into the hexadecimal format
 	passHash := sha512.Sum512([]byte(randomPassphrase + pepper))
 	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "error updating user in database"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update user's passphrase, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1109,104 +880,22 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	// compose a message to send
 	msg, err := composeResetMail(mailPayload)
 	if err != nil || msg == nil {
-		resp.Message = "failed to compose a message, try again later"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not compose the mail body, try again").Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if err := sendResetMail(msg); err != nil {
-		resp.Message = "failed to send the message, try again later"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message+err.Error(), resp.Code)
-		resp.Write(w)
+		l.Msg("could not send the mail, try again").Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if deleted := db.DeleteOne(db.RequestCache, fetch.UUID); !deleted {
-		resp.Message = "error deleting UUID from the database"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not delete the request from database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "the message was sent successfully, check your inbox"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("the message has been sent, check your e-mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
-}
-
-func sendResetMail(msg *gomail.Msg) error {
-	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
-	if err != nil {
-		return err
-	}
-
-	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
-		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")), gomail.WithHELO(os.Getenv("MAIL_HELO")))
-	if err != nil {
-		return err
-	}
-
-	//c.SetTLSPolicy(mail.TLSOpportunistic)
-
-	if err := c.DialAndSend(msg); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func composeResetMail(payload msgPayload) (*gomail.Msg, error) {
-	m := gomail.NewMsg()
-	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
-		return nil, err
-	}
-
-	if payload.Email == "" {
-		return nil, fmt.Errorf("no new passhrase given for mail composition")
-	}
-
-	if err := m.To(payload.Email); err != nil {
-		return nil, err
-	}
-
-	mainURL := os.Getenv("APP_URL_MAIN")
-	if mainURL == "" {
-		mainURL = "www.littr.eu"
-	}
-
-	switch payload.Type {
-	case "request":
-		if payload.UUID == "" {
-			return nil, fmt.Errorf("no UUID given for mail composition")
-		}
-
-		resetLink := "https://" + mainURL + "/reset/" + payload.UUID
-
-		m.Subject("Passphrase Reset Request")
-		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+resetLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nlittr\nhttps://"+mainURL)
-
-	case "passphrase":
-		if payload.Passphrase == "" {
-			return nil, fmt.Errorf("no new passhrase given for mail composition")
-		}
-
-		m.Subject("Your New Passphrase")
-		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nThe requested passphrase regeneration process has been successful. Please use the generated string below to log-in again.\n\nNew passphrase: "+payload.Passphrase+"\n\nPlease do not forget to change the passphrase right after logging in in settings.\n\nThank you\nlittr\nhttps://"+mainURL)
-
-	default:
-		return nil, fmt.Errorf("no mail Type specified")
-	}
-
-	return m, nil
 }
 
 // addToRequestList is a handler function to add an user to the request list of the private account called as {nickname}.
@@ -1216,41 +905,33 @@ func composeResetMail(payload msgPayload) (*gomail.Msg, error) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /users/{nickname}/request [post]
 func addToRequestList(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
-	nick := chi.URLParam(r, "nickname")
 	callerID, _ := r.Context().Value("nickname").(string)
+	nick := chi.URLParam(r, "nickname")
 
 	var caller models.User
 	var found bool
 
 	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		resp.Message = "caller not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("caller not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// patch the nil in RequestList
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
@@ -1259,19 +940,11 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 	user.RequestList[caller.Nickname] = true
 
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, request addeed to the reqeust list(s)"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, request added to the database").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -1282,41 +955,37 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /users/{nickname}/request [delete]
 func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	nick := chi.URLParam(r, "nickname")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg("could not get the caller's name, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var caller models.User
 	var found bool
 
 	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		resp.Message = "caller not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("caller not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// patch the nil in RequestList
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
@@ -1325,19 +994,11 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 	user.RequestList[caller.Nickname] = false
 
 	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		resp.Message = "backend error: cannot update the user"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, request removed from the reqeust list"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, request has been removed from database").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -1348,36 +1009,31 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      404  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /users/{nickname}/avatar [post]
 func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "users")
 
 	nick := chi.URLParam(r, "nickname")
-	caller, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg("could not get the caller's name, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var user models.User
 	var found bool
 
-	if caller != nick {
-		resp.Message = "bad request (access denied)"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if callerID != nick {
+		l.Msg("you can update yours avatar only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		resp.Message = "user not found"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("user not found in the database, try again or relog").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1387,11 +1043,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not process the input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1412,22 +1064,14 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		//
 		img, format, err := image.DecodeImage(&fetch.Data, extension)
 		if err != nil {
-			resp.Message = "backend error: cannot decode given byte stream"
-			resp.Code = http.StatusBadRequest
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("image: could not decode given byte stream").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		// fix the image orientation for decoded image
 		img, err = image.FixOrientation(img, &fetch.Data)
 		if err != nil {
-			resp.Message = "cannot fix image's orientation"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
+			l.Msg("image: could not fix the orientation").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -1464,21 +1108,13 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		// encode the thumbnail back to []byte
 		thumbImgData, err := image.EncodeImage(&thumbImg, format)
 		if err != nil {
-			resp.Message = "backend error: cannot encode thumbnail back to byte stream"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("image: could not encode the thumbnail to byte stream").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		// write the thumbnail byte stream to a file
 		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
-			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("image: could not save the file, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -1491,19 +1127,16 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	user.AvatarURL = "/web/pix/thumb_" + content
 
 	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		resp.Message = "backend error: cannot save new avatar"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg("could not save new avatar to database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, updating user's avatar"
-	resp.Code = http.StatusOK
-	resp.Key = content
+	pl := struct {
+		Key string
+	}{
+		Key: content,
+	}
 
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, updating user's avatar").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }
