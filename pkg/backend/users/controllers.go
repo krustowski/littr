@@ -39,7 +39,7 @@ type msgPayload struct {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   users.getUsers.response
+// @Success      200  {object}   common.APIResponse
 // @Router       /users [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	stats := make(map[string]models.UserStat)
@@ -137,8 +137,8 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   users.getOneUser.payload{code=200}
-// @Failure      404  {object}   users.getOneUser.payload{code=404}
+// @Success      200  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
 // @Router       /users/caller [get]
 func getOneUser(w http.ResponseWriter, r *http.Request) {
 	callerID, _ := r.Context().Value("nickname").(string)

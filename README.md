@@ -177,9 +177,12 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + write integration and e2e tests
 + [...]
 
-### roadmap to v0.42
-+ single poll referenced by ID (singlePoll subpage/view)
+### roasmap to v0.43
 + user activation via mail
+
+### roadmap to v0.42
++ deeply refactor BE+FE again: declarative syntax for BE logger + unified API response (wip)
++ single poll referenced by ID (singlePoll subpage/view)
 
 ### roadmap to v0.41
 + ~~pagination for polls~~
