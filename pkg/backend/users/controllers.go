@@ -33,35 +33,6 @@ type msgPayload struct {
 	Passphrase string
 }
 
-func flushUserData(users *map[string]models.User, callerID string) *map[string]models.User {
-	if users == nil || callerID == "" {
-		return nil
-	}
-
-	// flush unwanted properties
-	for key, user := range *users {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-
-		if user.Nickname != callerID {
-			user.Email = ""
-			user.FlowList = nil
-			user.ShadeList = nil
-
-			// return the caller's status in counterpart account's req. list only
-			if value, found := user.RequestList[callerID]; found {
-				user.RequestList = make(map[string]bool)
-				user.RequestList[callerID] = value
-			} else {
-				user.RequestList = nil
-			}
-		}
-
-		(*users)[key] = user
-	}
-	return users
-}
-
 // getUsers is the users handler that processes and returns existing users list.
 //
 // @Summary      Get a list of users
@@ -186,34 +157,31 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   users.getOneUser.response{code=200}
-// @Failure      404  {object}   users.getOneUser.response{code=404}
+// @Success      200  {object}   users.getOneUser.payload{code=200}
+// @Failure      404  {object}   users.getOneUser.payload{code=404}
 // @Router       /users/caller [get]
 func getOneUser(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "users")
 	callerID, _ := r.Context().Value("nickname").(string)
 
-	type response struct {
-		Message   string          `json:"message"`
-		Code      int             `json:"code"`
+	type payload struct {
 		User      models.User     `json:"user"`
 		Devices   []models.Device `json:"devices"`
 		PublicKey string          `json:"public_key"`
 	}
 
-	resp := response{
+	pl := payload{
 		PublicKey: os.Getenv("VAPID_PUB_KEY"),
 	}
+
+	l := common.NewLogger(r, "users")
 
 	// check the callerID record in the database
 	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		resp.Message = "this user does not exist in the database"
-		resp.Code = http.StatusNotFound
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).
+			Log().Payload(&pl).Write(w)
 		return
+
 	}
 
 	// fetch user's devices
@@ -225,14 +193,11 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	users = *flushUserData(&users, callerID)
 
 	// return response
-	resp.Devices = devs
-	resp.User = users[callerID]
+	pl.Devices = devs
+	pl.User = users[callerID]
 
-	resp.Code = http.StatusOK
-	resp.Message = "ok, returning callerID's record"
-
-	l.Println(resp.Message, resp.Code)
-	common.WriteResponse(w, resp, resp.Code)
+	l.Status(http.StatusOK).Msg("ok, returning callerID's record").
+		Log().Payload(&pl).Write(w)
 	return
 }
 
