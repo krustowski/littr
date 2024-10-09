@@ -90,7 +90,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			PageNo: 0,
 		}
 
-		if ok := common.FetchData[dataModel](input, output); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("cannot fetch data").Type("error").Dispatch(c, dispatch)
 			return
 		}

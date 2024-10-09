@@ -47,44 +47,57 @@ func (c *Content) OnNav(ctx app.Context) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method: "GET",
 			Url:    "/api/v1/users",
 			Data:   nil,
 			PageNo: 0,
 		}
 
-		response := struct {
+		type dataModel struct {
 			User      models.User                `json:"user"`
 			Users     map[string]models.User     `json:"users"`
 			UserStats map[string]models.UserStat `json:"user_stats"`
 			Code      int                        `json:"code"`
-		}{}
+		}
 
-		if ok := common.CallAPI(input, &response); !ok {
+		output := &common.Response{Data: &dataModel{}}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("cannot fetch data").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code == 401 {
+		if output.Code == 401 {
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			toast.Text("please log-in again").Type("info").Dispatch(c, dispatch)
+			toast.Text("please log-in again").Type("info").Link("/logout").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Dispatch(c, dispatch)
 			return
 		}
 
 		// manually toggle all users to be "searched for" on init
-		for k, u := range response.Users {
+		for k, u := range data.Users {
 			u.Searched = true
-			response.Users[k] = u
+			data.Users[k] = u
 		}
 
 		// Storing HTTP response in component field:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = response.User
-			c.users = response.Users
-			c.userStats = response.UserStats
+			c.user = data.User
+			c.users = data.Users
+			c.userStats = data.UserStats
 
 			//c.posts = postsPre.Posts
 

@@ -35,38 +35,46 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 			pageNo := c.pageNo
 
-			input := common.CallInput{
+			input := &common.CallInput{
 				Method: "GET",
 				Url:    "/api/v1/users",
 				Data:   nil,
 				PageNo: pageNo,
 			}
 
-			response := &struct {
+			type dataModel struct {
 				Users     map[string]models.User     `json:"users"`
 				Code      int                        `json:"code"`
 				User      models.User                `json:"user"`
 				UserStats map[string]models.UserStat `json:"user_stats"`
-			}{}
+			}
+
+			output := &common.Response{Data: &dataModel{}}
 
 			// call the API to fetch the data
-			if ok := common.CallAPI(input, response); !ok {
+			if ok := common.FetchData(input, output); !ok {
 				toast.Text("cannot fetch users list").Dispatch(c, dispatch)
 				return
 			}
 
-			if response.Code == 401 {
+			if output.Code == 401 {
 				toast.Text("please log-in again").Link("/logout").Dispatch(c, dispatch)
 				return
 			}
 
+			data, ok := output.Data.(*dataModel)
+			if !ok {
+				toast.Text("cannot get data").Dispatch(c, dispatch)
+				return
+			}
+
 			log.Printf("c.users: %d\n", len(c.users))
-			log.Printf("response.Users: %d\n", len(response.Users))
+			log.Printf("response.Users: %d\n", len(data.Users))
 
 			// manually toggle all users to be "searched for" on init
-			for k, u := range response.Users {
+			for k, u := range data.Users {
 				u.Searched = true
-				response.Users[k] = u
+				data.Users[k] = u
 			}
 
 			users := c.users
@@ -74,7 +82,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 				users = make(map[string]models.User)
 			}
 
-			for key, user := range response.Users {
+			for key, user := range data.Users {
 				if _, found := users[key]; found {
 					continue
 				}
@@ -85,7 +93,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.pageNo++
 				c.users = users
-				c.userStats = response.UserStats
+				c.userStats = data.UserStats
 				c.processingScroll = false
 			})
 			return
@@ -167,7 +175,7 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 			FlowList: flowList,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + user.Nickname + "/lists",
 			Data:        payload,
@@ -176,18 +184,15 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 			HideReplies: false,
 		}
 
-		response := struct {
-			Message string `json:"message"`
-			Code    int    `json:"code"`
-		}{}
+		output := &common.Response{}
 
-		if ok := common.CallAPI(input, &response); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code != 200 && response.Code != 201 {
-			toast.Text("user update failed: "+response.Message).Type("error").Dispatch(c, dispatch)
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text("user update failed: "+output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 

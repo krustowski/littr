@@ -6,8 +6,6 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type stub struct{}
-
 func (c *Content) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("toggle", key)
@@ -37,7 +35,7 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			RequestList: user.RequestList,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
 			Data:        payload,
@@ -46,13 +44,20 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		output := &common.Response{}
+
 		// delete the request from one's requestList
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		//toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
 
 		// prepare the lists for the counterpart
 		fellowFlowList := make(map[string]bool)
@@ -68,7 +73,7 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			FlowList: fellowFlowList,
 		}
 
-		input2 := common.CallInput{
+		input2 := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + nick + "/lists",
 			Data:        payload2,
@@ -77,17 +82,24 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input2, &payload2); !ok {
+		output2 := &common.Response{}
+
+		if ok := common.FetchData(input2, output2); !ok {
 			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output2.Code != 200 {
+			toast.Text(output2.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		toast.Text("user updated, request removed").Type("success").Dispatch(c, dispatch)
 
-		ctx.Dispatch(func(ctx app.Context) {
+		/*ctx.Dispatch(func(ctx app.Context) {
 			//c.user.FlowList = ourFlowList
 			//c.users[c.user.Nickname] = payload
-		})
+		})*/
 		return
 	})
 	return
@@ -116,7 +128,7 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 			RequestList: user.RequestList,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
 			Data:        payload,
@@ -125,9 +137,16 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		output := &common.Response{}
+
 		// delete the request from one's requestList
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
@@ -152,7 +171,7 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		user := c.users[nick]
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/users/" + nick + "/request",
 			Data:        nil,
@@ -161,8 +180,15 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		if user.RequestList == nil {
@@ -191,7 +217,7 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		user := c.users[nick]
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/users/" + nick + "/request",
 			Data:        nil,
@@ -200,8 +226,15 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		if user.RequestList == nil {
@@ -302,7 +335,7 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: userShaded.ShadeList,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + userShaded.Nickname + "/lists",
 			Data:        payload,
@@ -311,18 +344,15 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		response := struct {
-			Message string `json:"message"`
-			Code    int    `json:"code"`
-		}{}
+		output := &common.Response{}
 
-		if ok := common.CallAPI(input, &response); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code != 200 && response.Code != 201 {
-			toast.Text("user update failed: "+response.Message).Type("error").Dispatch(c, dispatch)
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -340,7 +370,7 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: c.user.ShadeList,
 		}
 
-		input = common.CallInput{
+		input = &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
 			Data:        payload,
@@ -349,8 +379,15 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &response); !ok {
+		output = &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
