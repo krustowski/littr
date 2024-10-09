@@ -36,7 +36,7 @@ type Logger struct {
 	// WorkerName string is the name of a worker processing such request.
 	WorkerName string `json:"worker_name" validation:"required"`
 
-	Response *APIResponse
+	Response *APIResponse `json:"-"`
 }
 
 func NewLogger(r *http.Request, worker string) *Logger {
