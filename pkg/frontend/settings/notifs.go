@@ -81,7 +81,7 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 	}
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
 			Data:        payload,
@@ -90,7 +90,9 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -99,6 +101,11 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 			})
 			return
 
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		toast.Text("successfully unsubscribed, notifications off").Type("success").Dispatch(c, dispatch)
@@ -138,7 +145,7 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PUT",
 			Url:         "/api/v1/push/subscription/" + ctx.DeviceID() + "/" + tag,
 			Data:        deviceSub,
@@ -147,13 +154,20 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("failed to update the subscription, try again later").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.subscribed = true
 				c.settingsButtonDisabled = false
 			})
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 

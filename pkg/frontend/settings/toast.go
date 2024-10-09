@@ -15,5 +15,6 @@ func dispatch(t *common.Toast, ic interface{}) {
 
 	(*t.AppContext).Dispatch(func(ctx app.Context) {
 		c.toast = *t
+		c.settingsButtonDisabled = false
 	})
 }

@@ -15,8 +15,6 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-type stub struct{}
-
 // onKeyDown()
 func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
@@ -41,19 +39,11 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 
 		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
 			toast.Text("passphrase fields need to be filled").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
 		if passphrase != passphraseAgain {
 			toast.Text("passphrases do not match").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
@@ -69,12 +59,7 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 			CurrentPassphraseHex: fmt.Sprintf("%x", passHashCurrent),
 		}
 
-		response := struct {
-			Message string `json:"message"`
-			Code    int    `json:"code"`
-		}{}
-
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/passphrase",
 			Data:        payload,
@@ -83,17 +68,15 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("connection error").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code != 200 {
-			toast.Text(response.Message).Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -110,10 +93,6 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		}*/
 
 		toast.Text("passphrase updated").Type("success").Dispatch(c, dispatch)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-		})
 		return
 	})
 }
@@ -131,19 +110,11 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 
 		if aboutText == "" {
 			toast.Text("about textarea needs to be filled, or you prolly haven't changed the text").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
 		if len(aboutText) > 100 {
 			toast.Text("about text has to be shorter than 100 chars").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
@@ -151,7 +122,7 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.AboutText = aboutText
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -160,20 +131,19 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		toast.Text("about text updated").Type("success").Dispatch(c, dispatch)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-		})
 		return
 	})
 }
@@ -190,20 +160,12 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		// check the trimmed version of website string
 		if website == "" {
 			toast.Text("website URL has to be filled, or changed").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
 		// check the URL/URI format
 		if _, err := url.ParseRequestURI(website); err != nil {
 			toast.Text("website prolly not a valid URL").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
@@ -211,10 +173,6 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		regex, err := regexp.Compile("^(http|https)://")
 		if err != nil {
 			toast.Text("failed to check the website (regex object fail)").Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 		}
 
@@ -226,7 +184,7 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.WebsiteLink = website
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -235,22 +193,23 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		// update user's struct in memory
-		c.user.Web = c.website
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
 
 		toast.Text("website updated").Type("success").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
+			// update user's struct in memory
+			c.user.Web = c.website
 		})
 		return
 	})
@@ -266,10 +225,6 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 	uuid := c.interactedUUID
 	if uuid == "" {
 		toast.Text("blank UUID string").Type("error").Dispatch(c, dispatch)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-		})
 		return
 	}
 
@@ -280,7 +235,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 			UUID: uuid,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
 			Data:        payload,
@@ -289,12 +244,15 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("failed to unsubscribe, try again later").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("failed to unsubscribe, try again later").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -310,8 +268,6 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 		toast.Text("device successfully unsubscribed").Type("success").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-
 			if uuid == c.thisDeviceUUID {
 				c.subscribed = false
 			}
@@ -458,7 +414,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		// send the registration to backend
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/push/subscription",
 			Data:        deviceSub,
@@ -467,14 +423,19 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("backend connection failed").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-
 				c.subscribed = false
 			})
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -489,8 +450,6 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			//c.user = user
 			c.subscribed = true
-
-			c.settingsButtonDisabled = false
 
 			if tag == "mention" {
 				c.subscription.Mentions = !c.subscription.Mentions
@@ -518,7 +477,7 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.LocalTimeMode = !localTime
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -527,14 +486,19 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-
 				c.user.LocalTimeMode = localTime
 			})
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -542,8 +506,6 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-
 			c.user.LocalTimeMode = !localTime
 		})
 		return
@@ -561,7 +523,7 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		payload := c.prefillPayload()
 		payload.Private = !c.user.Private
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
 			Data:        payload,
@@ -570,12 +532,15 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -583,8 +548,6 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
-			c.settingsButtonDisabled = false
-
 			c.user.Private = !c.user.Private
 		})
 		return
@@ -601,7 +564,7 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 	ctx.LocalStorage().Set("user", "")
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/users/" + c.user.Nickname,
 			Data:        c.user,
@@ -610,12 +573,15 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -635,12 +601,8 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 	c.settingsButtonDisabled = true
 
 	ctx.Async(func() {
-		if data, err := common.ReadFile(file); err != nil {
+		if figData, err := common.ReadFile(file); err != nil {
 			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-			})
 			return
 
 		} else {
@@ -665,14 +627,10 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			payload := models.Post{
 				Nickname: c.user.Nickname,
 				Figure:   file.Get("name").String(),
-				Data:     data,
+				Data:     figData,
 			}
 
-			resp := struct {
-				Key string
-			}{}
-
-			input := common.CallInput{
+			input := &common.CallInput{
 				Method:      "POST",
 				Url:         path,
 				Data:        payload,
@@ -681,24 +639,35 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 				HideReplies: false,
 			}
 
-			if ok := common.CallAPI(input, &resp); ok {
-				toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+			type dataModel struct {
+				Key string
+			}
 
-				ctx.Dispatch(func(ctx app.Context) {
-					c.settingsButtonDisabled = false
-				})
+			output := &common.Response{Data: &dataModel{}}
+
+			if ok := common.FetchData(input, output); ok {
+				toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 				return
 			}
 
+			if output.Code != 200 {
+				toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+				return
+			}
+
+			data, ok := output.Data.(*dataModel)
+			if !ok {
+				toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+				return
+			}
+
+			avatar := "/web/pix/thumb_" + data.Key
+
 			toast.Text("avatar successfully updated").Type("success").Dispatch(c, dispatch)
 
-			avatar := "/web/pix/thumb_" + resp.Key
-
 			ctx.Dispatch(func(ctx app.Context) {
-				c.settingsButtonDisabled = false
-
 				c.newFigFile = file.Get("name").String()
-				c.newFigData = data
+				c.newFigData = figData
 
 				c.user.AvatarURL = avatar
 			})
