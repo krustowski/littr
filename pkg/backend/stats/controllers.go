@@ -16,11 +16,16 @@ import (
 // @Tags         stats
 // @Accept       json
 // @Produce      json
-// @Success      200  {array}   common.Response
+// @Success      200  {array}   common.APIResponse
 // @Router       /stats/ [get]
 func getStats(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "stats")
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	// fetch the data
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
@@ -112,17 +117,16 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		flowStats["votes"] += poll.OptionThree.Counter
 	}
 
-	// export the stats
-	resp.FlowStats = flowStats
-	resp.UserStats = userStats
+	pl := struct {
+		FlowStats map[string]int             `json:"flow_stats"`
+		UserStats map[string]models.UserStat `json:"user_stats"`
+		Users     map[string]models.User     `json:"users"`
+	}{
+		FlowStats: flowStats,
+		UserStats: userStats,
+		Users:     *common.FlushUserData(&users, callerID),
+	}
 
-	// export users for the search bar
-	resp.Users = users
-
-	resp.Code = http.StatusOK
-	resp.Message = "ok, dumping user and system stats"
-
-	// write logs and response to the client
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	return
 }
