@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -34,6 +35,8 @@ type Logger struct {
 
 	// WorkerName string is the name of a worker processing such request.
 	WorkerName string `json:"worker_name" validation:"required"`
+
+	Response *APIResponse
 }
 
 func NewLogger(r *http.Request, worker string) *Logger {
@@ -89,4 +92,54 @@ func (l *Logger) Println(msg string, code int) bool {
 	fmt.Println(l.encode())
 
 	return true
+}
+
+// l.Msg("this user does not exist in the database").StatusCode(http.StatusNotFound).Log().Write(w)
+func (l *Logger) Msg(msg string) *Logger {
+	l.Message = msg
+	return l
+}
+
+func (l *Logger) Status(code int) *Logger {
+	l.Code = code
+	return l
+}
+
+func (l *Logger) Log() *Logger {
+	l.Time = time.Now()
+
+	if l.IPAddress == "" {
+		l.IPAddress = "127.0.0.1"
+	}
+
+	fmt.Println(l.encode())
+
+	return l
+}
+func (l *Logger) Payload(pl interface{}) *Logger {
+	if pl == nil {
+		return l
+	}
+
+	// construct the generic API response
+	l.Response = &APIResponse{
+		Message:   l.Message,
+		Timestamp: time.Now().UnixNano(),
+		Data:      pl,
+	}
+
+	return l
+}
+
+func (l *Logger) Write(w http.ResponseWriter) {
+	jsonData, err := json.Marshal(l.Response)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(l.Code)
+
+	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 }

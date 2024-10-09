@@ -62,6 +62,16 @@ func (r *Response) WritePix(w http.ResponseWriter) error {
 	return nil
 }
 
+// new generic API Response schema idea
+type APIResponse struct {
+	// Common fields for all responses
+	Message   string `json:"message"`
+	Timestamp int64  `json:"timestamp"`
+
+	// Data field for any payload
+	Data interface{} `json:"data"`
+}
+
 func WriteResponse(w http.ResponseWriter, resp interface{}, code int) error {
 	jsonData, err := json.Marshal(resp)
 	if err != nil {
