@@ -76,21 +76,21 @@ func (c *Content) OnNav(ctx app.Context) {
 	})
 
 	ctx.Async(func() {
-		output := struct {
+		type dataModel struct {
 			PublicKey string          `json:"public_key"`
 			User      models.User     `json:"user"`
 			Devices   []models.Device `json:"devices"`
-			Code      int             `json:"code"`
-			Message   string          `json:"message"`
-		}{}
+		}
 
-		input := common.CallInput{
+		output := &common.Response{Data: &dataModel{}}
+
+		input := &common.CallInput{
 			Method: "GET",
 			Url:    "/api/v1/users/caller",
 			PageNo: 0,
 		}
 
-		if ok := common.CallAPI(input, &output); !ok {
+		if ok := common.FetchData[dataModel](input, output); !ok {
 			toast.Text("cannot fetch data").Type("error").Dispatch(c, dispatch)
 			return
 		}
@@ -103,8 +103,14 @@ func (c *Content) OnNav(ctx app.Context) {
 			return
 		}
 
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
 		var thisDevice models.Device
-		for _, dev := range output.Devices {
+		for _, dev := range data.Devices {
 			if dev.UUID == ctx.DeviceID() {
 				thisDevice = dev
 				break
@@ -115,6 +121,7 @@ func (c *Content) OnNav(ctx app.Context) {
 		if helpers.Contains(thisDevice.Tags, "reply") {
 			subscription.Replies = true
 		}
+
 		if helpers.Contains(thisDevice.Tags, "mention") {
 			subscription.Mentions = true
 		}
@@ -125,9 +132,9 @@ func (c *Content) OnNav(ctx app.Context) {
 		//ctx.LocalStorage().Set("mode", user.AppBgMode)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = output.User
-			c.loggedUser = output.User.Nickname
-			c.devices = output.Devices
+			c.user = data.User
+			c.loggedUser = data.User.Nickname
+			c.devices = data.Devices
 
 			//c.subscribed = output.Subscribed
 			c.subscription = subscription
@@ -135,7 +142,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
 
-			c.VAPIDpublic = output.PublicKey
+			c.VAPIDpublic = data.PublicKey
 			c.thisDeviceUUID = ctx.DeviceID()
 			c.thisDevice = thisDevice
 

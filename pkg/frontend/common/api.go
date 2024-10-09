@@ -26,10 +26,94 @@ var (
 type CallInput struct {
 	Method      string
 	Url         string
-	Data        interface{}
 	CallerID    string
 	PageNo      int
 	HideReplies bool
+
+	// payload body for the API call
+	Data interface{}
+}
+
+// standardized common response from API
+type Response struct {
+	Code      int
+	Message   string      `json:"message"`
+	Timestamp int64       `json:"timestamp"`
+	Data      interface{} `json:"data"`
+}
+
+// ng-func
+func FetchData[T any](input *CallInput, output *Response) bool {
+	var req *http.Request
+	var err error
+
+	if input.Data != nil {
+		jsonData, err := json.Marshal(input.Data)
+		if err != nil {
+			log.Println(err.Error())
+			return false
+		}
+
+		payload := bytes.NewReader(jsonData)
+
+		req, err = http.NewRequest(input.Method, input.Url, payload)
+		if err != nil {
+			log.Println(err.Error())
+			return false
+		}
+	} else {
+		req, err = http.NewRequest(input.Method, input.Url, nil)
+		if err != nil {
+			log.Println(err.Error())
+			return false
+		}
+	}
+
+	pageNoString := strconv.FormatInt(int64(input.PageNo), 10)
+
+	version := app.Getenv("APP_VERSION")
+	if version == "" {
+		version = AppVersion
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-Caller-ID", input.CallerID)
+	req.Header.Set("X-App-Version", version)
+	req.Header.Set("X-Page-No", pageNoString)
+	req.Header.Set("X-Hide-Replies", fmt.Sprintf("%t", input.HideReplies))
+
+	client := http.Client{}
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	defer res.Body.Close()
+
+	output.Code = res.StatusCode
+
+	respData, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	err = json.Unmarshal(respData, output)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	data, ok := output.Data.(*T)
+	if !ok {
+		return false
+	}
+
+	output.Data = data
+
+	return true
 }
 
 func CallAPI[T any](input CallInput, output *T) bool {
