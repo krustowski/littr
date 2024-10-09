@@ -53,7 +53,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			})
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/posts/" + interactedPost.ID,
 			Data:        interactedPost,
@@ -62,8 +62,15 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			HideReplies: c.hideReplies,
 		}
 
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("backend error: cannot delete a post").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
@@ -151,7 +158,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			//ReplyTo: replyID, <--- is type int
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         path,
 			Data:        payload,
@@ -160,13 +167,14 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			HideReplies: c.hideReplies,
 		}
 
-		response := struct {
+		type dataModel struct {
 			Posts map[string]models.Post `posts`
-		}{}
+		}
 
-		// add new post/poll to backend struct
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("API error: cannot fetch the post list").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{Data: &dataModel{}}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -179,13 +187,24 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
 		payloadNotif := struct {
 			OriginalPost string `json:"original_post"`
 		}{
 			OriginalPost: c.interactedPostKey,
 		}
 
-		input = common.CallInput{
+		input = &common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/push/notification/" + c.interactedPostKey,
 			Data:        payloadNotif,
@@ -194,9 +213,11 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			HideReplies: c.hideReplies,
 		}
 
+		output2 := &common.Response{}
+
 		// create a notification
-		if ok := common.CallAPI(input, &stub{}); !ok {
-			toast.Text("cannot POST new notification").Type("error").Dispatch(c, dispatch)
+		if ok := common.FetchData(input, output2); !ok {
+			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -213,7 +234,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// we do not know the ID, as it is assigned in the BE logic,
 		// so we need to loop over the list of posts (1)...
-		for k, p := range response.Posts {
+		for k, p := range data.Posts {
 			posts[k] = p
 		}
 
@@ -255,8 +276,8 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 				c.contentLoadFinished = false
 			})
 
-			var newPosts map[string]models.Post
-			var newUsers map[string]models.User
+			var newPosts *map[string]models.Post
+			var newUsers *map[string]models.User
 
 			posts := c.posts
 			users := c.users
@@ -297,10 +318,10 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 				}
 
 				// append/insert more posts/users
-				for key, post := range newPosts {
+				for key, post := range *newPosts {
 					posts[key] = post
 				}
-				for key, user := range newUsers {
+				for key, user := range *newUsers {
 					users[key] = user
 				}
 
@@ -372,10 +393,10 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 		posts, users := c.fetchFlowPage(opts)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts = posts
-			c.users = users
+			c.posts = *posts
+			c.users = *users
 
-			c.user = users[c.key]
+			c.user = (*users)[c.key]
 
 			c.loaderShow = false
 			c.loaderShowImage = false
@@ -409,7 +430,7 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 		interactedPost := c.posts[key]
 		//interactedPost.ReactionCount++
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/posts/" + interactedPost.ID + "/star",
 			Data:        interactedPost,
@@ -418,18 +439,31 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 			HideReplies: c.hideReplies,
 		}
 
-		response := struct {
+		type dataModel struct {
 			Posts map[string]models.Post `json:"posts"`
-		}{}
+		}
+
+		output := &common.Response{Data: &dataModel{}}
 
 		// add new post to backend struct
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("backend error: cannot rate a post").Type("error").Dispatch(c, dispatch)
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		// keep the reply count!
 		oldPost := c.posts[key]
-		newPost := response.Posts[key]
+		newPost := data.Posts[key]
 		newPost.ReplyCount = oldPost.ReplyCount
 
 		ctx.Dispatch(func(ctx app.Context) {

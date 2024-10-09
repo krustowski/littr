@@ -23,7 +23,7 @@ type pageOptions struct {
 	HideReplies bool `default:"false"`
 }
 
-func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[string]models.User) {
+func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map[string]models.User) {
 	ctx := opts.Context
 	pageNo := opts.PageNo
 
@@ -66,7 +66,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[s
 
 	}
 
-	input := common.CallInput{
+	input := &common.CallInput{
 		Method:      "GET",
 		Url:         url,
 		Data:        nil,
@@ -75,14 +75,16 @@ func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[s
 		HideReplies: c.hideReplies,
 	}
 
-	resp := struct {
+	type dataModel struct {
 		Posts map[string]models.Post `json:"posts"`
 		Users map[string]models.User `json:"users"`
 		Code  int                    `json:"code"`
 		Key   string                 `json:"key"`
-	}{}
+	}
 
-	if ok := common.CallAPI(input, &resp); !ok {
+	output := &common.Response{Data: &dataModel{}}
+
+	if ok := common.FetchData(input, output); !ok {
 		toast.Text("API error: cannot fetch the flow page").Type("error").Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
@@ -91,7 +93,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[s
 		return nil, nil
 	}
 
-	if resp.Code == 401 {
+	if output.Code == 401 {
 		ctx.LocalStorage().Set("user", "")
 		ctx.LocalStorage().Set("authGranted", false)
 
@@ -99,7 +101,18 @@ func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[s
 		return nil, nil
 	}
 
-	if len(resp.Posts) < 1 {
+	if output.Code != 200 {
+		toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+		return nil, nil
+	}
+
+	data, ok := output.Data.(*dataModel)
+	if !ok {
+		toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+		return nil, nil
+	}
+
+	if len(data.Posts) < 1 {
 		toast.Text("no posts to show; try adding some folks to your flow, or create a new post!").Type("info").Link("/post").Dispatch(c, dispatch)
 		return nil, nil
 	}
@@ -107,11 +120,11 @@ func (c *Content) fetchFlowPage(opts pageOptions) (map[string]models.Post, map[s
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false
 
-		c.key = resp.Key
-		if resp.Key != "" {
-			c.user = c.users[resp.Key]
+		c.key = data.Key
+		if data.Key != "" {
+			c.user = c.users[data.Key]
 		}
 	})
 
-	return resp.Posts, resp.Users
+	return &data.Posts, &data.Users
 }

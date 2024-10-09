@@ -66,7 +66,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 			FlowList: flowList,
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
 			Data:        payload,
@@ -75,18 +75,15 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 			HideReplies: c.hideReplies,
 		}
 
-		response := struct {
-			Message string `json:"message"`
-			Code    int    `json:"code"`
-		}{}
+		output := &common.Response{}
 
-		if ok := common.CallAPI(input, &response); !ok {
+		if ok := common.FetchData(input, output); !ok {
 			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code != 200 && response.Code != 201 {
-			toast.Text("user update failed: "+response.Message).Type("error").Dispatch(c, dispatch)
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 

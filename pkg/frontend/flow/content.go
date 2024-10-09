@@ -132,18 +132,19 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// try the singlePostID/userFlowNick var if present
 		if parts.SinglePostID != "" && parts.SinglePost {
-			if _, found := posts[parts.SinglePostID]; !found {
+			if _, found := (*posts)[parts.SinglePostID]; !found {
 				toast.Text("post not found").Type("error").Dispatch(c, dispatch)
 			}
 		}
 		if parts.UserFlowNick != "" && parts.UserFlow {
-			if _, found := users[parts.UserFlowNick]; !found {
+			if _, found := (*users)[parts.UserFlowNick]; !found {
 				toast.Text("user not found").Type("error").Dispatch(c, dispatch)
 			}
 
 			if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
 				toast.Text("follow the user to see their posts").Type("info").Dispatch(c, dispatch)
 			}
+
 			isPost = false
 		}
 
@@ -153,10 +154,10 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.pageNo = 1
 			c.pageNoToFetch = 1
 
-			c.user = users[c.key]
+			c.user = (*users)[c.key]
 
-			c.users = users
-			c.posts = posts
+			c.users = *users
+			c.posts = *posts
 			c.singlePostID = parts.SinglePostID
 			c.userFlowNick = parts.UserFlowNick
 			c.isPost = isPost
