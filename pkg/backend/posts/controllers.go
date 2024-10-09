@@ -33,36 +33,32 @@ const (
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/ [get]
 func getPosts(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	pageNo := 0
 
 	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	pageNo = page
 
 	if callerID == "" {
-		resp.Message = "callerID header cannot be blank!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -92,27 +88,18 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	pagePtrs := pages.GetOnePage(opts)
 	//pExport, uExport := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
-		resp.Message = "error while requesting more pages, one exported map is nil!"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-referenced user"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
 		(*pagePtrs.Users)[callerID] = caller
 	}
 
-	// TODO: use DTO
 	for key, user := range *pagePtrs.Users {
 		user.Passphrase = ""
 		user.PassphraseHex = ""
@@ -127,20 +114,19 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		(*pagePtrs.Users)[key] = user
 	}
 
-	resp.Message = "ok, dumping posts"
-	resp.Code = http.StatusOK
+	pl := struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+		Count int                    `json:"count"`
+	}{
+		Posts: *pagePtrs.Posts,
+		Users: *pagePtrs.Users,
+		Key:   callerID,
+		Count: pages.PAGE_SIZE,
+	}
 
-	resp.Posts = *pagePtrs.Posts
-	resp.Users = *pagePtrs.Users
-
-	resp.Key = callerID
-
-	// a constant -> see backend/pages/common.go
-	resp.Count = pages.PAGE_SIZE
-
-	// write Response and logs
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, dumping posts").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }
 
@@ -151,47 +137,40 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      201  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      201  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/ [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	caller, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	// post a new post
 	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if post.Content == "" && post.Figure == "" && post.Data == nil {
-		resp.Message = "post with no content"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// patch wrongly loaded user data from LocalStorage on FE
 	if post.Nickname == "" {
-		post.Nickname = caller
+		post.Nickname = callerID
 	}
 
 	// check the post forgery possibility
-	if caller != post.Nickname {
-		resp.Message = "invalid author spotted --- one can post under their authenticated name only"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if callerID != post.Nickname {
+		l.Msg(common.ERR_POSTER_INVALID).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -214,11 +193,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		// decode image from []byte stream
 		img, format, err = image.DecodeImage(&post.Data, extension)
 		if err != nil {
-			resp.Message = "cannot decode given byte stream: probably an unsupported format was sent"
-			resp.Code = http.StatusBadRequest
-
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -227,22 +202,14 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			// fix the image orientation for decoded image
 			img, err = image.FixOrientation(img, &post.Data)
 			if err != nil {
-				resp.Message = "cannot fix image's orientation"
-				resp.Code = http.StatusInternalServerError
-
-				l.Println(resp.Message+err.Error(), resp.Code)
-				resp.Write(w)
+				l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 				return
 			}
 
 			// re-encode the image to flush EXIF metadata header
 			newBytes, err = image.EncodeImage(img, format)
 			if err != nil {
-				resp.Message = "cannot re-encode the novel image"
-				resp.Code = http.StatusBadRequest
-
-				l.Println(resp.Message+err.Error(), resp.Code)
-				resp.Write(w)
+				l.Msg(common.ERR_IMG_ENCODE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 				return
 			}
 
@@ -251,20 +218,12 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 			newBytes, err = image.ConvertGifToWebp(&post.Data)
 			if err != nil {
-				resp.Message = "cannot convert given GIF to WebP"
-				resp.Code = http.StatusInternalServerError
-
-				l.Println(resp.Message+err.Error(), resp.Code)
-				resp.Write(w)
+				l.Msg(common.ERR_IMG_GIF_TO_WEBP_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 				return
 			}
 
 		default:
-			resp.Message = "unsupported imafe format: " + format
-			resp.Code = http.StatusBadRequest
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_IMG_UNKNOWN_TYPE).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -274,11 +233,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		// upload the novel image to local storage
 		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
 		if err := os.WriteFile("/opt/pix/"+content, *newBytes, 0600); err != nil {
-			resp.Message = "couldn't write the novel image to file"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -288,21 +243,13 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		// encode the thumbnail back to []byte
 		thumbImgData, err := image.EncodeImage(&thumbImg, format)
 		if err != nil {
-			resp.Message = "cannot encode thumbnail back to byte stream"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		// write the thumbnail byte stream to a file
 		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
-			resp.Message = "couldn't write the thumbnail to file"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message+err.Error(), resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -312,11 +259,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
-		resp.Message = "couldn't save new post (try again)"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -338,7 +281,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// do not notify the same person --- OK condition
-		if receiverName == caller {
+		if receiverName == callerID {
 			continue
 		}
 
@@ -351,7 +294,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		body, _ := json.Marshal(app.Notification{
 			Title: "littr mention",
 			Icon:  "/web/apple-touch-icon.png",
-			Body:  caller + " mentioned you in their post",
+			Body:  callerID + " mentioned you in their post",
 			Path:  "/flow/post/" + post.ID,
 		})
 
@@ -359,17 +302,21 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast a new post to live subscribers
-	Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("post,"+post.Nickname))
+	if Streamer != nil {
+		Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("post,"+post.Nickname))
+	}
 
 	posts := make(map[string]models.Post)
 	posts[key] = post
 
-	resp.Message = "ok, adding new post"
-	resp.Code = http.StatusCreated
-	resp.Posts = posts
+	pl := struct {
+		Posts map[string]models.Post `json:"posts"`
+	}{
+		Posts: posts,
+	}
 
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(&pl).Write(w)
+	return
 }
 
 // updatePostStarCount increases the star count for the given post.
@@ -379,24 +326,24 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      403  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID}/star [patch]
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -406,20 +353,12 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	var found bool
 
 	if post, found = db.GetOne(db.FlowCache, key, models.Post{}); !found {
-		resp.Message = "unknown post update requested"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if post.Nickname == callerID {
-		resp.Message = "one cannot rate their own post(s)"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_SELF_RATE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -427,22 +366,21 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	post.ReactionCount++
 
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
-		resp.Message = "cannot update post"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, star count incremented"
-	resp.Code = http.StatusOK
+	posts := make(map[string]models.Post)
+	posts[key] = post
 
-	resp.Posts = make(map[string]models.Post)
-	resp.Posts[key] = post
+	pl := struct {
+		Posts map[string]models.Post `json:"posts"`
+	}{
+		Posts: posts,
+	}
 
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, star count incremented").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	return
 }
 
 // updatePost updates the specified post.
@@ -453,24 +391,24 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      403  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID} [put]
 func updatePost(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -478,37 +416,22 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	key := post.ID
 
 	if _, found := db.GetOne(db.FlowCache, key, models.Post{}); !found {
-		resp.Message = "unknown post update requested"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if post.Nickname != callerID {
-		resp.Message = "one cannot update foreign post(s)"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
-		resp.Message = "cannot update post"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, post updated"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, post updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // deletePost removes specified post.
@@ -518,25 +441,25 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      403  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID} [delete]
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	// remove a post
 	var post models.Post
 
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -544,20 +467,12 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	key := post.ID
 
 	if post.Nickname != callerID {
-		resp.Message = "one cannot delete foreign post(s)"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if deleted := db.DeleteOne(db.FlowCache, key); !deleted {
-		resp.Message = "cannot delete the post"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -565,30 +480,19 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	if post.Figure != "" {
 		err := os.Remove("/opt/pix/thumb_" + post.Figure)
 		if err != nil {
-			resp.Message = "cannot remove thumbnail associated to the post"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_POST_DELETE_THUMB).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		err = os.Remove("/opt/pix/" + post.Figure)
 		if err != nil {
-			resp.Message = "cannot remove image associated to the post"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_POST_DELETE_FULLIMG).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 	}
 
-	resp.Message = "ok, post removed"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, post removed").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // getSinglePost fetch specified post and its interaction.
@@ -602,9 +506,14 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.Response
 // @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
 	//user, _ := getOne(UserCache, callerID, models.User{})
 
 	// parse the URI's path
@@ -616,11 +525,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -642,45 +547,41 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pExport, uExport := GetOnePage(opts)
 	if pExport == nil || uExport == nil {
-		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// flush email addresses
-	for key, user := range uExport {
+	uExport = *common.FlushUserData(&uExport, callerID)
+
+	/*for key, user := range uExport {
 		if key == callerID {
 			continue
 		}
 		user.Email = ""
 		uExport[key] = user
-	}
+	}*/
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-named user"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
 		uExport[callerID] = caller
 	}
 
-	resp.Users = uExport
-	resp.Posts = pExport
+	pl := struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+	}{
+		Posts: pExport,
+		Users: uExport,
+		Key:   callerID,
+	}
 
-	resp.Key = callerID
-
-	resp.Message = "ok, dumping single post and its interactions"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, dumping single post and its interactions").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	return
 }
 
 // fetchHashtaggedPosts
@@ -690,13 +591,17 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
 // @Router       /posts/hashtag/{hashtag} [get]
 func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, pkgName)
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	// parse the URI's path
 	// check if diff page has been requested
@@ -705,11 +610,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -722,43 +623,31 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pExport, uExport := GetOnePage(opts)
 	if pExport == nil || uExport == nil {
-		resp.Message = "error while requesting more page, one exported map is nil!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// flush email addresses
-	for key, user := range uExport {
-		if key == callerID {
-			continue
-		}
-		user.Email = ""
-		uExport[key] = user
-	}
+	uExport = *common.FlushUserData(&uExport, callerID)
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-named user"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
 		uExport[callerID] = caller
 	}
 
-	resp.Users = uExport
-	resp.Posts = pExport
+	pl := struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+	}{
+		Posts: pExport,
+		Users: uExport,
+		Key:   callerID,
+	}
 
-	resp.Key = callerID
-
-	resp.Message = "ok, dumping hashtagged posts and their parent posts"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	return
 }

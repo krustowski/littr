@@ -122,7 +122,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// flush unwanted properties in users map
-	pl.Users = *flushUserData(pagePtrs.Users, callerID)
+	pl.Users = *common.FlushUserData(pagePtrs.Users, callerID)
 	pl.User = pl.Users[callerID]
 	pl.UserStats = stats
 
@@ -169,7 +169,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	// helper struct for the data flush
 	users := make(map[string]models.User)
 	users[callerID] = caller
-	users = *flushUserData(&users, callerID)
+	users = *common.FlushUserData(&users, callerID)
 
 	// return response
 	pl.Devices = devs
@@ -715,7 +715,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 		Posts map[string]models.Post
 		Key   string
 	}{
-		Users: *flushUserData(&uExport, callerID),
+		Users: *common.FlushUserData(&uExport, callerID),
 		Posts: pExport,
 		Key:   callerID,
 	}

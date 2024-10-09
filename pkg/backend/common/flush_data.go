@@ -1,10 +1,10 @@
-package users
+package common
 
 import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func flushUserData(users *map[string]models.User, callerID string) *map[string]models.User {
+func FlushUserData(users *map[string]models.User, callerID string) *map[string]models.User {
 	if users == nil || callerID == "" {
 		return nil
 	}
