@@ -43,7 +43,7 @@ type Response struct {
 }
 
 // ng-func
-func FetchData[T any](input *CallInput, output *Response) bool {
+func FetchData(input *CallInput, output *Response) bool {
 	var req *http.Request
 	var err error
 
@@ -105,13 +105,6 @@ func FetchData[T any](input *CallInput, output *Response) bool {
 		log.Println(err.Error())
 		return false
 	}
-
-	data, ok := output.Data.(*T)
-	if !ok {
-		return false
-	}
-
-	output.Data = data
 
 	return true
 }
