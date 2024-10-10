@@ -14,7 +14,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// snackbar
-		app.A().OnClick(c.onClickDismiss).Body(
+		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
 			app.If(c.toast.TText != "",
 				app.Div().Class("snackbar red10 white-text top active").Body(
 					app.I().Text("error"),

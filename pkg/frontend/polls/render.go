@@ -26,11 +26,6 @@ func (c *Content) Render() app.UI {
 		toastColor = "red10"
 	}
 
-	toastLink := ""
-	if c.toast.TLink != "" {
-		toastLink = c.toast.TLink
-	}
-
 	var sortedPolls []models.Poll
 
 	for _, sortedPoll := range c.polls {
@@ -85,8 +80,8 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.If(c.toast.TText != "",
-			app.A().Href(toastLink).OnClick(c.onClickDismiss).Body(
+		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
+			app.If(c.toast.TText != "",
 				app.Div().ID("snackbar").Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),

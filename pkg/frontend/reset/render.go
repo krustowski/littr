@@ -34,7 +34,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.A().OnClick(c.onDismissToast).Body(
+		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
 			app.If(c.toast.TText != "",
 				app.Div().ID("snackbar").Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),

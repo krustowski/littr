@@ -177,8 +177,8 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// snackbar
-		app.If(c.toast.TText != "",
-			app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
+		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
+			app.If(c.toast.TText != "",
 				app.Div().Class("snackbar "+toastColor+" white-text top active").Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),
