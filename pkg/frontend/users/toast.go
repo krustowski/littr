@@ -1,6 +1,8 @@
 package users
 
 import (
+	"time"
+
 	"go.vxn.dev/littr/pkg/frontend/common"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -16,5 +18,11 @@ func dispatch(t *common.Toast, ic interface{}) {
 	(*t.AppContext).Dispatch(func(ctx app.Context) {
 		c.toast = *t
 		c.usersButtonDisabled = false
+	})
+
+	time.Sleep(time.Second * 5)
+
+	(*t.AppContext).Dispatch(func(ctx app.Context) {
+		c.toast.TText = ""
 	})
 }
