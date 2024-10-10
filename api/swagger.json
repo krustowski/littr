@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.42.3"
+        "version": "0.42.4"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -200,21 +200,32 @@
                     "polls"
                 ],
                 "summary": "Add new poll",
+                "parameters": [
+                    {
+                        "description": "query params",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Poll"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "success",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "bad/malformed input data, invalid cookies",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "the poll saving process failed",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }

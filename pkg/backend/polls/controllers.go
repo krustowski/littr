@@ -108,9 +108,10 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      201  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Param    	 request body models.Poll true "query params"
+// @Success      201  {object}  common.APIResponse "success"
+// @Failure      400  {object}  common.APIResponse "bad/malformed input data, invalid cookies"
+// @Failure      500  {object}  common.APIResponse "the poll saving process failed"
 // @Router       /polls [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
