@@ -21,29 +21,30 @@ import (
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure 	 401  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure 	 401  {object}   common.APIResponse
 // @Router       /push/vapid [get]
 func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "push")
 
-	caller, _ := r.Context().Value("nickname").(string)
-	if caller == "" {
-		resp.Message = "client unauthorized"
-		resp.Code = http.StatusUnauthorized
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, sending VAPID public key"
-	resp.Key = os.Getenv("VAPID_PUB_KEY")
-	resp.Code = http.StatusOK
+	if callerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	pl := struct {
+		Key string `json:"key"`
+	}{
+		Key: os.Getenv("VAPID_PUB_KEY"),
+	}
+
+	l.Msg("ok, sending public VAPID key").Status(http.StatusOK).Log().Payload(&pl).Write(w)
 	return
 }
 
@@ -54,31 +55,35 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /push/subscription/{uuid}/mention [put]
 // @Router       /push/subscription/{uuid}/reply [put]
 func updateSubscription(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "push")
 
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
 	path := r.URL.Path
-	caller, _ := r.Context().Value("nickname").(string)
 	payload := models.Device{}
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache later on
-	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
+	devs, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	if !ok {
+		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
 
 	tag := ""
 	if strings.Contains(path, "mention") {
@@ -115,20 +120,12 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 		devs = append(devs, payload)
 	}
 
-	if saved := db.SetOne(db.SubscriptionCache, caller, devs); !saved {
-		resp.Code = http.StatusInternalServerError
-		resp.Message = "cannot save new subscription"
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if saved := db.SetOne(db.SubscriptionCache, callerID, devs); !saved {
+		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, device subscription updated"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, device subscription updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -139,38 +136,38 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      409  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      409  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /push/subscription [post]
 func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "push")
 
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
 	payload := models.Device{}
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache
-	devs, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
+	devs, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	if !ok {
+		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
 
 	for _, dev := range devs {
 		if dev.UUID == payload.UUID {
 			// we have just found a match, thus request was fired twice, or someone tickles the API
-			resp.Message = "backend notice: this device has already been registered for a subscription"
-			resp.Code = http.StatusConflict
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg(common.ERR_DEVICE_SUBSCRIBED).Status(http.StatusConflict).Log().Payload(nil).Write(w)
 			return
 		}
 	}
@@ -178,20 +175,13 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	// append new device into the devices array for such user
 	devs = append(devs, payload)
 
-	if saved := db.SetOne(db.SubscriptionCache, caller, devs); !saved {
-		resp.Code = http.StatusInternalServerError
-		resp.Message = "cannot save new subscription"
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if saved := db.SetOne(db.SubscriptionCache, callerID, devs); !saved {
+		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, device subscription added"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, device subscription added").Status(http.StatusCreated).Log().Payload(nil).Write(w)
+	return
 }
 
 // sendNotification is the push pkg handler function for sending new notification(s).
@@ -201,54 +191,51 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Success      201  {object}   common.Response
-// @Failure      400  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Success      201  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
 // @Router       /push/notification/{postID} [post]
 func sendNotification(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "push")
 
 	// this user ID points to the replier
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
-	// hm, this looks kinda sketchy...
-	// TODO: make this more readable
-	original := struct {
-		ID string `json:"original_post"`
+	payload := struct {
+		OriginalID string `json:"original_post"`
 	}{}
 
-	if err := common.UnmarshalRequestData(r, &original); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if err := common.UnmarshalRequestData(r, &payload); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// fetch related data from cachces
-	post, _ := db.GetOne(db.FlowCache, original.ID, models.Post{})
-	devs, _ := db.GetOne(db.SubscriptionCache, post.Nickname, []models.Device{})
-	//user, _ := db.GetOne(db.UserCache, post.Nickname, users.User{})
+	post, ok := db.GetOne(db.FlowCache, payload.OriginalID, models.Post{})
+	if !ok {
+		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
+
+	devs, ok := db.GetOne(db.SubscriptionCache, post.Nickname, []models.Device{})
+	if !ok {
+		l.Msg(common.ERR_SUBSCRIPTION_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
 
 	// do not notify the same person --- OK condition
-	if post.Nickname == caller {
-		resp.Message = "do not send notifs to oneself"
-		resp.Code = http.StatusOK
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if post.Nickname == callerID {
+		l.Msg(common.ERR_PUSH_SELF_NOTIF).Status(http.StatusOK).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// do not notify user --- notifications disabled --- OK condition
 	if len(devs) == 0 {
-		resp.Message = "notifications disabled for such user"
-		resp.Code = http.StatusOK
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PUSH_DISABLED_NOTIF).Status(http.StatusOK).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -256,17 +243,14 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 	body, _ := json.Marshal(app.Notification{
 		Title: "littr reply",
 		Icon:  "/web/apple-touch-icon.png",
-		Body:  caller + " replied to your post",
+		Body:  callerID + " replied to your post",
 		Path:  "/flow/post/" + post.ID,
 	})
 
+	// fire notification goroutines
 	SendNotificationToDevices(post.Nickname, devs, body, l)
 
-	resp.Message = "ok, notification(s) sent"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, notification(s) are being sent").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -277,41 +261,39 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure      400  {object}   common.Response
-// @Failure      500  {object}   common.Response
+// @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /push/subscription/{uuid} [delete]
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "push")
 
-	// this user ID points to the replier
-	caller, _ := r.Context().Value("nickname").(string)
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
 	payload := struct {
 		UUID string `json:"device_uuid"`
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	uuid := payload.UUID
 	if uuid == "" {
-		resp.Message = "backend error: blank UUID received!"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_PUSH_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	devices, _ := db.GetOne(db.SubscriptionCache, caller, []models.Device{})
+	devices, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	if !ok {
+		l.Msg(common.ERR_SUBSCRIPTION_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
 
 	var newDevices []models.Device
 
@@ -320,6 +302,7 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 			// do not include this device anymore
 			continue
 		}
+
 		if dev.UUID == "" {
 			// do not include blank-labeled devices
 			continue
@@ -328,20 +311,11 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 		newDevices = append(newDevices, dev)
 	}
 
-	if saved := db.SetOne(db.SubscriptionCache, caller, newDevices); !saved {
-		resp.Message = "new subscription state of devices could not be saved"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+	if saved := db.SetOne(db.SubscriptionCache, callerID, newDevices); !saved {
+		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, subscription deleted"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-
-	resp.Write(w)
+	l.Msg("ok, subscription deleted").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }

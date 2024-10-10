@@ -51,4 +51,13 @@ const (
 	ERR_POLL_EXISTING_VOTE   = "you have already voted on such poll"
 	ERR_POLL_DELETE_FOREIGN  = "you cannot delete a foreigner's poll"
 	ERR_POLL_DELETE_FAIL     = "could not delete the poll, try again"
+
+	// push-related error messages
+	ERR_DEVICE_NOT_FOUND       = "devices not found in the database"
+	ERR_SUBSCRIPTION_SAVE_FAIL = "could not save the subscription to database"
+	ERR_SUBSCRIPTION_NOT_FOUND = "such subscription not found in the database"
+	ERR_DEVICE_SUBSCRIBED      = "this device has been already registered"
+	ERR_PUSH_SELF_NOTIF        = "will not notify oneself"
+	ERR_PUSH_DISABLED_NOTIF    = "will not notify original poster"
+	ERR_PUSH_UUID_BLANK        = "device's UUID cannot be sent empty"
 )
