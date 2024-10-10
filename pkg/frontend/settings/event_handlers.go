@@ -434,7 +434,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if output.Code != 200 {
+		if output.Code != 201 || output.Code != 200 {
 			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
