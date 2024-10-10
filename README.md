@@ -181,8 +181,10 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + user activation via mail
 
 ### roadmap to v0.42
-+ deeply refactor BE+FE again: declarative syntax for BE logger + unified API response (wip)
++ ~~deeply refactor BE+FE again: declarative syntax for BE logger~~ 
++ implement 5s toast's appearence (autodismiss) (wip)
 + single poll referenced by ID (singlePoll subpage/view)
++ ~~unified clean API response (wip)~~
 
 ### roadmap to v0.41
 + ~~pagination for polls~~

@@ -502,8 +502,8 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
 // @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, pkgName)

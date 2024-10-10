@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.42.2"
+        "version": "0.42.3"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -490,13 +490,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.Response"
+                            "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.Response"
+                            "$ref": "#/definitions/common.APIResponse"
                         }
                     }
                 }
@@ -1416,128 +1416,6 @@
                 }
             }
         },
-        "common.Response": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "description": "auth tokens (JWT)",
-                    "type": "string"
-                },
-                "auth_granted": {
-                    "type": "boolean"
-                },
-                "code": {
-                    "type": "integer"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "devices": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Device"
-                    }
-                },
-                "flow_records": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "flow_stats": {
-                    "description": "very stats properties",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "key": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "polls": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.Poll"
-                    }
-                },
-                "posts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.Post"
-                    }
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "subscription": {
-                    "type": "object",
-                    "properties": {
-                        "mentions": {
-                            "type": "boolean"
-                        },
-                        "replies": {
-                            "type": "boolean"
-                        }
-                    }
-                },
-                "user_stats": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.UserStat"
-                    }
-                },
-                "users": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                }
-            }
-        },
-        "models.Device": {
-            "type": "object",
-            "properties": {
-                "subscription": {
-                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/webpush.Subscription"
-                        }
-                    ]
-                },
-                "tags": {
-                    "description": "List of labels for such device.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "time_created": {
-                    "description": "Timestamp of the subscription creation.",
-                    "type": "string"
-                },
-                "time_last_used": {
-                    "description": "Timestamp of the last notification sent through this device.",
-                    "type": "string"
-                },
-                "uuid": {
-                    "description": "Unique identification of the app on the current device.\nhttps://go-app.dev/reference#Context",
-                    "type": "string"
-                }
-            }
-        },
         "models.Poll": {
             "type": "object",
             "properties": {
@@ -1617,61 +1495,6 @@
                 "counter": {
                     "description": "Counter hold a number of votes being committed to such option.",
                     "type": "integer"
-                }
-            }
-        },
-        "models.Post": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "description": "Content contains the very post's data to be shown as a text typed in by the author when created.",
-                    "type": "string"
-                },
-                "data": {
-                    "description": "Data is a helper field for the actual figure upload.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "figure": {
-                    "description": "Figure hold the filename of the uploaded figure to post with some provided text.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "ID is an unique post's identificator.",
-                    "type": "string"
-                },
-                "nickname": {
-                    "description": "Nickname is a name of the post's author's name.",
-                    "type": "string"
-                },
-                "poll_id": {
-                    "description": "PollID is an identification of the Poll structure/object.",
-                    "type": "string"
-                },
-                "reaction_count": {
-                    "description": "ReactionCount counts the number of item's reactions.",
-                    "type": "integer"
-                },
-                "reply_count": {
-                    "description": "ReplyCount hold the count of replies for such post.",
-                    "type": "integer"
-                },
-                "reply_to": {
-                    "description": "ReplyTo is a reference key to another post, that is being replied to.",
-                    "type": "integer"
-                },
-                "reply_to_id": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "description": "Timestamp is an UNIX timestamp, indicates the creation time.",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "Type describes the post's type --- post, poll, reply, img.",
-                    "type": "string"
                 }
             }
         },
@@ -1789,31 +1612,6 @@
                 }
             }
         },
-        "models.UserStat": {
-            "type": "object",
-            "properties": {
-                "flowerCount": {
-                    "description": "FlowerCount is basically a number of followers.",
-                    "type": "integer"
-                },
-                "postCount": {
-                    "description": "PostCount is a number of posts of such user.",
-                    "type": "integer"
-                },
-                "reactionCount": {
-                    "description": "ReactionCount tells the number of interactions (stars given).",
-                    "type": "integer"
-                },
-                "searched": {
-                    "description": "Searched is a special boolean used by the search engine to mark who is to be shown in search results.",
-                    "type": "boolean"
-                },
-                "shadeCount": {
-                    "description": "ShadeCount is basically a number of blockers.",
-                    "type": "integer"
-                }
-            }
-        },
         "polls.getPolls.payload": {
             "type": "object",
             "properties": {
@@ -1825,28 +1623,6 @@
                 },
                 "user": {
                     "$ref": "#/definitions/models.User"
-                }
-            }
-        },
-        "webpush.Keys": {
-            "type": "object",
-            "properties": {
-                "auth": {
-                    "type": "string"
-                },
-                "p256dh": {
-                    "type": "string"
-                }
-            }
-        },
-        "webpush.Subscription": {
-            "type": "object",
-            "properties": {
-                "endpoint": {
-                    "type": "string"
-                },
-                "keys": {
-                    "$ref": "#/definitions/webpush.Keys"
                 }
             }
         }
