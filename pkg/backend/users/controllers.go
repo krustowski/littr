@@ -50,22 +50,25 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		UserStats map[string]models.UserStat `json:"user_stats"`
 	}
 
-	callerID, _ := r.Context().Value("nickname").(string)
-
 	l := common.NewLogger(r, "users")
 	pl := payload{}
 
-	// check the callerID record in the database
-	_, ok := db.GetOne(db.UserCache, callerID, models.User{})
+	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
-		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
+
+	// check the callerID record in the database
+	_, ok = db.GetOne(db.UserCache, callerID, models.User{})
+	if !ok {
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
 		return
 	}
 
 	pageNoString := r.Header.Get("X-Page-No")
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		l.Msg("pageNo has to be specified as integer/number").Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -82,7 +85,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	// fetch one (1) users page
 	pagePtrs := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
-		l.Msg("cannot request more pages, one export map is nil!").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 		return
 	}
 
@@ -141,7 +144,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 // @Failure      404  {object}   common.APIResponse
 // @Router       /users/caller [get]
 func getOneUser(w http.ResponseWriter, r *http.Request) {
-	callerID, _ := r.Context().Value("nickname").(string)
+	l := common.NewLogger(r, "users")
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	type payload struct {
 		User      models.User     `json:"user"`
@@ -153,12 +161,10 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 		PublicKey: os.Getenv("VAPID_PUB_KEY"),
 	}
 
-	l := common.NewLogger(r, "users")
-
 	// check the callerID record in the database
 	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		l.Msg("this user does not exist in the database").Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
 		return
 
 	}
@@ -298,12 +304,16 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/{nickname} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var user models.User
 
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		l.Msg("could not create process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -313,7 +323,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); !found {
-		l.Msg("user not found").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -340,10 +350,13 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/passphrase [patch]
 func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
-	callerID, _ := r.Context().Value("nickname").(string)
+	l := common.NewLogger(r, "users")
 	nick := chi.URLParam(r, "nickname")
 
-	l := common.NewLogger(r, "users")
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	if callerID != nick {
 		l.Msg("you can update yours passphrase only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
@@ -352,7 +365,7 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 
 	user, found := db.GetOne(db.UserCache, callerID, models.User{})
 	if !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -362,7 +375,7 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := common.UnmarshalRequestData(r, &options); err != nil {
-		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -401,14 +414,17 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/lists [patch]
 func updateUserList(w http.ResponseWriter, r *http.Request) {
-	callerID, _ := r.Context().Value("nickname").(string)
+	l := common.NewLogger(r, "users")
 	nick := chi.URLParam(r, "nickname")
 
-	l := common.NewLogger(r, "users")
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	user, found := db.GetOne(db.UserCache, nick, models.User{})
 	if !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -419,7 +435,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &lists); err != nil {
-		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -501,10 +517,13 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname}/options [patch]
 func updateUserOption(w http.ResponseWriter, r *http.Request) {
-	callerID, _ := r.Context().Value("nickname").(string)
+	l := common.NewLogger(r, "users")
 	nick := chi.URLParam(r, "nickname")
 
-	l := common.NewLogger(r, "users")
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	if callerID != nick {
 		l.Msg("you can update yours data only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
@@ -513,7 +532,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 
 	user, found := db.GetOne(db.UserCache, callerID, models.User{})
 	if !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -527,7 +546,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := common.UnmarshalRequestData(r, &options); err != nil {
-		l.Msg("could not process input data, try again").Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -583,24 +602,33 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.APIResponse
 // @Router       /users/{nickname} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
-	nick, _ := r.Context().Value("nickname").(string)
-
 	l := common.NewLogger(r, "users")
+	nick := chi.URLParam(r, "nickname")
 
-	if _, found := db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
+
+	if nick != callerID {
+		l.Msg(common.ERR_USER_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if _, found := db.GetOne(db.UserCache, callerID, models.User{}); !found {
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// delete user
 	if deleted := db.DeleteOne(db.UserCache, nick); !deleted {
-		l.Msg("could not delete the user from user database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// delete user's subscriptions
 	if deleted := db.DeleteOne(db.SubscriptionCache, nick); !deleted {
-		l.Msg("could not delete the user from subscription database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_SUBSCRIPTION_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -664,9 +692,12 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.APIResponse
 // @Router       /users/{nickname}/posts [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
-	callerID, _ := r.Context().Value("nickname").(string)
-
 	l := common.NewLogger(r, "users")
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	// parse the URI's path
 	// check if diff page has been requested
@@ -677,7 +708,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get("X-Page-No")
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		l.Msg("pageNo has to be specified as integer/number").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -698,13 +729,13 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pExport, uExport := posts.GetOnePage(opts)
 	if pExport == nil || uExport == nil {
-		l.Msg("could not request more pages, one exported map is nil!").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		l.Msg("could not get the user from database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	} else {
 		uExport[callerID] = caller
@@ -744,7 +775,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		l.Msg("could not process the input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -826,7 +857,7 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		l.Msg("could not process tbe input data, try again").Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -853,7 +884,7 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, found := db.GetOne(db.UserCache, requestData.Nickname, models.User{})
 	if !found {
-		l.Msg("no match has been found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -912,22 +943,30 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/{nickname}/request [post]
 func addToRequestList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-
-	callerID, _ := r.Context().Value("nickname").(string)
 	nick := chi.URLParam(r, "nickname")
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var caller models.User
 	var found bool
 
 	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		l.Msg("caller not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if !user.Private {
+		l.Msg("taget user is not private, no need to add new requests").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -962,26 +1001,25 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/{nickname}/request [delete]
 func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-
 	nick := chi.URLParam(r, "nickname")
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
-		l.Msg("could not get the caller's name, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 	}
 
 	var caller models.User
 	var found bool
 
 	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		l.Msg("caller not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg("user not found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1021,7 +1059,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
-		l.Msg("could not get the caller's name, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 	}
 
 	var user models.User
@@ -1033,7 +1071,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg("user not found in the database, try again or relog").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1043,7 +1081,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
-		l.Msg("could not process the input data, try again").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -1064,14 +1102,14 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		//
 		img, format, err := image.DecodeImage(&fetch.Data, extension)
 		if err != nil {
-			l.Msg("image: could not decode given byte stream").Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+			l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		// fix the image orientation for decoded image
 		img, err = image.FixOrientation(img, &fetch.Data)
 		if err != nil {
-			l.Msg("image: could not fix the orientation").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+			l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
@@ -1108,13 +1146,13 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		// encode the thumbnail back to []byte
 		thumbImgData, err := image.EncodeImage(&thumbImg, format)
 		if err != nil {
-			l.Msg("image: could not encode the thumbnail to byte stream").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+			l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 
 		// write the thumbnail byte stream to a file
 		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
-			l.Msg("image: could not save the file, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 

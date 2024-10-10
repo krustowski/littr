@@ -36,4 +36,9 @@ const (
 	ERR_IMG_UNKNOWN_TYPE     = "image: unsupported format entered"
 	ERR_IMG_SAVE_FILE_FAIL   = "image: could not save to a file"
 	ERR_IMG_THUMBNAIL_FAIL   = "image: could not re-encode the thumbnail"
+
+	// user-related error messages
+	ERR_USER_DELETE_FOREIGN      = "you cannot delete a foreign account"
+	ERR_USER_DELETE_FAIL         = "could not delete the user from user database, try again"
+	ERR_SUBSCRIPTION_DELETE_FAIL = "could not delete the user from subscriptions, try again"
 )
