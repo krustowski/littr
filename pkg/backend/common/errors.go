@@ -2,13 +2,15 @@ package common
 
 const (
 	// generic error messages
-	ERR_CALLER_BLANK     = "callerID cannot be empty"
-	ERR_CALLER_FAIL      = "could not get caller's name"
-	ERR_CALLER_NOT_FOUND = "caller not found in the database"
-	ERR_USER_NOT_FOUND   = "user not found in the database"
-	ERR_PAGENO_INCORRECT = "pageNo has to be specified as integer/number"
-	ERR_PAGE_EXPORT_NIL  = "could not get more pages, one exported map is nil!"
-	ERR_INPUT_DATA_FAIL  = "could not process the input data, try again"
+	ERR_CALLER_BLANK      = "callerID cannot be empty"
+	ERR_CALLER_FAIL       = "could not get caller's name"
+	ERR_CALLER_NOT_FOUND  = "caller not found in the database"
+	ERR_USER_NOT_FOUND    = "user not found in the database"
+	ERR_PAGENO_INCORRECT  = "pageNo has to be specified as integer/number"
+	ERR_PAGE_EXPORT_NIL   = "could not get more pages, one exported map is nil!"
+	ERR_INPUT_DATA_FAIL   = "could not process the input data, try again"
+	ERR_API_TOKEN_BLANK   = "blank API token sent"
+	ERR_API_TOKEN_INVALID = "invalid API token sent"
 
 	// auth-related error messages
 	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"

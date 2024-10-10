@@ -14,13 +14,11 @@ import (
 // @Tags         dump
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.Response
-// @Failure 	 401  {object}   common.Response
-// @Failure 	 403  {object}   common.Response
-// @Router       /dump/ [get]
+// @Success      200  {object}   common.APIResponse
+// @Failure 	 400  {object}   common.APIResponse
+// @Failure 	 403  {object}   common.APIResponse
+// @Router       /dump [get]
 func dumpHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-
 	l := common.NewLogger(r, "dump")
 	l.CallerID = "system"
 	l.Version = "system"
@@ -29,28 +27,17 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("X-Dump-Token")
 
 	if token == "" {
-		resp.Message = "empty token"
-		resp.Code = http.StatusUnauthorized
-
-		l.Println(resp.Message, resp.Code)
+		l.Msg(common.ERR_API_TOKEN_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if token != os.Getenv("API_TOKEN") {
-		resp.Message = "invalid token"
-		resp.Code = http.StatusForbidden
-
-		l.Println(resp.Message, resp.Code)
+		l.Msg(common.ERR_API_TOKEN_INVALID).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	go DumpAll()
 
-	resp.Code = http.StatusOK
-	resp.Message = "data dumped successfully"
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
-
+	l.Msg("ok, data are being dumped").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
