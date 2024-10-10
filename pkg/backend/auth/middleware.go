@@ -47,9 +47,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		resp := common.Response{}
 		l := common.NewLogger(r, "auth")
-		resp.AuthGranted = false
+
+		pl := struct {
+			AuthGranted bool                   `json:"auth_granted"`
+			Users       map[string]models.User `json:"users"`
+		}{
+			AuthGranted: false,
+		}
 
 		secret := os.Getenv("APP_PEPPER")
 
@@ -59,12 +64,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		var err error
 
 		if refreshCookie, err = r.Cookie(REFRESH_TOKEN); err != nil {
-			// logout --- missing refresh token
-			resp.Message = "client unauthorized"
-			resp.Code = http.StatusUnauthorized
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("client unauthorized").Status(http.StatusUnauthorized).Error(err).Log().Payload(&pl).Write(w)
 			return
 		}
 
@@ -73,11 +73,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// refresh token is expired => user should relogin
 		if refreshClaims.Valid() != nil {
-			resp.Message = "refresh token expired"
-			resp.Code = http.StatusUnauthorized
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("invalid/expired refresh token").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
 			return
 		}
 
@@ -89,6 +85,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// access cookie not present or access token is expired
 		if err != nil || (userClaims != nil && userClaims.StandardClaims.Valid() != nil) {
+			// get refresh token's fingerprint
 			refreshSum := sha256.New()
 			refreshSum.Write([]byte(refreshCookie.Value))
 			sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
@@ -98,7 +95,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				voidCookie := &http.Cookie{
 					Name:     REFRESH_TOKEN,
 					Value:    "",
-					Expires:  time.Now().Add(time.Second * -30),
+					Expires:  time.Now().Add(time.Second * -300),
 					Path:     "/",
 					HttpOnly: true,
 					Secure:   true,
@@ -106,21 +103,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 				http.SetCookie(w, voidCookie)
 
-				resp.Message = "the refresh token has been invalidated"
-				resp.Code = http.StatusUnauthorized
-
-				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
+				l.Msg("the refresh token has been invalidated, please log-in again").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
 				return
 			}
 
 			nickname, ok := rawNick.(string)
 			if !ok {
-				resp.Message = "cannot assert data type for nickname"
-				resp.Code = http.StatusInternalServerError
-
-				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
+				l.Msg("cannot assert data type for token's nickname field").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 				return
 			}
 
@@ -140,11 +129,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 				http.SetCookie(w, voidCookie)
 
-				resp.Message = "referenced user not found"
-				resp.Code = http.StatusUnauthorized
-
-				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
+				l.Msg("referenced user not found in the database").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
 				return
 			}
 
@@ -159,11 +144,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			// issue a new access token using refresh token's validity
 			accessToken, err := NewAccessToken(userClaims, secret)
 			if err != nil {
-				resp.Message = "error creating the access token: " + err.Error()
-				resp.Code = http.StatusInternalServerError
-
-				l.Println(resp.Message, resp.Code)
-				resp.Write(w)
+				l.Msg("access token generation failed").Error(err).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 				return
 			}
 
@@ -178,8 +159,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			http.SetCookie(w, accessCookie)
 
-			resp.Users = make(map[string]models.User)
-			resp.Users[nickname] = user
+			pl.Users = make(map[string]models.User)
+			pl.Users[nickname] = user
 
 			/*resp.Message = "ok, new access token issued"
 			resp.Code = http.StatusOK
@@ -187,18 +168,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			l.Println(resp.Message, resp.Code)
 			resp.Write(w)
 			return*/
+
+			ctx := context.WithValue(r.Context(), "nickname", nickname)
+			noteUsersActivity(nickname)
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		/*resp.Users = make(map[string]models.User)
-		resp.Users[user.Nickname] = user
-
-		resp.Message = "auth granted"
-		resp.Code = http.StatusOK
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return*/
-
+		// get the refresh token's fingerprint
 		refreshSum := sha256.New()
 		refreshSum.Write([]byte(refreshCookie.Value))
 		sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
@@ -208,7 +187,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			voidCookie := &http.Cookie{
 				Name:     REFRESH_TOKEN,
 				Value:    "",
-				Expires:  time.Now().Add(time.Second * -30),
+				Expires:  time.Now().Add(time.Second * -300),
 				Path:     "/",
 				HttpOnly: true,
 				Secure:   true,
@@ -216,21 +195,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			http.SetCookie(w, voidCookie)
 
-			resp.Message = "the refresh token has been invalidated"
-			resp.Code = http.StatusUnauthorized
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("the refresh token has been invalidated").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
 			return
 		}
 
 		nickname, ok := rawNick.(string)
 		if !ok {
-			resp.Message = "cannot assert data type for nickname"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
+			l.Msg("cannot assert data type for token's nickname").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 			return
 		}
 
@@ -239,5 +210,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
+		return
 	})
 }
