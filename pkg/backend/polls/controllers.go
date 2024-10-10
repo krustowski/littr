@@ -22,7 +22,7 @@ import (
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.APIResponse{Data: polls.getPolls.response}
+// @Success      200  {object}   common.APIResponse{Data=polls.getPolls.payload}
 // @Failure      400  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
 // @Router       /polls [get]
