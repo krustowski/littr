@@ -3,6 +3,7 @@ package frontend
 import (
 	"go.vxn.dev/littr/pkg/frontend/flow"
 	"go.vxn.dev/littr/pkg/frontend/login"
+	"go.vxn.dev/littr/pkg/frontend/navbars"
 	"go.vxn.dev/littr/pkg/frontend/polls"
 	"go.vxn.dev/littr/pkg/frontend/post"
 	"go.vxn.dev/littr/pkg/frontend/register"
@@ -15,6 +16,19 @@ import (
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
+
+/*func render[T any](component interface{}) app.UI {
+	compo, ok := component.(T)
+	if !ok {
+		return nil
+	}
+
+	return app.Div().Body(
+		&navbars.Header{},
+		&navbars.Footer{},
+		&compo,
+	)
+}*/
 
 /*
  *  flow
@@ -30,8 +44,8 @@ func (v *FlowView) OnNav(ctx app.Context) {
 
 func (v *FlowView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&flow.Content{},
 	)
 }
@@ -51,8 +65,8 @@ func (v *LoginView) OnNav(ctx app.Context) {
 
 func (v *LoginView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&login.Content{},
 	)
 }
@@ -86,8 +100,8 @@ func (v *PollsView) OnNav(ctx app.Context) {
 
 func (v *PollsView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&polls.Content{},
 	)
 }
@@ -106,8 +120,8 @@ func (v *PostView) OnNav(ctx app.Context) {
 
 func (v *PostView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&post.Content{},
 	)
 }
@@ -126,8 +140,8 @@ func (v *RegisterView) OnNav(ctx app.Context) {
 
 func (v *RegisterView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&register.Content{},
 	)
 }
@@ -150,8 +164,8 @@ func (v *ResetView) OnNav(ctx app.Context) {
 
 func (v *ResetView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&reset.Content{},
 	)
 }
@@ -168,8 +182,8 @@ type SettingsView struct {
 
 func (v *SettingsView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&settings.Content{},
 	)
 }
@@ -194,8 +208,8 @@ func (v *StatsView) OnNav(ctx app.Context) {
 
 func (v *StatsView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&stats.Content{},
 	)
 }
@@ -208,14 +222,14 @@ type ToSView struct {
 	app.Compo
 }
 
-func (p *ToSView) OnNav(ctx app.Context) {
+func (v *ToSView) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("ToS / littr")
 }
 
-func (p *ToSView) Render() app.UI {
+func (v *ToSView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&tos.Content{},
 	)
 }
@@ -234,8 +248,8 @@ func (v *UsersView) OnNav(ctx app.Context) {
 
 func (v *UsersView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&users.Content{},
 	)
 }
@@ -250,14 +264,14 @@ type WelcomeView struct {
 	mode string
 }
 
-func (p *WelcomeView) Render() app.UI {
+func (v *WelcomeView) Render() app.UI {
 	return app.Div().Body(
-		&header{},
-		&footer{},
+		&navbars.Header{},
+		&navbars.Footer{},
 		&welcome.Content{},
 	)
 }
 
-func (p *WelcomeView) OnNav(ctx app.Context) {
+func (v *WelcomeView) OnNav(ctx app.Context) {
 	ctx.Page().SetTitle("welcome / littr")
 }
