@@ -40,7 +40,6 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
 				toast.Text("poll question and at least two options have to be filled").Type("error").Dispatch(c, dispatch)
-				return
 				break
 			}
 
@@ -66,7 +65,6 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			// allow just picture posting
 			if newPost == "" && c.newFigFile == "" {
 				toast.Text("post textarea must be filled").Type("error").Dispatch(c, dispatch)
-				return
 				break
 			}
 
@@ -75,6 +73,11 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		default:
 			break
+		}
+
+		// fixing the bug: cannot use return and break together in switch according to Sonar
+		if c.toast.TText != "" {
+			return
 		}
 
 		var encoded string
@@ -106,7 +109,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			payload = poll
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         path,
 			Data:        payload,
@@ -115,19 +118,16 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		response := struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		}{}
+		output := &common.Response{}
 
 		// add new post/poll to backend struct
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("backend error: cannot add new content").Type("error").Dispatch(c, dispatch)
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code != 201 {
-			toast.Text(response.Message).Type("error").Dispatch(c, dispatch)
+		if output.Code != 201 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
