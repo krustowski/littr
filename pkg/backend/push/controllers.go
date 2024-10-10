@@ -223,8 +223,9 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 
 	devs, ok := db.GetOne(db.SubscriptionCache, post.Nickname, []models.Device{})
 	if !ok {
-		l.Msg(common.ERR_SUBSCRIPTION_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
+		// it is OK for this to return nothing, loop can handle it later...
+		//l.Msg(common.ERR_SUBSCRIPTION_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		//return
 	}
 
 	// do not notify the same person --- OK condition

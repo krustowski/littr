@@ -187,7 +187,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
-		if output.Code != 200 {
+		if output.Code != 201 {
 			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
