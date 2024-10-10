@@ -34,7 +34,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
-			toast.Text("all fields need to be filled").Type("error").Dispatch(c, dispatch)
+			toast.Text("all fields are required").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -77,7 +77,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		user.FlowList[nickname] = true
 		user.FlowList["system"] = true
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "POST",
 			Url:         "/api/v1/users",
 			Data:        user,
@@ -86,20 +86,21 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
-		response := struct {
-			Code    int                    `json:"code"`
-			Message string                 `json:"message"`
-			Users   map[string]models.User `json:"users"`
-		}{}
+		// what is the purpose of this model, if not used henceforth???
+		type dataModel struct {
+			Users map[string]models.User `json:"users"`
+		}
 
-		if ok := common.CallAPI(input, &response); !ok {
-			toast.Text("cannot send API request (backend error)").Type("error").Dispatch(c, dispatch)
+		output := &common.Response{Data: &dataModel{}}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
 		// has the user been registred?
-		if response.Code != 201 {
-			toast.Text(response.Message).Type("error").Dispatch(c, dispatch)
+		if output.Code != 201 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
 			return
 		}
 
