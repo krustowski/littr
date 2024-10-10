@@ -91,7 +91,6 @@ func (h *Header) OnMount(ctx app.Context) {
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
 		h.pagePath = path
-		//h.toastText = "lmaooooo"
 	})
 
 	// keep the update button on until clicked

@@ -46,32 +46,6 @@ func (h *Header) onKeyDown(ctx app.Context, e app.Event) {
 		return
 	}
 
-	/*path := ctx.Page().URL().Path
-
-	if path == "/settings" {
-	}
-
-	if path == "/flow" {
-		replyTextarea := app.Window().GetElementByID("reply-textarea")
-		figureInput := app.Window().GetElementByID("fig-upload")
-
-		if !replyTextarea.IsNull() && (len(replyTextarea.Get("value").String()) > 0) {
-			return
-		}
-
-		if !figureInput.IsNull() && len(figureInput.Get("value").String()) > 0 {
-			return
-		}
-	}
-
-	if path == "/post" {
-		postTextarea := app.Window().GetElementByID("post-textarea")
-
-		if !postTextarea.IsNull() && len(postTextarea.Get("value").String()) > 0 {
-			return
-		}
-	}*/
-
 	switch e.Get("key").String() {
 	case "1":
 		ctx.Navigate("/stats")
@@ -161,8 +135,8 @@ func (h *Header) onMessage(ctx app.Context, e app.Event) {
 		title.Set("title", "(*) "+prevTitle)
 	}
 
+	// won't trigger the render for some reason... see the bypass ^^
 	/*ctx.Dispatch(func(ctx app.Context) {
-		// won't trigger the render for some reason...
 		//h.toastText = "new post added above"
 		//h.toastType = "info"
 	})*/
