@@ -15,8 +15,6 @@ import (
 	sse "github.com/alexandrevicenzi/go-sse"
 )
 
-type stub struct{}
-
 // getPolls get a list of polls
 //
 // @Summary      Get a list of polls
@@ -24,31 +22,30 @@ type stub struct{}
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   polls.getPolls.response
-// @Failure      400  {object}   polls.getPolls.response{polls=stub,user=stub}
-// @Failure      500  {object}   polls.getPolls.response{polls=stub,user=stub}
+// @Success      200  {object}   common.APIResponse{Data: polls.getPolls.response}
+// @Failure      400  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
 // @Router       /polls [get]
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	//resp := common.Response{}
-	type response struct {
-		Code    int                    `json:"code"`
-		Message string                 `json:"message"`
-		Polls   map[string]models.Poll `json:"polls,omitempty"`
-		User    models.User            `json:"user,omitempty"`
+	type payload struct {
+		Polls map[string]models.Poll `json:"polls,omitempty"`
+		User  models.User            `json:"user,omitempty"`
 	}
-	resp := new(response)
+
+	pl := payload{}
 
 	pageNoString := r.Header.Get("X-Page-No")
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		resp.Message = "page No has to be specified as integer/number"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -65,11 +62,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	// fetch page according to the logged user
 	pagePtrs := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Polls == nil || (*pagePtrs.Polls) == nil {
-		resp.Message = "error while requesting more pages, one exported map is nil!"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -95,24 +88,16 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		(*pagePtrs.Polls)[key] = poll
 	}
 
-	var ok bool
-
 	// hack: include caller's models.User struct
-	if resp.User, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		resp.Message = "cannot fetch such callerID-named user"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		common.WriteResponse(w, resp, resp.Code)
+	if pl.User, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, dumping polls"
-	resp.Code = http.StatusOK
-	resp.Polls = *pagePtrs.Polls
+	pl.Polls = *pagePtrs.Polls
 
-	l.Println(resp.Message, resp.Code)
-	common.WriteResponse(w, resp, resp.Code)
+	l.Msg("ok, dumping polls").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	return
 }
 
 // addNewPoll ensures a new polls is created and saved
@@ -122,26 +107,26 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Success      201  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      201  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /polls [post]
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var poll models.Poll
 
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// patch wrongly loaded user data from LocalStorage
 	if poll.Author == "" {
 		poll.Author = callerID
 	}
@@ -149,20 +134,12 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	key := poll.ID
 
 	if poll.Author != callerID {
-		resp.Message = "backend error: such poll's author differs from callerID"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_AUTHOR_MISMATCH).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
-		resp.Message = "backend error: cannot save new poll (cache error)"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -178,21 +155,16 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
-		resp.Message = "backend error: cannot create a new post about new poll creation"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_POST_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("poll"))
+	if posts.Streamer != nil {
+		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("poll"))
+	}
 
-	resp.Message = "ok, adding new poll"
-	resp.Code = http.StatusCreated
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, adding new poll").Status(http.StatusCreated).Log().Payload(nil).Write(w)
+	return
 }
 
 // getSinglePoll
@@ -203,23 +175,22 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param        pollID path string true "poll ID"
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /polls/{pollID} [get]
 func getSinglePoll(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var payload models.Poll
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -229,29 +200,17 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 	var found bool
 
 	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
-		resp.Message = "unknown poll update requested"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if poll.Author == callerID {
-		resp.Message = "you cannot vote on your own poll"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_SELF_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if helpers.Contains(poll.Voted, callerID) {
-		resp.Message = "this user already voted on such poll"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_EXISTING_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -261,19 +220,12 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 	poll.OptionThree = payload.OptionThree
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
-		resp.Message = "cannot update poll"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, poll updated"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, poll updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // updatePoll updates a given poll
@@ -284,23 +236,22 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param        pollID path string true "poll ID"
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /polls/{pollID} [put]
 func updatePoll(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
 	l := common.NewLogger(r, "polls")
-	callerID, _ := r.Context().Value("nickname").(string)
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var payload models.Poll
 
 	if err := common.UnmarshalRequestData(r, &payload); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -310,29 +261,17 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	var found bool
 
 	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
-		resp.Message = "unknown poll update requested"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if poll.Author == callerID {
-		resp.Message = "you cannot vote on your own poll"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_SELF_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if helpers.Contains(poll.Voted, callerID) {
-		resp.Message = "this user already voted on such poll"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_EXISTING_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -342,19 +281,12 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	poll.OptionThree = payload.OptionThree
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
-		resp.Message = "cannot update poll"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, poll updated"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, poll updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // deletePoll removes a poll
@@ -365,52 +297,37 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param        pollID path string true "poll ID"
-// @Success      200  {object}  common.Response
-// @Failure      400  {object}  common.Response
-// @Failure      500  {object}  common.Response
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /polls/{pollID} [delete]
 func deletePoll(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{}
-	callerID, _ := r.Context().Value("nickname").(string)
 	l := common.NewLogger(r, "polls")
+
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	}
 
 	var poll models.Poll
 
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
-		resp.Message = "input read error: " + err.Error()
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if poll.Author != callerID {
-		resp.Message = "one can only delete their own poll"
-		resp.Code = http.StatusBadRequest
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	key := poll.ID
 
-	// check for possible poll forgery
-	//if caller != poll.Author {}
-
 	if deleted := db.DeleteOne(db.PollCache, key); !deleted {
-		resp.Message = "cannot delete the poll"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
+		l.Msg(common.ERR_POLL_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	resp.Message = "ok, poll removed"
-	resp.Code = http.StatusOK
-
-	l.Println(resp.Message, resp.Code)
-	resp.Write(w)
+	l.Msg("ok, poll removed").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }

@@ -38,7 +38,17 @@ const (
 	ERR_IMG_THUMBNAIL_FAIL   = "image: could not re-encode the thumbnail"
 
 	// user-related error messages
-	ERR_USER_DELETE_FOREIGN      = "you cannot delete a foreign account"
+	ERR_USER_DELETE_FOREIGN      = "you cannot delete a foreigner's account"
 	ERR_USER_DELETE_FAIL         = "could not delete the user from user database, try again"
 	ERR_SUBSCRIPTION_DELETE_FAIL = "could not delete the user from subscriptions, try again"
+
+	// poll-related error messages
+	ERR_POLL_AUTHOR_MISMATCH = "you cannot post a foreigner's poll"
+	ERR_POLL_SAVE_FAIL       = "could not save the poll, try again"
+	ERR_POLL_POST_FAIL       = "could not save a post about the new poll"
+	ERR_POLL_NOT_FOUND       = "such poll not found in the database (may be deleted)"
+	ERR_POLL_SELF_VOTE       = "you cannot vote on yours own poll"
+	ERR_POLL_EXISTING_VOTE   = "you have already voted on such poll"
+	ERR_POLL_DELETE_FOREIGN  = "you cannot delete a foreigner's poll"
+	ERR_POLL_DELETE_FAIL     = "could not delete the poll, try again"
 )

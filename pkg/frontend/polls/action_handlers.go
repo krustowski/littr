@@ -38,7 +38,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			return
 		}
 
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/polls/" + interactedPoll.ID,
 			Data:        interactedPoll,
@@ -47,13 +47,10 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 			HideReplies: false,
 		}
 
-		output := &struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		}{}
+		output := &common.Response{}
 
-		if ok := common.CallAPI(input, output); !ok {
-			toast.Text("backend error: cannot delete a poll").Type("error").Dispatch(c, dispatch)
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
 			return
 		}
 
@@ -99,27 +96,39 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 			pageNo := c.pageNo
 
-			input := common.CallInput{
+			input := &common.CallInput{
 				Method: "GET",
 				Url:    "/api/v1/polls",
 				Data:   nil,
 				PageNo: pageNo,
 			}
 
-			response := &struct {
+			type dataModel struct {
 				Polls map[string]models.Poll `json:"polls"`
-				Code  int                    `json:"code"`
 				User  models.User            `json:"user"`
-			}{}
+			}
+
+			output := &common.Response{Data: &dataModel{}}
 
 			// call the API to fetch the data
-			if ok := common.CallAPI(input, response); !ok {
-				toast.Text("cannot fetch polls list").Dispatch(c, dispatch)
+			if ok := common.FetchData(input, output); !ok {
+				toast.Text("cannot not reach backend").Dispatch(c, dispatch)
 				return
 			}
 
-			if response.Code == 401 {
+			if output.Code == 401 {
 				toast.Text("please log-in again").Link("/logout").Dispatch(c, dispatch)
+				return
+			}
+
+			if output.Code != 200 {
+				toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+				return
+			}
+
+			data, ok := output.Data.(*dataModel)
+			if !ok {
+				toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
 				return
 			}
 
@@ -128,7 +137,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 				polls = make(map[string]models.Poll)
 			}
 
-			for key, poll := range response.Polls {
+			for key, poll := range data.Polls {
 				polls[key] = poll
 			}
 
@@ -185,7 +194,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 	}
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "PUT",
 			Url:         "/api/v1/polls/" + poll.ID,
 			Data:        poll,
@@ -194,8 +203,15 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 			HideReplies: false,
 		}
 
-		if ok := common.CallAPI(input, &struct{}{}); !ok {
-			toast.Text("backend error: cannot update a poll").Dispatch(c, dispatch)
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("could not reach backend").Dispatch(c, dispatch)
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {

@@ -41,7 +41,7 @@ func (c *Content) OnNav(ctx app.Context) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		input := common.CallInput{
+		input := &common.CallInput{
 			Method:      "GET",
 			Url:         "/api/v1/polls",
 			Data:        nil,
@@ -50,28 +50,40 @@ func (c *Content) OnNav(ctx app.Context) {
 			HideReplies: false,
 		}
 
-		response := &struct {
+		type dataModel struct {
 			Polls map[string]models.Poll `json:"polls"`
-			Code  int                    `json:"code"`
 			User  models.User            `json:"user"`
-		}{}
+		}
+
+		output := &common.Response{Data: &dataModel{}}
 
 		// call the API to fetch the data
-		if ok := common.CallAPI(input, response); !ok {
-			toast.Text("cannot fetch polls list").Dispatch(c, dispatch)
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text("cannot reach backend").Dispatch(c, dispatch)
 			return
 		}
 
-		if response.Code == 401 {
+		if output.Code == 401 {
 			// void user's session indicators in LocalStorage
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			toast.Text("please log-in again").Dispatch(c, dispatch)
+			toast.Text("please log-in again").Type("info").Link("/logout").Dispatch(c, dispatch)
 			return
 		}
 
-		if len(response.Polls) < 1 {
+		if output.Code != 200 {
+			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		data, ok := output.Data.(*dataModel)
+		if !ok {
+			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			return
+		}
+
+		if len(data.Polls) < 1 {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.loaderShow = false
 			})
@@ -82,13 +94,13 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// storing the HTTP response in Content fields:
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = response.User
+			c.user = data.User
 			//c.loggedUser = c.user.Nickname
 
 			c.pagination = 25
 			c.pageNo = 1
 
-			c.polls = response.Polls
+			c.polls = data.Polls
 
 			c.pollsButtonDisabled = false
 			c.loaderShow = false
