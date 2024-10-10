@@ -32,6 +32,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	//resp := common.Response{}
@@ -117,6 +118,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var poll models.Poll
@@ -185,6 +187,7 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var payload models.Poll
@@ -246,6 +249,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var payload models.Poll
@@ -307,6 +311,7 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var poll models.Poll

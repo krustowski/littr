@@ -56,6 +56,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	// check the callerID record in the database
@@ -149,6 +150,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	type payload struct {
@@ -308,6 +310,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var user models.User
@@ -356,6 +359,7 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	if callerID != nick {
@@ -420,6 +424,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	user, found := db.GetOne(db.UserCache, nick, models.User{})
@@ -523,6 +528,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	if callerID != nick {
@@ -608,6 +614,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	if nick != callerID {
@@ -697,6 +704,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	// parse the URI's path
@@ -948,6 +956,7 @@ func addToRequestList(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var caller models.User
@@ -1006,6 +1015,7 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var caller models.User
@@ -1060,6 +1070,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	var user models.User
