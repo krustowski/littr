@@ -25,7 +25,7 @@ func (c *Content) handleResetRequest(email, uuid string) error {
 		UUID:  uuid,
 	}
 
-	input := common.CallInput{
+	input := &common.CallInput{
 		Method:      "POST",
 		Url:         "/api/v1/users/passphrase/" + path,
 		Data:        payload,
@@ -34,17 +34,14 @@ func (c *Content) handleResetRequest(email, uuid string) error {
 		HideReplies: false,
 	}
 
-	response := struct {
-		Message string `json:"message"`
-		Code    int    `json:"code"`
-	}{}
+	output := &common.Response{}
 
-	if ok := common.CallAPI(input, &response); !ok {
-		return fmt.Errorf("communication with backend failed")
+	if ok := common.FetchData(input, output); !ok {
+		return fmt.Errorf("could not reach backend")
 	}
 
-	if response.Code != 200 {
-		return fmt.Errorf("%s", response.Message)
+	if output.Code != 200 || output.Code != 201 {
+		return fmt.Errorf("%s", output.Message)
 	}
 
 	return nil
