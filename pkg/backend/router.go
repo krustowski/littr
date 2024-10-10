@@ -26,6 +26,7 @@ package backend
 import (
 	"net/http"
 	"os"
+	"time"
 
 	chi "github.com/go-chi/chi/v5"
 
@@ -40,11 +41,10 @@ import (
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	resp := common.Response{
-		Message: "littr API service (v" + os.Getenv("APP_VERSION") + ")",
-		Code:    http.StatusOK,
-	}
-	resp.Write(w)
+	common.WriteResponse(w, common.APIResponse{
+		Message:   "littr JSON API service (v" + os.Getenv("APP_VERSION") + ")",
+		Timestamp: time.Now().UnixNano(),
+	}, http.StatusOK)
 }
 
 // the very main API router
