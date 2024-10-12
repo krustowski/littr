@@ -62,14 +62,14 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	// check the callerID record in the database
 	_, ok = db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	pageNoString := r.Header.Get("X-Page-No")
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -86,7 +86,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	// fetch one (1) users page
 	pagePtrs := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -166,7 +166,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	// check the callerID record in the database
 	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
 	if !ok {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 
 	}
@@ -1101,77 +1101,80 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 
 	var content string
 
-	// uploadedFigure handling
-	if fetch.Data != nil && fetch.Figure != "" {
-		fileExplode := strings.Split(fetch.Figure, ".")
-		extension := fileExplode[len(fileExplode)-1]
-
-		content = key + "." + extension
-
-		//
-		// use image magic
-		//
-		img, format, err := image.DecodeImage(&fetch.Data, extension)
-		if err != nil {
-			l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// fix the image orientation for decoded image
-		img, err = image.FixOrientation(img, &fetch.Data)
-		if err != nil {
-			l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// encode cropped image back to []byte
-		// re-encode the image to flush EXIF metadata header
-		/*croppedImgData, err := image.EncodeImage(squareImg, format)
-		if err != nil {
-			resp.Message = "backend error: cannot encode image back to byte stream"
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
-			return
-		}
-
-		// upload to local storage
-		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-		if err := os.WriteFile("/opt/pix/"+content, croppedImgData, 0600); err != nil {
-			resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
-			resp.Code = http.StatusInternalServerError
-
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
-			return
-		}*/
-
-		// crop the image
-		squareImg := image.CropToSquare(img)
-
-		// generate thumbanils
-		thumbImg := image.ResizeImage(squareImg, 200)
-		*squareImg = nil
-
-		// encode the thumbnail back to []byte
-		thumbImgData, err := image.EncodeImage(&thumbImg, format)
-		if err != nil {
-			l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// write the thumbnail byte stream to a file
-		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
-			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		*thumbImgData = []byte{}
-
-		fetch.Figure = content
-		fetch.Data = []byte{}
+	if fetch.Data == nil || fetch.Figure == "" {
+		l.Msg(common.ERR_MISSING_IMG_CONTENT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
 	}
+
+	// uploadedFigure handling
+	fileExplode := strings.Split(fetch.Figure, ".")
+	extension := fileExplode[len(fileExplode)-1]
+
+	content = key + "." + extension
+
+	//
+	// use image magic
+	//
+	img, format, err := image.DecodeImage(&fetch.Data, extension)
+	if err != nil {
+		l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// fix the image orientation for decoded image
+	img, err = image.FixOrientation(img, &fetch.Data)
+	if err != nil {
+		l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// encode cropped image back to []byte
+	// re-encode the image to flush EXIF metadata header
+	/*croppedImgData, err := image.EncodeImage(squareImg, format)
+	if err != nil {
+		resp.Message = "backend error: cannot encode image back to byte stream"
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}
+
+	// upload to local storage
+	//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
+	if err := os.WriteFile("/opt/pix/"+content, croppedImgData, 0600); err != nil {
+		resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
+		resp.Code = http.StatusInternalServerError
+
+		l.Println(resp.Message, resp.Code)
+		resp.Write(w)
+		return
+	}*/
+
+	// crop the image
+	squareImg := image.CropToSquare(img)
+
+	// generate thumbanils
+	thumbImg := image.ResizeImage(squareImg, 200)
+	*squareImg = nil
+
+	// encode the thumbnail back to []byte
+	thumbImgData, err := image.EncodeImage(&thumbImg, format)
+	if err != nil {
+		l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// write the thumbnail byte stream to a file
+	if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
+		l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	*thumbImgData = []byte{}
+
+	fetch.Figure = content
+	fetch.Data = []byte{}
 
 	user.AvatarURL = "/web/pix/thumb_" + content
 

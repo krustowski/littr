@@ -43,6 +43,7 @@ const (
 	ERR_USER_DELETE_FOREIGN      = "you cannot delete a foreigner's account"
 	ERR_USER_DELETE_FAIL         = "could not delete the user from user database, try again"
 	ERR_SUBSCRIPTION_DELETE_FAIL = "could not delete the user from subscriptions, try again"
+	ERR_MISSING_IMG_CONTENT      = "no image data received, try again"
 
 	// poll-related error messages
 	ERR_POLL_AUTHOR_MISMATCH = "you cannot post a foreigner's poll"
