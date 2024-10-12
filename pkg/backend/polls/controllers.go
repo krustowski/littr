@@ -13,6 +13,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 
 	sse "github.com/alexandrevicenzi/go-sse"
+	chi "github.com/go-chi/chi/v5"
 )
 
 // getPolls get a list of polls
@@ -192,7 +193,6 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var caller models.User
-	var ok bool
 
 	// fetch caller using callerID here
 	if caller, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
