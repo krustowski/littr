@@ -291,12 +291,16 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// compose the body of this notification
-		body, _ := json.Marshal(app.Notification{
+		body, err := json.Marshal(app.Notification{
 			Title: "littr mention",
 			Icon:  "/web/apple-touch-icon.png",
 			Body:  callerID + " mentioned you in their post",
 			Path:  "/flow/post/" + post.ID,
 		})
+		if err != nil {
+			l.Msg(common.ERR_PUSH_BODY_COMPOSE_FAIL).Status(http.StatusInternalServerErrpr).Log()
+			continue
+		}
 
 		push.SendNotificationToDevices(receiverName, devs, body, l)
 	}

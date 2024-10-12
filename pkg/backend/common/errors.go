@@ -63,4 +63,5 @@ const (
 	ERR_PUSH_SELF_NOTIF        = "will not notify oneself"
 	ERR_PUSH_DISABLED_NOTIF    = "will not notify original poster"
 	ERR_PUSH_UUID_BLANK        = "device's UUID cannot be sent empty"
+	ERR_PUSH_COMPOSE_BODY_FAIL = "failed to compose the notification body"
 )
