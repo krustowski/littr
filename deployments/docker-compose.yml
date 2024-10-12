@@ -35,9 +35,9 @@ services:
         TZ: ${TZ}
         VAPID_PUB_KEY: ${VAPID_PUB_KEY}
     restart: unless-stopped
-    cpus: 0.3
+    cpus: 0.5
     mem_limit: 128m
-    mem_reservation: 32m
+    #mem_reservation: 32m
     volumes:
       - "littr-data:/opt/data"
       - "littr-pix:/opt/pix"
