@@ -1102,7 +1102,7 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	var content string
 
 	if fetch.Data == nil || fetch.Figure == "" {
-		l.Msg(common.ERR_MISSING_IMG_CONTENT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_MISSING_IMG_CONTENT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 

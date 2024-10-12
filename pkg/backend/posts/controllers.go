@@ -298,7 +298,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			Path:  "/flow/post/" + post.ID,
 		})
 		if err != nil {
-			l.Msg(common.ERR_PUSH_BODY_COMPOSE_FAIL).Status(http.StatusInternalServerErrpr).Log()
+			l.Msg(common.ERR_PUSH_BODY_COMPOSE_FAIL).Status(http.StatusInternalServerError).Log()
 			continue
 		}
 
