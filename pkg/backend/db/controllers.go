@@ -36,8 +36,7 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go DumpAll()
-
-	l.Msg("ok, data are being dumped").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	//go DumpAll()
+	l.Msg(DumpAll()).Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }

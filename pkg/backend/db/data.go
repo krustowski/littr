@@ -44,15 +44,33 @@ func LoadAll() string {
 	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s, %s", polls, posts, reqs, subs, tokens, users)
 }
 
-func DumpAll() {
-	// TODO: catch errors!
-	dumpOne(PollCache, pollsFile, models.Poll{})
-	dumpOne(FlowCache, postsFile, models.Post{})
-	dumpOne(RequestCache, requestsFile, models.Request{})
-	dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{})
-	dumpOne(TokenCache, tokensFile, void)
-	dumpOne(UserCache, usersFile, models.User{})
+func DumpAll() string {
+	var report string
+
+	report += prepareDumpReport("polls",
+		dumpOne(PollCache, pollsFile, models.Poll{}))
+
+	report += prepareDumpReport("posts",
+		dumpOne(FlowCache, postsFile, models.Post{}))
+
+	report += prepareDumpReport("requests",
+		dumpOne(RequestCache, requestsFile, models.Request{}))
+
+	report += prepareDumpReport("subscriptions",
+		dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{}))
+
+	report += prepareDumpReport("tokens",
+		dumpOne(TokenCache, tokensFile, void))
+
+	report += prepareDumpReport("users",
+		dumpOne(UserCache, usersFile, models.User{}))
+
+	return fmt.Sprintf("dump: %s", report)
 }
+
+/*
+ *  helper functions --- loadOne stack
+ */
 
 type load struct {
 	count int
@@ -133,54 +151,63 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, erro
 	return count, total, nil
 }
 
-func dumpOne[T any](cache *core.Cache, filepath string, model T) error {
+/*
+ *  helper functions --- dumpOne
+ */
+
+func prepareDumpReport(cacheName string, rep *dumpReport) string {
+	if rep.Error == nil {
+		return fmt.Sprintf("[%s] dumped: %d, ", cacheName, rep.Total)
+	}
+	return fmt.Sprintf("[%s] dump failed: %d (%s), ", cacheName, rep.Total, rep.Error.Error())
+}
+
+type dumpReport struct {
+	Total int
+	Error error
+}
+
+func dumpOne[T any](cache *core.Cache, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
+	// check if the model is usable
 	if &model == nil {
-		l.Println("nil pointer on input!", http.StatusBadRequest)
-		return errors.New("nil pointer on input!")
+		l.Msg("nil pointer to model on input to!").Status(http.StatusBadRequest).Log()
+		return &dumpReport{Total: 0, Error: fmt.Errorf("nil pointer to model on input!")}
 	}
 
+	// base struct to map the data to JSON
 	matrix := struct {
 		Items map[string]T `json:"items"`
 	}{}
 
-	matrix.Items, _ = GetAll(cache, model)
+	var total int
 
-	jsonData, err := json.Marshal(matrix)
+	// dump the in-memoty running data
+	matrix.Items, total = GetAll(cache, model)
+
+	// prepare the JSON byte stream
+	jsonData, err := json.Marshal(&matrix)
 	if err != nil {
-		return err
+		return &dumpReport{Error: err}
 	}
 
-	// system-critical short log hack
-	msg := struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	}{}
-
-	err = os.WriteFile(filepath, jsonData, 0660)
-	if err != nil {
-		msg.Message = err.Error()
-		err = nil
-	} else {
-		return nil
+	// write dumped data to the file
+	if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
+		// OK condition
+		return &dumpReport{Total: total}
 	}
 
+	// log the first attempt fail, but continue
+	l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
+	err = nil
+
+	// try the backup file if previous write failed
 	if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
-		msg.Message += "; cannot even dump the data to a backup file: " + err.Error()
-		l.Println(msg.Message, http.StatusInternalServerError)
-		err = nil
+		l.Msg("backup write failed: " + err.Error()).Status(http.StatusInternalServerError).Log()
+		return &dumpReport{Total: 0, Error: err}
 	}
 
-	msg.Code = 500
-	marsh, err := json.Marshal(msg)
-	if err != nil {
-		fmt.Println(msg.Message)
-		return err
-	}
-
-	l.Println(string(marsh), http.StatusInternalServerError)
-	//fmt.Println(string(marsh))
-
-	return fmt.Errorf(msg.Message)
+	// OK condition
+	return &dumpReport{Total: total}
 }

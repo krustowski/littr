@@ -110,18 +110,22 @@ func initServer() {
 
 	// signals goroutine
 	go func() {
+		// wait for signals
 		sig := <-sigs
 		signal.Stop(sigs)
 
-		l.Println("caught signal '"+sig.String()+"', exiting gracefully...", http.StatusCreated)
+		l.Msg("trap signal: " + sig.String() + ", exiting gracefully...").Status(http.StatusOK)
 		if posts.Streamer != nil {
 			posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-stop"))
 		}
 
 		// TODO
 		//db.LockAll()
-		db.DumpAll()
-		posts.Streamer.Shutdown()
+		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+
+		if posts.Streamer != nil {
+			posts.Streamer.Shutdown()
+		}
 	}()
 
 	// parse the custom Service Worker template string for the app handler
