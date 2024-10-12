@@ -11,6 +11,9 @@ import (
 //
 // @Summary      Perform system data dump
 // @Description  perform system data dump
+// @SecurityDefinitions.apikey ApiKeyAuth
+// @in 		 header
+// @name 	 X-Dump-Token
 // @Tags         dump
 // @Accept       json
 // @Produce      json

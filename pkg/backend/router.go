@@ -1,5 +1,6 @@
+// JSON REST API service
 // @title		littr
-// @version	 	0.42.7
+// @version	 	0.42.8
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -21,6 +22,9 @@
 
 // @externalDocs.description	OpenAPI
 // @externalDocs.url		https://swagger.io/resources/open-api/
+
+// @externalDocs.description	Documentation
+// @externalDocs.url		https://krusty.space/projects/littr/
 package backend
 
 import (

@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.42.7"
+        "version": "0.42.8"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -166,7 +166,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "Data": {
+                                        "data": {
                                             "$ref": "#/definitions/polls.getPolls.payload"
                                         }
                                     }
@@ -236,9 +236,6 @@
         "/polls/{pollID}": {
             "get": {
                 "description": "get single poll",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -259,7 +256,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/polls.getSinglePoll.response"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -268,8 +277,8 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1636,6 +1645,17 @@
                     "$ref": "#/definitions/models.User"
                 }
             }
+        },
+        "polls.getSinglePoll.response": {
+            "type": "object",
+            "properties": {
+                "poll": {
+                    "$ref": "#/definitions/models.Poll"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                }
+            }
         }
     },
     "securityDefinitions": {
@@ -1651,7 +1671,7 @@
         }
     ],
     "externalDocs": {
-        "description": "OpenAPI",
-        "url": "https://swagger.io/resources/open-api/"
+        "description": "Documentation",
+        "url": "https://krusty.space/projects/littr/"
     }
 }
