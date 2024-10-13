@@ -45,7 +45,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		interactedPost := c.posts[key]
 
 		if interactedPost.Nickname != c.user.Nickname {
-			toast.Text("you only can delete your own posts!").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_POST_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.deletePostModalShow = false
@@ -65,11 +65,11 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -130,7 +130,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// allow picture-only posting
 		if replyPost == "" && c.newFigFile == "" {
-			toast.Text("no valid reply entered").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_INVALID_REPLY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -174,7 +174,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -188,13 +188,13 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		if output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -217,7 +217,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// create a notification
 		if ok := common.FetchData(input, output2); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -448,17 +448,17 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 
 		// add new post to backend struct
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

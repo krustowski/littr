@@ -32,7 +32,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 
 	if value, found := flowList[key]; found {
 		if !value && c.users[key].Private {
-			toast.Text("this account is private").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonDisabled = false
@@ -43,7 +43,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		flowList[key] = !flowList[key]
 	} else {
 		if c.users[key].Private {
-			toast.Text("this account is private").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonDisabled = false
@@ -78,12 +78,12 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -319,7 +319,7 @@ func (c *Content) onMessage(ctx app.Context, e app.Event) {
 	}
 
 	toast := common.Toast{AppContext: &ctx}
-	toast.Text("new post added above").Type("info").Dispatch(c, dispatch)
+	toast.Text("new post added above").Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 }
 
 func (c *Content) onClickStar(ctx app.Context, e app.Event) {
