@@ -15,7 +15,7 @@ const (
 
 	// flow/post-related error messages
 	ERR_INVALID_REPLY = "no valid reply content entered"
-	ERR_POST_UNAUTH_DELETE = "you only can delete your own posts!"
+	ERR_POST_UNAUTH_DELETE = "you can delete your own posts only!"
 	ERR_POST_NOT_FOUND = "post not found"
 	ERR_USER_NOT_FOUND = "user not found"
 	ERR_PRIVATE_ACC = "this account is private"
@@ -51,4 +51,9 @@ const (
 	ERR_LOGIN_CHARS_LIMIT = "only a-z, A-Z characters and numbers can be used"
 	ERR_ACCESS_DENIED = "wrong credentials entered"
 	ERR_LOCAL_STORAGE_USER_FAIL = "cannot save user's data to the browser"
+
+	// polls-related (non-)error messages
+	MSG_NO_POLL_TO_SHOW = "no poll to show, click here to create one!"
+	ERR_POLL_UNAUTH_DELETE = "you can delete your own polls only!"
+	ERR_POLL_OPTION_MISMATCH = "such option is not associated to the poll"
 )
