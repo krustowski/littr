@@ -645,7 +645,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 			output := &common.Response{Data: &dataModel{}}
 
-			if ok := common.FetchData(input, output); ok {
+			if ok := common.FetchData(input, output); !ok {
 				toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
 				return
 			}
