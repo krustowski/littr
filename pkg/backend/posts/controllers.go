@@ -2,12 +2,10 @@ package posts
 
 import (
 	"encoding/json"
-	pic "image"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	sse "github.com/alexandrevicenzi/go-sse"
@@ -23,7 +21,8 @@ import (
 )
 
 const (
-	pkgName = "posts"
+	HDR_PAGE_NO = "X-Page-No"
+	PKG_NAME    = "posts"
 )
 
 // getPosts fetches posts, page spicified by a header.
@@ -38,7 +37,7 @@ const (
 // @Failure      500  {object}  common.APIResponse
 // @Router       /posts/ [get]
 func getPosts(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -48,7 +47,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get("X-Page-No")
+	pageNoString := r.Header.Get(HDR_PAGE_NO)
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
@@ -139,20 +138,22 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Success      201  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
 // @Router       /posts/ [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
+	// get caller's nickname from context
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// post a new post
 	var post models.Post
 
+	// decode received data
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
@@ -170,7 +171,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// check the post forgery possibility
 	if callerID != post.Nickname {
-		l.Msg(common.ERR_POSTER_INVALID).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_POSTER_INVALID).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -180,84 +181,17 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	post.ID = key
 	post.Timestamp = timestamp
 
-	// uploadedFigure handling
+	var imgReference string
+
+	// uploaded figure handling
 	if post.Data != nil && post.Figure != "" {
-		var newBytes *[]byte
-		var err error
-		var img *pic.Image
-		var format string
-
-		fileExplode := strings.Split(post.Figure, ".")
-		extension := fileExplode[len(fileExplode)-1]
-
-		// decode image from []byte stream
-		img, format, err = image.DecodeImage(&post.Data, extension)
-		if err != nil {
-			l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		if err, code := image.ProcessBytes(&post, &imgReference); err != nil {
+			l.Status(code).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
-
-		switch extension {
-		case "png", "jpg", "jpeg":
-			// fix the image orientation for decoded image
-			img, err = image.FixOrientation(img, &post.Data)
-			if err != nil {
-				l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-				return
-			}
-
-			// re-encode the image to flush EXIF metadata header
-			newBytes, err = image.EncodeImage(img, format)
-			if err != nil {
-				l.Msg(common.ERR_IMG_ENCODE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-				return
-			}
-
-		case "gif":
-			format = "webp"
-
-			newBytes, err = image.ConvertGifToWebp(&post.Data)
-			if err != nil {
-				l.Msg(common.ERR_IMG_GIF_TO_WEBP_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-				return
-			}
-
-		default:
-			l.Msg(common.ERR_IMG_UNKNOWN_TYPE).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// prepare the novel image's filename
-		content := key + "." + format
-
-		// upload the novel image to local storage
-		//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-		if err := os.WriteFile("/opt/pix/"+content, *newBytes, 0600); err != nil {
-			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// generate thumbnails --- keep aspect ratio
-		thumbImg := image.ResizeImage(img, 450)
-
-		// encode the thumbnail back to []byte
-		thumbImgData, err := image.EncodeImage(&thumbImg, format)
-		if err != nil {
-			l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// write the thumbnail byte stream to a file
-		if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
-			l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// flush post's image-related fields
-		post.Figure = content
-		post.Data = []byte{}
 	}
 
+	// save the post by its key
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
 		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -336,7 +270,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID}/star [patch]
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -401,7 +335,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID} [put]
 func updatePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -451,7 +385,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID} [delete]
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -510,7 +444,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.APIResponse
 // @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -526,7 +460,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get("X-Page-No")
+	pageNoString := r.Header.Get(HDR_PAGE_NO)
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
@@ -599,7 +533,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  common.APIResponse
 // @Router       /posts/hashtag/{hashtag} [get]
 func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, pkgName)
+	l := common.NewLogger(r, PKG_NAME)
 
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
@@ -611,7 +545,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	// check if diff page has been requested
 	hashtag := chi.URLParam(r, "hashtag")
 
-	pageNoString := r.Header.Get("X-Page-No")
+	pageNoString := r.Header.Get(HDR_PAGE_NO)
 	page, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
