@@ -196,7 +196,7 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		}
 		user.RequestList[c.user.Nickname] = false
 
-		toast.Text(common.MSG_USER_FOLLOW_REQ_REMOVED).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
+		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user

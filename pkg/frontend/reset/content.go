@@ -45,7 +45,7 @@ func (c *Content) OnMount(ctx app.Context) {
 			return
 		}
 
-		toast.Text(MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.buttonsDisabled = false

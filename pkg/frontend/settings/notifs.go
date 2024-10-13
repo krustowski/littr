@@ -108,7 +108,7 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 			return
 		}
 
-		toast.Text(common.UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.settingsButtonDisabled = false

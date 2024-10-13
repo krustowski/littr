@@ -143,7 +143,7 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		toast.Text(MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
 	})
 }
@@ -172,7 +172,7 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		// create a regex object
 		regex, err := regexp.Compile("^(http|https)://")
 		if err != nil {
-			toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTPYE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -205,7 +205,7 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 			return
 		}
 
-		toast.Text(common.ERR_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			// update user's struct in memory
@@ -385,7 +385,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		// register the subscription
 		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
 		if err != nil {
-			toast.Text(common.SUBSCRIPTION_REG_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_SUBSCRIPTION_REQ_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.settingsButtonDisabled = false
@@ -444,7 +444,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			devs = append(devs, deviceSub)
 		}
 
-		toast.Text(common.MSG_SUBSCRIPTION_REG_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
@@ -663,7 +663,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 			avatar := "/web/pix/thumb_" + data.Key
 
-			toast.Text(MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			toast.Text(common.MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()

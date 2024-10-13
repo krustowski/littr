@@ -88,7 +88,7 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.loaderShow = false
 			})
 
-			toast.Text(MSG_NO_POLL_TO_SHOW).Type(common.TTYPE_INFO).Link("/post").Dispatch(c, dispatch)
+			toast.Text(common.MSG_NO_POLL_TO_SHOW).Type(common.TTYPE_INFO).Link("/post").Dispatch(c, dispatch)
 			return
 		}
 

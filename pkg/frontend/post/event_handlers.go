@@ -87,7 +87,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// decode and unmarshal the local storage user data
 		if err := common.LoadUser(encoded, &user); err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -122,7 +122,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// add new post/poll to backend struct
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE.Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -175,7 +175,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		if data, err := common.ReadFile(file); err != nil {
-			toast.Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 
 		} else {
