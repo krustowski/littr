@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const (
+	LOCALHOST4 = "127.0.0.1"
+	LOCALHOST6 = "::1"
+)
+
 type Logger struct {
 	// CallerID is a nickname of the user calling the API.
 	CallerID string `json:"-"`
@@ -50,7 +55,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 	if r == nil {
 		return &Logger{
 			CallerID:   "",
-			IPAddress:  "127.0.0.1",
+			IPAddress:  LOCALHOST4,
 			Method:     "",
 			Route:      "",
 			WorkerName: worker,
@@ -88,7 +93,7 @@ func (l *Logger) Println(msg string, code int) bool {
 	l.Time = time.Now()
 
 	if l.IPAddress == "" {
-		l.IPAddress = "127.0.0.1"
+		l.IPAddress = LOCALHOST4
 	}
 
 	fmt.Println(l.encode())
@@ -116,7 +121,7 @@ func (l *Logger) Log() *Logger {
 	l.Time = time.Now()
 
 	if l.IPAddress == "" {
-		l.IPAddress = "127.0.0.1"
+		l.IPAddress = LOCALHOST4
 	}
 
 	if l.Err != nil {
