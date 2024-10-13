@@ -38,7 +38,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type data struct {
+	type responseData struct {
 		Polls map[string]models.Poll `json:"polls,omitempty"`
 		User  models.User            `json:"user,omitempty"`
 	}
@@ -222,7 +222,7 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type responseDate struct {
+	type responseData struct {
 		Poll models.Poll `json:"poll"`
 		User models.User `json:"user"`
 	}
@@ -288,7 +288,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify that only one vote had been passed in; supress vote count forgery
-	if (payload.OptionOne.Counter + payload.OptionTwo.Counter + payloadOptionThree.Counter) != (poll.OptionOne.Counter + poll.OptionTwo.Counter + poll.OptionThree.Counter + 1) {
+	if (payload.OptionOne.Counter + payload.OptionTwo.Counter + payload.OptionThree.Counter) != (poll.OptionOne.Counter + poll.OptionTwo.Counter + poll.OptionThree.Counter + 1) {
 		l.Msg(common.ERR_POLL_INVALID_VOTE_COUNT).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}

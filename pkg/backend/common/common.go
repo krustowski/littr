@@ -5,9 +5,8 @@ import (
 	//"errors"
 	"io"
 	"net/http"
-
 	//"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/swis/v5/pkg/core"
+	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
 func UnmarshalRequestData[T any](r *http.Request, model *T) error {
@@ -39,22 +38,22 @@ func UnmarshalRequestData[T any](r *http.Request, model *T) error {
 }*/
 
 //func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
-	/*resp := Response{}
-	l := NewLogger(r, subsystem)
+/*resp := Response{}
+l := NewLogger(r, subsystem)
 
-	caller, _ := r.Context().Value("nickname").(string)
+caller, _ := r.Context().Value("nickname").(string)
 
-	//items, _ := db.GetAll(cache, model)
+//items, _ := db.GetAll(cache, model)
 
-	//resp.Items = items
-	resp.Key = caller
+//resp.Items = items
+resp.Key = caller
 
-	l.Println(
-		"ok, dumping items of '"+subsystem+"' subsystem",
-		http.StatusOK,
-	)
-	//resp.Write(w)
-	*/
+l.Println(
+	"ok, dumping items of '"+subsystem+"' subsystem",
+	http.StatusOK,
+)
+//resp.Write(w)
+*/
 //}
 
 /*func GetOneItem[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
