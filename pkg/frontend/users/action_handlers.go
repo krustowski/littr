@@ -53,18 +53,18 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 			// call the API to fetch the data
 			if ok := common.FetchData(input, output); !ok {
-				toast.Text("cannot fetch users list").Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				return
 			}
 
 			if output.Code == 401 {
-				toast.Text("please log-in again").Link("/logout").Dispatch(c, dispatch)
+				toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch(c, dispatch)
 				return
 			}
 
 			data, ok := output.Data.(*dataModel)
 			if !ok {
-				toast.Text("cannot get data").Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				return
 			}
 
@@ -187,12 +187,12 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text("user update failed: "+output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

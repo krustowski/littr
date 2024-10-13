@@ -74,4 +74,8 @@ const (
 	ERR_RESET_FIELD_REQUIRED = "e-mail address is required"
 	ERR_RESET_UUID_FIELD_EMPTY = "UUID string is required to continue, check your mail inbox"
 	ERR_RESET_INVALID_INPUT_DATA = "invalid input data entered"
+
+	// users-related (non-)error messages
+	MSG_USER_UPDATED_SUCCESS = "user has been updated, request was removed"
+	MSG_FOLLOW_REQUEST_REMOVED = "user has been updated, request was removed"
 )

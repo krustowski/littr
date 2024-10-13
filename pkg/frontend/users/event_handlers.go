@@ -48,12 +48,12 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 
 		// delete the request from one's requestList
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -85,16 +85,16 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		output2 := &common.Response{}
 
 		if ok := common.FetchData(input2, output2); !ok {
-			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output2.Code != 200 {
-			toast.Text(output2.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output2.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("user updated, request removed").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
 		/*ctx.Dispatch(func(ctx app.Context) {
 			//c.user.FlowList = ourFlowList
@@ -141,15 +141,15 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 
 		// delete the request from one's requestList
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = user
@@ -183,11 +183,11 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -196,7 +196,7 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		}
 		user.RequestList[c.user.Nickname] = false
 
-		toast.Text("request to follow removed").Type("info").Dispatch(c, dispatch)
+		toast.Text(common.MSG_USER_FOLLOW_REQ_REMOVED).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
@@ -229,11 +229,11 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("problem calling the backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -242,7 +242,7 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		}
 		user.RequestList[c.user.Nickname] = true
 
-		toast.Text("requested to follow").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
@@ -347,12 +347,12 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -382,12 +382,12 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 		output = &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
