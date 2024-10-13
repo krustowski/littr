@@ -178,6 +178,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roasmap to v0.43
++ update swagger docs, ensure proper params, inputs, responses etc are valid
 + user activation via mail
 
 ### roadmap to v0.42

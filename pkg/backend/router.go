@@ -1,6 +1,5 @@
-// JSON REST API service
 // @title		littr
-// @version	 	0.42.8
+// @version	 	0.42.9
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -25,6 +24,8 @@
 
 // @externalDocs.description	Documentation
 // @externalDocs.url		https://krusty.space/projects/littr/
+
+// umbrella pkg for the JSON REST API service
 package backend
 
 import (

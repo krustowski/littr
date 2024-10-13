@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.42.8"
+        "version": "0.42.9"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -155,6 +155,15 @@
                     "polls"
                 ],
                 "summary": "Get a list of polls",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -167,7 +176,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/polls.getPolls.payload"
+                                            "$ref": "#/definitions/polls.getPolls.responseData"
                                         }
                                     }
                                 }
@@ -186,6 +195,9 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     }
+                },
+                "X-Page-No": {
+                    "pageNo": 0
                 }
             },
             "post": {
@@ -264,7 +276,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/polls.getSinglePoll.response"
+                                            "$ref": "#/definitions/polls.getSinglePoll.responseData"
                                         }
                                     }
                                 }
@@ -299,8 +311,17 @@
                 "summary": "Update a poll",
                 "parameters": [
                     {
+                        "description": "update poll's body",
+                        "name": "updatedPoll",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Poll"
+                        }
+                    },
+                    {
                         "type": "string",
-                        "description": "poll ID",
+                        "description": "poll's ID",
                         "name": "pollID",
                         "in": "path",
                         "required": true
@@ -340,6 +361,15 @@
                 ],
                 "summary": "Delete a poll by ID",
                 "parameters": [
+                    {
+                        "description": "poll to delete",
+                        "name": "pollToDelete",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Poll"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "poll ID",
@@ -425,6 +455,12 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1632,7 +1668,7 @@
                 }
             }
         },
-        "polls.getPolls.payload": {
+        "polls.getPolls.responseData": {
             "type": "object",
             "properties": {
                 "polls": {
@@ -1646,7 +1682,7 @@
                 }
             }
         },
-        "polls.getSinglePoll.response": {
+        "polls.getSinglePoll.responseData": {
             "type": "object",
             "properties": {
                 "poll": {
