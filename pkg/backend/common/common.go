@@ -29,16 +29,16 @@ func UnmarshalRequestData[T any](r *http.Request, model *T) error {
  *  https://github.com/vxn-dev/swis-api/blob/master/pkg/core/package.go
  */
 
-type ServiceOpts struct {
+/*type ServiceOpts struct {
 	Request *http.Request
 
 	Polls bool
 	Posts bool
 	Stats bool
 	Users bool
-}
+}*/
 
-func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
+//func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
 	/*resp := Response{}
 	l := NewLogger(r, subsystem)
 
@@ -55,12 +55,12 @@ func GetAllItems[T any](r *http.Request, cache *core.Cache, model T, subsystem s
 	)
 	//resp.Write(w)
 	*/
-}
+//}
 
-func GetOneItem[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
+/*func GetOneItem[T any](r *http.Request, cache *core.Cache, model T, subsystem string) {
 	//nick := chi.URLParam(r, "nickname")
 }
 
 func AddOneItem[T any](r *http.Request, cache *core.Cache, model *T)    {}
 func UpdateOneItem[T any](r *http.Request, cache *core.Cache, model *T) {}
-func DeleteOneItem[T any](r *http.Request, cache *core.Cache, model *T) {}
+func DeleteOneItem[T any](r *http.Request, cache *core.Cache, model *T) {}*/
