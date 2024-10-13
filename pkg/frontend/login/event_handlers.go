@@ -30,13 +30,13 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if nickname == "" || passphrase == "" {
-			toast.Text("all fields need to be filled").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_ALL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// don't allow special chars and spaces in the nickname
 		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
-			toast.Text("nickname can contain only chars a-z, A-Z and numbers").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOGIN_CHARS_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -67,29 +67,29 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if !data.AuthGranted {
-			toast.Text("wrong credentials passed").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_ACCESS_DENIED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		user, err := json.Marshal(data.Users[nickname])
 		if err != nil {
-			toast.Text("frontend error: user marshal failed").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

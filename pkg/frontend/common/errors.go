@@ -45,4 +45,10 @@ const (
 	ERR_WEBSITE_INVALID = "website prolly not a valid URL"
 	ERR_SUBSCRIPTION_BLANK_UUID = "blank UUID string"
 	ERR_SUBSCRIPTION_REG_FAIL = "failed to subscribe to notifications: "
+
+	// login-related error messages
+	ERR_ALL_FIELDS_REQUIRED = "all fields are required"
+	ERR_LOGIN_CHARS_LIMIT = "only a-z, A-Z characters and numbers can be used"
+	ERR_ACCESS_DENIED = "wrong credentials entered"
+	ERR_LOCAL_STORAGE_USER_FAIL = "cannot save user's data to the browser"
 )
