@@ -118,7 +118,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		postType := "post"
 
 		// trim the spaces on the extremites
-		replyPost := c.replyPostContent
+		replyPost := strings.TrimSpace(c.replyPostContent)
 
 		if !app.Window().GetElementByID("reply-textarea").IsNull() {
 			replyPostFull := strings.TrimSpace(app.Window().GetElementByID("reply-textarea").Get("value").String())
