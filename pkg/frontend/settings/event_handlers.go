@@ -38,12 +38,12 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
 
 		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
-			toast.Text("passphrase fields need to be filled").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISSING).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if passphrase != passphraseAgain {
-			toast.Text("passphrases do not match").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -71,12 +71,12 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -92,7 +92,7 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}*/
 
-		toast.Text("passphrase updated").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_PASSPHRASE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
 	})
 }
@@ -109,12 +109,12 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 		aboutText := strings.TrimSpace(c.aboutText)
 
 		if aboutText == "" {
-			toast.Text("about textarea needs to be filled, or you prolly haven't changed the text").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_ABOUT_TEXT_UNCHANGED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if len(aboutText) > 100 {
-			toast.Text("about text has to be shorter than 100 chars").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_ABOUT_TEXT_CHAR_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -134,16 +134,16 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("about text updated").Type("success").Dispatch(c, dispatch)
+		toast.Text(MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
 	})
 }
@@ -159,20 +159,20 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 
 		// check the trimmed version of website string
 		if website == "" {
-			toast.Text("website URL has to be filled, or changed").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_UNCHANGED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// check the URL/URI format
 		if _, err := url.ParseRequestURI(website); err != nil {
-			toast.Text("website prolly not a valid URL").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_INVALID).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// create a regex object
 		regex, err := regexp.Compile("^(http|https)://")
 		if err != nil {
-			toast.Text("failed to check the website (regex object fail)").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTPYE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -196,16 +196,16 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("website updated").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.ERR_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			// update user's struct in memory
@@ -224,7 +224,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 
 	uuid := c.interactedUUID
 	if uuid == "" {
-		toast.Text("blank UUID string").Type("error").Dispatch(c, dispatch)
+		toast.Text(common.ERR_SUBSCRIPTION_BLANK_UUID).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		return
 	}
 
@@ -247,12 +247,12 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("failed to unsubscribe, try again later").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -265,7 +265,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 			newDevs = append(newDevs, dev)
 		}
 
-		toast.Text("device successfully unsubscribed").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			if uuid == c.thisDeviceUUID {
@@ -385,7 +385,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		// register the subscription
 		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
 		if err != nil {
-			toast.Text("failed to subscribe to notifications: "+err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Text(common.SUBSCRIPTION_REG_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.settingsButtonDisabled = false
@@ -426,7 +426,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("backend connection failed").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.subscribed = false
@@ -435,7 +435,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		if output.Code != 201 && output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -444,7 +444,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			devs = append(devs, deviceSub)
 		}
 
-		toast.Text("successfully subscribed to notifs").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_SUBSCRIPTION_REG_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
@@ -489,7 +489,7 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.user.LocalTimeMode = localTime
@@ -498,11 +498,11 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("local time mode toggled").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_LOCAL_TIME_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
@@ -535,16 +535,16 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("private mode toggled").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_PRIVATE_MODE_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
@@ -576,12 +576,12 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("generic backend error").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -602,7 +602,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		if figData, err := common.ReadFile(file); err != nil {
-			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 
 		} else {
@@ -646,24 +646,24 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			output := &common.Response{Data: &dataModel{}}
 
 			if ok := common.FetchData(input, output); !ok {
-				toast.Text("cannot reach backend!").Type("error").Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				return
 			}
 
 			if output.Code != 200 {
-				toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+				toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				return
 			}
 
 			data, ok := output.Data.(*dataModel)
 			if !ok {
-				toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				return
 			}
 
 			avatar := "/web/pix/thumb_" + data.Key
 
-			toast.Text("avatar successfully updated").Type("success").Dispatch(c, dispatch)
+			toast.Text(MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()

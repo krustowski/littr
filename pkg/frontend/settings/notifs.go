@@ -14,7 +14,7 @@ func (c *Content) checkPermission(ctx app.Context, checked bool) bool {
 	// notify user that their browser does not support notifications and therefore they cannot
 	// use notifications service
 	if c.notificationPermission == app.NotificationNotSupported && checked {
-		toast.Text("notifications are not supported in this browser").Type("error").Dispatch(c, dispatch)
+		toast.Text(common.ERR_NOTIF_UNSUPPORTED_BROWSER).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.replyNotifOn = false
@@ -31,7 +31,7 @@ func (c *Content) checkPermission(ctx app.Context, checked bool) bool {
 
 	// fail on denied permission
 	if c.notificationPermission != app.NotificationGranted {
-		toast.Text("notification permission denied by user").Type("error").Dispatch(c, dispatch)
+		toast.Text(common.ERR_NOTIF_PERMISSION_DENIED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.replyNotifOn = false
@@ -93,7 +93,7 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("cannot reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.subscribed = true
@@ -104,11 +104,11 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		toast.Text("successfully unsubscribed, notifications off").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.settingsButtonDisabled = false
@@ -157,7 +157,7 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("failed to update the subscription, try again later").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_SUBSCRIPTION_UPDATE_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				//c.subscribed = true
@@ -167,13 +167,13 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		deviceSub.Tags = c.checkTags(c.thisDevice.Tags, tag)
 
-		toast.Text("subscription updated").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_SUBSCRIPTION_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			if tag == "mention" {
