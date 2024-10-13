@@ -56,4 +56,22 @@ const (
 	MSG_NO_POLL_TO_SHOW = "no poll to show, click here to create one!"
 	ERR_POLL_UNAUTH_DELETE = "you can delete your own polls only!"
 	ERR_POLL_OPTION_MISMATCH = "such option is not associated to the poll"
+
+	// post-related (non-)error messages
+	MSG_IMAGE_READY = "image is ready for the upload"
+	ERR_LOCAL_STORAGE_LOAD_FAIL = "cannot decode user's data: "
+	ERR_POST_TEXTAREA_EMPTY = "no valid content entered"
+	ERR_POLL_FIELDS_REQUIRED = "poll question and at least two options are required"
+
+	// register-related error messages
+	ERR_REGISTER_FIELDS_REQUIRED = "all fields are required"
+	ERR_REGISTER_CHARSET_LIMIT = "only a-z, A-Z characters and numbers can be used"
+	ERR_WRONG_EMAIL_FORMAT = "invalid e-mail address format entered"
+	
+	// reset-related (non-)error messages
+	MSG_RESET_PASSPHRASE_SUCCESS = "your passphrase has been changed, check your mail inbox"
+	MSG_RESET_REQUEST_SUCCESS = "the passphrase reset request has been sent, check your mail inbox"
+	ERR_RESET_FIELD_REQUIRED = "e-mail address is required"
+	ERR_RESET_UUID_FIELD_EMPTY = "UUID string is required to continue, check your mail inbox"
+	ERR_RESET_INVALID_INPUT_DATA = "invalid input data entered"
 )

@@ -8,7 +8,7 @@ import (
 
 func (c *Content) handleResetRequest(email, uuid string) error {
 	if email == "" && uuid == "" {
-		return fmt.Errorf("invalid payload data")
+		return fmt.Errorf(common.ERR_RESET_INVALID_INPUT_DATA)
 	}
 
 	path := "request"
@@ -37,7 +37,7 @@ func (c *Content) handleResetRequest(email, uuid string) error {
 	output := &common.Response{}
 
 	if ok := common.FetchData(input, output); !ok {
-		return fmt.Errorf("could not reach backend")
+		return fmt.Errorf(common.ERR_CANNOT_REACH_BE)
 	}
 
 	if output.Code != 200 || output.Code != 201 {

@@ -39,7 +39,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			pollOptionIII := strings.TrimSpace(c.pollOptionIII)
 
 			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
-				toast.Text("poll question and at least two options have to be filled").Type("error").Dispatch(c, dispatch)
+				toast.Text(common.ERR_POLL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				break
 			}
 
@@ -64,7 +64,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 			// allow just picture posting
 			if newPost == "" && c.newFigFile == "" {
-				toast.Text("post textarea must be filled").Type("error").Dispatch(c, dispatch)
+				toast.Text(common.ERR_POST_TEXTAREA_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				break
 			}
 
@@ -87,7 +87,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// decode and unmarshal the local storage user data
 		if err := common.LoadUser(encoded, &user); err != nil {
-			toast.Text("cannot decode user's data: "+err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -122,12 +122,12 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// add new post/poll to backend struct
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE.Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		if output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -175,7 +175,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		if data, err := common.ReadFile(file); err != nil {
-			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 
 		} else {
@@ -195,7 +195,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 				ctx.Navigate("/flow")
 			}*/
 
-			toast.Text("image is ready").Type("success").Dispatch(c, dispatch)
+			toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()

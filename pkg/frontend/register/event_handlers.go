@@ -34,32 +34,32 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
-			toast.Text("all fields are required").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_REGISTER_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// don't allow very long nicknames
 		if len(nickname) > configs.NicknameLengthMax {
-			toast.Text("nickname has to be "+strconv.Itoa(configs.NicknameLengthMax)+" chars long at max").Type("error").Dispatch(c, dispatch)
+			toast.Text("nickname has to be "+strconv.Itoa(configs.NicknameLengthMax)+" chars long at max").Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// don't allow special chars and spaces in the nickname
 		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
-			toast.Text("nickname can contain only chars a-z, A-Z and numbers").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_REGISTER_CHARSET_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// do passphrases match?
 		if passphrase != passphraseAgain {
-			toast.Text("passphrases don't match!").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// validate e-mail struct
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
-			toast.Text("wrong e-mail format entered").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
@@ -94,13 +94,13 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text("could not reach backend").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
 		// has the user been registred?
 		if output.Code != 201 {
-			toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

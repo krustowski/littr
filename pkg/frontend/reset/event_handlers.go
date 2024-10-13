@@ -24,7 +24,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		}
 
 		if email == "" {
-			toast.Text("e-mail field has to be filled").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_RESET_FIELD_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -35,7 +35,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		// validate e-mail struct
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
-			toast.Text("wrong e-mail format entered").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -44,7 +44,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		}
 
 		if err := c.handleResetRequest(email, ""); err != nil {
-			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -52,7 +52,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 			return
 		}
 
-		toast.Text("passphrase reset request sent successfully, check your inbox").Type("success").Dispatch(c, dispatch)
+		toast.Text(common.MSG_RESET_REQUEST_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.showUUIDPage = true
@@ -115,7 +115,7 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 		}
 
 		if uuid == "" {
-			toast.Text("please insert UUID from your inbox").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_RESET_UUID_FIELD_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -124,7 +124,7 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 		}
 
 		if err := c.handleResetRequest("", uuid); err != nil {
-			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
+			toast.Error(err).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -132,7 +132,7 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 			return
 		}
 
-		toast.Text("your passphrase has been changed, check your inbox").Type("success").Dispatch(c, dispatch)
+		toast.Text(MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.buttonsDisabled = false
