@@ -29,9 +29,9 @@ import (
 func getPolls(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -50,7 +50,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: callerID,
+		CallerID: l.CallerID,
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -71,8 +71,8 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		var votedList []string
 
 		for _, voter := range poll.Voted {
-			if voter == callerID {
-				votedList = append(votedList, callerID)
+			if voter == l.CallerID {
+				votedList = append(votedList, l.CallerID)
 			} else {
 				votedList = append(votedList, "voter")
 			}
@@ -80,7 +80,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 
 		poll.Voted = votedList
 
-		if poll.Author == callerID {
+		if poll.Author == l.CallerID {
 			continue
 		}
 
@@ -88,8 +88,10 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		(*pagePtrs.Polls)[key] = poll
 	}
 
+	var ok bool
+
 	// hack: include caller's models.User struct
-	if pl.User, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+	if pl.User, ok = db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
@@ -115,10 +117,9 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	// get the caller's nickname from context
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -132,13 +133,13 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 
 	// to patch wrongly loaded user data from LocalStorage
 	if poll.Author == "" {
-		poll.Author = callerID
+		poll.Author = l.CallerID
 	}
 
 	key := poll.ID
 
 	// caller must be the author of such poll to be added
-	if poll.Author != callerID {
+	if poll.Author != l.CallerID {
 		l.Msg(common.ERR_POLL_AUTHOR_MISMATCH).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -186,17 +187,17 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	// get the caller's nickname from context
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var caller models.User
+	var ok bool
 
 	// fetch caller's data object
-	if caller, ok = db.GetOne(db.UserCache, callerID, models.User{}); !ok {
+	if caller, ok = db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
@@ -244,10 +245,9 @@ func getSinglePoll(w http.ResponseWriter, r *http.Request) {
 func updatePoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	// get the caller's nickname from context
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -259,25 +259,23 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := payload.ID
-
 	var poll models.Poll
 	var found bool
 
 	// fetch the poll from database for comparison
-	if poll, found = db.GetOne(db.PollCache, key, models.Poll{}); !found {
+	if poll, found = db.GetOne(db.PollCache, payload.ID, models.Poll{}); !found {
 		l.Msg(common.ERR_POLL_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// caller must not be the author of such poll to be voted on
-	if poll.Author == callerID {
+	if poll.Author == l.CallerID {
 		l.Msg(common.ERR_POLL_SELF_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// has the caller already voted?
-	if helpers.Contains(poll.Voted, callerID) {
+	if helpers.Contains(poll.Voted, l.CallerID) {
 		l.Msg(common.ERR_POLL_EXISTING_VOTE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -295,7 +293,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 	poll.OptionThree = payload.OptionThree
 
 	// update the poll in database
-	if saved := db.SetOne(db.PollCache, key, poll); !saved {
+	if saved := db.SetOne(db.PollCache, payload.ID, poll); !saved {
 		l.Msg(common.ERR_POLL_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
@@ -319,10 +317,9 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	// get caller's name
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -341,7 +338,7 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for possible poll's deletion forgery
-	if poll.Author != callerID {
+	if poll.Author != l.CallerID {
 		l.Msg(common.ERR_POLL_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}

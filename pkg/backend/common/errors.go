@@ -64,7 +64,7 @@ const (
 	ERR_DEVICE_NOT_FOUND            = "devices not found in the database"
 	ERR_SUBSCRIPTION_SAVE_FAIL      = "could not save the subscription to database"
 	ERR_SUBSCRIPTION_NOT_FOUND      = "such subscription not found in the database"
-	ERR_DEVICE_SUBSCRIBED           = "this device has been already registered"
+	ERR_DEVICE_SUBSCRIBED_ALREADY   = "this device has been already registered"
 	ERR_PUSH_SELF_NOTIF             = "will not notify oneself"
 	ERR_PUSH_DISABLED_NOTIF         = "will not notify original poster"
 	ERR_PUSH_UUID_BLANK             = "device's UUID cannot be sent empty"
@@ -72,4 +72,5 @@ const (
 	ERR_NOTIFICATION_NOT_SENT       = "notification could not be sent"
 	ERR_NOTIFICATION_RESP_BODY_FAIL = "failed to read the notification's response body"
 	ERR_DEVICE_LIST_UPDATE_FAIL     = "failed to save the updated device list"
+	ERR_UUID_BLANK                  = "uuid param is required"
 )

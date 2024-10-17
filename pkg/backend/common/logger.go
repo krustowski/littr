@@ -63,7 +63,11 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		}
 	}
 
-	callerID, _ := r.Context().Value("nickname").(string)
+	// fetch the caller's nickname, to be check if not blank afterwards
+	callerID, ok := r.Context().Value("nickname").(string)
+	if !ok {
+		callerID = ""
+	}
 
 	return &Logger{
 		CallerID:   callerID,
