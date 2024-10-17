@@ -17,7 +17,7 @@ import (
 // @Produce      json
 // @Success      200  {object}   common.APIResponse{data=stats.getStats.responseData}
 // @Failure      400  {object}   common.APIResponse
-// @Router       /stats/ [get]
+// @Router       /stats [get]
 func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
