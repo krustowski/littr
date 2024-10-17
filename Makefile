@@ -12,6 +12,7 @@ include .env.example
 APP_ENVIRONMENT?=dev
 APP_NAME=littr
 APP_URLS_TRAEFIK?=`${HOSTNAME}`
+APP_URL_MAIN?=${HOSTNAME}
 PROJECT_NAME=${APP_NAME}-${APP_ENVIRONMENT}
 TZ=Europe/Vienna
 
@@ -195,6 +196,10 @@ version:
 		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
 		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
 		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' pkg/backend/router.go
+
+.PHONY: docs_host
+docs_host:
+		sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
 
 .PHONY: push
 push:

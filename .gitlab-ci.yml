@@ -29,7 +29,7 @@ build-image:
     - ssh-add "$DEPLOY_SSH_KEY"
   script:
     - export DOCKER_HOST=ssh://$DEPLOY_USER@$DEPLOY_TARGET
-    - make run
+    - make run docs_host docs
 
 deploy-stage:    
   environment: 
