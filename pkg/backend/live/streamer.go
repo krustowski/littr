@@ -48,7 +48,7 @@ func BroadcastMessage(data, eventName string) {
 	}
 
 	if Streamer != nil {
-		Streamer.SendMessage("/api/v1/live", 
+		Streamer.SendMessage("/api/v1/live",
 			sse.NewMessage("", data, eventName))
 	}
 
