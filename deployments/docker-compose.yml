@@ -70,7 +70,7 @@ services:
       VAPID_PRIV_KEY: ${VAPID_PRIV_KEY}
       VAPID_SUBSCRIBER: ${VAPID_SUBSCRIBER}
     healthcheck:
-      test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump/", "-O", "-", "-S" ]
+      test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump", "-O", "-", "-S" ]
       interval: 5m
       timeout: 5s
       retries: 3
