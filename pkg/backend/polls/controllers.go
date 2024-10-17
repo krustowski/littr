@@ -311,38 +311,45 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 // @Summary      Delete a poll by ID
 // @Description  delete a poll by ID
 // @Tags         polls
-// @Accept       json
 // @Produce      json
-// @Param    	 pollToDelete body models.Poll true "poll to delete"
-// @Param        pollID path string true "poll ID"
+// @Param        pollID path string true "poll's ID to delete"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
 // @Router       /polls/{pollID} [delete]
 func deletePoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
+	// get caller's name
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	var poll models.Poll
-
-	if err := common.UnmarshalRequestData(r, &poll); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+	// take the param from path
+	pollID := chi.URLParam(r, "pollID")
+	if pollID == "" {
+		l.Msg(common.ERR_POLLID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// fetch the poll from database for comparison
+	poll, found := db.GetOne(db.PollCache, key, models.Poll{})
+	if !found {
+		l.Msg(common.ERR_POLL_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// check for possible poll's deletion forgery
 	if poll.Author != callerID {
 		l.Msg(common.ERR_POLL_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	key := poll.ID
-
-	if deleted := db.DeleteOne(db.PollCache, key); !deleted {
+	// delete requested poll
+	if deleted := db.DeleteOne(db.PollCache, pollID); !deleted {
 		l.Msg(common.ERR_POLL_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
