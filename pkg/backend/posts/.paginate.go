@@ -9,6 +9,14 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
+/*
+ *
+ *
+ *  LEGACY CODE
+ *
+ * 
+ */
+
 const PageSize int = 25
 
 type PageOptions struct {

@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	HDR_PAGE_NO = "X-Page-No"
-	PKG_NAME    = "posts"
+	HDR_PAGE_NO      = "X-Page-No"
+	HDR_HIDE_REPLIES = "X-Hide-Replies"
+	PKG_NAME         = "posts"
 )
 
 // getPosts fetches posts, page spicified by a header.
@@ -30,45 +31,49 @@ const (
 // @Summary      Get posts
 // @Description  get posts
 // @Tags         posts
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.APIResponse
+// @Param    	 X-Page-No header string true "page number"
+// @Param    	 X-Hide-Replies header string false "hide replies bool"
+// @Success      200  {object}  common.APIResponse{data=posts.getPosts.responseData}
 // @Failure      400  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
-// @Router       /posts/ [get]
+// @Router       /posts [get]
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	type responseData struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+		Count int                    `json:"count"`
+	}
+
+	// fetch caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	pageNo := 0
-
-	pageNoString := r.Header.Get(HDR_PAGE_NO)
-	page, err := strconv.Atoi(pageNoString)
-	if err != nil {
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
-		return
-	}
-
-	pageNo = page
-
 	if callerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	hideReplies, err := strconv.ParseBool(r.Header.Get("X-Hide-Replies"))
-	if err != nil {
-		/*resp.Message = "invalid X-Hide-Replies"
-		resp.Code = http.StatusBadRequest
+	pageNo := 0
 
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return*/
+	pageNoString := r.Header.Get(HDR_PAGE_NO)
+	if page, err := strconv.Atoi(pageNoString); err != nil {
+		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+	} else {
+		pageNo = page
+	}
+
+	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	if err != nil {
+		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
 		hideReplies = false
 	}
 
@@ -85,7 +90,6 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	// fetch page according to the logged user
 	pagePtrs := pages.GetOnePage(opts)
-	//pExport, uExport := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
 		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -99,33 +103,15 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		(*pagePtrs.Users)[callerID] = caller
 	}
 
-	for key, user := range *pagePtrs.Users {
-		user.Passphrase = ""
-		user.PassphraseHex = ""
-		user.Email = ""
-
-		if user.Nickname != callerID {
-			user.FlowList = nil
-			user.ShadeList = nil
-			user.RequestList = nil
-		}
-
-		(*pagePtrs.Users)[key] = user
-	}
-
-	pl := struct {
-		Posts map[string]models.Post `json:"posts"`
-		Users map[string]models.User `json:"users"`
-		Key   string                 `json:"key"`
-		Count int                    `json:"count"`
-	}{
+	// compose the payload
+	pl := &responseData{
 		Posts: *pagePtrs.Posts,
-		Users: *pagePtrs.Users,
+		Users: *common.FlushUserData(pagePtrs.Users, callerID),
 		Key:   callerID,
 		Count: pages.PAGE_SIZE,
 	}
 
-	l.Msg("ok, dumping posts").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, dumping posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
 
@@ -136,13 +122,18 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Success      201  {object}  common.APIResponse
+// @Param    	 request body models.Post true "new post struct in request body"
+// @Success      201  {object}  common.APIResponse{data=posts.addNewPost.responseData}
 // @Failure      400  {object}  common.APIResponse
 // @Failure      403  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
-// @Router       /posts/ [post]
+// @Router       /posts [post]
 func addNewPost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
+
+	type responseData struct {
+		Posts map[string]models.Post `json:"posts"`
+	}
 
 	// get caller's nickname from context
 	callerID, ok := r.Context().Value("nickname").(string)
@@ -175,6 +166,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// prepare an ID for the post
 	timestamp := time.Now()
 	key := strconv.FormatInt(timestamp.UnixNano(), 10)
 
@@ -199,7 +191,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// notify all to-be-notifiedees
 	//
-	// find matches using regext compiling to '@username' matrix
+	// find matches using regexp compiling to '@username' matrix
 	re := regexp.MustCompile(`@(?P<text>\w+)`)
 	matches := re.FindAllStringSubmatch(post.Content, -1)
 
@@ -242,16 +234,15 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	// broadcast a new post to live subscribers
 	live.BroadcastMessage("post,"+post.Nickname, "message")
 
+	// prepare the payload
 	posts := make(map[string]models.Post)
 	posts[key] = post
 
-	pl := struct {
-		Posts map[string]models.Post `json:"posts"`
-	}{
+	pl := &responseData{
 		Posts: posts,
 	}
 
-	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(&pl).Write(w)
+	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(pl).Write(w)
 	return
 }
 
@@ -260,9 +251,9 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 // @Summary      Update post's star count
 // @Description  update the star count
 // @Tags         posts
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.APIResponse
+// @Param        postID path string true "post's ID to update"
+// @Success      200  {object}  common.APIResponse{data=posts.updatePostStarCount.responseData}
 // @Failure      400  {object}  common.APIResponse
 // @Failure      403  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
@@ -270,52 +261,55 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	type responseData struct {
+		Posts map[string]models.Post `json:"posts"`
+	}
+
+	// fetch caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	var post models.Post
-
-	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+	// take the param from path
+	postID := chi.URLParam(r, "postID")
+	if postID == "" {
+		l.Msg(common.ERR_POSTID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
-	key := post.ID
-
-	var found bool
-
-	if post, found = db.GetOne(db.FlowCache, key, models.Post{}); !found {
+	// fetch the post using postID
+	post, found := db.GetOne(db.FlowCache, postID, models.Post{})
+	if !found {
 		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// check if there is a selfrater
 	if post.Nickname == callerID {
 		l.Msg(common.ERR_POST_SELF_RATE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// increment the star count by 1
+	// increment the star count by one (1)
 	post.ReactionCount++
 
-	if saved := db.SetOne(db.FlowCache, key, post); !saved {
+	// resave the post back to databse
+	if saved := db.SetOne(db.FlowCache, postID, post); !saved {
 		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// prepare payload
 	posts := make(map[string]models.Post)
-	posts[key] = post
+	posts[postID] = post
 
-	pl := struct {
-		Posts map[string]models.Post `json:"posts"`
-	}{
+	pl := &responseData{
 		Posts: posts,
 	}
 
-	l.Msg("ok, star count incremented").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, star count incremented").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
 
@@ -327,6 +321,8 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
+// @Param    	 request body models.Post true "post to update in request body"
+// @Param        postID path string true "post's ID to update"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
 // @Failure      403  {object}  common.APIResponse
@@ -335,6 +331,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	// fetch caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -343,25 +340,27 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 
 	var post models.Post
 
+	// decode the request data
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
-	key := post.ID
-
-	if _, found := db.GetOne(db.FlowCache, key, models.Post{}); !found {
+	// check if suck post even exists
+	if _, found := db.GetOne(db.FlowCache, post.ID, models.Post{}); !found {
 		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// check for the post update forgery
 	if post.Nickname != callerID {
 		l.Msg(common.ERR_POST_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if saved := db.SetOne(db.FlowCache, key, post); !saved {
+	// save the updated post back (whole decoded struct to override the existing one --- very dangerous and nasty)
+	// one could easily change post's author to oneself and mutilate the post afterwards
+	if saved := db.SetOne(db.FlowCache, post.ID, post); !saved {
 		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
@@ -375,8 +374,8 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 // @Summary      Delete specified post
 // @Description  delete specified post
 // @Tags         posts
-// @Accept       json
 // @Produce      json
+// @Param        postID path string true "post's ID to update"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
 // @Failure      403  {object}  common.APIResponse
@@ -385,34 +384,40 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	// fetch caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// remove a post
-	var post models.Post
-
-	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+	// take the param from path
+	postID := chi.URLParam(r, "postID")
+	if postID == "" {
+		l.Msg(common.ERR_POSTID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	//key := strconv.FormatInt(post.Timestamp.UnixNano(), 10)
-	key := post.ID
+	// fetch the post using postID
+	post, found := db.GetOne(db.FlowCache, postID, models.Post{})
+	if !found {
+		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
+	// check for the possible post forgery
 	if post.Nickname != callerID {
 		l.Msg(common.ERR_POST_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if deleted := db.DeleteOne(db.FlowCache, key); !deleted {
+	// delete such post
+	if deleted := db.DeleteOne(db.FlowCache, postID); !deleted {
 		l.Msg(common.ERR_POST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete associated image and thumbnail
+	// delete associated image and its thumbnail
 	if post.Figure != "" {
 		err := os.Remove("/opt/pix/thumb_" + post.Figure)
 		if err != nil {
@@ -436,87 +441,89 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get single post
 // @Description  get single post
 // @Tags         posts
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.APIResponse
+// @Param    	 X-Hide-Replies header string false "hide replies"
+// @Param    	 X-Page-No header string true "page number"
+// @Param        postID path string true "post's ID to update"
+// @Success      200  {object}  common.APIResponse{data=posts.getSinglePost.responseData}
 // @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/{postID} [get]
 func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	type responseData struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+	}
+
+	// fetch the caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	//user, _ := getOne(UserCache, callerID, models.User{})
-
-	// parse the URI's path
-	// check if diff page has been requested
+	// take the param from path
 	postID := chi.URLParam(r, "postID")
+	if postID == "" {
+		l.Msg(common.ERR_POSTID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
-	pageNo := 0
-
+	// fetch the required X-Page-No header
 	pageNoString := r.Header.Get(HDR_PAGE_NO)
-	page, err := strconv.Atoi(pageNoString)
+	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	pageNo = page
+	// fetch the optional X-Hide-Replies header
+	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	if err != nil {
+		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+		hideReplies = false
+	}
 
-	/*flowList := user.FlowList
-	if flowList == nil {
-		flowList = make(map[string]bool)
-	}*/
+	opts := pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
 
-	opts := PageOptions{
-		SinglePost:   true,
-		SinglePostID: postID,
-		CallerID:     callerID,
-		PageNo:       pageNo,
-		//FlowList:   flowList,
+		Flow: pages.FlowOptions{
+			HideReplies:  hideReplies,
+			Plain:        hideReplies == false,
+			SinglePost:   true,
+			SinglePostID: postID,
+		},
 	}
 
 	// fetch page according to the logged user
-	pExport, uExport := GetOnePage(opts)
-	if pExport == nil || uExport == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	pagePtrs := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
-
-	// flush email addresses
-	uExport = *common.FlushUserData(&uExport, callerID)
-
-	/*for key, user := range uExport {
-		if key == callerID {
-			continue
-		}
-		user.Email = ""
-		uExport[key] = user
-	}*/
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		uExport[callerID] = caller
+		(*pagePtrs.Users)[callerID] = caller
 	}
 
-	pl := struct {
-		Posts map[string]models.Post `json:"posts"`
-		Users map[string]models.User `json:"users"`
-		Key   string                 `json:"key"`
-	}{
-		Posts: pExport,
-		Users: uExport,
+	// prepare the payload
+	pl := &responseData{
+		Posts: *pagePtrs.Posts,
+		Users: *common.FlushUserData(pagePtrs.Users, callerID),
 		Key:   callerID,
 	}
 
-	l.Msg("ok, dumping single post and its interactions").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, dumping single post and its interactions").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
 
@@ -525,65 +532,87 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get hashtagged post list
 // @Description  get hashtagged post list
 // @Tags         posts
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.APIResponse
+// @Param    	 X-Hide-Replies header string false "hide replies"
+// @Param    	 X-Page-No header string true "page number"
+// @Param        hashtag path string true "hashtag string"
+// @Success      200  {object}  common.APIResponse{data=posts.fetchHashtaggedPosts.responseData}
 // @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
 // @Router       /posts/hashtag/{hashtag} [get]
 func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
+	type responseData struct {
+		Posts map[string]models.Post `json:"posts"`
+		Users map[string]models.User `json:"users"`
+		Key   string                 `json:"key"`
+	}
+
+	// fetch the caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// parse the URI's path
-	// check if diff page has been requested
+	// take the param from path
 	hashtag := chi.URLParam(r, "hashtag")
+	if hashtag == "" {
+		l.Msg(common.ERR_HASHTAG_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
+	// fetch the required X-Page-No header
 	pageNoString := r.Header.Get(HDR_PAGE_NO)
-	page, err := strconv.Atoi(pageNoString)
+	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	opts := PageOptions{
-		Hashtag:  hashtag,
+	// fetch the optional X-Hide-Replies header
+	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	if err != nil {
+		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+		hideReplies = false
+	}
+
+	opts := pages.PageOptions{
 		CallerID: callerID,
-		PageNo:   page,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Flow: pages.FlowOptions{
+			HideReplies: hideReplies,
+			Plain:       hideReplies == false,
+			Hashtag:     hashtag,
+		},
 	}
 
 	// fetch page according to the logged user
-	pExport, uExport := GetOnePage(opts)
-	if pExport == nil || uExport == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	pagePtrs := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
+		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
-
-	// flush email addresses
-	uExport = *common.FlushUserData(&uExport, callerID)
 
 	// hack: include caller's models.User struct
 	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		uExport[callerID] = caller
+		(*pagePtrs.Users)[callerID] = caller
 	}
 
-	pl := struct {
-		Posts map[string]models.Post `json:"posts"`
-		Users map[string]models.User `json:"users"`
-		Key   string                 `json:"key"`
-	}{
-		Posts: pExport,
-		Users: uExport,
+	// prepare the payload
+	pl := &responseData{
+		Posts: *pagePtrs.Posts,
+		Users: *common.FlushUserData(pagePtrs.Users, callerID),
 		Key:   callerID,
 	}
 
-	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }

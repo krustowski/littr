@@ -7,23 +7,21 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", getPosts)
-		r.Post("/", addNewPost)
+	r.Get("/", getPosts)
+	r.Post("/", addNewPost)
 
-		// single-post view request
-		r.Get("/{postID}", getSinglePost)
+	// single-post view request
+	r.Get("/{postID}", getSinglePost)
 
-		// user flow page request -> backend/users/controllers.go
-		/*r.Route("/user", func(r chi.Router) {
-			r.Get("/{nick}", getUserPosts)
-		})*/
+	// user flow page request -> backend/users/controllers.go
+	/*r.Route("/user", func(r chi.Router) {
+		r.Get("/{nick}", getUserPosts)
+	})*/
 
-		r.Patch("/{postID}/star", updatePostStarCount)
-		r.Delete("/{postID}", deletePost)
+	r.Patch("/{postID}/star", updatePostStarCount)
+	r.Delete("/{postID}", deletePost)
 
-		r.Get("/hashtag/{hashtag}", fetchHashtaggedPosts)
-	})
+	r.Get("/hashtag/{hashtag}", fetchHashtaggedPosts)
 
 	return r
 }
