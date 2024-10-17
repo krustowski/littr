@@ -29,6 +29,8 @@ const (
 	ERR_POST_DELETE_FAIL    = "could not delete the post, try again"
 	ERR_POST_DELETE_THUMB   = "could not delete associated thumbnail"
 	ERR_POST_DELETE_FULLIMG = "could not delete associated full image"
+	ERR_POSTID_BLANK        = "postID param is required"
+	ERR_HASHTAG_BLANK       = "hashtag param is required"
 
 	// image-processing-related error messages
 	ERR_IMG_DECODE_FAIL      = "image: could not decode to byte stream"
