@@ -7,10 +7,8 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Route("/", func(r chi.Router) {
-		r.Post("/", authHandler)
-		r.Post("/logout", logoutHandler)
-	})
+	r.Post("/", authHandler)
+	r.Post("/logout", logoutHandler)
 
 	return r
 }

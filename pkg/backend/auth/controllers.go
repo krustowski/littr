@@ -28,35 +28,39 @@ type RefreshToken string
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	common.APIResponse
-// @Failure		400	{object}	common.APIResponse
-// @Failure		404	{object}	common.APIResponse
-// @Failure		500	{object}	common.APIResponse
-// @Router		/auth/ [post]
-// @security            []
+// @Param    	 	request body models.User true "user struct to auth"
+// @Success		200	{object}	common.APIResponse{data=auth.authHandler.responseData}
+// @Failure		400	{object}	common.APIResponse{data=auth.authHandler.responseData}
+// @Failure		404	{object}	common.APIResponse{data=auth.authHandler.responseData}
+// @Failure		500	{object}	common.APIResponse{data=auth.authHandler.responseData}
+// @Router		/auth [post]
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "auth")
 
-	pl := struct {
+	type responseData struct {
 		AuthGranted bool                   `json:"auth_granted"`
 		Users       map[string]models.User `json:"users"`
-	}{
+	}
+
+	// prepare the payload
+	pl := &responseData{
 		AuthGranted: false,
 	}
 
 	var user models.User
 
+	// decode the request body
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
 	l.CallerID = user.Nickname
 
 	// try to authenticate given user
-	u, ok := authUser(user)
+	grantedUser, ok := authUser(&user)
 	if !ok {
-		l.Msg(common.ERR_AUTH_FAIL).Status(http.StatusBadRequest).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_AUTH_FAIL).Status(http.StatusBadRequest).Log().Payload(pl).Write(w)
 		return
 	}
 
@@ -66,17 +70,17 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	secret := os.Getenv("APP_PEPPER")
 
 	userClaims := UserClaims{
-		Nickname: u.Nickname,
-		//User:     *u,
+		Nickname: grantedUser.Nickname,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		},
 	}
 
+	// get new access token
 	signedAccessToken, err := NewAccessToken(userClaims, secret)
 	if err != nil {
-		l.Msg(common.ERR_AUTH_ACC_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_AUTH_ACC_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
@@ -85,22 +89,25 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Now().Add(time.Hour * 168 * 4).Unix(),
 	}
 
+	// get new refresh token
 	signedRefreshToken, err := NewRefreshToken(refreshClaims, secret)
 	if err != nil {
-		l.Msg(common.ERR_AUTH_REF_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(&pl).Write(w)
+		l.Msg(common.ERR_AUTH_REF_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
+	// prepare the refresh token's hash
 	refreshSum := sha256.New()
 	refreshSum.Write([]byte(signedRefreshToken))
 	sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-	if saved := db.TokenCache.Set(sum, u.Nickname); !saved {
-		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+	// save new refresh token's hash to the database
+	if saved := db.TokenCache.Set(sum, grantedUser.Nickname); !saved {
+		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
 		return
 	}
 
-	// compose cookies
+	// compose the access cookie
 	accessCookie := &http.Cookie{
 		Name:     "access-token",
 		Value:    signedAccessToken,
@@ -111,6 +118,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	}
 
+	// compose the refresh cookie
 	refreshCookie := &http.Cookie{
 		Name:     "refresh-token",
 		Value:    signedRefreshToken,
@@ -121,16 +129,18 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	}
 
-	// save tokens as HTTP-only cookie
+	// set cookies to the response header
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
 
-	pl.Users = make(map[string]models.User)
-	pl.Users[u.Nickname] = *u
-	pl.Users = *common.FlushUserData(&pl.Users, u.Nickname)
+	// update the payload
+	users := make(map[string]models.User)
+	users[grantedUser.Nickname] = *grantedUser
+
+	pl.Users = *common.FlushUserData(&users, grantedUser.Nickname)
 	pl.AuthGranted = true
 
-	l.Msg("auth granted").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, auth granted, sending cookies").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
 
@@ -141,19 +151,21 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	common.APIResponse
-// @Failure		404	{object}	common.APIResponse
-// @Failure		500	{object}	common.APIResponse
+// @Success		200	{object}	common.APIResponse{data=auth.logoutHandler.responseData}
 // @Router		/auth/logout [post]
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "auth")
 
-	pl := struct {
+	type responseData struct {
 		AuthGranted bool
-	}{
+	}
+
+	// prepare the payload
+	pl := &responseData{
 		AuthGranted: false,
 	}
 
+	// invalidate the access cookie
 	voidAccessCookie := &http.Cookie{
 		Name:     "access-token",
 		Value:    "",
@@ -164,6 +176,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
+	// invalidate the refresh cookie
 	voidRefreshCookie := &http.Cookie{
 		Name:     "refresh-token",
 		Value:    "",
@@ -174,9 +187,10 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
+	// set void cookies
 	http.SetCookie(w, voidAccessCookie)
 	http.SetCookie(w, voidRefreshCookie)
 
-	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }

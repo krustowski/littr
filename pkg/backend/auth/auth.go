@@ -5,7 +5,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func authUser(aUser models.User) (*models.User, bool) {
+func authUser(aUser *models.User) (*models.User, bool) {
 	// fetch one user from cache according to the login credential
 	user, ok := db.GetOne(db.UserCache, aUser.Nickname, models.User{})
 	if !ok {
@@ -18,7 +18,11 @@ func authUser(aUser models.User) (*models.User, bool) {
 		// update user's hexadecimal passphrase form, as the binary form is broken and cannot be used on BE
 		if user.PassphraseHex == "" && aUser.PassphraseHex != "" {
 			user.PassphraseHex = aUser.PassphraseHex
-			_ = db.SetOne(db.UserCache, user.Nickname, user)
+
+			if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
+				// not very correct response --- user won't know this caused the failed auth
+				return nil, false
+			}
 		}
 
 		// auth granted
