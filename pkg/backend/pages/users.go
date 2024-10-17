@@ -6,7 +6,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePageUsers(opts PageOptions, ptrMaps *rawMaps) PagePointers {
+func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	var allUsers *map[string]models.User = ptrMaps.Users
 
 	users := []models.User{}

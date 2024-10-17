@@ -6,7 +6,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePagePolls(opts PageOptions, ptrMaps *rawMaps) PagePointers {
+func onePagePolls(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	var allPolls *map[string]models.Poll = ptrMaps.Polls
 	//var allUsers *map[string]models.User = ptrMaps.Users
 

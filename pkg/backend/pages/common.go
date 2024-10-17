@@ -47,13 +47,6 @@ type UserOptions struct {
 	SingleUserID string `json:"single_user_id"`
 }
 
-// DTO for fillDataMaps pointer output aggregation
-type rawMaps struct {
-	Polls *map[string]models.Poll
-	Posts *map[string]models.Post
-	Users *map[string]models.User
-}
-
 // DTO for GetOnePage pointer output aggregation
 type PagePointers struct {
 	Polls *map[string]models.Poll
@@ -62,13 +55,13 @@ type PagePointers struct {
 }
 
 // fillDataMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
-func fillDataMaps(opts PageOptions) *rawMaps {
+func fillDataMaps(opts PageOptions) *PagePointers {
 	// prepare data maps for a flow page
 	if opts.Flow != (FlowOptions{}) {
 		posts, _ := db.GetAll(db.FlowCache, models.Post{})
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &rawMaps{Posts: &posts, Users: &users}
+		return &PagePointers{Posts: &posts, Users: &users}
 	}
 
 	// prepare data map for a polls page
@@ -77,14 +70,14 @@ func fillDataMaps(opts PageOptions) *rawMaps {
 		// users are not needed necessarily there for now...
 		//users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &rawMaps{Polls: &polls}
+		return &PagePointers{Polls: &polls}
 	}
 
 	// prepare data map for a users page
 	if opts.Users != (UserOptions{}) {
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &rawMaps{Users: &users}
+		return &PagePointers{Users: &users}
 	}
 
 	return nil
@@ -107,7 +100,7 @@ func GetOnePage(opts PageOptions) (ptrs PagePointers) {
 	}
 
 	if opts.Flow != (FlowOptions{}) {
-		return onePageFlow(opts, ptrMaps)
+		return onePagePosts(opts, ptrMaps)
 	}
 
 	if opts.Polls != (PollOptions{}) {

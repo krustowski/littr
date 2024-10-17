@@ -7,7 +7,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePageFlow(opts PageOptions, ptrMaps *rawMaps) PagePointers {
+func onePagePosts(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	// BTW those variables are both of type map[string]T
 	//var allPolls map[string]models.Poll
 	var allPosts *map[string]models.Post = ptrMaps.Posts
