@@ -177,14 +177,17 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + write integration and e2e tests
 + [...]
 
-### roasmap to v0.43
-+ update swagger docs, ensure proper params, inputs, responses etc are valid
+### roadmap to v0.44
++ single poll referenced by ID (singlePoll subpage/view)
 + user activation via mail
+
+### roasmap to v0.43
++ unify options under the umbrella user.Options map (wip)
++ update swagger docs, ensure proper params, inputs, responses etc are valid (wip)
 
 ### roadmap to v0.42
 + ~~deeply refactor BE+FE again: declarative syntax for BE logger~~ 
-+ implement 5s toast's appearence (autodismiss) (wip)
-+ single poll referenced by ID (singlePoll subpage/view)
++ ~~implement 5s toast's appearence (autodismiss)~~ (wip)
 + ~~unified clean API response (wip)~~
 
 ### roadmap to v0.41

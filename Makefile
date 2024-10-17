@@ -199,7 +199,8 @@ version:
 
 .PHONY: docs_host
 docs_host:
-		sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
+	@echo -e "\n${YELLOW} Updating the host for docs... ${RESET}\n"
+	sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
 
 .PHONY: push
 push:
