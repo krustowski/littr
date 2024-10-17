@@ -131,12 +131,13 @@ func (c *Content) OnNav(ctx app.Context) {
 		posts, users := c.fetchFlowPage(opts)
 
 		// try the singlePostID/userFlowNick var if present
-		if parts.SinglePostID != "" && parts.SinglePost {
+		if parts.SinglePostID != "" && parts.SinglePost && posts != nil {
 			if _, found := (*posts)[parts.SinglePostID]; !found {
 				toast.Text(common.ERR_POST_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			}
 		}
-		if parts.UserFlowNick != "" && parts.UserFlow {
+
+		if parts.UserFlowNick != "" && parts.UserFlow && users != nil {
 			if _, found := (*users)[parts.UserFlowNick]; !found {
 				toast.Text(common.ERR_USER_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			}
