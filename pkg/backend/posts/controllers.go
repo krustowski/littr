@@ -228,7 +228,15 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		push.SendNotificationToDevices(receiverName, devs, body, l)
+		opts := &push.NotificationOpts{
+			Receiver: receiverName,
+			Devices:  &devs,
+			Body:     &body,
+			Logger:   l,
+		}
+
+		// send the webpush notification(s)
+		push.SendNotificationToDevices(opts)
 	}
 
 	// broadcast a new post to live subscribers

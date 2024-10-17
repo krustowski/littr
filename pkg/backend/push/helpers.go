@@ -15,20 +15,33 @@ import (
 	"github.com/SherClockHolmes/webpush-go"
 )
 
-func SendNotificationToDevices(nickname string, devs []models.Device, body []byte, l *common.Logger) {
-	tag := ""
-	if strings.Contains(string(body), "reply") {
+type NotificationOpts struct {
+	Receiver string
+	Devices  *[]models.Device
+	Body     *[]byte
+	Logger   *common.Logger
+}
+
+func SendNotificationToDevices(opts *NotificationOpts) {
+	l := opts.Logger
+	stringifiedBody := string(*opts.Body)
+
+	var tag string
+
+	if strings.Contains(stringifiedBody, "reply") {
 		tag = "reply"
-	} else if strings.Contains(string(body), "mention") {
+	} else if strings.Contains(stringifiedBody, "mention") {
 		tag = "mention"
 	}
 
+	// prepare an array for possible invalid devices (expired subscriptions etc)
 	devicesToDelete := []string{}
 
 	var wg sync.WaitGroup
 
-	// range devices
-	for _, dev := range devs {
+	// range devices and fire notifications
+	for _, dev := range *opts.Devices {
+		// skip blank UUIDs
 		if dev.UUID == "" {
 			continue
 		}
@@ -42,15 +55,15 @@ func SendNotificationToDevices(nickname string, devs []models.Device, body []byt
 
 		// run this async not to make client wait too much
 		//
-		// IMPORTANT NOTE: do not write headers in the goroutine --- this will crash the server on nil pointer dereference
+		// IMPORTANT NOTE: DO NOT write headers in the goroutine --- this will crash the server on nil pointer dereference
 		// and memory segment violation
-		go func(dev models.Device, body []byte) {
+		go func(dev models.Device, body *[]byte) {
 			defer wg.Done()
 
 			sub := dev.Subscription
 
-			// fire a notification
-			res, err := webpush.SendNotification(body, &sub, &webpush.Options{
+			// fire the notification
+			res, err := webpush.SendNotification(*body, &sub, &webpush.Options{
 				Subscriber:      os.Getenv("VAPID_SUBSCRIBER"),
 				VAPIDPublicKey:  os.Getenv("VAPID_PUB_KEY"),
 				VAPIDPrivateKey: os.Getenv("VAPID_PRIV_KEY"),
@@ -58,62 +71,65 @@ func SendNotificationToDevices(nickname string, devs []models.Device, body []byt
 				Urgency:         webpush.UrgencyNormal,
 			})
 			if err != nil {
-				code := http.StatusInternalServerError
-				message := "cannot send a notification: " + err.Error()
-
-				l.Println(message, code)
+				l.Msg(common.ERR_NOTIFICATION_NOT_SENT + err.Error()).Status(http.StatusInternalServerError).Log()
 				return
 			}
 
 			defer res.Body.Close()
 
+			// read the response body
 			bodyBytes, err := io.ReadAll(res.Body)
 			if err != nil {
-				// TODO: handle this
-				//log.Fatal(err)
+				l.Msg(common.ERR_NOTIFICATION_RESP_BODY_FAIL + err.Error()).Status(http.StatusInternalServerError).Log()
+				return
 			}
 
+			// stringify the text response
 			bodyString := string(bodyBytes)
 			if bodyString == "" {
-				bodyString = "(blank)"
+				bodyString = "okay"
 			}
 
-			code := res.StatusCode
-
-			// expired or unsubscribed -> delete subscription
-			if code != 201 {
+			// successful notification processing (webpush) gateway's response is HTTP/201
+			// otherwise is expired or unsubscribed => delete subscription
+			if res.StatusCode != 201 {
 				devicesToDelete = append(devicesToDelete, dev.UUID)
 			}
 
-			message := "push gorutine: response from the counterpart: " + bodyString
-			l.Println(message, code)
+			l.Msg(common.MSG_WEBPUSH_GW_RESPONSE + bodyString).Status(res.StatusCode).Log()
 			return
-		}(dev, body)
+		}(dev, opts.Body)
 	}
 
 	wg.Wait()
 
-	// update device list
-	defer func(devs []models.Device, oldUUIDs []string) {
+	// update device list --- do not include devs to delete (ones failed to send the notification to)
+	defer func(devs *[]models.Device, oldUUIDs []string) {
+		// no invalid devices = no worries
 		if len(devicesToDelete) == 0 {
 			return
 		}
 
+		// prepare a new device array
 		newDeviceList := []models.Device{}
 
-		for _, dev := range devs {
+		// loop over devs to cherrypick the currently valid devs
+		for _, dev := range *devs {
 			if helpers.Contains(oldUUIDs, dev.UUID) {
 				continue
 			}
 			newDeviceList = append(newDeviceList, dev)
 		}
 
-		if saved := db.SetOne(db.SubscriptionCache, nickname, newDeviceList); !saved {
-			l.Println("failed to update device list", http.StatusInternalServerError)
+		// save new device array upon the callerID
+		if saved := db.SetOne(db.SubscriptionCache, opts.Receiver, newDeviceList); !saved {
+			l.Msg(common.ERR_DEVICE_LIST_UPDATE_FAIL).Status(http.StatusInternalServerError).Log()
+			return
 		}
 
-		l.Println("ok, device list updated", http.StatusOK)
-	}(devs, devicesToDelete)
+		l.Msg("ok, device list updated").Status(http.StatusOK).Log()
+		return
+	}(opts.Devices, devicesToDelete)
 
 	return
 }

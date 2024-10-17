@@ -248,8 +248,15 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		Path:  "/flow/post/" + post.ID,
 	})
 
-	// fire notification goroutines
-	SendNotificationToDevices(post.Nickname, devs, body, l)
+	opts := &NotificationOpts{
+		Receiver: post.Nickname,
+		Devices:  &devs,
+		Body:     &body,
+		Logger:   l,
+	}
+
+	// send the webpush notification(s)
+	SendNotificationToDevices(opts)
 
 	l.Msg("ok, notification(s) are being sent").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return

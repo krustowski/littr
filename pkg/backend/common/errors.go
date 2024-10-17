@@ -59,13 +59,17 @@ const (
 	ERR_POLLID_BLANK            = "pollID param is required"
 	ERR_POLL_INVALID_VOTE_COUNT = "you can pass only one vote per poll"
 
-	// push-related error messages
-	ERR_DEVICE_NOT_FOUND       = "devices not found in the database"
-	ERR_SUBSCRIPTION_SAVE_FAIL = "could not save the subscription to database"
-	ERR_SUBSCRIPTION_NOT_FOUND = "such subscription not found in the database"
-	ERR_DEVICE_SUBSCRIBED      = "this device has been already registered"
-	ERR_PUSH_SELF_NOTIF        = "will not notify oneself"
-	ERR_PUSH_DISABLED_NOTIF    = "will not notify original poster"
-	ERR_PUSH_UUID_BLANK        = "device's UUID cannot be sent empty"
-	ERR_PUSH_BODY_COMPOSE_FAIL = "failed to compose the notification body"
+	// push-related (non-)error messages
+	MSG_WEBPUSH_GW_RESPONSE         = "push goroutine: webpush gateway:"
+	ERR_DEVICE_NOT_FOUND            = "devices not found in the database"
+	ERR_SUBSCRIPTION_SAVE_FAIL      = "could not save the subscription to database"
+	ERR_SUBSCRIPTION_NOT_FOUND      = "such subscription not found in the database"
+	ERR_DEVICE_SUBSCRIBED           = "this device has been already registered"
+	ERR_PUSH_SELF_NOTIF             = "will not notify oneself"
+	ERR_PUSH_DISABLED_NOTIF         = "will not notify original poster"
+	ERR_PUSH_UUID_BLANK             = "device's UUID cannot be sent empty"
+	ERR_PUSH_BODY_COMPOSE_FAIL      = "failed to compose the notification body"
+	ERR_NOTIFICATION_NOT_SENT       = "notification could not be sent"
+	ERR_NOTIFICATION_RESP_BODY_FAIL = "failed to read the notification's response body"
+	ERR_DEVICE_LIST_UPDATE_FAIL     = "failed to save the updated device list"
 )
