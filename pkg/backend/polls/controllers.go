@@ -20,9 +20,7 @@ import (
 // @Summary      Get a list of polls
 // @Description  get a list of polls
 // @Tags         polls
-// @Accept       json
 // @Produce      json
-// @X-Page-No    {"pageNo": 0}
 // @Param    	 X-Page-No header string true "page number"
 // @Success      200  {object}   common.APIResponse{data=polls.getPolls.responseData}
 // @Failure      400  {object}   common.APIResponse
@@ -336,7 +334,7 @@ func deletePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch the poll from database for comparison
-	poll, found := db.GetOne(db.PollCache, key, models.Poll{})
+	poll, found := db.GetOne(db.PollCache, pollID, models.Poll{})
 	if !found {
 		l.Msg(common.ERR_POLL_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
