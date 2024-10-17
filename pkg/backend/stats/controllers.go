@@ -14,29 +14,30 @@ import (
 // @Summary      Get stats
 // @Description  get stats
 // @Tags         stats
-// @Accept       json
 // @Produce      json
-// @Success      200  {array}   common.APIResponse
+// @Success      200  {object}   common.APIResponse{data=stats.getStats.responseData}
+// @Failure      400  {object}   common.APIResponse
 // @Router       /stats/ [get]
 func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
+	type responseData struct {
+		FlowStats map[string]int             `json:"flow_stats"`
+		UserStats map[string]models.UserStat `json:"user_stats"`
+		Users     map[string]models.User     `json:"users"`
+	}
+
+	// get the caller's nickname
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
 		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// fetch the data
+	// fetch all the data
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
 	posts, postCount := db.GetAll(db.FlowCache, models.Post{})
 	users, _ := db.GetAll(db.UserCache, models.User{})
-
-	// flush email addresses
-	for key, user := range users {
-		user.Email = ""
-		users[key] = user
-	}
 
 	// prepare the maps for export
 	flowStats := make(map[string]int)
@@ -61,20 +62,24 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 			stat.Searched = true
 		}
 
+		// increase the post count, increase the reaction count sum
 		stat.PostCount++
 		stat.ReactionCount += val.ReactionCount
+
 		userStats[val.Nickname] = stat
 		flowStats["stars"] += val.ReactionCount
 	}
 
 	// iterate over all users, compose global flower and shade count
 	for _, user := range users {
+		// flower count
 		for key, enabled := range user.FlowList {
 			if enabled && key != user.Nickname {
 				flowers[key]++
 			}
 		}
 
+		// shade count
 		for key, shaded := range user.ShadeList {
 			if shaded && key != user.Nickname {
 				shades[key]++
@@ -117,16 +122,12 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		flowStats["votes"] += poll.OptionThree.Counter
 	}
 
-	pl := struct {
-		FlowStats map[string]int             `json:"flow_stats"`
-		UserStats map[string]models.UserStat `json:"user_stats"`
-		Users     map[string]models.User     `json:"users"`
-	}{
+	pl := &responseData{
 		FlowStats: flowStats,
 		UserStats: userStats,
 		Users:     *common.FlushUserData(&users, callerID),
 	}
 
-	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
