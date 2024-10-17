@@ -26,7 +26,7 @@ var pathExceptions []string = []string{
 	"/api/v1/auth/",
 	"/api/v1/auth/logout",
 	"/api/v1/dump/",
-	"/api/v1/posts/live",
+	"/api/v1/live",
 	"/api/v1/users/passphrase/request",
 	"/api/v1/users/passphrase/reset",
 }
@@ -88,9 +88,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			// get refresh token's fingerprint
 			refreshSum := sha256.New()
 			refreshSum.Write([]byte(refreshCookie.Value))
-			sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+			refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-			rawNick, found := db.TokenCache.Get(sum)
+			// fetch refresh token details
+			rawToken, found := db.TokenCache.Get(refreshTokenSum)
 			if !found {
 				voidCookie := &http.Cookie{
 					Name:     REFRESH_TOKEN,
@@ -107,21 +108,21 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			nickname, ok := rawNick.(string)
+			token, ok := rawToken.(model.Token)
 			if !ok {
-				l.Msg("cannot assert data type for token's nickname field").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+				l.Msg("cannot assert data type to models.Token").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 				return
 			}
 
 			// invalidate refresh token on non-existing user referenced
-			user, ok = db.GetOne(db.UserCache, nickname, models.User{})
+			user, ok = db.GetOne(db.UserCache, token.Nickname, models.User{})
 			if !ok {
-				db.DeleteOne(db.TokenCache, sum)
+				db.DeleteOne(db.TokenCache, refreshTokenSum)
 
 				voidCookie := &http.Cookie{
 					Name:     REFRESH_TOKEN,
 					Value:    "",
-					Expires:  time.Now().Add(time.Second * -30),
+					Expires:  time.Now().Add(time.Second * -100),
 					Path:     "/",
 					HttpOnly: true,
 					Secure:   true,
@@ -133,8 +134,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
+			// prepare new access token claims
 			userClaims := UserClaims{
-				Nickname: nickname,
+				Nickname: token.Nickname,
 				StandardClaims: jwt.StandardClaims{
 					IssuedAt:  time.Now().Unix(),
 					ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
@@ -160,7 +162,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.SetCookie(w, accessCookie)
 
 			pl.Users = make(map[string]models.User)
-			pl.Users[nickname] = user
+			pl.Users[token.Nickname] = user
 
 			/*resp.Message = "ok, new access token issued"
 			resp.Code = http.StatusOK
@@ -169,8 +171,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			resp.Write(w)
 			return*/
 
-			ctx := context.WithValue(r.Context(), "nickname", nickname)
-			noteUsersActivity(nickname)
+			ctx := context.WithValue(r.Context(), "nickname", token.Nickname)
+			noteUsersActivity(token.Nickname)
 			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
@@ -180,9 +182,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// get the refresh token's fingerprint
 		refreshSum := sha256.New()
 		refreshSum.Write([]byte(refreshCookie.Value))
-		sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+		refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-		rawNick, found := db.TokenCache.Get(sum)
+		rawNick, found := db.TokenCache.Get(refreshTokenSum)
 		if !found {
 			voidCookie := &http.Cookie{
 				Name:     REFRESH_TOKEN,
@@ -199,14 +201,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		nickname, ok := rawNick.(string)
+		token, ok := rawToken.(models.Token)
 		if !ok {
-			l.Msg("cannot assert data type for token's nickname").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+			l.Msg("cannot assert data type to models.Token").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "nickname", nickname)
-		noteUsersActivity(nickname)
+		ctx := context.WithValue(r.Context(), "nickname", token.Nickname)
+		noteUsersActivity(token.Nickname)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

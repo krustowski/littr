@@ -1,5 +1,14 @@
 package common
 
+import (
+	"time"
+)
+
+// token consts
+const (
+	TOKEN_TTL = time.Hour * 168 * 4
+)
+
 // header names
 const (
 	HDR_PAGE_NO      = "X-Page-No"

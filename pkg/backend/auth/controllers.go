@@ -19,8 +19,6 @@ type UserAuth struct {
 	PassHash string `json:"pass_hash"`
 }
 
-type RefreshToken string
-
 // authHandler
 //
 // @Summary 		Auth an user
@@ -86,7 +84,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	refreshClaims := jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Hour * 168 * 4).Unix(),
+		ExpiresAt: time.Now().Add(common.TOKEN_TTL).Unix(),
 	}
 
 	// get new refresh token
@@ -99,10 +97,18 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	// prepare the refresh token's hash
 	refreshSum := sha256.New()
 	refreshSum.Write([]byte(signedRefreshToken))
-	sum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+
+	// prepare the refresh token struct
+	token := models.Token{
+		Hash:      refreshTokenSum,
+		Nickname:  grantedUser.Nickname,
+		CreatedAt: time.Now(),
+		TTL:       common.TOKEN_TTL,
+	}
 
 	// save new refresh token's hash to the database
-	if saved := db.TokenCache.Set(sum, grantedUser.Nickname); !saved {
+	if saved := db.TokenCache.Set(refreshTokenSum, token); !saved {
 		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
 		return
 	}
@@ -122,7 +128,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	refreshCookie := &http.Cookie{
 		Name:     "refresh-token",
 		Value:    signedRefreshToken,
-		Expires:  time.Now().Add(time.Hour * 168 * 4),
+		Expires:  time.Now().Add(common.TOKEN_TTL),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,

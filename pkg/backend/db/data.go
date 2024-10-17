@@ -19,7 +19,6 @@ const (
 	subscriptionsFile = "/opt/data/subscriptions.json"
 	tokensFile        = "/opt/data/tokens.json"
 	usersFile         = "/opt/data/users.json"
-	void              = ""
 )
 
 func LoadAll() string {
@@ -36,7 +35,7 @@ func LoadAll() string {
 		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
 
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
-		loadOne(TokenCache, tokensFile, void)))
+		loadOne(TokenCache, tokensFile, models.Token{})))
 
 	users := makeLoadReport("users", wrapLoadOutput(
 		loadOne(UserCache, usersFile, models.User{})))
@@ -60,7 +59,7 @@ func DumpAll() string {
 		dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{}))
 
 	report += prepareDumpReport("tokens",
-		dumpOne(TokenCache, tokensFile, void))
+		dumpOne(TokenCache, tokensFile, models.Token{}))
 
 	report += prepareDumpReport("users",
 		dumpOne(UserCache, usersFile, models.User{}))
