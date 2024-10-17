@@ -47,6 +47,16 @@ func initClient() {
 	app.RunWhenOnBrowser()
 }
 
+type Handler func(w http.ResponseWriter, r *http.Request) error
+
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := h(w, r); err != nil {
+		// handle returned error here.
+		w.WriteHeader(500)
+		w.Write([]byte("empty"))
+	}
+}
+
 func initServer() {
 	r := chi.NewRouter()
 
@@ -206,6 +216,11 @@ func initServer() {
 		},
 		ServiceWorkerTemplate: swTemplateString,
 	}
+
+	r.Method("GET", "/favicon.ico", Handler(func(w http.ResponseWriter, r *http.Request) error {
+		http.ServeFile(w, r, "/opt/web/favicon.ico")
+		return nil
+	}))
 
 	r.Handle("/*", appHandler)
 	server.Handler = r

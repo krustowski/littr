@@ -1,1 +1,5 @@
+build/*
+deployments/*
+docs/*
 .git/*
+.github/*

@@ -18,3 +18,6 @@
 .env
 run_data/
 .scannerwork/
+*.log
+
+test/jmeter/auth.json
