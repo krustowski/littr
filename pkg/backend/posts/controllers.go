@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"time"
 
-	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
 	app "github.com/maxence-charriere/go-app/v9/pkg/app"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
+	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/models"
@@ -240,9 +240,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast a new post to live subscribers
-	if Streamer != nil {
-		Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("post,"+post.Nickname))
-	}
+	live.BroadcastMessage("post,"+post.Nickname, "message")
 
 	posts := make(map[string]models.Post)
 	posts[key] = post

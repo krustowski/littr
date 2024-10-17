@@ -38,6 +38,8 @@ import (
 	"go.vxn.dev/littr/pkg/backend/auth"
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	//"go.vxn.dev/littr/pkg/backend/docs"
+	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/backend/push"
@@ -62,7 +64,9 @@ func APIRouter() chi.Router {
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.Router())
+	//r.Mount("/docs", docs.Router())
 	r.Mount("/dump", db.Router())
+	r.Mount("/live", live.Router())
 	r.Mount("/polls", polls.Router())
 	r.Mount("/posts", posts.Router())
 	r.Mount("/push", push.Router())

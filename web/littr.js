@@ -122,7 +122,7 @@
   //  })
   //}
 
-  const es = new EventSource("/api/v1/posts/live");
+  const es = new EventSource("/api/v1/live");
   es.retry = 5000;
 
   es.onerror = (err) => {

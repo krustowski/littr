@@ -7,12 +7,11 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
-	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
-	sse "github.com/alexandrevicenzi/go-sse"
 	chi "github.com/go-chi/chi/v5"
 )
 
@@ -169,9 +168,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast the new poll event
-	if posts.Streamer != nil {
-		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("poll"))
-	}
+	live.BroadcastMessage("poll", "message")
 
 	l.Msg("ok, adding new poll").Status(http.StatusCreated).Log().Payload(nil).Write(w)
 	return

@@ -16,11 +16,10 @@ import (
 	be "go.vxn.dev/littr/pkg/backend"
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/backend/posts"
+	"go.vxn.dev/littr/pkg/backend/live"
 	fe "go.vxn.dev/littr/pkg/frontend"
 	"go.vxn.dev/swis/v5/pkg/core"
 
-	sse "github.com/alexandrevicenzi/go-sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -106,8 +105,7 @@ func initServer() {
 
 	// load up data from local dumps (/opt/data/)
 	// TODO: catch an error there!
-	loadReport := db.LoadAll()
-	l.Println(loadReport, http.StatusOK)
+	l.Println(db.LoadAll(), http.StatusOK)
 
 	l.Println("dumped data loaded", http.StatusOK)
 
@@ -125,16 +123,14 @@ func initServer() {
 		signal.Stop(sigs)
 
 		l.Msg("trap signal: " + sig.String() + ", exiting gracefully...").Status(http.StatusOK)
-		if posts.Streamer != nil {
-			posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-stop"))
-		}
+		live.BroadcastMessage("server-stop", "message")
 
 		// TODO
-		//db.LockAll()
+		//db.Lock()
 		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
 
-		if posts.Streamer != nil {
-			posts.Streamer.Shutdown()
+		if live.Streamer != nil {
+			live.Streamer.Shutdown()
 		}
 	}()
 
@@ -217,6 +213,7 @@ func initServer() {
 		ServiceWorkerTemplate: swTemplateString,
 	}
 
+	// workaround to serve a proper favicon icon
 	r.Method("GET", "/favicon.ico", Handler(func(w http.ResponseWriter, r *http.Request) error {
 		http.ServeFile(w, r, "/opt/web/favicon.ico")
 		return nil
@@ -236,9 +233,7 @@ func initServer() {
 
 func serverStartNotif() {
 	time.Sleep(time.Second * 30)
+	live.BroadcastMessage("server-start", "message")
 
-	if posts.Streamer != nil {
-		posts.Streamer.SendMessage("/api/v1/posts/live", sse.SimpleMessage("server-start"))
-	}
-
+	return
 }
