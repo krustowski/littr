@@ -7,27 +7,31 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", getUsers)
-		r.Post("/", addNewUser)
-		r.Post("/passphrase/request", resetRequestHandler)
-		r.Post("/passphrase/reset", resetPassphraseHandler)
+	// basic routes
+	r.Get("/", getUsers)
+	r.Post("/", addNewUser)
 
-		r.Get("/{nickname}", getOneUser)
-		r.Get("/caller", getOneUser)
-		//r.Put("/{nickname}", updateUser)
-		r.Delete("/{nickname}", deleteUser)
+	// passphrase-related routes
+	r.Post("/passphrase/request", resetRequestHandler)
+	r.Post("/passphrase/reset", resetPassphraseHandler)
 
-		r.Post("/{nickname}/avatar", postUsersAvatar)
-		r.Get("/{nickname}/posts", getUserPosts)
-		r.Post("/{nickname}/request", addToRequestList)
-		r.Delete("/{nickname}/request", removeFromRequestList)
-		r.Patch("/{nickname}/lists", updateUserList)
-		r.Patch("/{nickname}/options", updateUserOption)
-		r.Patch("/{nickname}/passphrase", updateUserPassphrase)
-		//r.Patch("/{nickname}/private", togglePrivateMode)
-		//r.Patch("/{nickname}/localtime", toggleLocalTimeMode)
-	})
+	// incomplete CRUD
+	r.Get("/{userID}", getOneUser)
+	r.Get("/caller", getOneUser)
+	//r.Put("/{nickname}", updateUser)
+	r.Delete("/{userID}", deleteUser)
+
+	// user's settings routes
+	r.Post("/{userID}/avatar", postUsersAvatar)
+	r.Get("/{userID}/posts", getUserPosts)
+	r.Patch("/{userID}/lists", updateUserList)
+	r.Patch("/{userID}/options", updateUserOption)
+	r.Patch("/{userID}/passphrase", updateUserPassphrase)
+
+	// request-to-follow routes
+	// (depraceted, use /{userID}/lists route instead)
+	//r.Post("/{userID}/request", addToRequestList)
+	//r.Delete("/{userID}/request", removeFromRequestList)
 
 	return r
 }

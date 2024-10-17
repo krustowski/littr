@@ -8,6 +8,13 @@ import (
 	gomail "github.com/wneessen/go-mail"
 )
 
+type MessagePayload struct {
+	Email      string
+	Type       string
+	UUID       string
+	Passphrase string
+}
+
 func sendResetMail(msg *gomail.Msg) error {
 	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
 	if err != nil {
@@ -29,7 +36,7 @@ func sendResetMail(msg *gomail.Msg) error {
 	return nil
 }
 
-func composeResetMail(payload msgPayload) (*gomail.Msg, error) {
+func composeResetMail(payload MessagePayload) (*gomail.Msg, error) {
 	m := gomail.NewMsg()
 	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
 		return nil, err

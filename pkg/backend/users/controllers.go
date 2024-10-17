@@ -16,8 +16,8 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
+	//"go.vxn.dev/littr/pkg/backend/mail"
 	"go.vxn.dev/littr/pkg/backend/pages"
-	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -25,48 +25,41 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-type msgPayload struct {
-	Email      string
-	Type       string
-	UUID       string
-	Passphrase string
-}
-
 // getUsers is the users handler that processes and returns existing users list.
 //
 // @Summary      Get a list of users
 // @Description  get a list of users
 // @Tags         users
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.APIResponse
+// @Param    	 X-Page-No header string true "page number"
+// @Success      200  {object}   common.APIResponse{data=users.getUsers.responseData}
+// @Failure	 400  {object}   common.APIResponse
+// @Failure	 404  {object}   common.APIResponse
+// @Failure	 500  {object}   common.APIResponse
 // @Router       /users [get]
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	stats := make(map[string]models.UserStat)
+	l := common.NewLogger(r, "users")
 
-	type payload struct {
+	type responseData struct {
 		Users     map[string]models.User     `json:"users"`
 		User      models.User                `json:"user"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 	}
 
-	l := common.NewLogger(r, "users")
-	pl := payload{}
-
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check the callerID record in the database
-	_, ok = db.GetOne(db.UserCache, callerID, models.User{})
-	if !ok {
+	if _, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	pageNoString := r.Header.Get("X-Page-No")
+	// fetch the required X-Page-No header
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -74,7 +67,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: callerID,
+		CallerID: l.CallerID,
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -90,34 +83,39 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//(*pagePtrs.Users)[callerID] = caller
+	//(*pagePtrs.Users)[l.CallerID] = caller
 
 	// fetch all data for the calculations
-	//users, _ := db.GetAll(db.UserCache, models.User{})
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
+
+	// prepare a map for statistics
+	stats := make(map[string]models.UserStat)
 
 	// calculate the post count
 	for _, post := range posts {
-		nick := post.Nickname
-
-		stat, found := stats[nick]
+		// is there already a statistic struct for such user?
+		stat, found := stats[post.Nickname]
 		if !found {
 			stat = models.UserStat{}
 		}
 
+		// increase the post count and assign the stat back to stats map
 		stat.PostCount++
-		stats[nick] = stat
+		stats[post.Nickname] = stat
 	}
 
 	// calculate the flower/follower count
 	for nick, user := range *pagePtrs.Users {
+		// get one's flowList
 		flowList := user.FlowList
 		if flowList == nil {
 			continue
 		}
 
+		// loop over all flowList items, increment those followed
 		for key, state := range flowList {
 			if state && key != nick {
+				// increment the follower count
 				stat := stats[key]
 				stat.FlowerCount++
 				stats[key] = stat
@@ -126,64 +124,70 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// flush unwanted properties in users map
-	pl.Users = *common.FlushUserData(pagePtrs.Users, callerID)
-	pl.User = pl.Users[callerID]
-	pl.UserStats = stats
+	users := *common.FlushUserData(pagePtrs.Users, l.CallerID)
 
-	l.Msg("ok, dumping users").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	// prepare the response payload
+	pl := &responseData{
+		Users:     users,
+		User:      users[l.CallerID],
+		UserStats: stats,
+	}
+
+	l.Msg("ok, dumping users").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
 
-// getOneUser is the users handler that processes and returns existing user's details.
+// getOneUser is the users handler that processes and returns existing user's details according to callerID.
 //
 // @Summary      Get the user's details
 // @Description  get the user's details
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.APIResponse
+// @Success      200  {object}   common.APIResponse{data=users.getOneUser.responseData}
+// @Failure      400  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
 // @Router       /users/caller [get]
 func getOneUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	type payload struct {
+	type responseData struct {
 		User      models.User     `json:"user"`
 		Devices   []models.Device `json:"devices"`
 		PublicKey string          `json:"public_key"`
 	}
 
-	pl := payload{
-		PublicKey: os.Getenv("VAPID_PUB_KEY"),
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
 	}
 
 	// check the callerID record in the database
-	caller, ok := db.GetOne(db.UserCache, callerID, models.User{})
+	caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{})
 	if !ok {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
-
 	}
 
 	// fetch user's devices
-	devs, _ := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	devs, _ := db.GetOne(db.SubscriptionCache, l.CallerID, []models.Device{})
 
 	// helper struct for the data flush
 	users := make(map[string]models.User)
-	users[callerID] = caller
-	users = *common.FlushUserData(&users, callerID)
+	users[l.CallerID] = caller
 
-	// return response
-	pl.Devices = devs
-	pl.User = users[callerID]
+	// flush sensitive user data
+	users = *common.FlushUserData(&users, l.CallerID)
 
-	l.Status(http.StatusOK).Msg("ok, returning callerID's record").Log().Payload(&pl).Write(w)
+	// compose the response payloaad
+	pl := &responseData{
+		User:      users[l.CallerID],
+		Devices:   devs,
+		PublicKey: os.Getenv("VAPID_PUB_KEY"),
+	}
+
+	l.Status(http.StatusOK).Msg("ok, returning callerID's user record").Log().Payload(pl).Write(w)
 	return
 }
 
@@ -194,85 +198,100 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Param    	 request body models.User true "new user's request body"
 // @Success      200  {object}   common.APIResponse
 // @Failure      400  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
 // @Failure      409  {object}   common.APIResponse
-// @Router       /users/ [post]
+// @Failure      500  {object}   common.APIResponse
+// @Router       /users [post]
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
+	// check if the registration is allowed
 	if !configs.REGISTRATION_ENABLED {
-		l.Msg("registration is disabled at the moment").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_REGISTRATION_DISABLED).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
-	// decode raw bytes
+	// decode the incoming data
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		l.Msg("could not process input data, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// block restricted nicknames, use lowercase for comparison
 	if helpers.Contains(configs.UserDeletionList, strings.ToLower(user.Nickname)) {
-		l.Msg("this nickname is restricted").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_RESTRICTED_NICKNAME).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); found {
-		l.Msg("this nickname has been already taken").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NICKNAME_TAKEN).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// restrict the nickname to contains only some characters explicitly "listed"
 	// https://stackoverflow.com/a/38554480
 	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
-		l.Msg("nickname can consist of chars a-z, A-Z and numbers only").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_NICKNAME_CHARSET_MISMATCH).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check the nick's length limits
 	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
-		l.Msg("nickname is too long (>12 chars), or too short (<3 chars)").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_NICKNAME_TOO_LONG_SHORT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// get the e-mail address
 	email := strings.ToLower(user.Email)
 	user.Email = email
 
 	// validate e-mail struct
 	// https://stackoverflow.com/a/66624104
 	if _, err := mail.ParseAddress(email); err != nil {
-		l.Msg("e-mail address is of a wrong format").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_WRONG_EMAIL_FORMAT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check for the already registred e-mail
 	allUsers, _ := db.GetAll(db.UserCache, models.User{})
 
-	for _, u := range allUsers {
-		if strings.ToLower(u.Email) == user.Email {
-			l.Msg("this e-mail address has been already used").Status(http.StatusConflict).Log().Payload(nil).Write(w)
+	for _, usr := range allUsers {
+		// e-maill address match
+		if strings.ToLower(usr.Email) == user.Email {
+			l.Msg(common.ERR_EMAIL_ALREADY_USED).Status(http.StatusConflict).Log().Payload(nil).Write(w)
 			return
 		}
 	}
 
+	//
 	// validation end = new user can be added
+	//
 
+	// set defaults and a timestamp
 	user.LastActiveTime = time.Now()
 	user.About = "newbie"
 
+	// options defaults
+	user.Options = make(map[string]bool)
+	user.Options["gdpr"] = true
+	user.GDPR = true
+
+	// save new user to the database
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not save new user, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	//resp.Users[user.Nickname] = user
-
+	// prepare a timestamp for a very new post to alert others the new user has been added
 	postStamp := time.Now()
 	postKey := strconv.FormatInt(postStamp.UnixNano(), 10)
 
+	// compose the post's body
 	post := models.Post{
 		ID:        postKey,
 		Type:      "user",
@@ -282,8 +301,9 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		Timestamp: postStamp,
 	}
 
+	// save new post to the database
 	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
-		l.Msg("could not create a new post about new registration").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_POSTREG_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -293,45 +313,58 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 // updateUser is the users handler function that processes and updates given user in the database.
 //
+// @Deprecated
 // @Summary      Update the user's details
 // @Description  update the user's details
 // @Tags         users
 // @Accept       json
-// @Deprecated
 // @Produce      json
+// @Param        userID path string true "updated user's ID"
+// @Param    	 request body models.User true "updated user's body"
 // @Success      200  {object}   common.APIResponse
 // @Failure      400  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
 // @Failure      409  {object}   common.APIResponse
-// @Router       /users/{nickname} [put]
+// @Router       /users/{userID} [put]
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	var user models.User
 
+	// decode the incoming data
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if user.Nickname != callerID {
-		l.Msg("you can update yours account only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	// mismatching user's name from the caller's ID
+	if user.Nickname != l.CallerID || userID != l.CallerID || userID != user.Nickname {
+		l.Msg(common.ERR_USER_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// get the uploaded user's database record verification
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// save uploaded user object as a whole --- dangerous and nasty!!! DO NOT use this handler
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -344,59 +377,80 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 // @Summary      Update user's passphrase
 // @Description  update user's passphrase
 // @Tags         users
-// @Accept       json
 // @Produce      json
+// @Param    	 request body users.updateUserPassphrase.requestData true "new passphrase hash body"
+// @Param        userID path string true "ID of the user to update"
 // @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
 // @Failure      403  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
 // @Failure      409  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
-// @Router       /users/{nickname}/passphrase [patch]
+// @Router       /users/{userID}/passphrase [patch]
 func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	type requestData struct {
+		NewPassphraseHex     string `json:"new_passphrase_hex"`
+		CurrentPassphraseHex string `json:"current_passphrase_hex"`
+	}
+
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if callerID != nick {
-		l.Msg("you can update yours passphrase only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	user, found := db.GetOne(db.UserCache, callerID, models.User{})
+	// check for possible user's record forgery attempt
+	if l.CallerID != userID {
+		l.Msg(common.ERR_USER_PASSPHRASE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// fetch requested user's database record
+	user, found := db.GetOne(db.UserCache, l.CallerID, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	var options struct {
-		NewPassphraseHex     string `json:"new_passphrase_hex"`
-		CurrentPassphraseHex string `json:"current_passphrase_hex"`
-	}
+	var reqData requestData
 
-	if err := common.UnmarshalRequestData(r, &options); err != nil {
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if options.NewPassphraseHex == "" || options.CurrentPassphraseHex == "" {
-		l.Msg("empty data received, try again").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// check if both new or old passphrase hashes are blank/empty
+	if reqData.NewPassphraseHex == "" || reqData.CurrentPassphraseHex == "" {
+		l.Msg(common.ERR_PASSPHRASE_REQ_INCOMPLETE).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if options.CurrentPassphraseHex != user.PassphraseHex {
-		l.Msg("current passhrase is wrong").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// check if the current passphrasë́'s hash is correct
+	if reqData.CurrentPassphraseHex != user.PassphraseHex {
+		l.Msg(common.ERR_PASSPHRASE_CURRENT_WRONG).Status(http.StatusConflict).Log().Payload(nil).Write(w)
 		return
 	}
 
-	user.PassphraseHex = options.NewPassphraseHex
+	//
+	// ok, passhprase should be okay to update/change
+	//
 
+	// set new passphrase hash to the user's record
+	user.PassphraseHex = reqData.NewPassphraseHex
+
+	// save the user's record back to database
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -409,98 +463,123 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 // @Summary      Update user's list
 // @Description  update user's list
 // @Tags         users
-// @Accept       json
 // @Produce      json
+// @Param    	 request body users.updateUserList.requestData true "new user lists data"
+// @Param        userID path string true "ID of the user to update"
 // @Success      200  {object}   common.APIResponse
 // @Failure      403  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
-// @Router       /users/{nickname}/lists [patch]
+// @Router       /users/{userID}/lists [patch]
 func updateUserList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	type requestData struct {
+		FlowList    map[string]bool `json:"flow_list"`
+		RequestList map[string]bool `json:"request_list"`
+		ShadeList   map[string]bool `json:"shade_list"`
+	}
+
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	user, found := db.GetOne(db.UserCache, nick, models.User{})
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// check for possible user's record forgery attempt
+	if l.CallerID != userID {
+		l.Msg(common.ERR_USER_PASSPHRASE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// look for the requested user's record in database
+	user, found := db.GetOne(db.UserCache, userID, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	lists := struct {
-		FlowList    map[string]bool `json:"flow_list"`
-		RequestList map[string]bool `json:"request_list"`
-		ShadeList   map[string]bool `json:"shade_list"`
-	}{}
+	var reqData requestData
 
-	if err := common.UnmarshalRequestData(r, &lists); err != nil {
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// process FlowList if not empty
-	if lists.FlowList != nil {
+	// process the FlowList if not empty
+	if reqData.FlowList != nil {
 		if user.FlowList == nil {
 			user.FlowList = make(map[string]bool)
 		}
 
-		for key, value := range lists.FlowList {
+		// loop over all flowList records
+		for key, value := range reqData.FlowList {
 			// do not allow to unfollow oneself
 			if key == user.Nickname {
 				user.FlowList[key] = true
 				continue
 			}
 
+			// set such flowList record according to the request data
 			if _, found := user.FlowList[key]; found {
 				user.FlowList[key] = value
 			}
 
 			// check if the user is shaded by the counterpart
 			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
-				if counterpart.Private && key != callerID {
+				if counterpart.Private && key != l.CallerID {
 					// cannot add this user to one's flow, as the following
 					// has to be requested and allowed by the counterpart
+					user.FlowList[key] = false
 					continue
 				}
 
+				// update the flowList record according to the counterpart's shade list state of the user
 				if shaded, found := counterpart.ShadeList[user.Nickname]; !found || (found && !shaded) {
 					user.FlowList[key] = value
 				}
 			}
 		}
 	}
+	// always allow to see system posts
 	user.FlowList["system"] = true
 
-	// process RequestList if not empty
-	if lists.RequestList != nil {
+	// process the RequestList if not empty
+	if reqData.RequestList != nil {
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
 		}
 
-		for key, value := range lists.RequestList {
+		// loop over the RequestList records and change the user's values accordingly
+		for key, value := range reqData.RequestList {
 			user.RequestList[key] = value
 		}
 	}
 
 	// process ShadeList if not empty
-	if lists.ShadeList != nil {
+	if reqData.ShadeList != nil {
 		if user.ShadeList == nil {
 			user.ShadeList = make(map[string]bool)
 		}
 
-		for key, value := range lists.ShadeList {
+		// loop over the ShadeList records and change the user's values accordingly
+		// TODO: what if the counterpards shades us already???
+		for key, value := range reqData.ShadeList {
 			user.ShadeList[key] = value
 		}
 	}
 
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	// save updated user lists to the database
+	if saved := db.SetOne(db.UserCache, userID, user); !saved {
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -513,36 +592,19 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 // @Summary      Update user's option
 // @Description  update user's option
 // @Tags         users
-// @Accept       json
 // @Produce      json
+// @Param    	 request body users.updateUserOptions.requestData true "new user options' values"
+// @Param        userID path string true "ID of the user to update"
 // @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
 // @Failure      403  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
-// @Router       /users/{nickname}/options [patch]
+// @Router       /users/{userID}/options [patch]
 func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	if callerID != nick {
-		l.Msg("you can update yours data only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
-		return
-	}
-
-	user, found := db.GetOne(db.UserCache, callerID, models.User{})
-	if !found {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var options struct {
+	type requestData struct {
 		UIDarkMode    bool   `json:"dark_mode"`
 		LiveMode      bool   `json:"live_mode"`
 		LocalTimeMode bool   `json:"local_time_mode"`
@@ -551,43 +613,86 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 		WebsiteLink   string `json:"website_link"`
 	}
 
-	if err := common.UnmarshalRequestData(r, &options); err != nil {
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// check for the possible user's data forgery attempt
+	if l.CallerID != userID {
+		l.Msg(common.ERR_USER_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// fetch the requested user's record form the database
+	user, found := db.GetOne(db.UserCache, userID, models.User{})
+	if !found {
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
+
+	//
+	// OK, caller seems to be a genuine existing user
+	//
+
+	var reqData requestData
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// patch the nil map
+	if user.Options == nil {
+		user.Options = make(map[string]bool)
+	}
+
 	// toggle dark mode to light mode and vice versa
-	if options.UIDarkMode != user.UIDarkMode {
+	if reqData.UIDarkMode != user.UIDarkMode {
 		user.UIDarkMode = !user.UIDarkMode
+		user.Options["uiDarkMode"] = reqData.UIDarkMode
 	}
 
 	// toggle the live mode
-	if options.LiveMode != user.LiveMode {
+	if reqData.LiveMode != user.LiveMode {
 		user.LiveMode = !user.LiveMode
+		user.Options["liveMode"] = reqData.LiveMode
 	}
 
 	// toggle the local time mode
-	if options.LocalTimeMode != user.LocalTimeMode {
+	if reqData.LocalTimeMode != user.LocalTimeMode {
 		user.LocalTimeMode = !user.LocalTimeMode
+		user.Options["localTimeMode"] = reqData.LocalTimeMode
 	}
 
 	// toggle the private mode
-	if options.Private != user.Private {
+	if reqData.Private != user.Private {
 		user.Private = !user.Private
+		user.Options["private"] = reqData.Private
 	}
 
 	// change the about text if present and differs from the current one
-	if options.AboutText != "" && options.AboutText != user.About {
-		user.About = options.AboutText
+	if reqData.AboutText != "" && reqData.AboutText != user.About {
+		user.About = reqData.AboutText
 	}
 
 	// change the website link if present and differs from the current one
-	if options.WebsiteLink != "" && options.WebsiteLink != user.Web {
-		user.Web = options.WebsiteLink
+	if reqData.WebsiteLink != "" && reqData.WebsiteLink != user.Web {
+		user.Web = reqData.WebsiteLink
 	}
 
-	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	// save the updated user's record back to the database
+	if saved := db.SetOne(db.UserCache, userID, user); !saved {
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -600,91 +705,119 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 // @Summary      Delete user
 // @Description  delete user
 // @Tags         users
-// @Accept       json
 // @Produce      json
+// @Param        userID path string true "ID of the user to delete"
 // @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
 // @Failure      404  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
-// @Router       /users/{nickname} [delete]
+// @Router       /users/{userID} [delete]
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if nick != callerID {
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// check for possible user's data forgery attempt
+	if userID != l.CallerID {
 		l.Msg(common.ERR_USER_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if _, found := db.GetOne(db.UserCache, callerID, models.User{}); !found {
+	// look for such user requested in the database
+	if _, found := db.GetOne(db.UserCache, userID, models.User{}); !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete user
-	if deleted := db.DeleteOne(db.UserCache, nick); !deleted {
+	// delete requested user record from database
+	if deleted := db.DeleteOne(db.UserCache, userID); !deleted {
 		l.Msg(common.ERR_USER_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete user's subscriptions
-	if deleted := db.DeleteOne(db.SubscriptionCache, nick); !deleted {
+	// delete user's subscriptions/registered devices
+	if deleted := db.DeleteOne(db.SubscriptionCache, userID); !deleted {
 		l.Msg(common.ERR_SUBSCRIPTION_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	void := ""
+	var void string
 
 	// delete all user's posts and polls, and tokens
+	// fetch all posts, polls, and tokens to find mathing ones to delete
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
 	tokens, _ := db.GetAll(db.TokenCache, void)
 
 	// loop over posts and delete authored ones + linked fungures
-	for id, post := range posts {
-		if post.Nickname == nick {
-			db.DeleteOne(db.FlowCache, id)
+	for postID, post := range posts {
+		if post.Nickname != userID {
+			continue
+		}
 
-			// delete associated image and thumbnail
-			if post.Figure != "" {
-				err := os.Remove("/opt/pix/thumb_" + post.Figure)
-				if err != nil {
-					// TODO catch error
-					continue
-				}
+		// delete such user's post
+		if deleted := db.DeleteOne(db.FlowCache, postID); !deleted {
+			l.Msg("could not delete deleted user's post (" + postID + ")").Status(http.StatusInternalServerError).Log()
+			//continue
+		}
 
-				err = os.Remove("/opt/pix/" + post.Figure)
-				if err != nil {
-					// TODO catch error
-					continue
-				}
+		// delete associated image and thumbnail
+		if post.Figure != "" {
+			// remove the original image's thumbnail
+			err := os.Remove("/opt/pix/thumb_" + post.Figure)
+			if err != nil {
+				l.Msg("error removing a thumbnail: " + err.Error()).Status(http.StatusInternalServerError).Log()
+				//continue
+			}
+
+			// remove the original image posted
+			err = os.Remove("/opt/pix/" + post.Figure)
+			if err != nil {
+				l.Msg("error removing a original image: " + err.Error()).Status(http.StatusInternalServerError).Log()
+				//continue
 			}
 		}
 	}
 
 	// loop over polls and delete authored ones
-	for id, poll := range polls {
-		if poll.Author == nick {
-			// TODO catch error
-			db.DeleteOne(db.PollCache, id)
+	for pollID, poll := range polls {
+		if poll.Author != userID {
+			continue
+		}
+
+		// delete such poll
+		if deleted := db.DeleteOne(db.PollCache, pollID); !deleted {
+			l.Msg("could not delete deleted user's poll (" + pollID + ")").Status(http.StatusInternalServerError).Log()
+			continue
 		}
 	}
 
 	// loop over tokens and delete matching ones
-	for id, tok := range tokens {
-		if tok == nick {
-			// TODO catch error
-			db.DeleteOne(db.TokenCache, id)
+	for tokenHash, token := range tokens {
+		if token != userID {
+			continue
+		}
+
+		// delete such refresh token record
+		if deleted := db.DeleteOne(db.TokenCache, tokenHash); !deleted {
+			l.Msg("could not delete deleted user's token (" + tokenHash + ")").Status(http.StatusInternalServerError).Log()
+			continue
 		}
 	}
 
-	l.Msg("ok, deleting user " + nick).Status(http.StatusOK).Log().Payload(nil).Write(w)
+	l.Msg("ok, purging user and their assets").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -693,70 +826,86 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get user posts
 // @Description  get user posts
 // @Tags         users
-// @Accept       json
 // @Produce      json
-// @Success      200  {object}  common.APIResponse
+// @Param    	 X-Hide-Replies header string false "hide replies"
+// @Param    	 X-Page-No header string true "page number"
+// @Param        userID path string true "user's ID for their posts"
+// @Success      200  {object}  common.APIResponse{data=users.getUserPosts.responseData}
 // @Failure      400  {object}  common.APIResponse
-// @Router       /users/{nickname}/posts [get]
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/{userID}/posts [get]
 func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	type responseData struct {
+		Users map[string]models.User `json:"users"`
+		Posts map[string]models.Post `json:"posts"`
+		Key   string                 `json:"key"`
+	}
+
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// parse the URI's path
-	// check if diff page has been requested
-	nick := chi.URLParam(r, "nickname")
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
-	pageNo := 0
-
-	pageNoString := r.Header.Get("X-Page-No")
-	page, err := strconv.Atoi(pageNoString)
+	// fetch the required X-Page-No header's value
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
+	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	pageNo = page
-
-	// mock the flowlist (nasty hack)
-	flowList := make(map[string]bool)
-	flowList[nick] = true
-
-	opts := posts.PageOptions{
-		UserFlow:     true,
-		UserFlowNick: nick,
-		CallerID:     callerID,
-		PageNo:       pageNo,
-		FlowList:     flowList,
+	// fetch the optional X-Hide-Replies header's value
+	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
+	if err != nil {
+		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+		hideReplies = false
 	}
 
-	// fetch page according to the logged user
-	pExport, uExport := posts.GetOnePage(opts)
-	if pExport == nil || uExport == nil {
+	// set the page options
+	opts := pages.PageOptions{
+		CallerID: l.CallerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Flow: pages.FlowOptions{
+			HideReplies:  hideReplies,
+			Plain:        hideReplies == false,
+			UserFlow:     true,
+			UserFlowNick: userID,
+		},
+	}
+
+	// fetch page according to the options and logged user
+	pagePtrs := pages.GetOnePage(opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
 		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, callerID, models.User{}); !ok {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+	// include caller in the user export
+	if caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		uExport[callerID] = caller
+		(*pagePtrs.Users)[l.CallerID] = caller
 	}
 
-	pl := struct {
-		Users map[string]models.User
-		Posts map[string]models.Post
-		Key   string
-	}{
-		Users: *common.FlushUserData(&uExport, callerID),
-		Posts: pExport,
-		Key:   callerID,
+	// prepare the payload
+	pl := &responseData{
+		Posts: *pagePtrs.Posts,
+		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID),
+		Key:   l.CallerID,
 	}
 
 	l.Msg("ok, dumping user's flow posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
@@ -770,6 +919,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Param    	 request body users.resetRequestHandler.requestData true "the e-mail address struct"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
@@ -778,39 +928,53 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	fetch := struct {
+	type requestData struct {
 		Email string `json:"email"`
-	}{}
+	}
 
-	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
+	var reqData requestData
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	email := strings.ToLower(fetch.Email)
-	fetch.Email = email
+	// skip blank e-mail address entered
+	if reqData.Email == "" {
+		l.Msg(common.ERR_REQUEST_EMAIL_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
 
+	// preprocess the reqeuest data
+	email := strings.ToLower(reqData.Email)
+	reqData.Email = email
+
+	// fetch all users to find the matching e-mail address
 	users, _ := db.GetAll(db.UserCache, models.User{})
 
 	// loop over users to find matching e-mail address
 	var user models.User
 
 	found := false
-	for _, u := range users {
-		if strings.ToLower(u.Email) == fetch.Email {
+	for _, usr := range users {
+		if strings.ToLower(usr.Email) == reqData.Email {
 			found = true
-			user = u
+			user = usr
 			break
 		}
 	}
 
+	// e-mail address was not found
 	if !found {
-		l.Msg("no match found in the database").Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_NO_EMAIL_MATCH).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// generate new random UUID, aka requestID
 	randomID := uuid.New().String()
 
+	// prepare the request data for the database
 	dbPayload := models.Request{
 		ID:        randomID,
 		Nickname:  user.Nickname,
@@ -818,12 +982,14 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now(),
 	}
 
+	// save new reset request to the database
 	if saved := db.SetOne(db.RequestCache, randomID, dbPayload); !saved {
 		l.Msg("could not save the UUID to database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	mailPayload := msgPayload{
+	// prepare the mail options
+	mailPayload := MessagePayload{
 		Email: email,
 		Type:  "request",
 		UUID:  randomID,
@@ -832,12 +998,13 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// compose a message to send
 	msg, err := composeResetMail(mailPayload)
 	if err != nil || msg == nil {
-		l.Msg("could not compose the mail body, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// send the message
 	if err := sendResetMail(msg); err != nil {
-		l.Msg("could not send the mail, try again").Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_MAIL_NOT_SENT).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -852,6 +1019,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Param    	 request body users.resetPassphraseHandler.requestData true "the e-mail address struct"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
@@ -860,37 +1028,47 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	fetch := struct {
+	type requestData struct {
 		UUID string `json:"uuid"`
-	}{}
+	}
 
-	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
+	var reqData requestData
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if fetch.UUID == "" {
-		l.Msg("no UUID has been entered").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank UUID entered
+	if reqData.UUID == "" {
+		l.Msg(common.ERR_REQUEST_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	requestData, match := db.GetOne(db.RequestCache, fetch.UUID, models.Request{})
+	// try the UUID to fetch the request
+	request, match := db.GetOne(db.RequestCache, reqData.UUID, models.Request{})
 	if !match {
-		l.Msg("invalid UUID inserted").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_REQUEST_UUID_INVALID).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if requestData.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
+	if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
 		// delete the request from database
-		db.DeleteOne(db.RequestCache, requestData.Nickname)
+		if deleted := db.DeleteOne(db.RequestCache, request.Nickname); !deleted {
+			l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log()
+			//return
+		}
 
-		l.Msg("entered UUID expired").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_REQUEST_UUID_EXPIRED).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	email := strings.ToLower(requestData.Email)
+	// preprocess the e-mail address
+	email := strings.ToLower(request.Email)
 
-	user, found := db.GetOne(db.UserCache, requestData.Nickname, models.User{})
+	// fetch the user linked to such request
+	user, found := db.GetOne(db.UserCache, request.Nickname, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -901,16 +1079,18 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	randomPassphrase := helpers.RandSeq(32)
 	pepper := os.Getenv("APP_PEPPER")
 
-	// convert new passphrase into the hexadecimal format
+	// convert new passphrase into the hexadecimal format with pepper added
 	passHash := sha512.Sum512([]byte(randomPassphrase + pepper))
 	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
+	// save new passphrase to the database
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not update user's passphrase, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_PASSPHRASE_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	mailPayload := msgPayload{
+	// set mail options
+	mailPayload := MessagePayload{
 		Email:      email,
 		Type:       "passphrase",
 		Passphrase: randomPassphrase,
@@ -919,134 +1099,23 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	// compose a message to send
 	msg, err := composeResetMail(mailPayload)
 	if err != nil || msg == nil {
-		l.Msg("could not compose the mail body, try again").Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// send the message
 	if err := sendResetMail(msg); err != nil {
-		l.Msg("could not send the mail, try again").Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_MAIL_NOT_SENT).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if deleted := db.DeleteOne(db.RequestCache, fetch.UUID); !deleted {
-		l.Msg("could not delete the request from database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	// delete the request from the request database
+	if deleted := db.DeleteOne(db.RequestCache, reqData.UUID); !deleted {
+		l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	l.Msg("the message has been sent, check your e-mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
-}
-
-// addToRequestList is a handler function to add an user to the request list of the private account called as {nickname}.
-//
-// @Summary      Add to the request list
-// @Description  add to the request list
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /users/{nickname}/request [post]
-func addToRequestList(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
-
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var caller models.User
-	var found bool
-
-	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var user models.User
-
-	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
-	}
-
-	if !user.Private {
-		l.Msg("taget user is not private, no need to add new requests").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// patch the nil in RequestList
-	if user.RequestList == nil {
-		user.RequestList = make(map[string]bool)
-	}
-
-	// toggle the status for the user
-	user.RequestList[caller.Nickname] = true
-
-	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
-		return
-	}
-
-	l.Msg("ok, request added to the database").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
-}
-
-// removeFromRequestList is a handler function to remove an user from the request list of the private account called as {nickname}.
-//
-// @Summary      Remove from the request list
-// @Description  remove from the request list
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /users/{nickname}/request [delete]
-func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "users")
-	nick := chi.URLParam(r, "nickname")
-
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var caller models.User
-	var found bool
-
-	if caller, found = db.GetOne(db.UserCache, callerID, models.User{}); !found {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var user models.User
-
-	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// patch the nil in RequestList
-	if user.RequestList == nil {
-		user.RequestList = make(map[string]bool)
-	}
-
-	// toggle the status
-	user.RequestList[caller.Nickname] = false
-
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		l.Msg("could not update the user in database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
-		return
-	}
-
-	l.Msg("ok, request has been removed from database").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -1057,106 +1126,97 @@ func removeFromRequestList(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Param    	 request body users.postUserAvatar.requestData true "new avatar data"
+// @Param        userID path string true "user's ID for avatar update"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
-// @Router       /users/{nickname}/avatar [post]
+// @Router       /users/{userID}/avatar [post]
 func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	nick := chi.URLParam(r, "nickname")
+	type requestData struct {
+		Figure string `json."figure"`
+		Data   []byte `json:"data"`
+	}
 
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	type responseData struct {
+		Key string `json:"key"`
+	}
+
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	var user models.User
-	var found bool
-
-	if callerID != nick {
-		l.Msg("you can update yours avatar only").Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	// take the param from path
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if user, found = db.GetOne(db.UserCache, nick, models.User{}); !found {
+	// check for possible user's data forgery attempt
+	if l.CallerID != userID {
+		l.Msg(common.ERR_USER_AVATAR_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// fetch the caller's user record from database
+	user, found := db.GetOne(db.UserCache, userID, models.User{})
+	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	fetch := struct {
-		Figure string `json."figure"`
-		Data   []byte `json:"data"`
-	}{}
+	var reqData requestData
 
-	if err := common.UnmarshalRequestData(r, &fetch); err != nil {
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// prepare stamps and keys for ???
 	timestamp := time.Now()
 	key := strconv.FormatInt(timestamp.UnixNano(), 10)
 
-	var content string
-
-	if fetch.Data == nil || fetch.Figure == "" {
+	// check if data are there
+	if reqData.Data == nil || reqData.Figure == "" {
 		l.Msg(common.ERR_MISSING_IMG_CONTENT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// uploadedFigure handling
-	fileExplode := strings.Split(fetch.Figure, ".")
+	// preprocess the image name and extension
+	fileExplode := strings.Split(reqData.Figure, ".")
 	extension := fileExplode[len(fileExplode)-1]
 
-	content = key + "." + extension
+	// content for the future user's AvatarURL field update
+	content := key + "." + extension
 
 	//
 	// use image magic
 	//
-	img, format, err := image.DecodeImage(&fetch.Data, extension)
+
+	// decode the input byte stream into an image.Image object
+	img, format, err := image.DecodeImage(&reqData.Data, extension)
 	if err != nil {
 		l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// fix the image orientation for decoded image
-	img, err = image.FixOrientation(img, &fetch.Data)
+	// fix the image's orientation in decoded image
+	img, err = image.FixOrientation(img, &reqData.Data)
 	if err != nil {
 		l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// encode cropped image back to []byte
-	// re-encode the image to flush EXIF metadata header
-	/*croppedImgData, err := image.EncodeImage(squareImg, format)
-	if err != nil {
-		resp.Message = "backend error: cannot encode image back to byte stream"
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}
-
-	// upload to local storage
-	//if err := os.WriteFile("/opt/pix/"+content, post.Data, 0600); err != nil {
-	if err := os.WriteFile("/opt/pix/"+content, croppedImgData, 0600); err != nil {
-		resp.Message = "backend error: couldn't save a figure to a file: " + err.Error()
-		resp.Code = http.StatusInternalServerError
-
-		l.Println(resp.Message, resp.Code)
-		resp.Write(w)
-		return
-	}*/
-
-	// crop the image
-	squareImg := image.CropToSquare(img)
-
-	// generate thumbanils
-	thumbImg := image.ResizeImage(squareImg, 200)
-	*squareImg = nil
+	// generate thumbanils from the cropped image
+	thumbImg := image.ResizeImage(image.CropToSquare(img), 200)
 
 	// encode the thumbnail back to []byte
 	thumbImgData, err := image.EncodeImage(&thumbImg, format)
@@ -1171,24 +1231,27 @@ func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// null the pointers and contents
 	*thumbImgData = []byte{}
 
-	fetch.Figure = content
-	fetch.Data = []byte{}
+	// null the request data
+	reqData.Figure = content
+	reqData.Data = []byte{}
 
+	// update user's avatar reference
 	user.AvatarURL = "/web/pix/thumb_" + content
 
-	if saved := db.SetOne(db.UserCache, nick, user); !saved {
-		l.Msg("could not save new avatar to database").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	// save the updated user record bach to the database
+	if saved := db.SetOne(db.UserCache, userID, user); !saved {
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	pl := struct {
-		Key string
-	}{
+	// prepare the payload
+	pl := &responseData{
 		Key: content,
 	}
 
-	l.Msg("ok, updating user's avatar").Status(http.StatusOK).Log().Payload(&pl).Write(w)
+	l.Msg("ok, updating user's avatar").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
