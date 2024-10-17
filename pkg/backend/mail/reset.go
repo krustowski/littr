@@ -1,4 +1,4 @@
-package users
+package mail
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type MessagePayload struct {
 	Passphrase string
 }
 
-func sendResetMail(msg *gomail.Msg) error {
+func SendResetMail(msg *gomail.Msg) error {
 	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func sendResetMail(msg *gomail.Msg) error {
 	return nil
 }
 
-func composeResetMail(payload MessagePayload) (*gomail.Msg, error) {
+func ComposeResetMail(payload MessagePayload) (*gomail.Msg, error) {
 	m := gomail.NewMsg()
 	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
 		return nil, err

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"net/mail"
+	netmail "net/mail"
 	"os"
 	"regexp"
 	"strconv"
@@ -16,7 +16,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
-	//"go.vxn.dev/littr/pkg/backend/mail"
+	"go.vxn.dev/littr/pkg/backend/mail"
 	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
@@ -252,7 +252,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// validate e-mail struct
 	// https://stackoverflow.com/a/66624104
-	if _, err := mail.ParseAddress(email); err != nil {
+	if _, err := netmail.ParseAddress(email); err != nil {
 		l.Msg(common.ERR_WRONG_EMAIL_FORMAT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -989,21 +989,21 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepare the mail options
-	mailPayload := MessagePayload{
+	mailPayload := mail.MessagePayload{
 		Email: email,
 		Type:  "request",
 		UUID:  randomID,
 	}
 
 	// compose a message to send
-	msg, err := composeResetMail(mailPayload)
+	msg, err := mail.ComposeResetMail(mailPayload)
 	if err != nil || msg == nil {
 		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// send the message
-	if err := sendResetMail(msg); err != nil {
+	if err := mail.SendResetMail(msg); err != nil {
 		l.Msg(common.ERR_MAIL_NOT_SENT).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
@@ -1090,21 +1090,21 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set mail options
-	mailPayload := MessagePayload{
+	mailPayload := mail.MessagePayload{
 		Email:      email,
 		Type:       "passphrase",
 		Passphrase: randomPassphrase,
 	}
 
 	// compose a message to send
-	msg, err := composeResetMail(mailPayload)
+	msg, err := mail.ComposeResetMail(mailPayload)
 	if err != nil || msg == nil {
 		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// send the message
-	if err := sendResetMail(msg); err != nil {
+	if err := mail.SendResetMail(msg); err != nil {
 		l.Msg(common.ERR_MAIL_NOT_SENT).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}

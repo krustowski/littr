@@ -22,4 +22,3 @@ func UnmarshalRequestData[T any](r *http.Request, model *T) error {
 
 	return nil
 }
-
