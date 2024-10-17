@@ -17,6 +17,7 @@ import (
 // @Produce      json
 // @Success      200  {object}   common.APIResponse{data=stats.getStats.responseData}
 // @Failure      400  {object}   common.APIResponse
+// @Failure      401  {object}   common.APIResponse{data=auth.authHandler.responseData}
 // @Router       /stats [get]
 func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
@@ -27,10 +28,9 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		Users     map[string]models.User     `json:"users"`
 	}
 
-	// get the caller's nickname
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// skip blank callerID
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -125,7 +125,7 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	pl := &responseData{
 		FlowStats: flowStats,
 		UserStats: userStats,
-		Users:     *common.FlushUserData(&users, callerID),
+		Users:     *common.FlushUserData(&users, l.CallerID),
 	}
 
 	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(pl).Write(w)

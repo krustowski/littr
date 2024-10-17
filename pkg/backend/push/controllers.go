@@ -33,15 +33,8 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 		Key string `json:"key"`
 	}
 
-	// fetch the caller's nickname (callerID)
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
 	// skip blank callerID
-	if callerID == "" {
+	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -71,15 +64,8 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 func updateSubscription(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
-	// fetch the caller's nickname
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
 	// skip blank callerID
-	if callerID == "" {
+	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -93,7 +79,7 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache later on
-	devs, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	devs, ok := db.GetOne(db.SubscriptionCache, l.CallerID, []models.Device{})
 	if !ok {
 		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -159,7 +145,7 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// save the updated device array back to the database
-	if saved := db.SetOne(db.SubscriptionCache, callerID, devs); !saved {
+	if saved := db.SetOne(db.SubscriptionCache, l.CallerID, devs); !saved {
 		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
@@ -184,15 +170,8 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
-	// fetch the caller's nickname
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
 	// skip blank callerID
-	if callerID == "" {
+	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -207,7 +186,7 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache
-	devs, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	devs, ok := db.GetOne(db.SubscriptionCache, l.CallerID, []models.Device{})
 	if !ok {
 		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -226,7 +205,7 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	devs = append(devs, device)
 
 	// save the device array back to the database
-	if saved := db.SetOne(db.SubscriptionCache, callerID, devs); !saved {
+	if saved := db.SetOne(db.SubscriptionCache, l.CallerID, devs); !saved {
 		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
@@ -249,15 +228,8 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 func sendNotification(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
-	// this user ID points to the replier
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
 	// skip blank callerID
-	if callerID == "" {
+	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -285,7 +257,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// do not notify the same person --- OK condition
-	if post.Nickname == callerID {
+	if post.Nickname == l.CallerID {
 		l.Msg(common.ERR_PUSH_SELF_NOTIF).Status(http.StatusOK).Log().Payload(nil).Write(w)
 		return
 	}
@@ -300,7 +272,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 	body, _ := json.Marshal(app.Notification{
 		Title: "littr reply",
 		Icon:  "/web/apple-touch-icon.png",
-		Body:  callerID + " replied to your post",
+		Body:  l.CallerID + " replied to your post",
 		Path:  "/flow/post/" + post.ID,
 	})
 
@@ -333,15 +305,8 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
-	// fetch the caller's nickname
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
-		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
 	// skip blank callerID
-	if callerID == "" {
+	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -355,7 +320,7 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache later on
-	devs, ok := db.GetOne(db.SubscriptionCache, callerID, []models.Device{})
+	devs, ok := db.GetOne(db.SubscriptionCache, l.CallerID, []models.Device{})
 	if !ok {
 		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -382,7 +347,7 @@ func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// save the update device list
-	if saved := db.SetOne(db.SubscriptionCache, callerID, newDevices); !saved {
+	if saved := db.SetOne(db.SubscriptionCache, l.CallerID, newDevices); !saved {
 		l.Msg(common.ERR_SUBSCRIPTION_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
