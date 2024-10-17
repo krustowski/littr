@@ -24,7 +24,7 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	l.Version = "system"
 
 	// check the incoming API token
-	token := r.Header.Get("X-Dump-Token")
+	token := r.Header.Get(common.HDR_DUMP_TOKEN)
 	if token == "" {
 		l.Msg(common.ERR_API_TOKEN_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
