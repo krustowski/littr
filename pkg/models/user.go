@@ -29,6 +29,10 @@ type User struct {
 	// About is a description string of such user.
 	About string `json:"about" default:"newbie"`
 
+	// Options is an umbrella struct/map for the booleans.
+	Options map[string]bool `json:"options,omitempty"`
+	//Options Options `json:"options,omitempty"`
+
 	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`
 
@@ -63,23 +67,51 @@ type User struct {
 	LastActiveTime time.Time `json:"last_active_time"`
 
 	// searched is a bool indicating a status for the search engine.
-	Searched bool `json:"-" default:true`
+	Searched bool `json:"-" default:"true"`
 
 	// GDPR consent, set to true because it is noted on the registration page so. No user data should
 	// be saved if the boolean is false.
-	GDPR bool `json:"gdpr" default:true`
+	GDPR bool `json:"gdpr" default:"true"`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	UIDarkMode bool `json:"app_bg_mode" default:true`
+	UIDarkMode bool `json:"app_bg_mode" default:"true"`
 
 	// LiveMode is a feature allowing to show notifications about new posts
-	LiveMode bool `json:"live_mode" default:true`
+	LiveMode bool `json:"live_mode" default:"true"`
 
 	// LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.
-	LocalTimeMode bool `json:"local_time_mode" default:true`
+	LocalTimeMode bool `json:"local_time_mode" default:"true"`
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags"`
+}
+
+// Options is an umbrella struct to hold all the booleans in one place.
+type Options struct {
+	// Active boolean indicates an activated user's account.
+	// Map equivalent: active
+	Active bool `json:"active" default:"true"`
+
+	// GDPR consent, set to true because it is noted on the registration page so. No user data should
+	// be saved if the boolean is false.
+	// Map equivalent: gdpr
+	GDPR bool `json:"gdpr" default:"true"`
+
+	// Private boolean indicates a private user's account.
+	// Map equivalent: private
+	Private bool `json:"private" default:"false"`
+
+	// AppBgMode string defines the colour mode of the app's background (light vs dark).
+	// Map equivalent: uiDarkMode
+	UIDarkMode bool `json:"app_bg_mode" default:"true"`
+
+	// LiveMode is a feature allowing to show notifications about new posts
+	// Map equivalent: liveMode
+	LiveMode bool `json:"live_mode" default:"true"`
+
+	// LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.
+	// Map equivalent: localTimeMode
+	LocalTimeMode bool `json:"local_time_mode" default:"true"`
 }
 
 // UserStat is a helper struct to hold statistics about the whole app.
