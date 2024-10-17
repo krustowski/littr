@@ -42,7 +42,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 
 	pl := responseData{}
 
-	pageNoString := r.Header.Get("X-Page-No")
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -109,7 +109,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Accept       json
 // @Produce      json
-// @Param    	 request body models.Poll true "query params"
+// @Param    	 request body models.Poll true "new poll's body"
 // @Success      201  {object}  common.APIResponse "success"
 // @Failure      400  {object}  common.APIResponse "bad/malformed input data, invalid cookies"
 // @Failure      500  {object}  common.APIResponse "the poll saving process failed"

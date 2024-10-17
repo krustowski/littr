@@ -1,5 +1,14 @@
 package common
 
+// header names
+const (
+	HDR_PAGE_NO      = "X-Page-No"
+	HDR_HIDE_REPLIES = "X-Hide-Replies"
+	HDR_DUMP_TOKEN   = "X-Dump-Token"
+	DHR_API_TOKEN    = "X-API-Token"
+)
+
+// (non-)error messages
 const (
 	// generic error messages
 	ERR_CALLER_BLANK      = "callerID cannot be empty"
@@ -42,10 +51,36 @@ const (
 	ERR_IMG_THUMBNAIL_FAIL   = "image: could not re-encode the thumbnail"
 
 	// user-related error messages
-	ERR_USER_DELETE_FOREIGN      = "you cannot delete a foreigner's account"
-	ERR_USER_DELETE_FAIL         = "could not delete the user from user database, try again"
-	ERR_SUBSCRIPTION_DELETE_FAIL = "could not delete the user from subscriptions, try again"
-	ERR_MISSING_IMG_CONTENT      = "no image data received, try again"
+	ERR_USER_DELETE_FOREIGN       = "you cannot delete a foreigner's account"
+	ERR_USER_DELETE_FAIL          = "could not delete the user from user database, try again"
+	ERR_SUBSCRIPTION_DELETE_FAIL  = "could not delete the user from subscriptions, try again"
+	ERR_MISSING_IMG_CONTENT       = "no image data received, try again"
+	ERR_REGISTRATION_DISABLED     = "registration is disabled at the moment"
+	ERR_RESTRICTED_NICKNAME       = "this nickname is restricted"
+	ERR_USER_NICKNAME_TAKEN       = "this nickname has been already taken"
+	ERR_NICKNAME_CHARSET_MISMATCH = "the nickname can only consist of characters a-z, A-Z and numbers 0-9"
+	ERR_NICKNAME_TOO_LONG_SHORT   = "nickname is too long (>12 runes), or too short (<3 runes)"
+	ERR_WRONG_EMAIL_FORMAT        = "wrong format of the e-mail address"
+	ERR_EMAIL_ALREADY_USED        = "this e-mail address has been already used"
+	ERR_USER_SAVE_FAIL            = "could not save new user to database"
+	ERR_POSTREG_POST_SAVE_FAIL    = "could not save a new post about the new user's addition"
+	ERR_USER_UPDATE_FOREIGN       = "could not update a foreign's account"
+	ERR_USERID_BLANK              = "userID param is required"
+	ERR_USER_UPDATE_FAIL          = "could not update the user in database"
+	ERR_USER_PASSPHRASE_FOREIGN   = "you can change yours passphrase only"
+	ERR_PASSPHRASE_REQ_INCOMPLETE = "passphrase change request is partly or completely empty"
+	ERR_PASSPHRASE_CURRENT_WRONG  = "current passphrase sent is wrong"
+	ERR_NO_EMAIL_MATCH            = "could not find a match for such e-mail address"
+	ERR_MAIL_COMPOSITION_FAIL     = "could not compose the mail properly, try again"
+	ERR_MAIL_NOT_SENT             = "could not send the mail, try again"
+	ERR_REQUEST_UUID_BLANK        = "could not process blank request's UUID"
+	ERR_REQUEST_EMAIL_BLANK       = "could not process blank request's e-mail address"
+	ERR_REQUEST_UUID_INVALID      = "entered UUID is invalid"
+	ERR_REQUEST_UUID_EXPIRED      = "entered UUID has expired"
+	ERR_REQUEST_DELETE_FAIL       = "could not delete the request from database, try again"
+	ERR_PASSPHRASE_UPDATE_FAIL    = "could not update the passphrase in database, try again"
+	ERR_TARGET_USER_NOT_PRIVATE   = "target user is not private, no need to file new follow requests"
+	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
 
 	// poll-related error messages
 	ERR_POLL_AUTHOR_MISMATCH    = "you cannot post a foreigner's poll"

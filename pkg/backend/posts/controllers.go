@@ -21,9 +21,7 @@ import (
 )
 
 const (
-	HDR_PAGE_NO      = "X-Page-No"
-	HDR_HIDE_REPLIES = "X-Hide-Replies"
-	PKG_NAME         = "posts"
+	PKG_NAME = "posts"
 )
 
 // getPosts fetches posts, page spicified by a header.
@@ -56,7 +54,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
-	pageNoString := r.Header.Get(HDR_PAGE_NO)
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	if page, err := strconv.Atoi(pageNoString); err != nil {
 		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		//return
@@ -64,7 +62,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		pageNo = page
 	}
 
-	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
 		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		//return
@@ -467,7 +465,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch the required X-Page-No header
-	pageNoString := r.Header.Get(HDR_PAGE_NO)
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
@@ -475,7 +473,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch the optional X-Hide-Replies header
-	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
 		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		//return
@@ -557,7 +555,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch the required X-Page-No header
-	pageNoString := r.Header.Get(HDR_PAGE_NO)
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
 		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
@@ -565,7 +563,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch the optional X-Hide-Replies header
-	hideReplies, err := strconv.ParseBool(r.Header.Get(HDR_HIDE_REPLIES))
+	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
 		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		//return
