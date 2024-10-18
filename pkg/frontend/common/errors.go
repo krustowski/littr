@@ -22,7 +22,7 @@ const (
 
 	// notification-related (non-)error messages
 	MSG_SUBSCRIPTION_UPDATED      = "subscription updated"
-	MSG_UNSUBSCRIPED_SUCCESS      = "successfully unsubscribed, notifications off"
+	MSG_UNSUBSCRIBED_SUCCESS      = "successfully unsubscribed, notifications off"
 	ERR_SUBSCRIPTION_UPDATE_FAIL  = "failed to update the subscription, try again later"
 	ERR_NOTIF_PERMISSION_DENIED   = "notification permission denied by user"
 	ERR_NOTIF_UNSUPPORTED_BROWSER = "notifications are not supported in this browser"
@@ -31,7 +31,6 @@ const (
 	MSG_PASSPHRASE_UPDATED       = "passphrase updated successfully"
 	MSG_ABOUT_TEXT_UPDATED       = "about text updated successfully"
 	MSG_WEBSITE_UPDATED          = "website updated successfully"
-	MSG_UNSUBSCRIBED_SUCCESS     = "device unsubscribed successfully"
 	MSG_SUBSCRIPTION_REQ_SUCCESS = "successfully subscribed to notifs"
 	MSG_LOCAL_TIME_TOGGLE        = "local time mode toggled"
 	MSG_PRIVATE_MODE_TOGGLE      = "private mode toggled"

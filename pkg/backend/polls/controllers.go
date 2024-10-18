@@ -280,7 +280,7 @@ func updatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// verify that only one vote had been passed in; supress vote count forgery
+	// verify that only one vote had been passed in; suppress vote count forgery
 	if (payload.OptionOne.Counter + payload.OptionTwo.Counter + payload.OptionThree.Counter) != (poll.OptionOne.Counter + poll.OptionTwo.Counter + poll.OptionThree.Counter + 1) {
 		l.Msg(common.ERR_POLL_INVALID_VOTE_COUNT).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
