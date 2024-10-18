@@ -17,12 +17,15 @@ import (
 
 const defaultAvatarImage = "/web/android-chrome-192x192.png"
 
-var urlsChan chan string
-
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
+	// Migration name.
 	N string
+
+	// Migration function.
 	F func(*common.Logger, []interface{}) bool
+
+	// Migration resources.
 	R []interface{}
 }
 
@@ -214,6 +217,7 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 // migrateAvatarURL procedure takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
+	var urlsChan chan string
 
 	// assert pointers from the interface array
 	for _, raw := range rawElems {
@@ -230,7 +234,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	// channel for gravatar routines' results
-	urlsChan := make(chan string)
+	urlsChan = make(chan string)
 
 	var wg *sync.WaitGroup
 
