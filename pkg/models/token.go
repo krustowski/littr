@@ -16,5 +16,5 @@ type Token struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	// Time to live, period of validity since the token creation.
-	TTL time.Time `json:"ttl"`
+	TTL time.Duration `json:"ttl"`
 }
