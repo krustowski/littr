@@ -8,8 +8,11 @@ import (
 )
 
 type ToastInterface interface {
-	Dispatch() func(interface{})
-	False() func(interface{})
+	Context(*app.Context) *Toast
+	Text(string) *Toast
+	Link(string) *Toast
+	Type(string) *Toast
+	Dispatch(interface{}, func(*Toast, interface{}))
 }
 
 type Toast struct {

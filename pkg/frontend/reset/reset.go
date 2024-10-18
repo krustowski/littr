@@ -40,7 +40,7 @@ func (c *Content) handleResetRequest(email, uuid string) error {
 		return fmt.Errorf(common.ERR_CANNOT_REACH_BE)
 	}
 
-	if output.Code != 200 || output.Code != 201 {
+	if output.Code != 200 && output.Code != 201 {
 		return fmt.Errorf("%s", output.Message)
 	}
 
