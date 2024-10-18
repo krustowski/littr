@@ -593,7 +593,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 // @Description  update user's option
 // @Tags         users
 // @Produce      json
-// @Param    	 request body users.updateUserOptions.requestData true "new user options' values"
+// @Param    	 request body users.updateUserOption.requestData true "new user options' values"
 // @Param        userID path string true "ID of the user to update"
 // @Success      200  {object}   common.APIResponse
 // @Failure      400  {object}   common.APIResponse
@@ -1119,7 +1119,7 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// postUsersAvatar is a handler function to update user's avatar directly in the app.
+// postUserAvatar is a handler function to update user's avatar directly in the app.
 //
 // @Summary      Post user's avatar
 // @Description  post user's avatar
@@ -1134,7 +1134,7 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure      404  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
 // @Router       /users/{userID}/avatar [post]
-func postUsersAvatar(w http.ResponseWriter, r *http.Request) {
+func postUserAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	type requestData struct {

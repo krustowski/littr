@@ -22,7 +22,7 @@ import (
 // @Tags         push
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   common.APIResponse{data=push.getchVAPIDKey.responseData}
+// @Success      200  {object}   common.APIResponse{data=push.fetchVAPIDKey.responseData}
 // @Failure 	 400  {object}   common.APIResponse
 // @Failure 	 401  {object}   common.APIResponse{data=auth.authHandler.responseData}
 // @Router       /push/vapid [get]

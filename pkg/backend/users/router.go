@@ -22,7 +22,7 @@ func Router() chi.Router {
 	r.Delete("/{userID}", deleteUser)
 
 	// user's settings routes
-	r.Post("/{userID}/avatar", postUsersAvatar)
+	r.Post("/{userID}/avatar", postUserAvatar)
 	r.Get("/{userID}/posts", getUserPosts)
 	r.Patch("/{userID}/lists", updateUserList)
 	r.Patch("/{userID}/options", updateUserOption)
