@@ -108,7 +108,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			token, ok := rawToken.(model.Token)
+			token, ok := rawToken.(models.Token)
 			if !ok {
 				l.Msg("cannot assert data type to models.Token").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
 				return
@@ -184,7 +184,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		refreshSum.Write([]byte(refreshCookie.Value))
 		refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-		rawNick, found := db.TokenCache.Get(refreshTokenSum)
+		rawToken, found := db.TokenCache.Get(refreshTokenSum)
 		if !found {
 			voidCookie := &http.Cookie{
 				Name:     REFRESH_TOKEN,
