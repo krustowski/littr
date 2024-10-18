@@ -71,7 +71,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 			Email:          email,
 			FlowList:       make(map[string]bool),
 			RegisteredTime: time.Now(),
-			AvatarURL:      db.GetGravatarURL(email, nil),
+			AvatarURL:      db.GetGravatarURL(email, nil, nil),
 		}
 
 		user.FlowList[nickname] = true

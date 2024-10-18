@@ -51,7 +51,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		input := &common.CallInput{
 			Method:      "POST",
-			Url:         "/api/v1/auth/",
+			Url:         "/api/v1/auth",
 			Data:        payload,
 			CallerID:    nickname,
 			PageNo:      0,

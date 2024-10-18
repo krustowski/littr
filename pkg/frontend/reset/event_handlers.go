@@ -32,7 +32,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// validate e-mail struct
+		// validate the e-mail format
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
 			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)

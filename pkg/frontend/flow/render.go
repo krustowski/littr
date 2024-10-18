@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"fmt"
 	"net/url"
 	"sort"
 	"strings"
@@ -135,7 +136,7 @@ func (c *Content) Render() app.UI {
 		// snackbar
 		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
 			app.If(c.toast.TText != "",
-				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
+				app.Div().ID(fmt.Sprintf("snackbar-%d", c.toast.TID)).Class("snackbar white-text top active "+toastColor).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),
 				),
