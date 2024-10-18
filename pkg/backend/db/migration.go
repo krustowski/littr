@@ -67,7 +67,7 @@ func RunMigrations() bool {
 		{
 			N: "migrateUserDeletion",
 			F: migrateUserDeletion,
-			R: []interface{}{&users},
+			R: []interface{}{&posts, &users},
 		},
 		{
 			N: "migrateUserRegisteredTime",
