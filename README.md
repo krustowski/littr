@@ -182,8 +182,10 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + user activation via mail
 
 ### roasmap to v0.43
++ ~~design and implement new Token model~~ (wip)
++ ~~refactor mailing on BE~~
 + unify options under the umbrella user.Options map (wip)
-+ update swagger docs, ensure proper params, inputs, responses etc are valid (wip)
++ ~~update swagger docs, ensure proper params, inputs, responses etc are valid~~ (wip)
 
 ### roadmap to v0.42
 + ~~deeply refactor BE+FE again: declarative syntax for BE logger~~ 

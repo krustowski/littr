@@ -19,20 +19,13 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.42.11"
+        "version": "0.43,0"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
     "paths": {
-        "/auth/": {
+        "/auth": {
             "post": {
-                "security": [
-                    {
-                        "": [
-                            ""
-                        ]
-                    }
-                ],
                 "description": "auth an user",
                 "consumes": [
                     "application/json"
@@ -44,29 +37,88 @@
                     "auth"
                 ],
                 "summary": "Auth an user",
+                "parameters": [
+                    {
+                        "description": "user struct to auth",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -89,19 +141,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.logoutHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -110,9 +162,6 @@
         "/dump": {
             "get": {
                 "description": "perform system data dump",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -120,6 +169,15 @@
                     "dump"
                 ],
                 "summary": "Perform system data dump",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "dump token",
+                        "name": "X-Dump-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -142,12 +200,32 @@
                 }
             }
         },
+        "/live": {
+            "get": {
+                "description": "get real-time posts event stream",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "live"
+                ],
+                "summary": "Get real-time posts event stream (SSE stream)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/polls": {
             "get": {
                 "description": "get a list of polls",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -195,9 +273,6 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     }
-                },
-                "X-Page-No": {
-                    "pageNo": 0
                 }
             },
             "post": {
@@ -214,7 +289,7 @@
                 "summary": "Add new poll",
                 "parameters": [
                     {
-                        "description": "query params",
+                        "description": "new poll's body",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -350,9 +425,6 @@
             },
             "delete": {
                 "description": "delete a poll by ID",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -362,17 +434,8 @@
                 "summary": "Delete a poll by ID",
                 "parameters": [
                     {
-                        "description": "poll to delete",
-                        "name": "pollToDelete",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Poll"
-                        }
-                    },
-                    {
                         "type": "string",
-                        "description": "poll ID",
+                        "description": "poll's ID to delete",
                         "name": "pollID",
                         "in": "path",
                         "required": true
@@ -391,6 +454,12 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -400,12 +469,9 @@
                 }
             }
         },
-        "/posts/": {
+        "/posts": {
             "get": {
                 "description": "get posts",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -413,11 +479,38 @@
                     "posts"
                 ],
                 "summary": "Get posts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "hide replies bool",
+                        "name": "X-Hide-Replies",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/posts.getPosts.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -446,11 +539,34 @@
                     "posts"
                 ],
                 "summary": "Add new post",
+                "parameters": [
+                    {
+                        "description": "new post struct in request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Post"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/posts.addNewPost.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -477,9 +593,6 @@
         "/posts/hashtag/{hashtag}": {
             "get": {
                 "description": "get hashtagged post list",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -487,11 +600,45 @@
                     "posts"
                 ],
                 "summary": "Get hashtagged post list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "hide replies",
+                        "name": "X-Hide-Replies",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "hashtag string",
+                        "name": "hashtag",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/posts.fetchHashtaggedPosts.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -499,32 +646,12 @@
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
-                    }
-                }
-            }
-        },
-        "/posts/live": {
-            "get": {
-                "description": "get real-time posts event stream",
-                "consumes": [
-                    "text/event-stream"
-                ],
-                "produces": [
-                    "text/event-stream"
-                ],
-                "tags": [
-                    "posts"
-                ],
-                "summary": "Get real-time posts event stream (SSE stream)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
                     }
                 }
             }
@@ -532,9 +659,6 @@
         "/posts/{postID}": {
             "get": {
                 "description": "get single post",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -542,15 +666,55 @@
                     "posts"
                 ],
                 "summary": "Get single post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "hide replies",
+                        "name": "X-Hide-Replies",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "post's ID to update",
+                        "name": "postID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/posts.getSinglePost.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -570,6 +734,24 @@
                 ],
                 "summary": "Update specified post",
                 "deprecated": true,
+                "parameters": [
+                    {
+                        "description": "post to update in request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Post"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "post's ID to update",
+                        "name": "postID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -599,9 +781,6 @@
             },
             "delete": {
                 "description": "delete specified post",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -609,6 +788,15 @@
                     "posts"
                 ],
                 "summary": "Delete specified post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post's ID to update",
+                        "name": "postID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -640,9 +828,6 @@
         "/posts/{postID}/star": {
             "patch": {
                 "description": "update the star count",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -650,11 +835,32 @@
                     "posts"
                 ],
                 "summary": "Update post's star count",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post's ID to update",
+                        "name": "postID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/posts.updatePostStarCount.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -681,9 +887,6 @@
         "/push/notification/{postID}": {
             "post": {
                 "description": "Send a notification",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -691,6 +894,15 @@
                     "push"
                 ],
                 "summary": "Send a notification",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "original post's ID",
+                        "name": "postID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -698,14 +910,14 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "201": {
-                        "description": "Created",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -726,9 +938,26 @@
                     "push"
                 ],
                 "summary": "Add the notification subscription",
+                "parameters": [
+                    {
+                        "description": "device to subscribe",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Device"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -751,9 +980,6 @@
         "/push/subscription/{uuid}": {
             "delete": {
                 "description": "delete a subscription",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -761,6 +987,15 @@
                     "push"
                 ],
                 "summary": "Delete a subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of a device to delete",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -770,6 +1005,12 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -796,6 +1037,15 @@
                     "push"
                 ],
                 "summary": "Update the notification subscription tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of a device to update",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -803,8 +1053,8 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -831,6 +1081,15 @@
                     "push"
                 ],
                 "summary": "Update the notification subscription tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of a device to update",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -838,8 +1097,8 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -870,24 +1129,51 @@
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/push.fetchVAPIDKey.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             }
         },
-        "/stats/": {
+        "/stats": {
             "get": {
                 "description": "get stats",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -899,10 +1185,43 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/common.APIResponse"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/stats.getStats.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -911,9 +1230,6 @@
         "/users": {
             "get": {
                 "description": "get a list of users",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -921,34 +1237,32 @@
                     "users"
                 ],
                 "summary": "Get a list of users",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
                     }
-                }
-            }
-        },
-        "/users/": {
-            "post": {
-                "description": "add new user",
-                "consumes": [
-                    "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Add new user",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.getUsers.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -963,8 +1277,64 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "add new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Add new user",
+                "parameters": [
+                    {
+                        "description": "new user's request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -988,6 +1358,24 @@
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.getOneUser.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1014,6 +1402,17 @@
                     "users"
                 ],
                 "summary": "Request the passphrase recovery link",
+                "parameters": [
+                    {
+                        "description": "the e-mail address struct",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.resetRequestHandler.requestData"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1055,6 +1454,17 @@
                     "users"
                 ],
                 "summary": "Reset the passphrase",
+                "parameters": [
+                    {
+                        "description": "the e-mail address struct",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.resetPassphraseHandler.requestData"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1083,7 +1493,7 @@
                 }
             }
         },
-        "/users/{nickname}": {
+        "/users/{userID}": {
             "put": {
                 "description": "update the user's details",
                 "consumes": [
@@ -1097,6 +1507,24 @@
                 ],
                 "summary": "Update the user's details",
                 "deprecated": true,
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "updated user's ID",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "updated user's body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1126,9 +1554,6 @@
             },
             "delete": {
                 "description": "delete user",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1136,6 +1561,15 @@
                     "users"
                 ],
                 "summary": "Delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the user to delete",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1143,14 +1577,20 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1164,7 +1604,7 @@
                 }
             }
         },
-        "/users/{nickname}/avatar": {
+        "/users/{userID}/avatar": {
             "post": {
                 "description": "post user's avatar",
                 "consumes": [
@@ -1177,6 +1617,24 @@
                     "users"
                 ],
                 "summary": "Post user's avatar",
+                "parameters": [
+                    {
+                        "description": "new avatar data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.postUserAvatar.requestData"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ID for avatar update",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1186,6 +1644,12 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1205,12 +1669,9 @@
                 }
             }
         },
-        "/users/{nickname}/lists": {
+        "/users/{userID}/lists": {
             "patch": {
                 "description": "update user's list",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1218,6 +1679,24 @@
                     "users"
                 ],
                 "summary": "Update user's list",
+                "parameters": [
+                    {
+                        "description": "new user lists data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.updateUserList.requestData"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user to update",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1237,12 +1716,6 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1252,12 +1725,9 @@
                 }
             }
         },
-        "/users/{nickname}/options": {
+        "/users/{userID}/options": {
             "patch": {
                 "description": "update user's option",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1265,9 +1735,33 @@
                     "users"
                 ],
                 "summary": "Update user's option",
+                "parameters": [
+                    {
+                        "description": "new user options' values",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.updateUserOption.requestData"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user to update",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1284,12 +1778,6 @@
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1299,12 +1787,9 @@
                 }
             }
         },
-        "/users/{nickname}/passphrase": {
+        "/users/{userID}/passphrase": {
             "patch": {
                 "description": "update user's passphrase",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1312,9 +1797,33 @@
                     "users"
                 ],
                 "summary": "Update user's passphrase",
+                "parameters": [
+                    {
+                        "description": "new passphrase hash body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.updateUserPassphrase.requestData"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user to update",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1346,12 +1855,9 @@
                 }
             }
         },
-        "/users/{nickname}/posts": {
+        "/users/{userID}/posts": {
             "get": {
                 "description": "get user posts",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1359,89 +1865,49 @@
                     "users"
                 ],
                 "summary": "Get user posts",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "hide replies",
+                        "name": "X-Hide-Replies",
+                        "in": "header"
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ID for their posts",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
                     }
-                }
-            }
-        },
-        "/users/{nickname}/request": {
-            "post": {
-                "description": "add to the request list",
-                "consumes": [
-                    "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Add to the request list",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.getUserPosts.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "remove from the request list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Remove from the request list",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1457,6 +1923,28 @@
         }
     },
     "definitions": {
+        "auth.authHandler.responseData": {
+            "type": "object",
+            "properties": {
+                "auth_granted": {
+                    "type": "boolean"
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "auth.logoutHandler.responseData": {
+            "type": "object",
+            "properties": {
+                "authGranted": {
+                    "type": "boolean"
+                }
+            }
+        },
         "common.APIResponse": {
             "type": "object",
             "properties": {
@@ -1469,6 +1957,38 @@
                 },
                 "timestamp": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.Device": {
+            "type": "object",
+            "properties": {
+                "subscription": {
+                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/webpush.Subscription"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "List of labels for such device.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "time_created": {
+                    "description": "Timestamp of the subscription creation.",
+                    "type": "string"
+                },
+                "time_last_used": {
+                    "description": "Timestamp of the last notification sent through this device.",
+                    "type": "string"
+                },
+                "uuid": {
+                    "description": "Unique identification of the app on the current device.\nhttps://go-app.dev/reference#Context",
+                    "type": "string"
                 }
             }
         },
@@ -1554,6 +2074,61 @@
                 }
             }
         },
+        "models.Post": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Content contains the very post's data to be shown as a text typed in by the author when created.",
+                    "type": "string"
+                },
+                "data": {
+                    "description": "Data is a helper field for the actual figure upload.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "figure": {
+                    "description": "Figure hold the filename of the uploaded figure to post with some provided text.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID is an unique post's identificator.",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "Nickname is a name of the post's author's name.",
+                    "type": "string"
+                },
+                "poll_id": {
+                    "description": "PollID is an identification of the Poll structure/object.",
+                    "type": "string"
+                },
+                "reaction_count": {
+                    "description": "ReactionCount counts the number of item's reactions.",
+                    "type": "integer"
+                },
+                "reply_count": {
+                    "description": "ReplyCount hold the count of replies for such post.",
+                    "type": "integer"
+                },
+                "reply_to": {
+                    "description": "ReplyTo is a reference key to another post, that is being replied to.",
+                    "type": "integer"
+                },
+                "reply_to_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "Timestamp is an UNIX timestamp, indicates the creation time.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type describes the post's type --- post, poll, reply, img.",
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "required": [
@@ -1571,7 +2146,8 @@
                 },
                 "app_bg_mode": {
                     "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
@@ -1603,7 +2179,8 @@
                 },
                 "gdpr": {
                     "description": "GDPR consent, set to true because it is noted on the registration page so. No user data should\nbe saved if the boolean is false.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true
                 },
                 "last_active_time": {
                     "description": "LastLoginTime is an UNIX timestamp of the last action performed by such user.",
@@ -1615,15 +2192,24 @@
                 },
                 "live_mode": {
                     "description": "LiveMode is a feature allowing to show notifications about new posts",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true
                 },
                 "local_time_mode": {
                     "description": "LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true
                 },
                 "nickname": {
                     "description": "Nickname is a login name of such user.",
                     "type": "string"
+                },
+                "options": {
+                    "description": "Options is an umbrella struct/map for the booleans.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
                 },
                 "passphrase": {
                     "description": "Passphrase is a hashed pass phrase string (binary form).",
@@ -1668,6 +2254,31 @@
                 }
             }
         },
+        "models.UserStat": {
+            "type": "object",
+            "properties": {
+                "flowerCount": {
+                    "description": "FlowerCount is basically a number of followers.",
+                    "type": "integer"
+                },
+                "postCount": {
+                    "description": "PostCount is a number of posts of such user.",
+                    "type": "integer"
+                },
+                "reactionCount": {
+                    "description": "ReactionCount tells the number of interactions (stars given).",
+                    "type": "integer"
+                },
+                "searched": {
+                    "description": "Searched is a special boolean used by the search engine to mark who is to be shown in search results.",
+                    "type": "boolean"
+                },
+                "shadeCount": {
+                    "description": "ShadeCount is basically a number of blockers.",
+                    "type": "integer"
+                }
+            }
+        },
         "polls.getPolls.responseData": {
             "type": "object",
             "properties": {
@@ -1690,6 +2301,288 @@
                 },
                 "user": {
                     "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "posts.addNewPost.responseData": {
+            "type": "object",
+            "properties": {
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                }
+            }
+        },
+        "posts.fetchHashtaggedPosts.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "posts.getPosts.responseData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "posts.getSinglePost.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "posts.updatePostStarCount.responseData": {
+            "type": "object",
+            "properties": {
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                }
+            }
+        },
+        "push.fetchVAPIDKey.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "stats.getStats.responseData": {
+            "type": "object",
+            "properties": {
+                "flow_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "user_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.UserStat"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "users.getOneUser.responseData": {
+            "type": "object",
+            "properties": {
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Device"
+                    }
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "users.getUserPosts.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "users.getUsers.responseData": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.UserStat"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "users.postUserAvatar.requestData": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "figure": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.resetPassphraseHandler.requestData": {
+            "type": "object",
+            "properties": {
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.resetRequestHandler.requestData": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.updateUserList.requestData": {
+            "type": "object",
+            "properties": {
+                "flow_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "request_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "shade_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "users.updateUserOption.requestData": {
+            "type": "object",
+            "properties": {
+                "about_you": {
+                    "type": "string"
+                },
+                "dark_mode": {
+                    "type": "boolean"
+                },
+                "live_mode": {
+                    "type": "boolean"
+                },
+                "local_time_mode": {
+                    "type": "boolean"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "website_link": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.updateUserPassphrase.requestData": {
+            "type": "object",
+            "properties": {
+                "current_passphrase_hex": {
+                    "type": "string"
+                },
+                "new_passphrase_hex": {
+                    "type": "string"
+                }
+            }
+        },
+        "webpush.Keys": {
+            "type": "object",
+            "properties": {
+                "auth": {
+                    "type": "string"
+                },
+                "p256dh": {
+                    "type": "string"
+                }
+            }
+        },
+        "webpush.Subscription": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "keys": {
+                    "$ref": "#/definitions/webpush.Keys"
                 }
             }
         }
