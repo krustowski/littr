@@ -13,6 +13,22 @@ var (
 	UserCache         *core.Cache
 )
 
+type state struct {
+	unlocked bool
+}
+
+var dbState state
+
+// Unlock function ensures that the database driver is set to the readwrite mode.
+func Unlock() {
+	dbState = state{unlocked: true}
+}
+
+// Lock function ensures that the database driver is set to the readonly mode.
+func Lock() {
+	dbState = state{unlocked: false}
+}
+
 // GetAll
 func GetAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	itemsInterface, count := cache.GetAll()
@@ -31,7 +47,7 @@ func GetAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 	return items, count
 }
 
-// etOne
+// GetOne
 func GetOne[T any](cache *core.Cache, key string, model T) (T, bool) {
 	itemInterface, found := cache.Get(key)
 	if !found {
@@ -48,10 +64,18 @@ func GetOne[T any](cache *core.Cache, key string, model T) (T, bool) {
 
 // SetOne
 func SetOne[T any](cache *core.Cache, key string, model T) bool {
+	if !dbState.unlocked {
+		return false
+	}
+
 	return cache.Set(key, model)
 }
 
 // DeleteOne
 func DeleteOne(cache *core.Cache, key string) bool {
+	if !dbState.unlocked {
+		return false
+	}
+
 	return cache.Delete(key)
 }

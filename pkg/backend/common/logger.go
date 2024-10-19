@@ -54,19 +54,19 @@ func NewLogger(r *http.Request, worker string) *Logger {
 	// little hack for data dump/load procedure
 	if r == nil {
 		return &Logger{
-			CallerID:   "",
+			CallerID:   "system",
 			IPAddress:  LOCALHOST4,
 			Method:     "",
 			Route:      "",
 			WorkerName: worker,
-			Version:    "",
+			Version:    "system",
 		}
 	}
 
 	// fetch the caller's nickname, to be check if not blank afterwards
 	callerID, ok := r.Context().Value("nickname").(string)
 	if !ok {
-		callerID = ""
+		callerID = "system"
 	}
 
 	return &Logger{

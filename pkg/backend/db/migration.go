@@ -19,24 +19,19 @@ const defaultAvatarImage = "/web/android-chrome-192x192.png"
 
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
-	// Migration name.
+	// Migration's name.
 	N string
 
-	// Migration function.
+	// Migration's function handle.
 	F func(*common.Logger, []interface{}) bool
 
-	// Migration resources.
+	// Migration's resources to process.
 	R []interface{}
 }
 
-// RunMigrations is a "wrapper" function for the migration registration and execution
-func RunMigrations() bool {
-	// init logger
-	l := common.NewLogger(nil, "migrations")
-	l.CallerID = "system"
-	l.Version = "system"
-
-	// fetch all the data
+// RunMigrations is a wrapper function for the migration registration and execution.
+func RunMigrations(l *common.Logger) string {
+	// Fetch all the data for the migration procedures.
 	users, _ := GetAll(UserCache, models.User{})
 	//polls, _ := GetAll(PollCache, models.Poll{})
 	posts, _ := GetAll(FlowCache, models.Post{})
@@ -44,9 +39,8 @@ func RunMigrations() bool {
 	subs, _ := GetAll(SubscriptionCache, []models.Device{})
 	tokens, _ := GetAll(TokenCache, models.Token{})
 
-	// define the migrations map
-	//var migrations = map[string]migrationProp{
-	var migrations = []migrationProp{
+	// Define the migration procedures order.
+	var migrationsOrderedList = []migrationProp{
 		{
 			N: "migrateExpired",
 			F: migrateExpired,
@@ -99,17 +93,15 @@ func RunMigrations() bool {
 		},
 	}
 
-	// prepare the report var
+	// Declare the migrations report variable.
 	var report string
 
-	// run migrations
-	for _, mig := range migrations {
+	// Execute the migration procedures.
+	for _, mig := range migrationsOrderedList {
 		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l, mig.R))
 	}
 
-	l.Msg(report).Status(http.StatusOK).Log()
-
-	return true
+	return report
 }
 
 // migrateExpiredRequests procedure loops over requests and removes those expired already.
