@@ -1,6 +1,8 @@
 package register
 
 import (
+	"go.vxn.dev/littr/pkg/config"
+
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -90,7 +92,7 @@ func (c *Content) Render() app.UI {
 
 		// register button
 		app.Div().Class("row center-align").Body(
-			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
+			app.If(config.IsRegistrationEnabled,
 				app.Button().ID("register-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 					app.Text("register"),
 				),

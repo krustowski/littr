@@ -5,5 +5,5 @@ var (
 	NicknameLengthMax int = 12
 
 	// MaxPostLength is the maximal length of the fully shown post in the flow. Posts longer than that are to be shorten/hidden.
-	MaxPostLength     int = 500
+	MaxPostLength int = 500
 )

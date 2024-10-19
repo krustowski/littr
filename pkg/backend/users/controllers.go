@@ -209,7 +209,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	// check if the registration is allowed
-	if !config.REGISTRATION_ENABLED {
+	if !config.IsRegistrationEnabled {
 		l.Msg(common.ERR_REGISTRATION_DISABLED).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}

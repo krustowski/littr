@@ -63,7 +63,7 @@ func (c *Content) Render() app.UI {
 		// register button
 		app.Div().Class("row center-align").Body(
 			// register button
-			app.If(app.Getenv("REGISTRATION_ENABLED") == "true",
+			app.If(config.IsRegistrationEnabled,
 				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
 					app.Text("register"),
 				),
