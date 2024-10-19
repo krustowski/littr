@@ -22,7 +22,7 @@ var (
 	VapidPublicKey string
 )
 
-// DTO-in stucture for the API call.
+// DTO-in structure for the API call.
 type CallInput struct {
 	Method      string
 	Url         string
