@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.43.2"
+        "version": "0.43.3"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -196,29 +196,6 @@
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
-                    }
-                }
-            }
-        },
-        "/live": {
-            "get": {
-                "description": "get real-time posts event stream",
-                "produces": [
-                    "text/event-stream"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "Get real-time posts event stream (SSE stream)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
                     }
                 }
             }

@@ -14,35 +14,68 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 )
 
-var Streamer *sse.Server
+const (
+	topicRandomNumbers = "numbers"
+	topicMetrics       = "metrics"
+)
 
-// Get live flow event stream
-//
-// @Summary      Get real-time posts event stream (SSE stream)
-// @Description  get real-time posts event stream
-// @Tags         live
-// @Produce      text/event-stream
-// @Success      200  {object}  string
-// @Failure      500  {object}  nil
-// @Router       /live [get]
+// Core SSE server struct initialization, the server implements http.Handler interface.
+var Streamer = &sse.Server{
+	// Joe is the default pubsub service provider.
+	Provider: &sse.Joe{
+		// Replays only valid events, that expire after 5 minutes.
+		ReplayProvider: &sse.ValidReplayProvider{
+			TTL:        time.Minute * 5,
+			GCInterval: time.Minute,
+			AutoIDs:    true,
+		},
+	},
+	// Custom callback function when a SSE session is started.
+	OnSession: func(s *sse.Session) (sse.Subscription, bool) {
+		// Fetch the topic list.
+		topics := s.Req.URL.Query()["topic"]
+
+		// Loop over the topic list to determine the returned Subscription structure.
+		for _, topic := range topics {
+			// The topic is unknown or invalid.
+			if topic != topicRandomNumbers && topic != topicMetrics {
+				// Do not send a pre-superfluous reponse.
+				//fmt.Fprintf(s.Res, "invalid topic %q; supported are %q, %q", topic, topicRandomNumbers, topicMetrics)
+				//s.Res.WriteHeader(http.StatusBadRequest)
+				return sse.Subscription{}, false
+			}
+		}
+
+		if len(topics) == 0 {
+			// Provide default topics, if none are given.
+			topics = []string{topicRandomNumbers, topicMetrics}
+		}
+
+		// Return a new SSE subscription.
+		return sse.Subscription{
+			Client:      s,
+			LastEventID: s.LastEventID,
+			Topics:      append(topics, sse.DefaultTopic), // The shutdown message is sent on the default topic.
+		}, true
+	},
+	//Logger:
+}
+
+// The very keepalive pacemaker.
 func beat() {
 	for {
 		// Break the loop if Streamer is nil.
-		/*if Streamer == nil {
+		if Streamer == nil {
 			break
 		}
 
-		BroadcastMessage("heartbeat", "keepalive")
-		time.Sleep(time.Second * config.HEARTBEAT_SLEEP_TIME)*/
-
-		// New implementation (other lib).
+		// Compose a new message.
 		msg := &sse.Message{}
 		id, err := sse.NewID("keepalive")
 		if err != nil {
 			// ???
 			break
 		}
-
 		msg.ID = id
 
 		msg.AppendData("heartbeat")
@@ -61,24 +94,27 @@ func beat() {
 
 // BroadcastMessage is a wrapper function for a SSE message sending.
 func BroadcastMessage(data, eventName string) {
+	// Refuse empty data.
 	if data == "" {
 		return
 	}
 
 	// Compose a message.
 	msg := &sse.Message{}
-	msg.AppendData(data)
 
+	// Ensure a default event ID set.
 	if eventName == "" {
 		eventName = "message"
 	}
 
-	// Ensure a proper ID is used.
+	// Ensure a valid ID is used.
 	id, err := sse.NewID(eventName)
 	if err != nil {
 		return
 	}
 	msg.ID = id
+
+	msg.AppendData(data)
 
 	if Streamer != nil {
 		_ = Streamer.Publish(msg)
@@ -92,20 +128,18 @@ func BroadcastMessage(data, eventName string) {
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	// Core SSE server struct initialization.
-	Streamer = &sse.Server{
-		// Joe is the default provider.
-		Provider: &sse.Joe{
-			// Replays only valid events, that expire after 5 minutes.
-			ReplayProvider: &sse.ValidReplayProvider{TTL: time.Minute * 5},
-		},
-		//OnSession:
-		//Logger:
-	}
-
 	// Run the keepalive pacemaker.
 	go beat()
 
+	// Get live flow event stream
+	//
+	// @Summary      Get real-time posts event stream (SSE stream)
+	// @Description  get real-time posts event stream
+	// @Tags         live
+	// @Produce      text/event-stream
+	// @Success      200  {object}  string
+	// @Failure      500  {object}  nil
+	// @Router       /live [get]
 	r.Mount("/", Streamer)
 
 	return r

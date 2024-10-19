@@ -33,7 +33,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.url.match("/api/v1/posts/live")) {
+  if (event.request.url.match("/api/v1/live")) {
     return
   }
 
