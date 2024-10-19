@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -70,8 +70,8 @@ func (c *Content) Render() app.UI {
 
 	// compose a summary of a long post to be replied to
 	replySummary := ""
-	if c.modalReplyActive && len(c.posts[c.interactedPostKey].Content) > configs.MaxPostLength {
-		replySummary = c.posts[c.interactedPostKey].Content[:configs.MaxPostLength/10] + "- [...]"
+	if c.modalReplyActive && len(c.posts[c.interactedPostKey].Content) > config.MaxPostLength {
+		replySummary = c.posts[c.interactedPostKey].Content[:config.MaxPostLength/10] + "- [...]"
 	}
 
 	return app.Main().Class("responsive").Body(
@@ -278,14 +278,14 @@ func (c *Content) Render() app.UI {
 
 					// check the post's length, on threshold use <details> tag
 					postDetailsSummary := ""
-					if len(post.Content) > configs.MaxPostLength {
-						postDetailsSummary = post.Content[:configs.MaxPostLength/10] + "- [...]"
+					if len(post.Content) > config.MaxPostLength {
+						postDetailsSummary = post.Content[:config.MaxPostLength/10] + "- [...]"
 					}
 
 					// the same as above with the previous post's length for reply render
 					previousDetailsSummary := ""
-					if len(previousContent) > configs.MaxPostLength {
-						previousDetailsSummary = previousContent[:configs.MaxPostLength/10] + "- [...]"
+					if len(previousContent) > config.MaxPostLength {
+						previousDetailsSummary = previousContent[:config.MaxPostLength/10] + "- [...]"
 					}
 
 					// fetch the image

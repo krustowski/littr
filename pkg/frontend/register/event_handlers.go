@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"go.vxn.dev/littr/configs"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -39,8 +39,8 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// don't allow very long nicknames
-		if len(nickname) > configs.NicknameLengthMax {
-			toast.Text("nickname has to be "+strconv.Itoa(configs.NicknameLengthMax)+" chars long at max").Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		if len(nickname) > config.NicknameLengthMax {
+			toast.Text("nickname has to be "+strconv.Itoa(config.NicknameLengthMax)+" chars long at max").Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

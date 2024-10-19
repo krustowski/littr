@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"go.vxn.dev/littr/configs"
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/image"
 	"go.vxn.dev/littr/pkg/backend/mail"
 	"go.vxn.dev/littr/pkg/backend/pages"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -209,7 +209,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	// check if the registration is allowed
-	if !configs.REGISTRATION_ENABLED {
+	if !config.REGISTRATION_ENABLED {
 		l.Msg(common.ERR_REGISTRATION_DISABLED).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -223,7 +223,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// block restricted nicknames, use lowercase for comparison
-	if helpers.Contains(configs.UserDeletionList, strings.ToLower(user.Nickname)) {
+	if helpers.Contains(config.UserDeletionList, strings.ToLower(user.Nickname)) {
 		l.Msg(common.ERR_RESTRICTED_NICKNAME).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}

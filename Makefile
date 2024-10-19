@@ -35,7 +35,6 @@ MAIL_SASL_PWD?=""
 
 REGISTRY?=
 
-
 # go environment
 GOARCH := $(shell go env GOARCH)
 GOCACHE?=/home/${USER}/.cache/go-build

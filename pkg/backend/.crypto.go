@@ -1,4 +1,4 @@
-package configs
+package backend
 
 import (
 	"crypto/aes"

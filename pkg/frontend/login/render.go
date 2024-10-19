@@ -1,7 +1,7 @@
 package login
 
 import (
-	"go.vxn.dev/littr/configs"
+	"go.vxn.dev/littr/pkg/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -27,7 +27,7 @@ func (c *Content) Render() app.UI {
 
 		// login credentials fields
 		app.Div().Class("field border label deep-orange-text").Body(
-			app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(configs.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
+			app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
 			app.Label().Text("nickname").Class("active deep-orange-text"),
 		),
 

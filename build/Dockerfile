@@ -30,7 +30,6 @@ COPY go.mod .
 ARG GOMODCACHE GOCACHE GOARCH
 RUN --mount=type=cache,target="$GOMODCACHE" go mod download
 
-#COPY .. . 
 COPY cmd/littr /usr/local/go/src/cmd/littr
 COPY . /go/src/${APP_NAME}/
 

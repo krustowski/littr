@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	"os"
@@ -6,8 +6,11 @@ import (
 )
 
 const (
+	DEFAULT_PORT = "8054"
+
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
 	HEARTBEAT_SLEEP_TIME = 20
+	SERVER_PORT          = "APP_PORT"
 )
 
 /*
@@ -36,6 +39,14 @@ var APP_ENVIRONMENT string = func() string {
 	} else {
 		return "dev"
 	}
+}()
+
+var ServerPort = func() string {
+	if os.Getenv(SERVER_PORT) != "" {
+		return os.Getenv(SERVER_PORT)
+	}
+
+	return DEFAULT_PORT
 }()
 
 /*

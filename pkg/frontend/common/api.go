@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.vxn.dev/littr/configs"
+	//"go.vxn.dev/littr/pkg/config"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -23,6 +22,7 @@ var (
 	VapidPublicKey string
 )
 
+// DTO-in stucture for the API call.
 type CallInput struct {
 	Method      string
 	Url         string
@@ -113,7 +113,7 @@ func FetchData(input *CallInput, output *Response) bool {
 //  prolly to be deleted soon
 //
 
-func reload[T any](model T, stream *[]byte) error {
+/*func reload[T any](model T, stream *[]byte) error {
 	if &model == nil {
 		return errors.New("reload: input model is blank")
 	}
@@ -123,7 +123,7 @@ func reload[T any](model T, stream *[]byte) error {
 		return errors.New("marshal error: model marshal failed" + err.Error())
 	}
 
-	encryptedStream := configs.Encrypt(
+	encryptedStream := config.Encrypt(
 		[]byte(app.Getenv("APP_PEPPER")),
 		preStream,
 	)
@@ -131,7 +131,7 @@ func reload[T any](model T, stream *[]byte) error {
 	*stream = encryptedStream
 
 	return nil
-}
+}*/
 
 /*func verifyUser(encodedUser string) bool {
 	var user models.User

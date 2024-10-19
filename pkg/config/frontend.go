@@ -1,4 +1,4 @@
-package configs
+package config
 
 var (
 	NicknameLengthMax int = 12
