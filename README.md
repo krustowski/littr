@@ -16,10 +16,10 @@ a simple nanoblogging platform for a raw mind _flow_
 ## features
 
 + in-memory runtime cache(s)
-+ data persistence on container restart (on `SIGINT`) in Docker volumes
++ data persistence on container's restart (on `SIGINT`) in Docker volume(s)
 + flow posts filtering using the FlowList --- simply choose who to follow
 + shade function to block other accounts from following you and reading your posts
-+ webpush notification management --- choose which notifications (reply/mention) is one's device willing to accept
++ webpush notification management --- choose which notifications (reply/mention) is your device willing to accept
 + private acccount --- others have to file a follow request to such account (and have to approved by the acc's owner)
 + swift client side (a WebAssebmly binary)
 + safe photo sharing --- EXIF metadata are removed while image file is uploading

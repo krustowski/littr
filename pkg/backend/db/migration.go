@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	configs "go.vxn.dev/littr/configs"
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -329,7 +329,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 		return false
 	}
 
-	bank := &configs.UserDeletionList
+	bank := &config.UserDeletionList
 
 	// delete all users matching the contents of restricted nickname list
 	for key, user := range *users {
@@ -461,7 +461,7 @@ func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 		return false
 	}
 
-	usersToUnshade := &configs.UsersToUnshade
+	usersToUnshade := &config.UsersToUnshade
 
 	for key, user := range *users {
 		if !helpers.Contains(*usersToUnshade, key) {
