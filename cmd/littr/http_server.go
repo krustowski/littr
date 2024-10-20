@@ -51,15 +51,15 @@ var appHandler = &app.Handler{
 	LoadingLabel: "loading...",
 	Lang:         "en",
 	Keywords: []string{
-		"go-app",
-		"nanoblogging",
-		"nanoblog",
-		"microblogging",
-		"microblog",
-		"platform",
+		"blog",
 		"blogging",
 		"board",
-		"blog",
+		"go-app",
+		"microblog",
+		"microblogging",
+		"nanoblog",
+		"nanoblogging",
+		"platform",
 		"social network",
 	},
 	AutoUpdateInterval: time.Minute * 1,
@@ -91,7 +91,6 @@ var appHandler = &app.Handler{
 		"https://cdn.vxn.dev/css/material-symbols-outlined.woff2",
 		//"https://cdn.jsdelivr.net/npm/beercss@3.5.0/dist/cdn/material-symbols-outlined.woff2",
 	},
-
 	Styles: []string{
 		"https://cdn.vxn.dev/css/beercss-3.7.0-custom.min.css",
 		"https://cdn.vxn.dev/css/sortable.min.css",
@@ -218,17 +217,6 @@ func initServer() {
 		Handler:      r,
 	}
 
-	// The HTTP server shutdown registration.
-	/*server.RegisterOnShutdown(func() {
-		l.Msg("trap signal: " + sig.String() + ", exiting gracefully...").Status(http.StatusOK).Log()
-		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-		defer cancel()
-
-		_ = live.Streamer.Shutdown(ctx)
-	})*/
-
 	//
 	//  Database and data initialization
 	//
@@ -297,7 +285,7 @@ func initServer() {
 	//  Exit
 	//
 
-	// Wait for the graceful HTTP server shutdown.
+	// Wait for the graceful HTTP server shutdown attempt.
 	wg.Wait()
 
 	// This is the final log before the application exits for real!
