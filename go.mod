@@ -13,14 +13,14 @@ require (
 	github.com/sizeofint/webpanimation v0.0.0-20210809145948-1d2b32119882
 	github.com/tmaxmax/go-sse v0.8.0
 	github.com/wneessen/go-mail v0.5.1
-	go.vxn.dev/swis/v5 v5.17.9
+	go.vxn.dev/swis/v5 v5.18.1
 	golang.org/x/image v0.21.0
 )
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.12.3 // indirect
-	github.com/bytedance/sonic/loader v0.2.0 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
