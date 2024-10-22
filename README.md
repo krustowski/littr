@@ -183,6 +183,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 
 ### roasmap to v0.43
 + ~~design and implement new Token model~~ (wip)
++ ~~enable cache metrics gauges~~
 + ~~refactor mailing on BE~~
 + unify options under the umbrella user.Options map (wip)
 + ~~update swagger docs, ensure proper params, inputs, responses etc are valid~~ (wip)

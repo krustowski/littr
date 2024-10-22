@@ -1,6 +1,7 @@
 package db
 
 import (
+	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/swis/v5/pkg/core"
 )
 
@@ -44,6 +45,8 @@ func GetAll[T any](cache *core.Cache, model T) (map[string]T, int) {
 		items[key] = item
 	}
 
+	metrics.UpdateCountMetric(cache, count, true)
+
 	return items, count
 }
 
@@ -68,6 +71,8 @@ func SetOne[T any](cache *core.Cache, key string, model T) bool {
 		return false
 	}
 
+	metrics.UpdateCountMetric(cache, 1, false)
+
 	return cache.Set(key, model)
 }
 
@@ -76,6 +81,8 @@ func DeleteOne(cache *core.Cache, key string) bool {
 	if !dbState.unlocked {
 		return false
 	}
+
+	metrics.UpdateCountMetric(cache, -1, false)
 
 	return cache.Delete(key)
 }

@@ -222,17 +222,20 @@ func initServer() {
 	//
 
 	// Initialize all the in-memory databases (caches).
-	db.FlowCache = &core.Cache{}
-	db.PollCache = &core.Cache{}
-	db.RequestCache = &core.Cache{}
-	db.SubscriptionCache = &core.Cache{}
-	db.TokenCache = &core.Cache{}
-	db.UserCache = &core.Cache{}
+	db.FlowCache = &core.Cache{Name: "FlowCache"}
+	db.PollCache = &core.Cache{Name: "PollCache"}
+	db.RequestCache = &core.Cache{Name: "RequestCache"}
+	db.SubscriptionCache = &core.Cache{Name: "SubscriptionCache"}
+	db.TokenCache = &core.Cache{Name: "TokenCache"}
+	db.UserCache = &core.Cache{Name: "UserCache"}
 
 	// Unlock the write access.
 	db.Unlock()
 
 	l.Msg("caches initialized").Status(http.StatusOK).Log()
+
+	// Register the (mostly) cache metrics.
+	metrics.RegisterAll()
 
 	// Load the persistent data from the filesystem to memory.
 	l.Msg(db.LoadAll()).Status(http.StatusOK).Log()
@@ -255,8 +258,7 @@ func initServer() {
 		return nil
 	}))
 
-	// Register the Prometheus' metrics and mount their handle.
-	metrics.RegisterAll()
+	// Register the Prometheus metrics' handle.
 	r.Handle("/metrics", promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
 		Registry: metrics.Registry,
 	}))

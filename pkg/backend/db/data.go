@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/models"
 	"go.vxn.dev/swis/v5/pkg/core"
 )
@@ -146,6 +147,8 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, erro
 
 		count++
 	}
+
+	metrics.UpdateCountMetric(cache, count, true)
 
 	return count, total, nil
 }
