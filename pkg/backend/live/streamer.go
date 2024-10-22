@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	topicRandomNumbers = "numbers"
 	topicMetrics       = "metrics"
+	topicRandomNumbers = "numbers"
 )
 
 // Core SSE server struct initialization, the server implements http.Handler interface.
@@ -39,10 +39,10 @@ var Streamer = &sse.Server{
 		for _, topic := range topics {
 			// The topic is unknown or invalid.
 			if topic != topicRandomNumbers && topic != topicMetrics {
-				// Do not send a pre-superfluous reponse.
+				// Do not send a pre-superfluous response.
 				//fmt.Fprintf(s.Res, "invalid topic %q; supported are %q, %q", topic, topicRandomNumbers, topicMetrics)
 				//s.Res.WriteHeader(http.StatusBadRequest)
-				return sse.Subscription{}, false
+				//return sse.Subscription{}, false
 			}
 		}
 
