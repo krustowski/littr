@@ -9,7 +9,7 @@
 #
 
 # https://hub.docker.com/_/golang
-ARG DOCKER_BUILD_IMAGE="golang1.23:alpine"
+ARG DOCKER_BUILD_IMAGE="golang:1.23-alpine"
 ARG DOCKER_BUILD_IMAGE_RELEASE "alpine:3.20"
 FROM ${DOCKER_BUILD_IMAGE} AS littr-build
 
