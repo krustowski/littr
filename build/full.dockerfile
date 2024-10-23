@@ -9,8 +9,9 @@
 #
 
 # https://hub.docker.com/_/golang
-ARG GOLANG_VERSION
-FROM golang:${GOLANG_VERSION}-alpine3.20 AS littr-build
+ARG DOCKER_BUILD_IMAGE="golang1.23:alpine"
+ARG DOCKER_BUILD_IMAGE_RELEASE "alpine:3.20"
+FROM ${DOCKER_BUILD_IMAGE} AS littr-build
 
 ARG APP_NAME APP_PEPPER APP_VERSION API_TOKEN VAPID_PUB_KEY
 
@@ -54,7 +55,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 # stage 1 -- release
 #
 
-FROM alpine:3.20 AS littr-release
+FROM ${DOCKER_BUILD_IMAGE_RELEASE} AS littr-release
 
 ARG APP_FLAGS APP_VERSION DOCKER_INTERNAL_PORT DOCKER_USER
 

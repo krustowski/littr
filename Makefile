@@ -33,8 +33,6 @@ MAIL_PORT?=25
 MAIL_SASL_USR?=""
 MAIL_SASL_PWD?=""
 
-REGISTRY?=
-
 # go environment
 GOARCH := $(shell go env GOARCH)
 GOCACHE?=/home/${USER}/.cache/go-build
@@ -42,17 +40,22 @@ GOMODCACHE?=/home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
 # docker environment
-DOCKER_COMPOSE_FILE?=deployments/docker-compose.yml
-DOCKER_COMPOSE_TEST_FILE?=deployments/docker-compose-test.yml
-DOCKER_COMPOSE_OVERRIDE?=deployments/docker-compose.override.yml
-DOCKER_COMPOSE_TEST_OVERRIDE?=deployments/docker-compose-test.override.yml
-DOCKER_CONTAINER_NAME?=${PROJECT_NAME}-server
-DOCKER_IMAGE_TAG?=${REGISTRY}backend:${APP_VERSION}-go${GOLANG_VERSION}
-DOCKER_INTERNAL_PORT?=8080
-DOCKER_NETWORK_NAME?=traefik
-DOCKER_USER?=littr
-DOCKER_VOLUME_DATA_NAME?=littr-data
-DOCKER_VOLUME_PIX_NAME?=littr-pix
+DOCKER_COMPOSE_FILE ?= deployments/docker-compose.yml
+DOCKER_COMPOSE_TEST_FILE ?= deployments/docker-compose-test.yml
+DOCKER_COMPOSE_OVERRIDE ?= deployments/docker-compose.override.yml
+DOCKER_COMPOSE_TEST_OVERRIDE ?= deployments/docker-compose-test.override.yml
+DOCKER_CONTAINER_NAME ?= ${PROJECT_NAME}-server
+
+REGISTRY ?= ${APP_NAME}
+DOCKER_BUILD_IMAGE ?= golang:${GOLANG_VERSION}-alpine
+DOCKER_BUILD_IMAGE_RELEASE ?= alpine:${ALPINE_VERSION}
+DOCKER_IMAGE_TAG ?= ${REGISTRY}/littr/backend:${APP_VERSION}-go${GOLANG_VERSION}
+
+DOCKER_INTERNAL_PORT ?= 8080
+DOCKER_NETWORK_NAME ?= traefik
+DOCKER_USER ?= littr
+DOCKER_VOLUME_DATA_NAME ?= littr-data
+DOCKER_VOLUME_PIX_NAME ?= littr-pix
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -140,23 +143,28 @@ docs: config
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
-	@[ -z "${REGISTRY}" ] || \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
-	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
-		&& DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build \
-		|| DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} build
+	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
+	@if [ \( -z "${REGISTRY_USER}" \) -o \( -z "${REGISTRY_PASSWORD}" \) ]; \
+	then \
+		DOCKERFILE=full.dockerfile DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build; \
+	else \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"; \
+		DOCKERFILE=prebuilt.dockerfile DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build; \
+	fi
 
 .PHONY: run
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
-	@[ -z "${REGISTRY}" ] || \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
-	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
-		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans \
-		|| docker compose -f ${DOCKER_COMPOSE_FILE} up --force-recreate --detach --remove-orphans
-	@[ -z "${REGISTRY}" ] || \
-		docker logout "${REGISTRY}" > /dev/null
+	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
+	@if [ \( -n "${REGISTRY_USER}" \) -a \( -n "${REGISTRY_PASSWORD}" \) ]; \
+	then \
+		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"; \
+		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
+		docker logout "${REGISTRY}" > /dev/null; \
+	else \
+		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
+	fi
 
 .PHONY: run-test
 run-test:	
@@ -179,7 +187,7 @@ stop:
 
 .PHONY: version
 version: 
-	@[ -f "./.env" ] && head -n 7 .env | \
+	@[ -f "./.env" ] && head -n 8 .env | \
 		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
 		sed -e 's/\(REGISTRY\)=\(.*\)/\1=""/' | \
 		sed -e 's/\(MAIL_SASL_USR\)=\(.*\)/\1=xxx/' | \
