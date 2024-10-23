@@ -256,3 +256,9 @@ push_to_registry:
 sse_client:
 	@echo -e "\n${YELLOW} Starting the SSE client... ${RESET}\n"
 	@go run cmd/sse_client/main.go
+
+.PHONY: push_mirror
+push_mirror:
+	@echo -e "\n${YELLOW} Pushing to the mirror repository... ${RESET}\n"
+	@git push mirror master --follow-tags
+	
