@@ -5,7 +5,20 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func authUser(aUser *models.User) (*models.User, bool) {
+type AuthUser struct {
+	// Nickname is the user's very username.
+	Nickname string `json:"nickname"`
+
+	// Passphrase is a legacy format converted to string from a raw byte stream
+	// (do not use anymore as this will be removed in future versions).
+	Passphrase string `json:"passphrase"`
+
+	// PassphraseHex is a hexadecimal representation of a passphrase (a SHA-512 checksum).
+	// Use 'echo $PASS | sha512sum' for example to get the hex format.
+	PassphraseHex string `json:"passphrase_hex"`
+}
+
+func authUser(aUser *AuthUser) (*models.User, bool) {
 	// fetch one user from cache according to the login credential
 	user, ok := db.GetOne(db.UserCache, aUser.Nickname, models.User{})
 	if !ok {

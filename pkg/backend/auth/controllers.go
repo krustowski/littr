@@ -14,11 +14,6 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-type UserAuth struct {
-	User     string `json:"user_name"`
-	PassHash string `json:"pass_hash"`
-}
-
 // authHandler
 //
 // @Summary 		Auth an user
@@ -26,7 +21,7 @@ type UserAuth struct {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Param    	 	request body models.User true "user struct to auth"
+// @Param    	 	request body auth.AuthUser true "user struct to auth"
 // @Success		200	{object}	common.APIResponse{data=auth.authHandler.responseData}
 // @Failure		400	{object}	common.APIResponse{data=auth.authHandler.responseData}
 // @Failure		404	{object}	common.APIResponse{data=auth.authHandler.responseData}
@@ -45,7 +40,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		AuthGranted: false,
 	}
 
-	var user models.User
+	var user AuthUser
 
 	// decode the request body
 	if err := common.UnmarshalRequestData(r, &user); err != nil {

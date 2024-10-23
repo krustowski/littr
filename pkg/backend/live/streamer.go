@@ -62,6 +62,14 @@ var Streamer = &sse.Server{
 }
 
 // The very keepalive pacemaker.
+//
+// @Summary      Get real-time posts event stream (SSE stream)
+// @Description  get real-time posts event stream
+// @Tags         live
+// @Produce      text/event-stream
+// @Success      200  {object}  string
+// @Failure      500  {object}  nil
+// @Router       /live [get]
 func beat() {
 	for {
 		// Break the loop if Streamer is nil.
@@ -127,15 +135,6 @@ func BroadcastMessage(data, eventName string) {
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	// Get live flow event stream
-	//
-	// @Summary      Get real-time posts event stream (SSE stream)
-	// @Description  get real-time posts event stream
-	// @Tags         live
-	// @Produce      text/event-stream
-	// @Success      200  {object}  string
-	// @Failure      500  {object}  nil
-	// @Router       /live [get]
 	r.Mount("/", Streamer)
 
 	// Run the keepalive pacemaker.
