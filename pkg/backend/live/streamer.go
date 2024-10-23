@@ -69,20 +69,8 @@ func beat() {
 			break
 		}
 
-		// Compose a new message.
-		msg := &sse.Message{}
-		id, err := sse.NewID("keepalive")
-		if err != nil {
-			// ???
-			break
-		}
-		msg.ID = id
-
-		msg.AppendData("heartbeat")
-
-		if Streamer != nil {
-			_ = Streamer.Publish(msg)
-		}
+		// Send the message.
+		BroadcastMessage("heartbeat", "keepalive")
 
 		// Sleep for the given period of time.
 		time.Sleep(time.Second * config.HEARTBEAT_SLEEP_TIME)
@@ -94,6 +82,11 @@ func beat() {
 
 // BroadcastMessage is a wrapper function for a SSE message sending.
 func BroadcastMessage(data, eventName string) {
+	// Exit if Streamer is nil.
+	if Streamer == nil {
+		return
+	}
+
 	// Refuse empty data.
 	if data == "" {
 		return
@@ -113,6 +106,12 @@ func BroadcastMessage(data, eventName string) {
 		return
 	}
 	msg.ID = id
+
+	typ, err := sse.NewType(eventName)
+	if err != nil {
+		return
+	}
+	msg.Type = typ
 
 	msg.AppendData(data)
 
