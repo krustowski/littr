@@ -1,5 +1,6 @@
 build/*
 deployments/*
 docs/*
+Makefile
 .git/*
 .github/*

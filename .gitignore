@@ -21,3 +21,4 @@ run_data/
 *.log
 
 test/jmeter/auth.json
+deployments/*override*
