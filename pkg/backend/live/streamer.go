@@ -127,9 +127,6 @@ func BroadcastMessage(data, eventName string) {
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	// Run the keepalive pacemaker.
-	go beat()
-
 	// Get live flow event stream
 	//
 	// @Summary      Get real-time posts event stream (SSE stream)
@@ -140,6 +137,9 @@ func Router() chi.Router {
 	// @Failure      500  {object}  nil
 	// @Router       /live [get]
 	r.Mount("/", Streamer)
+
+	// Run the keepalive pacemaker.
+	go beat()
 
 	return r
 }
