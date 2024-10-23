@@ -252,3 +252,7 @@ push_to_registry:
 		docker push ${DOCKER_IMAGE_TAG}
 	@docker logout ${REGISTRY} > /dev/null
 
+.PHONY: sse_client
+sse_client:
+	@echo -e "\n${YELLOW} Starting the SSE client... ${RESET}\n"
+	@go run cmd/sse_client/main.go
