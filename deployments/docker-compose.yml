@@ -16,16 +16,19 @@ volumes:
 services:
   littr-backend:
     image: ${DOCKER_IMAGE_TAG}
+    hostname: ${DOCKER_CONTAINER_NAME}
     container_name: ${DOCKER_CONTAINER_NAME}
     env_file:
       - ../.env
     build:
       context: ..
-      dockerfile: build/Dockerfile
+      dockerfile: build/${DOCKERFILE}
       args: 
         APP_NAME: ${APP_NAME}
         APP_PEPPER: ${APP_PEPPER}
         APP_VERSION: ${APP_VERSION}
+        DOCKER_BUILD_IMAGE: ${DOCKER_BUILD_IMAGE}
+        DOCKER_BUILD_IMAGE_RELEASE: ${DOCKER_BUILD_IMAGE_RELEASE}
         DOCKER_INTERNAL_PORT: ${DOCKER_INTERNAL_PORT} 
         DOCKER_USER: ${DOCKER_USER}
         OARCH: ${GOARCH}
