@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.vxn.dev/littr/pkg/config"
 	//"go.vxn.dev/littr/pkg/helpers"
 	//"go.vxn.dev/littr/pkg/models"
 
@@ -112,7 +111,7 @@ func (h *Header) Render() app.UI {
 					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 						app.Span().Body(
 							app.Text(headerString),
-							app.If(config.AppEnvironment != "prod",
+							app.If(app.Getenv("APP_ENVIRONNMENT") != "prod",
 								app.Span().Class("col").Body(
 									app.Sup().Body(
 										app.Text(" (dev) "),
@@ -149,7 +148,7 @@ func (h *Header) Render() app.UI {
 							app.H4().Body(
 								app.Span().Body(
 									app.Text("littr"),
-									app.If(config.AppEnvironment != "prod",
+									app.If(app.Getenv("APP_ENVIRONNMENT") != "prod",
 										app.Span().Class("col").Body(
 											app.Sup().Body(
 												app.Text(" (dev) "),

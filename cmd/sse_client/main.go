@@ -10,8 +10,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.vxn.dev/littr/pkg/config"
+
 	"github.com/tmaxmax/go-sse"
 )
+
+var URL = func() string {
+	if os.Getenv("SSE_CLIENT_URL") != "" {
+		return os.Getenv("SSE_CLIENT_URL")
+	}
+
+	return "http://localhost:" + config.ServerPort
+}()
 
 func main() {
 	var sub string
@@ -53,5 +63,5 @@ func getRequestURL(sub string) string {
 		panic(fmt.Errorf("unexpected subscription topic %q", sub))
 	}
 
-	return "http://localhost:8094/api/v1/live?" + q.Encode()
+	return URL + "/api/v1/live?" + q.Encode()
 }
