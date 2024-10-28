@@ -56,6 +56,13 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		}
 	}
 
+	// Add all (for now) users from the requestList to render properly at the top of the users page.
+	for nick, requested := range *opts.Users.RequestList {
+		if requested {
+			part = append(part, (*allUsers)[nick])
+		}
+	}
+
 	uExport := make(map[string]models.User)
 
 	for _, user := range part {

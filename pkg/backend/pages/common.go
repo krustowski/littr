@@ -42,9 +42,10 @@ type PollOptions struct {
 
 // users subviews' options
 type UserOptions struct {
-	Plain        bool   `json:"plain"`
-	SingleUser   bool   `json:"single_user"`
-	SingleUserID string `json:"single_user_id"`
+	Plain        bool             `json:"plain"`
+	SingleUser   bool             `json:"single_user"`
+	SingleUserID string           `json:"single_user_id"`
+	RequestList  *map[string]bool `json:"request_list"`
 }
 
 // DTO for GetOnePage pointer output aggregation

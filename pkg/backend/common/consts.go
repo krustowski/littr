@@ -59,6 +59,7 @@ const (
 	ERR_POLL_DELETE_FAIL        = "could not delete the poll, try again"
 	ERR_POLLID_BLANK            = "pollID param is required"
 	ERR_POLL_INVALID_VOTE_COUNT = "you can pass only one vote per poll"
+	ERR_POLL_DUPLICIT_OPTIONS   = "all options (inc. the very question) have to be unique"
 
 	// Post-related error messages
 	ERR_POST_BLANK          = "post has got no content"
