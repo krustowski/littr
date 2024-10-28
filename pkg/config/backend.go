@@ -33,7 +33,7 @@ var (
 	// EnchartedSW is a string variable to hold the templated ServiceWorker contents to load into the very main FE app handler.
 	EnchartedSW = func() string {
 		// Parse the custom Service Worker template string for the app handler.
-		tpl, err := os.ReadFile("/opt/web/app-worker.js")
+		tpl, err := os.ReadFile("/opt/web/app-worker.js.tmpl")
 		if err != nil {
 			return ""
 		}

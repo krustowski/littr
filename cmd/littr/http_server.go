@@ -30,6 +30,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// Handler and its ServerHTTP method is a simple implementation of the http.Handler interface.
 type Handler func(w http.ResponseWriter, r *http.Request) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +110,7 @@ var appHandler = &app.Handler{
 	ServiceWorkerTemplate: config.EnchartedSW,
 }
 
+// initClient initializes the router for the client web application (if run in browser for the first time).
 func initClient() {
 	initClientCommon()
 }
@@ -144,7 +146,7 @@ func initServer() {
 		live.BroadcastMessage("server-stop", "message")
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
-		sctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		// Lock the database so no one can change any data henceforth.
@@ -153,9 +155,9 @@ func initServer() {
 		// Dump all in-memory databases.
 		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
 
-		// Terminate the server from here.
+		// Terminate the server from here, give it 5 seconds to shutdown gracefully..
 		if err := server.Shutdown(sctx); err != nil {
-			l.Msg(fmt.Sprintf("HTTP server shutdown error: %s, force terminitaing the server...", err.Error())).Status(http.StatusInternalServerError).Log()
+			l.Msg(fmt.Sprintf("HTTP server shutdown error: %s, force terminitaing the server..., ", err.Error())).Status(http.StatusInternalServerError).Log()
 
 			// Force terminate the server if failed to stop gracefully.
 			server.Close()
@@ -254,7 +256,7 @@ func initServer() {
 
 	l.Msg("starting the server (v" + os.Getenv("APP_VERSION") + ")...").Status(http.StatusOK).Log()
 
-	// Send the SSE
+	// Send the SSE regarding the server start.
 	go func() {
 		time.Sleep(time.Second * 30)
 		live.BroadcastMessage("server-start", "message")
