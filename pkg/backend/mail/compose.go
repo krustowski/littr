@@ -3,6 +3,7 @@ package mail
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	gomail "github.com/wneessen/go-mail"
 )
@@ -35,39 +36,83 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 		return "www.littr.eu"
 	}()
 
-	// Swtich the message type(s).
-	switch payload.Type {
-	case "user_activation":
-		if payload.Nickname == "" {
-			return nil, fmt.Errorf("no user nickname given")
+	// Ensure the nickname is never blank.
+	nickname := func() string {
+		if payload.Nickname != "" && strings.TrimSpace(payload.Nickname) != "" {
+			return payload.Nickname
 		}
 
-		activationLink := "https://" + mainURL + "/activate/" + payload.UUID
+		return "user"
+	}()
 
-		m.Subject("User Activation")
-		m.SetBodyString(gomail.TypeTextPlain, "Dear "+payload.Nickname+",\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+activationLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nlittr\nhttps://"+mainURL)
+	var tmplPayload *TemplatePayload
 
+	// Swtich the message type(s).
+	switch payload.Type {
+	// User Activation procedure.
+	case "user_activation":
+		if payload.UUID == "" {
+			return nil, fmt.Errorf("no UUID given for mail composition")
+		}
+
+		tmplPayload = &TemplatePayload{
+			Nickname:       nickname,
+			MainURL:        mainURL,
+			ActivationLink: "https://" + mainURL + "/activate/" + payload.UUID,
+			TemplateSrc:    "/opt/templates/activation.tmpl",
+		}
+
+		m.Subject("User Activation Link")
+
+	// Passphrase reset request.
 	case "reset_request":
 		if payload.UUID == "" {
 			return nil, fmt.Errorf("no UUID given for mail composition")
 		}
 
-		resetLink := "https://" + mainURL + "/reset/" + payload.UUID
+		tmplPayload = &TemplatePayload{
+			Nickname:    nickname,
+			MainURL:     mainURL,
+			ResetLink:   "https://" + mainURL + "/reset/" + payload.UUID,
+			UUID:        payload.UUID,
+			TemplateSrc: "/opt/templates/reset_request.tmpl",
+		}
 
 		m.Subject("Passphrase Reset Request")
-		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+resetLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nlittr\nhttps://"+mainURL)
 
+	// New passphrase regeneration procedure.
 	case "reset_passphrase":
 		if payload.Passphrase == "" {
 			return nil, fmt.Errorf("no new passhrase given for mail composition")
 		}
 
+		tmplPayload = &TemplatePayload{
+			Nickname:    nickname,
+			MainURL:     mainURL,
+			Passphrase:  payload.Passphrase,
+			TemplateSrc: "/opt/templates/new_passphrase.tmpl",
+		}
+
 		m.Subject("Your New Passphrase")
-		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nThe requested passphrase regeneration process has been successful. Please use the generated string below to log-in again.\n\nNew passphrase: "+payload.Passphrase+"\n\nPlease do not forget to change the passphrase right after logging in in settings.\n\nThank you\nlittr\nhttps://"+mainURL)
 
 	default:
 		return nil, fmt.Errorf("no mail Type specified")
 	}
+
+	var composition string
+
+	// Bake the given template (via TemplateSrc) to the <composition> pointer address.
+	if err := bakeTemplate(tmplPayload, &composition); err != nil {
+		return nil, err
+	}
+
+	// Check the composition content.
+	if composition == "" {
+		return nil, fmt.Errorf("blank mail text composition")
+	}
+
+	// Set the mail's body.
+	m.SetBodyString(gomail.TypeTextPlain, composition)
 
 	return m, nil
 }
