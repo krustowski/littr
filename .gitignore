@@ -19,6 +19,7 @@
 run_data/
 .scannerwork/
 *.log
+.run_data/*
 
 test/jmeter/auth.json
 deployments/*override*

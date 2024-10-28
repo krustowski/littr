@@ -177,9 +177,11 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + write integration and e2e tests
 + [...]
 
+### roadmap to v0.45
+
 ### roadmap to v0.44
 + ~~single poll referenced by ID (singlePoll subpage/view]~~
-+ user activation via mail
++ ~~user activation via mail~~ (wip)
 
 ### roasmap to v0.43
 + ~~design and implement new Token model~~ (wip)
