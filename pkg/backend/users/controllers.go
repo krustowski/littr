@@ -1087,33 +1087,36 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
+	// Declare the HTTP request data type.
 	type requestData struct {
 		UUID string `json:"uuid"`
 	}
 
+	// Define the HTTP request data instance.
 	var reqData requestData
 
-	// decode the incoming data
+	// Decode the incoming request data.
 	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// skip blank UUID entered
+	// Skip the blank UUID entered.
 	if reqData.UUID == "" {
 		l.Msg(common.ERR_REQUEST_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// try the UUID to fetch the request
+	// Try the UUID to fetch the request from the Request database.
 	request, match := db.GetOne(db.RequestCache, reqData.UUID, models.Request{})
 	if !match {
 		l.Msg(common.ERR_REQUEST_UUID_INVALID).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// Check the request's validity.
 	if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
-		// delete the request from database
+		// Delete the invalid request from the database.
 		if deleted := db.DeleteOne(db.RequestCache, reqData.UUID); !deleted {
 			l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log()
 		}
@@ -1122,53 +1125,59 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// preprocess the e-mail address
+	// Preprocess the e-mail address = use the lowecased form.
 	email := strings.ToLower(request.Email)
+	request.Email = email
 
-	// fetch the user linked to such request
+	// Fetch the user associated with such request.
 	user, found := db.GetOne(db.UserCache, request.Nickname, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// reset the passphrase - generete a new one (32 chars)
+	// Reset the passphrase = generete a new one (32 chars long).
 	rand.Seed(time.Now().UnixNano())
 	randomPassphrase := helpers.RandSeq(32)
 	pepper := os.Getenv("APP_PEPPER")
 
-	// convert new passphrase into the hexadecimal format with pepper added
+	if pepper == "" {
+		l.Msg(common.ERR_NO_SERVER_SECRET).Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		return
+	}
+
+	// Convert new passphrase into the hexadecimal format with pepper added.
 	passHash := sha512.Sum512([]byte(randomPassphrase + pepper))
 	user.PassphraseHex = fmt.Sprintf("%x", passHash)
 
-	// save new passphrase to the database
+	// Save the novel passphrase to the database.
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		l.Msg(common.ERR_PASSPHRASE_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// set mail options
+	// Compose the mail payload.
 	mailPayload := mail.MessagePayload{
 		Nickname:   user.Nickname,
-		Email:      user.Email,
+		Email:      request.Email,
 		Type:       "reset_passphrase",
 		Passphrase: randomPassphrase,
 	}
 
-	// compose a message to send
+	// Compose a message to send.
 	msg, err := mail.ComposeMail(mailPayload)
 	if err != nil || msg == nil {
 		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// send the message
+	// Send the message.
 	if err := mail.SendMail(msg); err != nil {
 		l.Msg(common.ERR_MAIL_NOT_SENT).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete the request from the request database
+	// Delete the request from the request database. If this procedure fails, the request can still be deleted via the migrateExpired migration defined in pkg/backend/db/migration.go.
 	if deleted := db.DeleteOne(db.RequestCache, reqData.UUID); !deleted {
 		l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -1232,7 +1241,13 @@ func activationRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Update the user's activation status (a deprecated and a new method).
 	user.Active = true
+
+	if user.Options == nil {
+		user.Options = make(map[string]bool)
+	}
+	user.Options["active"] = true
 
 	// Save the just-activated user back to the database.
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
@@ -1268,35 +1283,37 @@ func activationRequestHandler(w http.ResponseWriter, r *http.Request) {
 func postUserAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
+	// Declare the HTTP request data contents type.
 	type requestData struct {
 		Figure string `json."figure"`
 		Data   []byte `json:"data"`
 	}
 
+	// Declare the HTTP response data contents type.
 	type responseData struct {
 		Key string `json:"key"`
 	}
 
-	// skip blank callerID
+	// Skip the blank callerID.
 	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// take the param from path
+	// Take the userID param from URL path.
 	userID := chi.URLParam(r, "userID")
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// check for possible user's data forgery attempt
+	// Check for the possible user's data forgery attempt.
 	if l.CallerID != userID {
 		l.Msg(common.ERR_USER_AVATAR_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// fetch the caller's user record from database
+	// Fetch the caller's User record from database.
 	user, found := db.GetOne(db.UserCache, userID, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
@@ -1305,80 +1322,80 @@ func postUserAvatar(w http.ResponseWriter, r *http.Request) {
 
 	var reqData requestData
 
-	// decode the incoming data
+	// Decode the incoming request data.
 	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// prepare stamps and keys for ???
+	// Prepare a timestamp and the derived key.
 	timestamp := time.Now()
 	key := strconv.FormatInt(timestamp.UnixNano(), 10)
 
-	// check if data are there
+	// Check if data are there in the request data structure.
 	if reqData.Data == nil || reqData.Figure == "" {
 		l.Msg(common.ERR_MISSING_IMG_CONTENT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// preprocess the image name and extension
+	// Preprocess the image's name and extension.
 	fileExplode := strings.Split(reqData.Figure, ".")
 	extension := fileExplode[len(fileExplode)-1]
 
-	// content for the future user's AvatarURL field update
+	// Content for the future user's AvatarURL field update.
 	content := key + "." + extension
 
 	//
-	// use image magic
+	//  Use the pkg/backend/image magic
 	//
 
-	// decode the input byte stream into an image.Image object
+	// Decode the input []byte stream into an image.Image object. Returns a pointer to the image.Image object.
 	img, format, err := image.DecodeImage(&reqData.Data, extension)
 	if err != nil {
 		l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// fix the image's orientation in decoded image
+	// Fix the image's orientation in the decoded image. Returns a pointer to the image.Image object.
 	img, err = image.FixOrientation(img, &reqData.Data)
 	if err != nil {
 		l.Msg(common.ERR_IMG_ORIENTATION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// generate thumbanils from the cropped image
+	// Generate the thumbanail(s) from the cropped image of size 200x200 px.
 	thumbImg := image.ResizeImage(image.CropToSquare(img), 200)
 
-	// encode the thumbnail back to []byte
+	// Encode the thumbnail back to []byte stream to be writable to a file.
 	thumbImgData, err := image.EncodeImage(&thumbImg, format)
 	if err != nil {
 		l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// write the thumbnail byte stream to a file
+	// Write the thumbnail []byte stream to a file.
 	if err := os.WriteFile("/opt/pix/thumb_"+content, *thumbImgData, 0600); err != nil {
 		l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// null the pointers and contents
-	*thumbImgData = []byte{}
+	// Null the pointers and data contents. Questionable memory performance output.
+	thumbImgData = nil
 
-	// null the request data
+	// Null the request data.
 	reqData.Figure = content
 	reqData.Data = []byte{}
 
-	// update user's avatar reference
+	// Update user's avatar reference.
 	user.AvatarURL = "/web/pix/thumb_" + content
 
-	// save the updated user record bach to the database
+	// Save the updated user record bach to the database.
 	if saved := db.SetOne(db.UserCache, userID, user); !saved {
 		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// prepare the payload
+	// Prepare the response payload.
 	pl := &responseData{
 		Key: content,
 	}
