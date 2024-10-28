@@ -606,6 +606,10 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 		// The user is not activated and the registration time is (way) before the migration creating datetime = make active.
 		if (!user.Active || !user.Options["active"]) && migrationCreationDate.After(user.RegisteredTime) {
 			user.Active = true
+
+			if user.Options == nil {
+				user.Options = make(map[string]bool)
+			}
 			user.Options["active"] = true
 
 			if saved := SetOne(UserCache, key, user); !saved {
