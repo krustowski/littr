@@ -1,10 +1,8 @@
-// Package to provide a server-side instance for SSE.
 package live
 
 import (
 	"time"
 
-	chi "github.com/go-chi/chi/v5"
 	sse "github.com/tmaxmax/go-sse"
 
 	// Those two should be abaddoned already.
@@ -85,9 +83,6 @@ func beat() {
 	}
 }
 
-// ID, data, event
-// https://github.com/alexandrevicenzi/go-sse/blob/master/message.go#L23
-
 // BroadcastMessage is a wrapper function for a SSE message sending.
 func BroadcastMessage(data, eventName string) {
 	// Exit if Streamer is nil.
@@ -115,30 +110,20 @@ func BroadcastMessage(data, eventName string) {
 	}
 	msg.ID = id
 
+	// Ensure a valid event Type is used.
 	typ, err := sse.NewType(eventName)
 	if err != nil {
 		return
 	}
 	msg.Type = typ
 
+	// Append any given data to the event.
 	msg.AppendData(data)
 
+	// Broadcast the message to the subscribers.
 	if Streamer != nil {
 		_ = Streamer.Publish(msg)
-
-		/*Streamer.SendMessage("/api/v1/live",
-		sse.NewMessage("", data, eventName))*/
 	}
 	return
 }
 
-func Router() chi.Router {
-	r := chi.NewRouter()
-
-	r.Mount("/", Streamer)
-
-	// Run the keepalive pacemaker.
-	go beat()
-
-	return r
-}

@@ -1,3 +1,4 @@
+// The polls view and view-controllers logic package.
 package polls
 
 import (

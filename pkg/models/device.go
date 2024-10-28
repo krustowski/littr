@@ -1,3 +1,4 @@
+// The very models-related package containing all the in-database-saved types and structures.
 package models
 
 import (

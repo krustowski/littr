@@ -1,3 +1,4 @@
+// The very flow view and view-controllers logic package.
 package flow
 
 import (

@@ -1,3 +1,4 @@
+// The very core database/cache data operations package.
 package db
 
 import (

@@ -1,3 +1,4 @@
+// The very ToS (terms of service) view logic package.
 package tos
 
 import (

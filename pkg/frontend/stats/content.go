@@ -1,3 +1,4 @@
+// The stats (app's statistics) view and view-controllers logic package.
 package stats
 
 import (

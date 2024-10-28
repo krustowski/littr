@@ -1,3 +1,4 @@
+// The settings view and view-controllers logic package.
 package settings
 
 import (

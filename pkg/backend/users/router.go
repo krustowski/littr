@@ -1,4 +1,4 @@
-// Package containing the backend logic regarding users and their settings.
+// Users routes and controllers logic package for the backend.
 package users
 
 import (

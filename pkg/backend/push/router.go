@@ -1,3 +1,4 @@
+// (Web)Push notifications and subscriptions routes and controllers logic package for the backend.
 package push
 
 import (

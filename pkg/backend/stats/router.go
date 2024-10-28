@@ -1,3 +1,4 @@
+// The very app statistics routes and controllers logic package for the backend.
 package stats
 
 import (

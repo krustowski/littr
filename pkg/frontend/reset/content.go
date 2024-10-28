@@ -1,3 +1,4 @@
+// The reset view and view-controllers logic package.
 package reset
 
 import (

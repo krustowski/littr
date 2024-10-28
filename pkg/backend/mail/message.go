@@ -1,4 +1,4 @@
-// Common mailing package.
+// Common mailing (and templating) package.
 package mail
 
 type MessagePayload struct {

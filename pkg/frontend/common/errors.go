@@ -1,3 +1,4 @@
+// Common functions, constants, and structures package for the frontend.
 package common
 
 const (

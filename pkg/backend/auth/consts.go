@@ -1,3 +1,4 @@
+// Authentication logic and JWT operations package.
 package auth
 
 const (

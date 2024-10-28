@@ -1,3 +1,4 @@
+// The post (new flow post, or new poll) view and view-controllers logic package.
 package post
 
 import (

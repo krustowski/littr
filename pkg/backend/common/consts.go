@@ -1,15 +1,17 @@
+// Common functions, constants, and structures package for the backend.
 package common
 
 import (
 	"time"
 )
 
-// token consts
+// Token consts.
 const (
+	// Refresh token's TTL.
 	TOKEN_TTL = time.Hour * 168 * 4
 )
 
-// header names
+// Header names.
 const (
 	HDR_PAGE_NO      = "X-Page-No"
 	HDR_HIDE_REPLIES = "X-Hide-Replies"
@@ -17,9 +19,15 @@ const (
 	DHR_API_TOKEN    = "X-API-Token"
 )
 
-// (non-)error messages
+// (Non-)Error messages.
 const (
-	// generic error messages
+	// Auth-related error messages
+	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
+	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
+	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
+	ERR_TOKEN_SAVE_FAIL     = "could not save new token to database"
+
+	// Generic error messages
 	ERR_CALLER_BLANK      = "callerID cannot be empty"
 	ERR_CALLER_FAIL       = "could not get caller's name"
 	ERR_CALLER_NOT_FOUND  = "caller not found in the database"
@@ -31,13 +39,28 @@ const (
 	ERR_API_TOKEN_INVALID = "invalid API token sent"
 	ERR_NO_SERVER_SECRET  = "missing the server's secret (APP_PEPPER)"
 
-	// auth-related error messages
-	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
-	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
-	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
-	ERR_TOKEN_SAVE_FAIL     = "could not save new token to database"
+	// Image-processing-related error messages
+	ERR_IMG_DECODE_FAIL      = "image: could not decode to byte stream"
+	ERR_IMG_ENCODE_FAIL      = "image: could not re-encode"
+	ERR_IMG_ORIENTATION_FAIL = "image: could not fix the orientation"
+	ERR_IMG_GIF_TO_WEBP_FAIL = "image: could not convert GIF to WebP"
+	ERR_IMG_UNKNOWN_TYPE     = "image: unsupported format entered"
+	ERR_IMG_SAVE_FILE_FAIL   = "image: could not save to a file"
+	ERR_IMG_THUMBNAIL_FAIL   = "image: could not re-encode the thumbnail"
 
-	// post-related error messages
+	// Poll-related error messages
+	ERR_POLL_AUTHOR_MISMATCH    = "you cannot post a foreigner's poll"
+	ERR_POLL_SAVE_FAIL          = "could not save the poll, try again"
+	ERR_POLL_POST_FAIL          = "could not save a post about the new poll"
+	ERR_POLL_NOT_FOUND          = "such poll not found in the database (may be deleted)"
+	ERR_POLL_SELF_VOTE          = "you cannot vote in yours own poll"
+	ERR_POLL_EXISTING_VOTE      = "you have already voted on such poll"
+	ERR_POLL_DELETE_FOREIGN     = "you cannot delete a foreigner's poll"
+	ERR_POLL_DELETE_FAIL        = "could not delete the poll, try again"
+	ERR_POLLID_BLANK            = "pollID param is required"
+	ERR_POLL_INVALID_VOTE_COUNT = "you can pass only one vote per poll"
+
+	// Post-related error messages
 	ERR_POST_BLANK          = "post has got no content"
 	ERR_POSTER_INVALID      = "you can add yours posts only"
 	ERR_POST_SAVE_FAIL      = "could not save the post, try again"
@@ -51,16 +74,22 @@ const (
 	ERR_POSTID_BLANK        = "postID param is required"
 	ERR_HASHTAG_BLANK       = "hashtag param is required"
 
-	// image-processing-related error messages
-	ERR_IMG_DECODE_FAIL      = "image: could not decode to byte stream"
-	ERR_IMG_ENCODE_FAIL      = "image: could not re-encode"
-	ERR_IMG_ORIENTATION_FAIL = "image: could not fix the orientation"
-	ERR_IMG_GIF_TO_WEBP_FAIL = "image: could not convert GIF to WebP"
-	ERR_IMG_UNKNOWN_TYPE     = "image: unsupported format entered"
-	ERR_IMG_SAVE_FILE_FAIL   = "image: could not save to a file"
-	ERR_IMG_THUMBNAIL_FAIL   = "image: could not re-encode the thumbnail"
+	// Push-related (non-)error messages
+	MSG_WEBPUSH_GW_RESPONSE         = "push goroutine: webpush gateway:"
+	ERR_DEVICE_NOT_FOUND            = "devices not found in the database"
+	ERR_SUBSCRIPTION_SAVE_FAIL      = "could not save the subscription to database"
+	ERR_SUBSCRIPTION_NOT_FOUND      = "such subscription not found in the database"
+	ERR_DEVICE_SUBSCRIBED_ALREADY   = "this device has been already registered"
+	ERR_PUSH_SELF_NOTIF             = "will not notify oneself"
+	ERR_PUSH_DISABLED_NOTIF         = "will not notify original poster"
+	ERR_PUSH_UUID_BLANK             = "device's UUID cannot be sent empty"
+	ERR_PUSH_BODY_COMPOSE_FAIL      = "failed to compose the notification body"
+	ERR_NOTIFICATION_NOT_SENT       = "notification could not be sent"
+	ERR_NOTIFICATION_RESP_BODY_FAIL = "failed to read the notification's response body"
+	ERR_DEVICE_LIST_UPDATE_FAIL     = "failed to save the updated device list"
+	ERR_UUID_BLANK                  = "uuid param is required"
 
-	// user-related error messages
+	// User-related error messages
 	ERR_USER_DELETE_FOREIGN       = "you cannot delete a foreigner's account"
 	ERR_USER_DELETE_FAIL          = "could not delete the user from user database, try again"
 	ERR_SUBSCRIPTION_DELETE_FAIL  = "could not delete the user from subscriptions, try again"
@@ -94,30 +123,4 @@ const (
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
 	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
 
-	// poll-related error messages
-	ERR_POLL_AUTHOR_MISMATCH    = "you cannot post a foreigner's poll"
-	ERR_POLL_SAVE_FAIL          = "could not save the poll, try again"
-	ERR_POLL_POST_FAIL          = "could not save a post about the new poll"
-	ERR_POLL_NOT_FOUND          = "such poll not found in the database (may be deleted)"
-	ERR_POLL_SELF_VOTE          = "you cannot vote in yours own poll"
-	ERR_POLL_EXISTING_VOTE      = "you have already voted on such poll"
-	ERR_POLL_DELETE_FOREIGN     = "you cannot delete a foreigner's poll"
-	ERR_POLL_DELETE_FAIL        = "could not delete the poll, try again"
-	ERR_POLLID_BLANK            = "pollID param is required"
-	ERR_POLL_INVALID_VOTE_COUNT = "you can pass only one vote per poll"
-
-	// push-related (non-)error messages
-	MSG_WEBPUSH_GW_RESPONSE         = "push goroutine: webpush gateway:"
-	ERR_DEVICE_NOT_FOUND            = "devices not found in the database"
-	ERR_SUBSCRIPTION_SAVE_FAIL      = "could not save the subscription to database"
-	ERR_SUBSCRIPTION_NOT_FOUND      = "such subscription not found in the database"
-	ERR_DEVICE_SUBSCRIBED_ALREADY   = "this device has been already registered"
-	ERR_PUSH_SELF_NOTIF             = "will not notify oneself"
-	ERR_PUSH_DISABLED_NOTIF         = "will not notify original poster"
-	ERR_PUSH_UUID_BLANK             = "device's UUID cannot be sent empty"
-	ERR_PUSH_BODY_COMPOSE_FAIL      = "failed to compose the notification body"
-	ERR_NOTIFICATION_NOT_SENT       = "notification could not be sent"
-	ERR_NOTIFICATION_RESP_BODY_FAIL = "failed to read the notification's response body"
-	ERR_DEVICE_LIST_UPDATE_FAIL     = "failed to save the updated device list"
-	ERR_UUID_BLANK                  = "uuid param is required"
 )

@@ -1,3 +1,4 @@
+// Image (de)coding and processing magic package.
 package image
 
 import (

@@ -1,3 +1,4 @@
+// The login view and view-controllers logic package.
 package login
 
 import (

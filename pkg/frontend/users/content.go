@@ -1,3 +1,4 @@
+// The users view and view-controllers logic package.
 package users
 
 import (

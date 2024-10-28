@@ -9,6 +9,7 @@ import (
 	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
+// UnmarshalRequestData is a helper function that combines reading the request body and data structure unmarshalling from a JSON stream.
 func UnmarshalRequestData[T any](r *http.Request, model *T) error {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {

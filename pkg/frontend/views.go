@@ -1,3 +1,4 @@
+// The umbrella package for the (mainly) WASM app's client service.
 package frontend
 
 import (
@@ -30,9 +31,9 @@ import (
 	)
 }*/
 
-/*
- *  flow
- */
+//
+//  flow view
+//
 
 type FlowView struct {
 	app.Compo
@@ -50,9 +51,9 @@ func (v *FlowView) Render() app.UI {
 	)
 }
 
-/*
- *  login
- */
+//
+//  login view
+//
 
 type LoginView struct {
 	app.Compo
@@ -86,9 +87,9 @@ func (v *LoginView) OnMount(ctx app.Context) {
 	}
 }
 
-/*
- *  polls view
- */
+//
+//  polls view
+//
 
 type PollsView struct {
 	app.Compo
@@ -106,9 +107,9 @@ func (v *PollsView) Render() app.UI {
 	)
 }
 
-/*
- *  posts
- */
+//
+//  posts view
+//
 
 type PostView struct {
 	app.Compo
@@ -126,9 +127,9 @@ func (v *PostView) Render() app.UI {
 	)
 }
 
-/*
- *  register
- */
+//
+//  register view
+//
 
 type RegisterView struct {
 	app.Compo
@@ -146,9 +147,9 @@ func (v *RegisterView) Render() app.UI {
 	)
 }
 
-/*
- *  reset
- */
+//
+//  reset view
+//
 
 type ResetView struct {
 	app.Compo
@@ -170,9 +171,9 @@ func (v *ResetView) Render() app.UI {
 	)
 }
 
-/*
- *  settings
- */
+//
+//  settings view
+//
 
 type SettingsView struct {
 	app.Compo
@@ -194,9 +195,9 @@ func (v *SettingsView) OnNav(ctx app.Context) {
 	ctx.LocalStorage().Get("mode", &v.mode)
 }
 
-/*
- *  stats
- */
+//
+//  stats view
+//
 
 type StatsView struct {
 	app.Compo
@@ -214,9 +215,9 @@ func (v *StatsView) Render() app.UI {
 	)
 }
 
-/*
- *  ToS
- */
+//
+//  ToS (terms of service) view
+//
 
 type ToSView struct {
 	app.Compo
@@ -234,9 +235,9 @@ func (v *ToSView) Render() app.UI {
 	)
 }
 
-/*
- *  users view
- */
+//
+//  users view
+//
 
 type UsersView struct {
 	app.Compo
@@ -254,9 +255,9 @@ func (v *UsersView) Render() app.UI {
 	)
 }
 
-/*
- *  welcome view
- */
+//
+//  welcome view
+//
 
 type WelcomeView struct {
 	app.Compo

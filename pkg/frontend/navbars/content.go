@@ -1,3 +1,4 @@
+// The navigation bars (sub)view and view-controllers logic package.
 package navbars
 
 import (

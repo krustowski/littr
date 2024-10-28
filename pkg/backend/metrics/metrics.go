@@ -1,3 +1,4 @@
+// Metrics registration and handling package.
 package metrics
 
 import (
@@ -65,10 +66,8 @@ func RegisterAll() {
 		}),
 	}
 
-	//m := eng.NewMetrics(reg)
-	//m.One.Set(888)
-	//m.Two.With(prometheus.Labels{"device": "custom name"}).Inc()
 
+	// Register all the defined metrics.
 	Registry.MustRegister(Metrics.PollCountMetric, Metrics.PostCountMetric, Metrics.RequestCountMetric, Metrics.SubscriptionCountMetric, Metrics.TokenCountMetric, Metrics.UserCountMetric)
 }
 
@@ -76,6 +75,7 @@ func UpdateCountMetric(cache *core.Cache, count int, absolute bool) {
 	switch cache.Name {
 	case "FlowCache":
 		if absolute {
+			//Metrics.PostCountMetric.With(prometheus.Labels{"device": "custom name"}).Set(55)
 			Metrics.PostCountMetric.Set(float64(count))
 			return
 		}

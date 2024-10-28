@@ -1,4 +1,4 @@
-// universal cache pagination tooling
+// The universal cache pagination tooling package.
 package pages
 
 import (

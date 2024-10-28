@@ -1,3 +1,4 @@
+// The register view and view-controllers logic package.
 package register
 
 import (

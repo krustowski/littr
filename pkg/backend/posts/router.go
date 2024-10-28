@@ -1,3 +1,4 @@
+// Posts routes and controllers logic package for the backend.
 package posts
 
 import (

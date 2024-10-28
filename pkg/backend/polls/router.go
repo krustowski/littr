@@ -1,3 +1,4 @@
+// Polls routes and controllers logic package for the backend.
 package polls
 
 import (
