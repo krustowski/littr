@@ -1,7 +1,6 @@
 package post
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -112,7 +111,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 				Figure:   c.newFigFile,
 				Data:     c.newFigData,
 			}
-		// Compose a poll payload.
+			// Compose a poll payload.
 		} else if postType == "poll" {
 			path = "/api/v1/polls"
 			poll.Author = user.Nickname
@@ -205,7 +204,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 
-		// Continue on the errorless output.
+			// Continue on the errorless output.
 		} else {
 			// Cast the image ready message.
 			toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
