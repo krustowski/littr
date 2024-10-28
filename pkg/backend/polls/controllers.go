@@ -143,7 +143,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Patch the recurring option value (every option has to be unique).
-	if (poll.OptionOne == poll.OptionTwo) || (poll.OptionOne == poll.OptionThree) || (poll.OptionTwo == poll.OptionThree) || (poll.Question == poll.OptionOne) || (poll.Question == poll.OptionTwo) || (poll.Question == poll.OptionThree) {
+	if (poll.OptionOne == poll.OptionTwo) || (poll.OptionOne == poll.OptionThree) || (poll.OptionTwo == poll.OptionThree) || (poll.Question == poll.OptionOne.Content) || (poll.Question == poll.OptionTwo.Content) || (poll.Question == poll.OptionThree.Content) {
 		l.Msg(common.ERR_POLL_DUPLICIT_OPTIONS).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}

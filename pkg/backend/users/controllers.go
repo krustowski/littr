@@ -53,7 +53,8 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check the callerID record in the database
-	if _, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+	caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	if !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
@@ -72,7 +73,8 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		FlowList: nil,
 
 		Users: pages.UserOptions{
-			Plain: true,
+			Plain:       true,
+			RequestList: &caller.RequestList,
 		},
 	}
 
@@ -531,19 +533,27 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 func updateUserList(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
+	// Declare the request data structure model type.
 	type requestData struct {
 		FlowList    map[string]bool `json:"flow_list"`
 		RequestList map[string]bool `json:"request_list"`
 		ShadeList   map[string]bool `json:"shade_list"`
 	}
 
-	// skip blank callerID
+	// Skip the blank callerID.
 	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// take the param from path
+	// Fetch the caller user record.
+	caller, found := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	if !found {
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Take the userID param from the URL path.
 	userID := chi.URLParam(r, "userID")
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -551,12 +561,12 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for possible user's record forgery attempt
-	if l.CallerID != userID {
+	/*if l.CallerID != userID {
 		l.Msg(common.ERR_USER_PASSPHRASE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
-	}
+	}*/
 
-	// look for the requested user's record in database
+	// Look for the requested user's record in database.
 	user, found := db.GetOne(db.UserCache, userID, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
@@ -565,32 +575,42 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 
 	var reqData requestData
 
-	// decode the incoming data
+	// Decode the incoming request data.
 	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// process the FlowList if not empty
+	//
+	// caller = controlling user
+	// user = counterpart user
+	//
+
+	// Process the FlowList if not empty.
 	if reqData.FlowList != nil {
 		if user.FlowList == nil {
 			user.FlowList = make(map[string]bool)
 		}
 
-		// loop over all flowList records
+		// Loop over all flowList records.
 		for key, value := range reqData.FlowList {
-			// do not allow to unfollow oneself
-			if key == user.Nickname {
-				user.FlowList[key] = true
+			// Forbid changing the foreign flowList according to the requested flowList records.
+			if user.Nickname != caller.Nickname && key != caller.Nickname {
 				continue
 			}
 
-			// set such flowList record according to the request data
+			// Only allow to change controlling user's field in the foreign flowList.
+			if user.Nickname != caller.Nickname && key == caller.Nickname {
+				user.FlowList[key] = value
+				continue
+			}
+
+			// Set such flowList record according to the request data.
 			if _, found := user.FlowList[key]; found {
 				user.FlowList[key] = value
 			}
 
-			// check if the user is shaded by the counterpart
+			// Check if the caller is shaded by the counterpart.
 			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
 				if counterpart.Private && key != l.CallerID {
 					// cannot add this user to one's flow, as the following
@@ -604,6 +624,12 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 					user.FlowList[key] = value
 				}
 			}
+
+			// Do not allow to unfollow oneself.
+			if key == user.Nickname {
+				user.FlowList[key] = true
+			}
+
 		}
 	}
 	// always allow to see system posts
@@ -615,8 +641,13 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 			user.RequestList = make(map[string]bool)
 		}
 
-		// loop over the RequestList records and change the user's values accordingly
+		// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
 		for key, value := range reqData.RequestList {
+			// Only allow to change the caller's record in the remote/counterpart's requestList.
+			if key != l.CallerID {
+				continue
+			}
+
 			user.RequestList[key] = value
 		}
 	}
@@ -627,9 +658,13 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 			user.ShadeList = make(map[string]bool)
 		}
 
-		// loop over the ShadeList records and change the user's values accordingly
-		// TODO: what if the counterpards shades us already???
+		// Loop over the ShadeList records and change the user's values accordingly (enforce the proper shadeList changing!).
 		for key, value := range reqData.ShadeList {
+			// To change the shadeList, one has to be its owner.
+			if user.Nickname != l.CallerID {
+				continue
+			}
+
 			user.ShadeList[key] = value
 		}
 	}
