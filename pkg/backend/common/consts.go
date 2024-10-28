@@ -29,6 +29,7 @@ const (
 	ERR_INPUT_DATA_FAIL   = "could not process the input data, try again"
 	ERR_API_TOKEN_BLANK   = "blank API token sent"
 	ERR_API_TOKEN_INVALID = "invalid API token sent"
+	ERR_NO_SERVER_SECRET  = "missing the server's secret (APP_PEPPER)"
 
 	// auth-related error messages
 	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
@@ -91,6 +92,7 @@ const (
 	ERR_TARGET_USER_NOT_PRIVATE   = "target user is not private, no need to file new follow requests"
 	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
+	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
 
 	// poll-related error messages
 	ERR_POLL_AUTHOR_MISMATCH    = "you cannot post a foreigner's poll"
