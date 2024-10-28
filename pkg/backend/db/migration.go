@@ -100,9 +100,10 @@ func RunMigrations(l *common.Logger) string {
 
 	// Execute the migration procedures.
 	for _, mig := range migrationsOrderedList {
-		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l, mig.R))
+		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R))
 	}
 
+	l.RemovePrefix()
 	return report
 }
 
