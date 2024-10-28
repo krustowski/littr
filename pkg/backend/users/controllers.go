@@ -293,10 +293,10 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare the mail options.
 	mailPayload := mail.MessagePayload{
+		Nickname: user.Nickname,
 		Email:    user.Email,
 		Type:     "user_activation",
 		UUID:     randomID,
-		Nickname: user.Nickname,
 	}
 
 	// Compose a message to send.
@@ -1048,9 +1048,10 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the mail options
 	mailPayload := mail.MessagePayload{
-		Email: email,
-		Type:  "reset_request",
-		UUID:  randomID,
+		Nickname: user.Nickname,
+		Email:    user.Email,
+		Type:     "reset_request",
+		UUID:     randomID,
 	}
 
 	// compose a message to send
@@ -1148,7 +1149,8 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 
 	// set mail options
 	mailPayload := mail.MessagePayload{
-		Email:      email,
+		Nickname:   user.Nickname,
+		Email:      user.Email,
 		Type:       "reset_passphrase",
 		Passphrase: randomPassphrase,
 	}
