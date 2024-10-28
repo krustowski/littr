@@ -122,5 +122,4 @@ const (
 	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
 	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
-
 )

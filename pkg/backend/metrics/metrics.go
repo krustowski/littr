@@ -66,7 +66,6 @@ func RegisterAll() {
 		}),
 	}
 
-
 	// Register all the defined metrics.
 	Registry.MustRegister(Metrics.PollCountMetric, Metrics.PostCountMetric, Metrics.RequestCountMetric, Metrics.SubscriptionCountMetric, Metrics.TokenCountMetric, Metrics.UserCountMetric)
 }

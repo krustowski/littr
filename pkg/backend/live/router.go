@@ -1,5 +1,5 @@
 // The package to provide a server-side instance for the SSE message streaming.
-package streamer
+package live
 
 import (
 	chi "github.com/go-chi/chi/v5"
