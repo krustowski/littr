@@ -22,7 +22,6 @@ import (
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/config"
-	fe "go.vxn.dev/littr/pkg/frontend"
 	"go.vxn.dev/swis/v5/pkg/core"
 
 	"github.com/go-chi/chi/v5"
@@ -111,24 +110,7 @@ var appHandler = &app.Handler{
 }
 
 func initClient() {
-	app.Route("/", &fe.WelcomeView{})
-	app.Route("/flow", &fe.FlowView{})
-	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowView{})
-	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowView{})
-	app.RouteWithRegexp("/flow/user/\\w+", &fe.FlowView{})
-	app.Route("/login", &fe.LoginView{})
-	app.Route("/logout", &fe.LoginView{})
-	app.Route("/polls", &fe.PollsView{})
-	app.Route("/post", &fe.PostView{})
-	app.Route("/register", &fe.RegisterView{})
-	app.Route("/reset", &fe.ResetView{})
-	app.RouteWithRegexp("/reset/\\w+", &fe.ResetView{})
-	app.Route("/settings", &fe.SettingsView{})
-	app.Route("/stats", &fe.StatsView{})
-	app.Route("/tos", &fe.ToSView{})
-	app.Route("/users", &fe.UsersView{})
-
-	app.RunWhenOnBrowser()
+	initClientCommon()
 }
 
 var (
