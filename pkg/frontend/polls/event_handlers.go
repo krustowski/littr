@@ -29,6 +29,25 @@ func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {
 	ctx.NewAction("dismiss")
 }
 
+// onClickLink()
+func (c *Content) onClickLink(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	url := ctx.Page().URL()
+	scheme := url.Scheme
+	host := url.Host
+
+	// write the link to browsers's clipboard
+	navigator := app.Window().Get("navigator")
+	if !navigator.IsNull() {
+		clipboard := navigator.Get("clipboard")
+		if !clipboard.IsNull() && !clipboard.IsUndefined() {
+			clipboard.Call("writeText", scheme+"://"+host+"/polls/poll/"+key)
+		}
+	}
+	ctx.Navigate("/polls/poll/" + key)
+}
+
 // onClickPollOption()
 func (c *Content) onClickPollOption(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()

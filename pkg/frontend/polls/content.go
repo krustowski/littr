@@ -1,6 +1,8 @@
 package polls
 
 import (
+	"strings"
+
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -35,15 +37,38 @@ type Content struct {
 	processingScroll bool
 
 	keyDownEventListener func()
+
+	singlePollID string
 }
 
 func (c *Content) OnNav(ctx app.Context) {
 	toast := common.Toast{AppContext: &ctx}
 
+	url := strings.Split(ctx.Page().URL().Path, "/")
+
+	var singlePollID string
+
+	if len(url) > 3 && url[3] != "" {
+		switch url[2] {
+		case "poll":
+			singlePollID = url[3]
+		}
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.singlePollID = singlePollID
+	})
+
 	ctx.Async(func() {
 		input := &common.CallInput{
-			Method:      "GET",
-			Url:         "/api/v1/polls",
+			Method: "GET",
+			Url: func() string {
+				if singlePollID != "" {
+					return "/api/v1/polls/" + singlePollID
+				}
+
+				return "/api/v1/polls"
+			}(),
 			Data:        nil,
 			CallerID:    "",
 			PageNo:      0,
@@ -51,6 +76,7 @@ func (c *Content) OnNav(ctx app.Context) {
 		}
 
 		type dataModel struct {
+			Poll  models.Poll            `json:"poll"`
 			Polls map[string]models.Poll `json:"polls"`
 			User  models.User            `json:"user"`
 		}
@@ -81,6 +107,11 @@ func (c *Content) OnNav(ctx app.Context) {
 		if !ok {
 			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
+		}
+
+		if data.Polls == nil {
+			data.Polls = make(map[string]models.Poll)
+			data.Polls[data.Poll.ID] = data.Poll
 		}
 
 		if len(data.Polls) < 1 {

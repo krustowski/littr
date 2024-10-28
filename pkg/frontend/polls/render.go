@@ -159,9 +159,12 @@ func (c *Content) Render() app.UI {
 					return app.Tr().Body(
 						app.Td().Attr("data-timestamp", poll.Timestamp.UnixNano()).Class("align-left").Body(
 							app.Div().Class("row top-padding").Body(
-								app.P().Body(
+								app.P().Class("max").Body(
 									app.Span().Title("question").Text("Q: "),
 									app.Span().Text(poll.Question).Class("deep-orange-text space bold"),
+								),
+								app.Button().ID(key).Title("link to this post (to clipboard)").Class("transparent circle").OnClick(c.onClickLink).Disabled(c.pollsButtonDisabled).Body(
+									app.I().Text("link"),
 								),
 							),
 							app.Div().Class("space"),
