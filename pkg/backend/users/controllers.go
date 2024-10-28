@@ -319,6 +319,8 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	user.Options = make(map[string]bool)
 	user.Options["gdpr"] = true
 	user.GDPR = true
+	user.Options["active"] = false
+	user.Active = false
 
 	// Save new user to the database.
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
@@ -1094,9 +1096,8 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 
 	if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
 		// delete the request from database
-		if deleted := db.DeleteOne(db.RequestCache, request.Nickname); !deleted {
+		if deleted := db.DeleteOne(db.RequestCache, reqData.UUID); !deleted {
 			l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log()
-			//return
 		}
 
 		l.Msg(common.ERR_REQUEST_UUID_EXPIRED).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -1155,6 +1156,80 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("the message has been sent, check your e-mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
+}
+
+// activationRequestHandler is a handler function to complete the user's activation procedure.
+//
+// @Summary      Activate the user via given UUID
+// @Description  activate the user via given UUID
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        uuid path string true "UUID from the activation mail"
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/activation/{uuid} [post]
+func activationRequestHandler(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, "users")
+
+	type responseData struct{}
+
+	// Fetch the param value from URL's path.
+	uuid := chi.URLParam(r, "uuid")
+	if uuid == "" {
+		l.Msg(common.ERR_REQUEST_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Use the UUID to fetch the existing request.
+	request, match := db.GetOne(db.RequestCache, uuid, models.Request{})
+	if !match {
+		l.Msg(common.ERR_REQUEST_UUID_INVALID).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Check the request's validity.
+	if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
+		// Delete the expired request from database.
+		if deleted := db.DeleteOne(db.RequestCache, uuid); !deleted {
+			l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log()
+		}
+
+		// Delete the expired inactivated user from database.
+		if deleted := db.DeleteOne(db.UserCache, request.Nickname); !deleted {
+			l.Msg(common.ERR_USER_DELETE_FAIL).Status(http.StatusInternalServerError).Log()
+		}
+
+		l.Msg(common.ERR_REQUEST_UUID_EXPIRED).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the related user from database.
+	user, found := db.GetOne(db.UserCache, request.Nickname, models.User{})
+	if !found {
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	user.Active = true
+
+	// Save the just-activated user back to the database.
+	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Delete the request from the request database.
+	if deleted := db.DeleteOne(db.RequestCache, uuid); !deleted {
+		l.Msg(common.ERR_REQUEST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("the user has been activated successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 

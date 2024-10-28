@@ -1,3 +1,4 @@
+// Package containing the backend logic regarding users and their settings.
 package users
 
 import (
@@ -7,21 +8,26 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 
-	// basic routes
+	// Basic routes handlers.
 	r.Get("/", getUsers)
 	r.Post("/", addNewUser)
 
-	// passphrase-related routes
+	// Handler for the user activation.
+	r.Post("/activation/{uuid}", activationRequestHandler)
+
+	// Passphrase-related routes handlers.
 	r.Post("/passphrase/request", resetRequestHandler)
 	r.Post("/passphrase/reset", resetPassphraseHandler)
 
-	// incomplete CRUD
+	// User getter handlers.
 	r.Get("/{userID}", getOneUser)
 	r.Get("/caller", getOneUser)
+
+	// User modification/deletion handlers.
 	//r.Put("/{nickname}", updateUser)
 	r.Delete("/{userID}", deleteUser)
 
-	// user's settings routes
+	// User's settings modification routes handlers.
 	r.Post("/{userID}/avatar", postUserAvatar)
 	r.Get("/{userID}/posts", getUserPosts)
 	r.Patch("/{userID}/lists", updateUserList)

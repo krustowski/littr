@@ -21,12 +21,13 @@ const (
 	REFRESH_TOKEN = "refresh-token"
 )
 
-var pathExceptions []string = []string{
+var pathExceptions = []string{
 	"/api/v1",
 	"/api/v1/auth",
 	"/api/v1/auth/logout",
 	"/api/v1/dump",
 	"/api/v1/live",
+	"/api/v1/users/activation/",
 	"/api/v1/users/passphrase/request",
 	"/api/v1/users/passphrase/reset",
 }
