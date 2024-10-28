@@ -155,10 +155,15 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.pageNo = 1
 			c.pageNoToFetch = 1
 
-			c.user = (*users)[c.key]
+			if users != nil {
+				c.user = (*users)[c.key]
+				c.users = *users
+			}
 
-			c.users = *users
-			c.posts = *posts
+			if posts != nil {
+				c.posts = *posts
+			}
+
 			c.singlePostID = parts.SinglePostID
 			c.userFlowNick = parts.UserFlowNick
 			c.isPost = isPost
