@@ -16,6 +16,7 @@ func initClientCommon() {
 	app.Route("/logout", &fe.LoginView{})
 	app.Route("/polls", &fe.PollsView{})
 	app.RouteWithRegexp("/polls/poll/\\d+", &fe.PollsView{})
+	app.RouteWithRegexp("/polls/poll/\\w+", &fe.PollsView{})
 	app.Route("/post", &fe.PostView{})
 	app.Route("/register", &fe.RegisterView{})
 	app.Route("/reset", &fe.ResetView{})
