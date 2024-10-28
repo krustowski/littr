@@ -247,11 +247,11 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Preprocess the e-mail address.
+	// Preprocess the e-mail address: set to lowercase.
 	email := strings.ToLower(user.Email)
 	user.Email = email
 
-	// Validate the e-mail struct.
+	// Validate the e-mail format.
 	// https://stackoverflow.com/a/66624104
 	if _, err := netmail.ParseAddress(email); err != nil {
 		l.Msg(common.ERR_WRONG_EMAIL_FORMAT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -270,7 +270,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//
-	// Validation end = new user can be added
+	// Validation end = new user can be added: compose a activation request and send the mail
 	//
 
 	// Generate new random UUID, aka requestID.
@@ -312,15 +312,30 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//
+	//  Set user defaults, save the user struct to database and create a new system post
+	//
+
 	// Set the defaults and a timestamp.
+	user.RegisteredTime = time.Now()
 	user.LastActiveTime = time.Now()
 	user.About = "newbie"
 
+	// New user's umbrella option map.
+	options := map[string]bool{
+		"active":        false,
+		"gdpr":          true,
+		"private":       false,
+		"uiDarkMode":    true,
+		"liveMode":      true,
+		"localTimeMode": true,
+	}
+
 	// Options defaults.
-	user.Options = make(map[string]bool)
-	user.Options["gdpr"] = true
+	user.Options = options
+
+	// Deprecated option setting method.
 	user.GDPR = true
-	user.Options["active"] = false
 	user.Active = false
 
 	// Save new user to the database.
@@ -1166,12 +1181,10 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 // @Summary      Activate the user via given UUID
 // @Description  activate the user via given UUID
 // @Tags         users
-// @Accept       json
 // @Produce      json
 // @Param        uuid path string true "UUID from the activation mail"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
 // @Router       /users/activation/{uuid} [post]
@@ -1213,7 +1226,7 @@ func activationRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch the related user from database.
 	user, found := db.GetOne(db.UserCache, request.Nickname, models.User{})
 	if !found {
-		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 

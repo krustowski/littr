@@ -128,7 +128,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if reqs == nil {
-		l.Msg("migrateExpired: reqs are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("reqs are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -136,7 +136,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 	for uuid, req := range *reqs {
 		if time.Now().After(req.CreatedAt.Add(time.Hour * 24)) {
 			if deleted := DeleteOne(RequestCache, uuid); !deleted {
-				l.Msg("migrateExpired: could not delete request: " + uuid).Status(http.StatusInternalServerError).Log()
+				l.Msg("could not delete request: " + uuid).Status(http.StatusInternalServerError).Log()
 				continue
 			}
 
@@ -147,7 +147,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 	// migrateExpiredTokens subprocedure loop over tokens and removes those beyond the expiry.
 	//func migrateExpiredTokens(l *common.Logger, tokens *map[string]models.Token) bool {
 	if tokens == nil {
-		l.Msg("migrateExpired: tokens are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("tokens are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -155,7 +155,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 	for hash, token := range *tokens {
 		if time.Now().After(token.CreatedAt.Add(common.TOKEN_TTL)) {
 			if deleted := DeleteOne(TokenCache, hash); !deleted {
-				l.Msg("migrateExpiredTokens: could not delete token: " + hash).Status(http.StatusInternalServerError).Log()
+				l.Msg("could not delete token: " + hash).Status(http.StatusInternalServerError).Log()
 				continue
 			}
 
@@ -180,7 +180,7 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if subs == nil {
-		l.Msg("migrateEmptyDeviceTags: subs are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("subs are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -200,7 +200,7 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 
 		if changed {
 			if saved := SetOne(SubscriptionCache, key, devs); !saved {
-				l.Msg("migrateEmptyDeviceTags: cannot save changed dev: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot save changed dev: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 		}
@@ -224,7 +224,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateAvatarURL: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -246,7 +246,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 			user.AvatarURL = url
 
 			if ok := SetOne(UserCache, key, user); !ok {
-				l.Msg("migrateAvatarURL: cannot save an avatar: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot save an avatar: " + key).Status(http.StatusInternalServerError).Log()
 				close(urlsChan)
 				return false
 			}
@@ -281,7 +281,7 @@ func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
 
 	// terminate on nil pointer(s)
 	if users == nil || posts == nil {
-		l.Msg("migrateFlowPurge: users or posts are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users or posts are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -289,7 +289,7 @@ func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
 	for key, post := range *posts {
 		if _, found := (*users)[post.Nickname]; !found {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
-				l.Msg("migrateFlowPurge: cannot delete user: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot delete user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 			delete(*posts, key)
@@ -320,7 +320,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil || posts == nil {
-		l.Msg("migrateUserDeletion: users or posts are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users or posts are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -329,10 +329,10 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 	// delete all users matching the contents of restricted nickname list
 	for key, user := range *users {
 		if helpers.Contains(*bank, user.Nickname) {
-			l.Msg("migrateUserDeletion: deleting " + user.Nickname).Status(http.StatusProcessing).Log()
+			l.Msg("deleting " + user.Nickname).Status(http.StatusProcessing).Log()
 
 			if deleted := DeleteOne(UserCache, key); !deleted {
-				l.Msg("migrateUserDeletion: cannot delete an user: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot delete an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 
@@ -344,7 +344,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 	for key, post := range *posts {
 		if helpers.Contains(*bank, post.Nickname) {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
-				l.Msg("migrateUserDeletion: cannot delete a post: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot delete a post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 
@@ -369,7 +369,7 @@ func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateUserRegisteredTime: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -378,7 +378,7 @@ func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 			if ok := SetOne(UserCache, key, user); !ok {
-				l.Msg("migrateUserRegisteredTime: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 			(*users)[key] = user
@@ -402,7 +402,7 @@ func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateUserShadeList: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -428,7 +428,7 @@ func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
 		flowList[key] = true
 		user.FlowList = flowList
 		if saved := SetOne(UserCache, key, user); !saved {
-			l.Msg("migrateUserShadeList: cannot save user: " + key).Status(http.StatusInternalServerError).Log()
+			l.Msg("cannot save user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
@@ -452,7 +452,7 @@ func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateUserUnshade: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -473,7 +473,7 @@ func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 
 		user.ShadeList = shadeList
 		if ok := SetOne(UserCache, key, user); !ok {
-			l.Msg("migrateUserUnshade: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
@@ -497,7 +497,7 @@ func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateBlankAboutText: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -507,7 +507,7 @@ func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
 		}
 
 		if saved := SetOne(UserCache, key, user); !saved {
-			l.Msg("migrateBlankAboutText: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
@@ -531,7 +531,7 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	if users == nil {
-		l.Msg("migrateSystemFlowOn: users are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
@@ -545,7 +545,7 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 		user.FlowList["system"] = true
 
 		if saved := SetOne(UserCache, key, user); !saved {
-			l.Msg("migrateSystemFlowOn: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
@@ -555,6 +555,7 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 	return true
 }
 
+// migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it alse tries to delete valid, but misdeleted activation requests from its database.
 func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 	var reqs *map[string]models.Request
@@ -574,18 +575,19 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Fail on nil pointer(s).
 	if users == nil || reqs == nil {
-		l.Msg("migrateUserActiveState: users and/or reqs are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users and/or reqs are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
 	// Iterate over requests to find misdeleted requests.
 	for key, req := range *reqs {
 		// Check the request validity = the activation request is still valid and the user has been already activated.
-		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && req.Type == "activation" && (*users)[req.Nickname].Active {
+		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && req.Type == "activation" && ((*users)[req.Nickname].Active || (*users)[req.Nickname].Options["active"]) {
 			// Delete the misdeleted request.
 			if deleted := DeleteOne(RequestCache, key); !deleted {
-				l.Msg("migrateUserActiveState: cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 		}
@@ -597,16 +599,17 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 	for key, user := range *users {
 		migrationCreationDate, err := time.Parse(timeLayout, "2024-Oct-24")
 		if err != nil {
-			l.Msg("migrateUserActiveState: cannot parse the migration createdAt date").Status(http.StatusInternalServerError).Log()
+			l.Msg("cannot parse the migration createdAt date").Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
 		// The user is not activated and the registration time is (way) before the migration creating datetime = make active.
-		if !user.Active && migrationCreationDate.After(user.RegisteredTime) {
+		if (!user.Active || !user.Options["active"]) && migrationCreationDate.After(user.RegisteredTime) {
 			user.Active = true
+			user.Options["active"] = true
 
 			if saved := SetOne(UserCache, key, user); !saved {
-				l.Msg("migrateUserActiveState: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 		}
