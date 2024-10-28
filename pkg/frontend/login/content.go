@@ -40,6 +40,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		case "activation":
 			activationUUID = url[2]
 		}
+	} else {
+		return
 	}
 
 	ctx.Dispatch(func(ctx app.Context) {
