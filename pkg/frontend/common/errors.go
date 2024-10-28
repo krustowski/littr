@@ -46,6 +46,7 @@ const (
 	ERR_SUBSCRIPTION_REQ_FAIL    = "failed to subscribe to notifications: "
 
 	// login-related error messages
+	MSG_USER_ACTIVATED          = "user successfully activated, try logging in"
 	ERR_ALL_FIELDS_REQUIRED     = "all fields are required"
 	ERR_LOGIN_CHARS_LIMIT       = "only a-z, A-Z characters and numbers can be used"
 	ERR_ACCESS_DENIED           = "wrong credentials entered"
