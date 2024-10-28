@@ -94,7 +94,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			//return
 		} else {
 			// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
-			userClaims := ParseAccessToken(accessCookie.Value, secret)
+			userClaims = ParseAccessToken(accessCookie.Value, secret)
 		}
 
 		// Access cookie is expired (not present), or userClaims can be decoded but the token is invalid (expired).
