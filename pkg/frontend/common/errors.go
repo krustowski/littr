@@ -83,4 +83,5 @@ const (
 	MSG_USER_UPDATED_SUCCESS   = "user has been updated, request was removed"
 	MSG_FOLLOW_REQUEST_REMOVED = "user has been updated, request was removed"
 	MSG_REQ_TO_FOLLOW_SUCCESS  = "request to follow sent successfully"
+	MSG_SHADE_SUCCESSFUL       = "user (un)shaded successfully"
 )

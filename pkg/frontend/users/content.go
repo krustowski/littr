@@ -113,11 +113,12 @@ func (c *Content) OnNav(ctx app.Context) {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
-	ctx.Handle("toggle", c.handleToggle)
-	ctx.Handle("search", c.handleSearch)
+	ctx.Handle("dismiss", c.handleDismiss)
 	ctx.Handle("preview", c.handleUserPreview)
 	ctx.Handle("scroll", c.handleScroll)
-	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("search", c.handleSearch)
+	ctx.Handle("shade", c.handleUserShade)
+	ctx.Handle("toggle", c.handleToggle)
 
 	c.paginationEnd = false
 	c.pagination = 0

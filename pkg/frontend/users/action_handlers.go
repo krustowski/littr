@@ -281,3 +281,138 @@ func (c *Content) handleUserPreview(ctx app.Context, a app.Action) {
 	})
 	return
 }
+
+// handleUserShade is an action handler function that enables one to shade other accounts.
+func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
+	// Fetch the requested ID (nickname) and assert it type string.
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	// One cannot shade themselves.
+	if c.user.Nickname == key {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.userButtonDisabled = false
+		})
+		return
+	}
+
+	// Fetch the to-be-(un)shaded counterpart user. If not found, simply return the call.
+	userShaded, found := c.users[key]
+	if !found {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.userButtonDisabled = false
+		})
+		return
+	}
+
+	// Patch the to-be-(un)shaded counterpart user's flowList.
+	if userShaded.FlowList == nil {
+		userShaded.FlowList = make(map[string]bool)
+	}
+
+	// Fetch and negate the current shade status.
+	shadeListItem := c.user.ShadeList[key]
+
+	// Patch the controlling user's flowList/shadeList nil map.
+	if c.user.FlowList == nil {
+		c.user.FlowList = make(map[string]bool)
+	}
+	if c.user.ShadeList == nil {
+		c.user.ShadeList = make(map[string]bool)
+	}
+
+	// Only (un)shade user accounts different from the controlling user's one.
+	if key != c.user.Nickname {
+		c.user.ShadeList[key] = !shadeListItem
+	}
+
+	// Disable the following of the controlling user in the counterpart user's flowList. And vice versa.
+	if c.user.ShadeList[key] {
+		userShaded.FlowList[c.user.Nickname] = false
+		c.user.FlowList[key] = false
+	}
+
+	// Instantiate the toast.
+	toast := common.Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		// Prepare the request body data structure.
+		payload := struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: userShaded.FlowList,
+		}
+
+		// Compose the API input payload.
+		input := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + userShaded.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API call response object.
+		output := &common.Response{}
+
+		// Patch the counterpart's lists.
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Prepare the second list update payload.
+		payload2 := struct {
+			FlowList  map[string]bool `json:"flow_list"`
+			ShadeList map[string]bool `json:"shade_list"`
+		}{
+			FlowList:  c.user.FlowList,
+			ShadeList: c.user.ShadeList,
+		}
+
+		// Compsoe the second API call input.
+		input2 := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Data:        payload2,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API response object.
+		output2 := &common.Response{}
+
+		// Patch the controlling user's lists.
+		if ok := common.FetchData(input2, output2); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
+		if output2.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Update the current user's state in the LocalStorage.
+		ctx.LocalStorage().Set("user", c.user)
+
+		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		return
+	})
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.userButtonDisabled = false
+	})
+	return
+}
