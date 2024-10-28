@@ -3,60 +3,51 @@ package mail
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	gomail "github.com/wneessen/go-mail"
 )
 
-type MessagePayload struct {
-	Email      string
-	Type       string
-	UUID       string
-	Passphrase string
-}
-
-func SendResetMail(msg *gomail.Msg) error {
-	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
-	if err != nil {
-		return err
-	}
-
-	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
-		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")), gomail.WithHELO(os.Getenv("MAIL_HELO")))
-	if err != nil {
-		return err
-	}
-
-	//c.SetTLSPolicy(mail.TLSOpportunistic)
-
-	if err := c.DialAndSend(msg); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ComposeResetMail(payload MessagePayload) (*gomail.Msg, error) {
+// ComposeMail is a function to prepare a go-mail-formatted message for sending.
+func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 	m := gomail.NewMsg()
+
+	// Compose the From field.
 	if err := m.From(os.Getenv("VAPID_SUBSCRIBER")); err != nil {
 		return nil, err
 	}
 
+	// Check if the e-mail address is given.
 	if payload.Email == "" {
 		return nil, fmt.Errorf("no new passhrase given for mail composition")
 	}
 
+	// Compose the To field.
 	if err := m.To(payload.Email); err != nil {
 		return nil, err
 	}
 
-	mainURL := os.Getenv("APP_URL_MAIN")
-	if mainURL == "" {
-		mainURL = "www.littr.eu"
-	}
+	// Fetch the mail instance URL: used in the PS part of the message.
+	mainURL := func() string {
+		if os.Getenv("APP_URL_MAIN") != "" {
+			return os.Getenv("APP_URL_MAIN")
+		}
 
+		return "www.littr.eu"
+	}()
+
+	// Swtich the message type(s).
 	switch payload.Type {
-	case "request":
+	case "user_activation":
+		if payload.Nickname == "" {
+			return nil, fmt.Errorf("no user nickname given")
+		}
+
+		activationLink := "https://" + mainURL + "/activate/" + payload.UUID
+
+		m.Subject("User Activation")
+		m.SetBodyString(gomail.TypeTextPlain, "Dear "+payload.Nickname+",\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+activationLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nlittr\nhttps://"+mainURL)
+
+	case "reset_request":
 		if payload.UUID == "" {
 			return nil, fmt.Errorf("no UUID given for mail composition")
 		}
@@ -66,7 +57,7 @@ func ComposeResetMail(payload MessagePayload) (*gomail.Msg, error) {
 		m.Subject("Passphrase Reset Request")
 		m.SetBodyString(gomail.TypeTextPlain, "Dear user,\n\nWe received a request to reset the passphrase for your account associated with this e-mail address: "+payload.Email+"\n\nTo reset your passphrase, please click the link below:\n\nReset Passphrase Link: "+resetLink+"\n\nYou can insert the generated UUID in the reset form too: "+payload.UUID+"\n\nIf you did not request a passphrase reset, please ignore this email. Your passphrase will remain unchanged.\n\nFor security reasons, this link will expire in 24 hours.\n\nThank you\nlittr\nhttps://"+mainURL)
 
-	case "passphrase":
+	case "reset_passphrase":
 		if payload.Passphrase == "" {
 			return nil, fmt.Errorf("no new passhrase given for mail composition")
 		}

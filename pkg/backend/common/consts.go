@@ -90,6 +90,7 @@ const (
 	ERR_PASSPHRASE_UPDATE_FAIL    = "could not update the passphrase in database, try again"
 	ERR_TARGET_USER_NOT_PRIVATE   = "target user is not private, no need to file new follow requests"
 	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
+	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
 
 	// poll-related error messages
 	ERR_POLL_AUTHOR_MISMATCH    = "you cannot post a foreigner's poll"

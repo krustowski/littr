@@ -208,7 +208,7 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 func addNewUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	// check if the registration is allowed
+	// Check if the registration is allowed.
 	if !config.IsRegistrationEnabled {
 		l.Msg(common.ERR_REGISTRATION_DISABLED).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
@@ -216,52 +216,53 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 
-	// decode the incoming data
+	// Decode the incoming data.
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// block restricted nicknames, use lowercase for comparison
+	// Block restricted nicknames, use lowercase for comparison.
 	if helpers.Contains(config.UserDeletionList, strings.ToLower(user.Nickname)) {
 		l.Msg(common.ERR_RESTRICTED_NICKNAME).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
+	// Check if the nickname has been already used/taken.
 	if _, found := db.GetOne(db.UserCache, user.Nickname, models.User{}); found {
 		l.Msg(common.ERR_USER_NICKNAME_TAKEN).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// restrict the nickname to contains only some characters explicitly "listed"
+	// Restrict the nickname to contains only some characters explicitly "listed".
 	// https://stackoverflow.com/a/38554480
 	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
 		l.Msg(common.ERR_NICKNAME_CHARSET_MISMATCH).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// check the nick's length limits
+	// Check the nick's length contraints.
 	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
 		l.Msg(common.ERR_NICKNAME_TOO_LONG_SHORT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// get the e-mail address
+	// Preprocess the e-mail address.
 	email := strings.ToLower(user.Email)
 	user.Email = email
 
-	// validate e-mail struct
+	// Validate the e-mail struct.
 	// https://stackoverflow.com/a/66624104
 	if _, err := netmail.ParseAddress(email); err != nil {
 		l.Msg(common.ERR_WRONG_EMAIL_FORMAT).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// check for the already registred e-mail
+	// Check for the already registred e-mail match.
 	allUsers, _ := db.GetAll(db.UserCache, models.User{})
 
 	for _, usr := range allUsers {
-		// e-maill address match
+		// E-mail address match found.
 		if strings.ToLower(usr.Email) == user.Email {
 			l.Msg(common.ERR_EMAIL_ALREADY_USED).Status(http.StatusConflict).Log().Payload(nil).Write(w)
 			return
@@ -269,29 +270,67 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//
-	// validation end = new user can be added
+	// Validation end = new user can be added
 	//
 
-	// set defaults and a timestamp
+	// Generate new random UUID, aka requestID.
+	randomID := uuid.New().String()
+
+	// Prepare the request data for the database.
+	reqPayload := models.Request{
+		ID:        randomID,
+		Nickname:  user.Nickname,
+		Email:     user.Email,
+		CreatedAt: time.Now(),
+	}
+
+	// Save new reset request to the database.
+	if saved := db.SetOne(db.RequestCache, randomID, reqPayload); !saved {
+		l.Msg("could not save the UUID to database, try again").Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Prepare the mail options.
+	mailPayload := mail.MessagePayload{
+		Email:    user.Email,
+		Type:     "user_activation",
+		UUID:     randomID,
+		Nickname: user.Nickname,
+	}
+
+	// Compose a message to send.
+	msg, err := mail.ComposeMail(mailPayload)
+	if err != nil || msg == nil {
+		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Send the activation mail to such user.
+	if err := mail.SendMail(msg); err != nil {
+		l.Msg(common.ERR_ACTIVATION_MAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Set the defaults and a timestamp.
 	user.LastActiveTime = time.Now()
 	user.About = "newbie"
 
-	// options defaults
+	// Options defaults.
 	user.Options = make(map[string]bool)
 	user.Options["gdpr"] = true
 	user.GDPR = true
 
-	// save new user to the database
+	// Save new user to the database.
 	if saved := db.SetOne(db.UserCache, user.Nickname, user); !saved {
 		l.Msg(common.ERR_USER_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// prepare a timestamp for a very new post to alert others the new user has been added
+	// Prepare a timestamp for a very new post to alert others the new user has been added.
 	postStamp := time.Now()
 	postKey := strconv.FormatInt(postStamp.UnixNano(), 10)
 
-	// compose the post's body
+	// Compose the post's body.
 	post := models.Post{
 		ID:        postKey,
 		Type:      "user",
@@ -301,13 +340,13 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		Timestamp: postStamp,
 	}
 
-	// save new post to the database
+	// Save new post to the database.
 	if saved := db.SetOne(db.FlowCache, postKey, post); !saved {
 		l.Msg(common.ERR_POSTREG_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	l.Msg("ok, adding new user").Status(http.StatusCreated).Log().Payload(nil).Write(w)
+	l.Msg("ok, adding new user, activation mail sent").Status(http.StatusCreated).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -991,19 +1030,19 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// prepare the mail options
 	mailPayload := mail.MessagePayload{
 		Email: email,
-		Type:  "request",
+		Type:  "reset_request",
 		UUID:  randomID,
 	}
 
 	// compose a message to send
-	msg, err := mail.ComposeResetMail(mailPayload)
+	msg, err := mail.ComposeMail(mailPayload)
 	if err != nil || msg == nil {
 		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// send the message
-	if err := mail.SendResetMail(msg); err != nil {
+	if err := mail.SendMail(msg); err != nil {
 		l.Msg(common.ERR_MAIL_NOT_SENT).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
@@ -1092,19 +1131,19 @@ func resetPassphraseHandler(w http.ResponseWriter, r *http.Request) {
 	// set mail options
 	mailPayload := mail.MessagePayload{
 		Email:      email,
-		Type:       "passphrase",
+		Type:       "reset_passphrase",
 		Passphrase: randomPassphrase,
 	}
 
 	// compose a message to send
-	msg, err := mail.ComposeResetMail(mailPayload)
+	msg, err := mail.ComposeMail(mailPayload)
 	if err != nil || msg == nil {
 		l.Msg(common.ERR_MAIL_COMPOSITION_FAIL).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// send the message
-	if err := mail.SendResetMail(msg); err != nil {
+	if err := mail.SendMail(msg); err != nil {
 		l.Msg(common.ERR_MAIL_NOT_SENT).Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
