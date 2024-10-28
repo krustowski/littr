@@ -86,15 +86,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		var accessCookie *http.Cookie
+		var userClaims *UserClaims
 
 		// Get the access cookie to check its validity.
 		if accessCookie, err = r.Cookie(ACCESS_TOKEN); err != nil {
 			//l.Msg("invalid/expired access token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 			//return
+		} else {
+			// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
+			userClaims := ParseAccessToken(accessCookie.Value, secret)
 		}
-
-		// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
-		userClaims := ParseAccessToken(accessCookie.Value, secret)
 
 		// Access cookie is expired (not present), or userClaims can be decoded but the token is invalid (expired).
 		// Generate a new access token.
