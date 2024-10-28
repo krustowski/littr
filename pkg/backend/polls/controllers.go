@@ -102,7 +102,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// addNewPoll ensures a new polls is created and saved
+// addNewPoll ensures a new polls is created and saved.
 //
 // @Summary      Add new poll
 // @Description  add new poll
@@ -117,7 +117,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 func addNewPoll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "polls")
 
-	// skip blank callerID
+	// Skip the blank callerID.
 	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
@@ -125,24 +125,30 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 
 	var poll models.Poll
 
-	// decode received data
+	// Decode the received data.
 	if err := common.UnmarshalRequestData(r, &poll); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// to patch wrongly loaded user data from LocalStorage
+	// To patch loaded invalid user data from LocalStorage = caller's the Author now.
 	if poll.Author == "" {
 		poll.Author = l.CallerID
 	}
-
-	key := poll.ID
 
 	// caller must be the author of such poll to be added
 	if poll.Author != l.CallerID {
 		l.Msg(common.ERR_POLL_AUTHOR_MISMATCH).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
+
+	// Patch the recurring option value (every option has to be unique).
+	if (poll.OptionOne == poll.OptionTwo) || (poll.OptionOne == poll.OptionThree) || (poll.OptionTwo == poll.OptionThree) || (poll.Question == poll.OptionOne) || (poll.Question == poll.OptionTwo) || (poll.Question == poll.OptionThree) {
+		l.Msg(common.ERR_POLL_DUPLICIT_OPTIONS).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	key := poll.ID
 
 	if saved := db.SetOne(db.PollCache, key, poll); !saved {
 		l.Msg(common.ERR_POLL_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
