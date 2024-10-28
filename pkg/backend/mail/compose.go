@@ -96,7 +96,7 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 		m.Subject("Your New Passphrase")
 
 	default:
-		return nil, fmt.Errorf("no mail Type specified")
+		return nil, fmt.Errorf("no or wrong mail Type specified")
 	}
 
 	var composition string
