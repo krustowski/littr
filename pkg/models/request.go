@@ -16,4 +16,7 @@ type Request struct {
 
 	// Timestamp of the request generation, should expire in 24 hours after creation.
 	CreatedAt time.Time `json:"created_at"`
+
+	// Type is a helper field to differentiate the request's processor target.
+	Type string `json:"type"`
 }

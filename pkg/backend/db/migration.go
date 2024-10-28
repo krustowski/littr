@@ -1,11 +1,8 @@
 package db
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -91,6 +88,11 @@ func RunMigrations(l *common.Logger) string {
 			F: migrateSystemFlowOn,
 			R: []interface{}{&users},
 		},
+		{
+			N: "migrateUserActiveState",
+			F: migrateUserActiveState,
+			R: []interface{}{&users, &reqs},
+		},
 	}
 
 	// Declare the migrations report variable.
@@ -141,7 +143,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
-	// migrateExpiredTokens procedure loop over tokens and removes those beyond the expiry.
+	// migrateExpiredTokens subprocedure loop over tokens and removes those beyond the expiry.
 	//func migrateExpiredTokens(l *common.Logger, tokens *map[string]models.Token) bool {
 	if tokens == nil {
 		l.Msg("migrateExpired: tokens are nil").Status(http.StatusInternalServerError).Log()
@@ -326,7 +328,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 	// delete all users matching the contents of restricted nickname list
 	for key, user := range *users {
 		if helpers.Contains(*bank, user.Nickname) {
-			l.Msg("deleting " + user.Nickname).Status(http.StatusProcessing).Log()
+			l.Msg("migrateUserDeletion: deleting " + user.Nickname).Status(http.StatusProcessing).Log()
 
 			if deleted := DeleteOne(UserCache, key); !deleted {
 				l.Msg("migrateUserDeletion: cannot delete an user: " + key).Status(http.StatusInternalServerError).Log()
@@ -552,43 +554,62 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 	return true
 }
 
-/*
- *  helpers
- */
+func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
+	var users *map[string]models.User
+	var reqs *map[string]models.Request
 
-// GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
-func GetGravatarURL(emailInput string, channel chan string, wg *sync.WaitGroup) string {
-	if wg != nil {
-		defer wg.Done()
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		elem, ok := raw.(*map[string]models.User)
+		if ok {
+			users = elem
+			continue
+		}
+
+		elem2, ok := raw.(*map[string]models.Request)
+		if ok {
+			reqs = elem2
+			continue
+		}
 	}
 
-	email := strings.ToLower(emailInput)
-	size := 150
-
-	sha := sha256.New()
-	sha.Write([]byte(email))
-
-	hashedStringEmail := fmt.Sprintf("%x", sha.Sum(nil))
-
-	// hash the emailInput
-	//byteEmail := []byte(email)
-	//hashEmail := md5.Sum(byteEmail)
-	//hashedStringEmail := hex.EncodeToString(hashEmail[:])
-
-	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?s=" + strconv.Itoa(size)
-
-	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode != 200 {
-		//log.Println(resp.StatusCode)
-		//log.Println(err.Error())
-		url = defaultAvatarImage
-	} else {
-		resp.Body.Close()
+	if users == nil || reqs == nil {
+		l.Msg("migrateUserActiveState: users and/or reqs are nil").Status(http.StatusInternalServerError).Log()
+		return false
 	}
 
-	// maybe we are running in a goroutine...
-	if channel != nil {
-		channel <- url
+	// Iterate over requests to find misdeleted requests.
+	for key, req := range *reqs {
+		// Check the request validity = the activation request is still valid and the user has been already activated.
+		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && req.Type == "activation" && (*users)[req.Nickname].Active {
+			// Delete the misdeleted request.
+			if deleted := DeleteOne(RequestCache, key); !deleted {
+				l.Msg("migrateUserActiveState: cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()
+				return false
+			}
+		}
 	}
-	return url
+
+	const timeLayout = "2006-Jan-02"
+
+	// Iterate over users to patch the Active bool's state according to the user's registration date.
+	for key, user := range *users {
+		migrationCreationDate, err := time.Parse(timeLayout, "2024-Oct-24")
+		if err != nil {
+			l.Msg("migrateUserActiveState: cannot parse the migration createdAt date").Status(http.StatusInternalServerError).Log()
+			return false
+		}
+
+		// The user is not activated and the registration time is (way) before the migration creating datetime = make active.
+		if !user.Active && migrationCreationDate.After(user.RegisteredTime) {
+			user.Active = true
+
+			if saved := SetOne(UserCache, key, user); !saved {
+				l.Msg("migrateUserActiveState: cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+				return false
+			}
+		}
+	}
+
+	return true
 }

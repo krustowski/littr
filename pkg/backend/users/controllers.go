@@ -282,6 +282,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) {
 		Nickname:  user.Nickname,
 		Email:     user.Email,
 		CreatedAt: time.Now(),
+		Type:      "activation",
 	}
 
 	// Save new reset request to the database.
@@ -1021,6 +1022,7 @@ func resetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		Nickname:  user.Nickname,
 		Email:     email,
 		CreatedAt: time.Now(),
+		Type:      "reset_passphrase",
 	}
 
 	// save new reset request to the database
