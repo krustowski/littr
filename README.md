@@ -178,7 +178,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.44
-+ single poll referenced by ID (singlePoll subpage/view)
++ ~~single poll referenced by ID (singlePoll subpage/view]~~
 + user activation via mail
 
 ### roasmap to v0.43
