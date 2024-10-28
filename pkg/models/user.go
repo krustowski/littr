@@ -30,7 +30,7 @@ type User struct {
 	About string `json:"about" default:"newbie"`
 
 	// Options is an umbrella struct/map for the booleans.
-	Options map[string]bool `json:"options,omitempty"`
+	Options map[string]bool `json:"options"`
 	//Options Options `json:"options,omitempty"`
 
 	// Active boolean indicates an activated user's account.
