@@ -6,35 +6,43 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+// onClick prolly acts like a callback function for the generic user flow's state ((un)flowed toggling).
 func (c *Content) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("toggle", key)
 	c.usersButtonDisabled = true
 }
 
+// onClickAllow is a callback function that enables the controlling user to accept the incoming follow request (one must be in the private mode of their profile).
 func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
+	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
 		return
 	}
 
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.user
 
+		// Pathc the nil requestMap.
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
 		}
 
+		// Falsify the incoming nick's request making it allowed soon.
 		user.RequestList[nick] = false
 
+		// Prepare the request data structure.
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
 		}{
 			RequestList: user.RequestList,
 		}
 
+		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
@@ -44,35 +52,41 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		// Prepare the blank API call response object.
 		output := &common.Response{}
 
-		// delete the request from one's requestList
+		// Delete the request from one's (the controlling one's) requestList.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Check the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Cast the successful API response in the toast.
 		//toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
 
-		// prepare the lists for the counterpart
+		// Prepare the lists for the counterpart. Ensure that the controlling user's account is followed, as well as their own one too.
 		fellowFlowList := make(map[string]bool)
 		fellowFlowList[nick] = true
 		fellowFlowList[c.user.Nickname] = true
 
+		// Update the controlling user's flowList (disabled, as it is not sure, whether such user wants to follow the counterpart directly too.
 		//ourFlowList := c.user.FlowList
 		//ourFlowList[nick] = true
 
+		// Prepare the second request data structure.
 		payload2 := struct {
 			FlowList map[string]bool `json:"flow_list"`
 		}{
 			FlowList: fellowFlowList,
 		}
 
+		// Compose the second API input payload.
 		input2 := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + nick + "/lists",
@@ -82,20 +96,25 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		// Prepare the blank API response object.
 		output2 := &common.Response{}
 
+		// Update the counterpart's flowList.
 		if ok := common.FetchData(input2, output2); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Check the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output2.Code != 200 {
 			toast.Text(output2.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Cast the successful update of both lists.
 		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
+		// Dispatch the updated controlling one's flowList.
 		/*ctx.Dispatch(func(ctx app.Context) {
 			//c.user.FlowList = ourFlowList
 			//c.users[c.user.Nickname] = payload
@@ -105,29 +124,36 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 	return
 }
 
+// onClickCancel is a callback function to cancel the incoming follow request.
 func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
+	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
 		return
 	}
 
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.user
 
+		// Patch the requestList nil map.
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
 		}
 
+		// Falsify the counterpart's existence in the controlling one's requestList (disable the request).
 		user.RequestList[nick] = false
 
+		// Prepare the request data structure.
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
 		}{
 			RequestList: user.RequestList,
 		}
 
+		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
@@ -137,20 +163,24 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		// Prepare the blank API response object.
 		output := &common.Response{}
 
-		// delete the request from one's requestList
+		// Delete the request from the controlling one's requestList.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 		}
 
+		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Cast the successful request removal.
 		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
+		// Dispatch the changes to match them in the UI.
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = user
 			c.users[c.user.Nickname] = user
@@ -160,44 +190,61 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 	return
 }
 
+// onClickPrivateOff toggle-offs the previously sent follow request to the counterpart.
 func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
+	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
 		return
 	}
 
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		user := c.users[nick]
 
-		input := &common.CallInput{
-			Method:      "DELETE",
-			Url:         "/api/v1/users/" + nick + "/request",
-			Data:        nil,
-			CallerID:    c.user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		output := &common.Response{}
-
-		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-		}
-
-		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-			return
-		}
-
+		// Patch the nil requestList map.
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
 		}
 		user.RequestList[c.user.Nickname] = false
 
+		// Prepare the request data structure.
+		payload := struct {
+			RequestList map[string]bool `json:"request_list"`
+		}{
+			RequestList: user.RequestList,
+		}
+
+		// Compose the API input payload.
+		input := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + nick + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API response object.
+		output := &common.Response{}
+
+		// Call the API to delete the follow request.
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		}
+
+		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Cast the successful request removal.
 		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
+		// Dispatch the changes to match the reality in the UI.
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
 		})
@@ -206,6 +253,7 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 	return
 }
 
+// onClickPrivateOn is a callback function to send a follow request to an account that is in the private mode.
 func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
@@ -217,33 +265,47 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 	ctx.Async(func() {
 		user := c.users[nick]
 
-		input := &common.CallInput{
-			Method:      "POST",
-			Url:         "/api/v1/users/" + nick + "/request",
-			Data:        nil,
-			CallerID:    c.user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		output := &common.Response{}
-
-		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-		}
-
-		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-			return
-		}
-
+		// Patch the nil requestList map.
 		if user.RequestList == nil {
 			user.RequestList = make(map[string]bool)
 		}
 		user.RequestList[c.user.Nickname] = true
 
+		// Prepare the request data structure.
+		payload := struct {
+			RequestList map[string]bool `json:"request_list"`
+		}{
+			RequestList: user.RequestList,
+		}
+
+		// Compose the API input payload.
+		input := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + nick + "/lists",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API response object.
+		output := &common.Response{}
+
+		// Patch the requestList of the counterpart user's.
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		}
+
+		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Cast the successful patch made.
 		toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
+		// Dispatch the changes to match the reality in the UI.
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
 		})
@@ -252,10 +314,15 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 	return
 }
 
+// onClickUser is a callback function that is called when one clicks on the user's nickname to show their user modal.
 func (c *Content) onClickUser(ctx app.Context, e app.Event) {
+	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
+
+	// Cast a new action with the key value.
 	ctx.NewActionWithValue("preview", key)
 
+	// Dispatch the UI changes to match the processing time.
 	ctx.Dispatch(func(ctx app.Context) {
 		c.usersButtonDisabled = true
 		c.showUserPreviewModal = true
@@ -263,78 +330,102 @@ func (c *Content) onClickUser(ctx app.Context, e app.Event) {
 	return
 }
 
+// onClickUserFlow is a callback function that enables one to be navigated to the counterpart user's flow (if permitted).
 func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
+	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
+
+	// Nasty way of how to disable duttons (use Dispatch function instead + new action casting).
 	c.usersButtonDisabled = true
 
-	// isn't the use blocked?
+	// Check if the user is not block already.
 	if c.user.ShadeList[key] {
 		c.usersButtonDisabled = false
 		return
 	}
 
-	// is the user followed?
+	// Check if the counterpart user is blocking us.
+	if c.users[key].ShadeList[c.user.Nickname] {
+		c.usersButtonDisabled = false
+		return
+	}
+
+	// Check the state of the counterpart user's in the controlling one's flowList. If not followed, do not redirect anywhere.
 	if !c.user.FlowList[key] {
 		c.usersButtonDisabled = false
 		return
 	}
 
-	// show only 1+ posts
-	if c.userStats[key].PostCount == 0 {
+	// Check for the post count of the requested user. Only redirect to the flow of 1 and more posts.
+	/*if c.userStats[key].PostCount == 0 {
 		c.usersButtonDisabled = false
 		return
-	}
+	}*/
 
+	// Navigate to the counterpart user's flow.
 	ctx.Navigate("/flow/user/" + key)
 }
 
+// oncLickUserShade is a callback function that enables shadeList toggling.
 func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
+	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
+
+	// Nasty way of buttons disabling (use Dispatch function + new action casting).
 	c.usersButtonDisabled = true
 
-	// do not shade yourself
+	// One cannot shade themselves.
 	if c.user.Nickname == key {
 		c.usersButtonDisabled = false
 		return
 	}
 
-	// fetch the to-be-shaded user
+	// Fetch the to-be-(un)shaded counterpart user. If not found, simply return the call.
 	userShaded, found := c.users[key]
 	if !found {
 		c.usersButtonDisabled = false
 		return
 	}
 
+	// Patch the to-be-(un)shaded counterpart user's flowList.
 	if userShaded.FlowList == nil {
 		userShaded.FlowList = make(map[string]bool)
 	}
 
-	// disable any following of such user
-	userShaded.FlowList[c.user.Nickname] = false
-	c.user.FlowList[key] = false
-
-	// negate the previous state
+	// Fetch and negate the current shade status.
 	shadeListItem := c.user.ShadeList[key]
 
+	// Patch the controlling user's flowList/shadeList nil map.
+	if c.user.FlowList == nil {
+		c.user.FlowList = make(map[string]bool)
+	}
 	if c.user.ShadeList == nil {
 		c.user.ShadeList = make(map[string]bool)
 	}
 
+	// Only (un)shade user accounts different from the controlling user's one.
 	if key != c.user.Nickname {
 		c.user.ShadeList[key] = !shadeListItem
 	}
 
+	// Disable the following of the controlling user in the counterpart user's flowList. And vice versa.
+	if c.user.ShadeList[key] {
+		userShaded.FlowList[c.user.Nickname] = false
+		c.user.FlowList[key] = false
+	}
+
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		// Prepare the request body data structure.
 		payload := struct {
-			FlowList  map[string]bool `json:"flow_list"`
-			ShadeList map[string]bool `json:"shade_list"`
+			FlowList map[string]bool `json:"flow_list"`
 		}{
-			FlowList:  userShaded.FlowList,
-			ShadeList: userShaded.ShadeList,
+			FlowList: userShaded.FlowList,
 		}
 
+		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + userShaded.Nickname + "/lists",
@@ -344,25 +435,23 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		// Prepare the blank API call response object.
 		output := &common.Response{}
 
+		// Patch the counterpart's lists.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
 		if output.Code != 200 && output.Code != 201 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		/*var stream []byte
-		if err := reload(c.user, &stream); err != nil {
-			toastText = "local storage reload failed: " + err.Error()
-			return
-		}*/
-
-		payload = struct {
+		// Prepare the second list update payload.
+		payload2 := struct {
 			FlowList  map[string]bool `json:"flow_list"`
 			ShadeList map[string]bool `json:"shade_list"`
 		}{
@@ -370,56 +459,72 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 			ShadeList: c.user.ShadeList,
 		}
 
-		input = &common.CallInput{
+		// Compsoe the second API call input.
+		input2 := &common.CallInput{
 			Method:      "PATCH",
 			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
-			Data:        payload,
+			Data:        payload2,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
 			HideReplies: false,
 		}
 
-		output = &common.Response{}
+		// Prepare the blank API response object.
+		output2 := &common.Response{}
 
-		if ok := common.FetchData(input, output); !ok {
+		// Patch the controlling user's lists.
+		if ok := common.FetchData(input2, output2); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
-		if output.Code != 200 && output.Code != 201 {
+		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
+		if output2.Code != 200 && output2.Code != 201 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Update the current user's state in the LocalStorage.
 		ctx.LocalStorage().Set("user", c.user)
+
+		// Dispatch the changes to match the reality in the UI.
+		ctx.Dispatch(func(ctx app.Context) {
+			c.userButtonDisabled = false
+		})
+		return
 	})
-
-	c.userButtonDisabled = false
 	return
-
 }
 
+// onDismissToast is a callback function to call the dismiss action to hide any toast present in the UI.
 func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
 	ctx.NewAction("dismiss")
 }
 
+// onKeyDown is a callback function that enables the UI controlling using the keyboards keys.
 func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
+	// If the key is Escape/Esc, cast new dismiss action.
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
 	}
 }
 
+// onScroll is a callback function, that is called on any scroll in the UI. New scroll action is then called just after.
 func (c *Content) onScroll(ctx app.Context, e app.Event) {
 	ctx.NewAction("scroll")
 }
 
+// onSearch is a callback function that helps to order, show and render the searched (matching) user(s) in the UI.
 func (c *Content) onSearch(ctx app.Context, e app.Event) {
+	// Fetch the requested string to compare with the existing users map.
 	val := ctx.JSSrc().Get("value").String()
 
-	if len(val) > 20 {
+	// Strings longer than 12 characters are ignored.
+	if len(val) > 12 || len(val) < 2 {
 		return
 	}
 
+	// Cast new search action.
 	ctx.NewActionWithValue("search", val)
 }

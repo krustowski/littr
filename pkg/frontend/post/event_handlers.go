@@ -1,6 +1,7 @@
 package post
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -11,27 +12,33 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+// onClick is a callback function to post generic input (post, or poll).
 func (c *Content) onClick(ctx app.Context, e app.Event) {
-	// prevent double-posting
+	// Prevent the double-posting.
 	if c.postButtonsDisabled {
 		return
 	}
 
-	// post, fig, poll
+	// Fetch the type: post, fig, or poll.
 	postType := ctx.JSSrc().Get("id").String()
+
+	// Null the content (field of the payload, read on).
 	content := ""
 	poll := models.Poll{}
 
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	var payload interface{}
 
+	// Nasty way on how to disable the buttons. (Use action handler and Dispatch function instead.)
 	c.postButtonsDisabled = true
 
 	ctx.Async(func() {
+		// Determine the post Type.
 		switch postType {
 		case "poll":
-			// trim the padding spaces on the extremities
+			// Trim the padding spaces on the extremities.
 			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 			pollQuestion := strings.TrimSpace(c.pollQuestion)
 			pollOptionI := strings.TrimSpace(c.pollOptionI)
@@ -43,39 +50,41 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 				break
 			}
 
+			// Compose a timestamp and the derived key (content).
 			now := time.Now()
 			content = strconv.FormatInt(now.UnixNano(), 10)
 
+			// Assign various poll's field inputs to the generic poll.
 			poll.ID = content
 			poll.Question = pollQuestion
 			poll.OptionOne.Content = pollOptionI
 			poll.OptionTwo.Content = pollOptionII
 			poll.OptionThree.Content = pollOptionIII
 			poll.Timestamp = now
-			break
 
 		case "post":
+			// This is to hotfix the fact that the input can be CTRL-Entered in.
 			textarea := app.Window().GetElementByID("post-textarea").Get("value").String()
 
-			// trim the padding spaces on the extremities
+			// Trim the padding spaces on the extremities.
 			// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
-			//newPost := strings.TrimSpace(c.newPost)
 			newPost := strings.TrimSpace(textarea)
 
-			// allow just picture posting
+			// Allow a just picture posting.
 			if newPost == "" && c.newFigFile == "" {
 				toast.Text(common.ERR_POST_TEXTAREA_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 				break
 			}
 
+			// Content is the new post itself.
 			content = newPost
-			break
 
 		default:
-			break
+			toast.Text(common.ERR_POST_UNKNOWN_TYPE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
 		}
 
-		// fixing the bug: cannot use return and break together in switch according to Sonar
+		// Fixing the bug: cannot use return and break together in switch according to Sonar.
 		if c.toast.TText != "" {
 			return
 		}
@@ -85,7 +94,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		ctx.LocalStorage().Get("user", &encoded)
 
-		// decode and unmarshal the local storage user data
+		// Decode and unmarshal the local storage user data.
 		if err := common.LoadUser(encoded, &user); err != nil {
 			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
@@ -93,6 +102,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		path := "/api/v1/posts"
 
+		// Compose a post payload.
 		if postType == "post" {
 			payload = models.Post{
 				Nickname: user.Nickname,
@@ -101,14 +111,15 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 				PollID:   poll.ID,
 				Figure:   c.newFigFile,
 				Data:     c.newFigData,
-				//Timestamp: time.Now(),
 			}
+		// Compose a poll payload.
 		} else if postType == "poll" {
 			path = "/api/v1/polls"
 			poll.Author = user.Nickname
 			payload = poll
 		}
 
+		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "POST",
 			Url:         path,
@@ -118,91 +129,94 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			HideReplies: false,
 		}
 
+		// Prepare the blank API response object.
 		output := &common.Response{}
 
-		// add new post/poll to backend struct
+		// Send new post/poll to backend struct.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Check for the HTTP 201 response code, otherwise print the API response message in the toast.
 		if output.Code != 201 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 
+		// Redirection according to the post type.
 		if postType == "poll" {
 			ctx.Navigate("/polls")
 		} else {
 			ctx.Navigate("/flow")
 		}
+
+		return
 	})
 }
 
+// onDismissToast is a callback fucntion that call a new action to handle that request for you.
 func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
+	// Cast a new valueless action.
 	ctx.NewAction("dismiss")
 }
 
+// onKeyDown is a callback function that takes care of the keyboard key UI controlling.
 func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
+	// IS the key an Escape/Esc? Then the dismiss action call.
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
 	}
 
+	// Fetch the post textarea.
 	textarea := app.Window().GetElementByID("post-textarea")
 
-	//if textarea.Get("value").IsNull() {
+	// If null, we null.
 	if textarea.IsNull() {
 		return
 	}
 
+	// Otherwise utilize the CTRL-Enter combination and send the post in.
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
 		app.Window().GetElementByID("post").Call("click")
 	}
 }
 
+// handleFixUpload is a callbackfunction that takes care of the figure/image uploading.
 // https://github.com/maxence-charriere/go-app/issues/882
 func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
+	// Fetch the first file in the row (index 0).
 	file := e.Get("target").Get("files").Index(0)
 
 	//log.Println("name", file.Get("name").String())
 	//log.Println("size", file.Get("size").Int())
 	//log.Println("type", file.Get("type").String())
 
+	// Nasty way on how to disable buttons.
 	c.postButtonsDisabled = true
 
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		// Read the figure/image data.
 		if data, err := common.ReadFile(file); err != nil {
 			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 
+		// Continue on the errorless output.
 		} else {
-			/*payload := models.Post{
-				Nickname:  author,
-				Type:      "fig",
-				Content:   file.Get("name").String(),
-				Timestamp: time.Now(),
-				Data:      data,
-			}*/
-
-			// add new post/poll to backend struct
-			/*if _, ok := littrAPI("POST", path, payload, user.Nickname, 0); !ok {
-				toastText = "backend error: cannot add new content"
-				log.Println("cannot post new content to API!")
-			} else {
-				ctx.Navigate("/flow")
-			}*/
-
+			// Cast the image ready message.
 			toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
+			// Load the image data to the Content strucutre.
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
 			})
 			return
-
 		}
+		return
 	})
 }

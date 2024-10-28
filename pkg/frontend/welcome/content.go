@@ -14,4 +14,3 @@ func (c *Content) OnMount(ctx app.Context) {
 
 func (c *Content) OnNav(ctx app.Context) {
 }
-
