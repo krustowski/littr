@@ -16,11 +16,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-const (
-	ACCESS_TOKEN  = "access-token"
-	REFRESH_TOKEN = "refresh-token"
-)
-
+// These URL paths are to be skipped by the authentication middleware.
 var pathExceptions = []string{
 	"/api/v1",
 	"/api/v1/auth",
@@ -32,6 +28,14 @@ var pathExceptions = []string{
 	"/api/v1/users/passphrase/reset",
 }
 
+type responseData struct {
+	AuthGranted bool                   `json:"auth_granted"`
+	Users       map[string]models.User `json:"users"`
+}
+
+var payload *responseData
+
+// The very authentication middleware entrypoint.
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//ctx := r.Context()
@@ -42,115 +46,100 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		    			return
 		  		}*/
 
-		// skip those routes
+		// Skip those HTTP routes.
 		if helpers.Contains(pathExceptions, r.URL.Path) || (r.URL.Path == "/api/v1/users" && r.Method == "POST") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
+		// Instantionate the new logger.
 		l := common.NewLogger(r, "auth")
 
-		pl := struct {
-			AuthGranted bool                   `json:"auth_granted"`
-			Users       map[string]models.User `json:"users"`
-		}{
+		// Prepare the HTTP response payload.
+		payload := &responseData{
 			AuthGranted: false,
 		}
 
+		// Fetch the server's secret.
 		secret := os.Getenv("APP_PEPPER")
+		if secret == "" {
+			l.Msg("server's secret is not set!").Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
+			return
+		}
 
-		var accessCookie *http.Cookie
 		var refreshCookie *http.Cookie
-		var user models.User
 		var err error
 
+		// Get the refresh cookie to check its validity.
 		if refreshCookie, err = r.Cookie(REFRESH_TOKEN); err != nil {
-			l.Msg("client unauthorized").Status(http.StatusUnauthorized).Error(err).Log().Payload(&pl).Write(w)
+			l.Msg("client unauthorized (invalid refresh token)").Status(http.StatusUnauthorized).Error(err).Log().Payload(payload).Write(w)
 			return
 		}
 
-		// decode the contents of refreshCookie
+		// Decode the contents of the refresh HTTP cookie, compare the signature with the server's secret.
 		refreshClaims := ParseRefreshToken(refreshCookie.Value, secret)
 
-		// refresh token is expired => user should relogin
+		// If the refresh token is expired => user should relogin.
 		if refreshClaims.Valid() != nil {
-			l.Msg("invalid/expired refresh token").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
+			l.Msg("invalid/expired refresh token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 			return
 		}
 
-		var userClaims *UserClaims
-		accessCookie, err = r.Cookie(ACCESS_TOKEN)
-		if err == nil {
-			userClaims = ParseAccessToken(accessCookie.Value, secret)
+		var accessCookie *http.Cookie
+
+		// Get the access cookie to check its validity.
+		if accessCookie, err = r.Cookie(ACCESS_TOKEN); err != nil {
+			//l.Msg("invalid/expired access token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
+			//return
 		}
 
-		// access cookie not present or access token is expired
+		// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
+		userClaims := ParseAccessToken(accessCookie.Value, secret)
+
+		// Access cookie is expired (not present), or userClaims can be decoded but the token is invalid (expired).
+		// Generate a new access token.
 		if err != nil || (userClaims != nil && userClaims.StandardClaims.Valid() != nil) {
-			// get refresh token's fingerprint
-			refreshSum := sha256.New()
-			refreshSum.Write([]byte(refreshCookie.Value))
-			refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
-
-			// fetch refresh token details
-			rawToken, found := db.TokenCache.Get(refreshTokenSum)
-			if !found {
-				voidCookie := &http.Cookie{
-					Name:     REFRESH_TOKEN,
-					Value:    "",
-					Expires:  time.Now().Add(time.Second * -300),
-					Path:     "/",
-					HttpOnly: true,
-					Secure:   true,
-				}
-
-				http.SetCookie(w, voidCookie)
-
-				l.Msg("the refresh token has been invalidated, please log-in again").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
+			// Fetch the request token's database record
+			refToken, err := fetchRefreshTokenRecord(refreshCookie, &w)
+			if refToken == nil && err != nil {
+				// Token has been invalidated due to its non-existence or invalidity.
+				l.Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 				return
 			}
 
-			token, ok := rawToken.(models.Token)
+			// Invalidate refresh token if the associated user does not exist.
+			user, ok := db.GetOne(db.UserCache, refToken.Nickname, models.User{})
 			if !ok {
-				l.Msg("cannot assert data type to models.Token").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+				// Delete such token record form the Token database.
+				db.DeleteOne(db.TokenCache, refToken.Hash)
+				invalidateRefreshToken(nil, &w)
+
+				l.Msg("referenced user not found in the database").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 				return
 			}
 
-			// invalidate refresh token on non-existing user referenced
-			user, ok = db.GetOne(db.UserCache, token.Nickname, models.User{})
-			if !ok {
-				db.DeleteOne(db.TokenCache, refreshTokenSum)
-
-				voidCookie := &http.Cookie{
-					Name:     REFRESH_TOKEN,
-					Value:    "",
-					Expires:  time.Now().Add(time.Second * -100),
-					Path:     "/",
-					HttpOnly: true,
-					Secure:   true,
-				}
-
-				http.SetCookie(w, voidCookie)
-
-				l.Msg("referenced user not found in the database").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
-				return
-			}
-
-			// prepare new access token claims
+			// Prepare new access token claims.
 			userClaims := UserClaims{
-				Nickname: token.Nickname,
+				Nickname: refToken.Nickname,
+				// Set the new access token's validity to 15 minutes only.
 				StandardClaims: jwt.StandardClaims{
 					IssuedAt:  time.Now().Unix(),
 					ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 				},
 			}
 
-			// issue a new access token using refresh token's validity
+			// Issue a new access token via the refresh token's validity.
 			accessToken, err := NewAccessToken(userClaims, secret)
 			if err != nil {
-				l.Msg("access token generation failed").Error(err).Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
+				l.Msg("access token generation failed").Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 				return
 			}
 
+			//
+			//  OK, generate and set a new access HTTP cookie.
+			//
+
+			// Compose the new access HTTP cookie structure.
 			accessCookie := &http.Cookie{
 				Name:     ACCESS_TOKEN,
 				Value:    accessToken,
@@ -160,59 +149,98 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				Secure:   true,
 			}
 
+			// Set the access HTTP cookie to response headers.
 			http.SetCookie(w, accessCookie)
 
-			pl.Users = make(map[string]models.User)
-			pl.Users[token.Nickname] = user
+			// Add the auth-granted user to the response payload.
+			payload.Users = make(map[string]models.User)
+			payload.Users[refToken.Nickname] = user
 
-			/*resp.Message = "ok, new access token issued"
-			resp.Code = http.StatusOK
+			l.Msg("ok, new access token issued").Status(http.StatusOK).Log()
 
-			l.Println(resp.Message, resp.Code)
-			resp.Write(w)
-			return*/
+			// Set the HTTP context value for such user's nickname.
+			ctx := context.WithValue(r.Context(), "nickname", refToken.Nickname)
 
-			ctx := context.WithValue(r.Context(), "nickname", token.Nickname)
-			noteUsersActivity(token.Nickname)
+			// Register user's activity = refresh the LastActiveTime datetime field.
+			noteUsersActivity(refToken.Nickname)
 			r = r.WithContext(ctx)
 
+			// Continue with the HTTP request's propragation.
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// get the refresh token's fingerprint
-		refreshSum := sha256.New()
-		refreshSum.Write([]byte(refreshCookie.Value))
-		refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+		//
+		//  Check the validity and existence of the refresh token/cookie if the access token is present and valid.
+		//
 
-		rawToken, found := db.TokenCache.Get(refreshTokenSum)
-		if !found {
-			voidCookie := &http.Cookie{
-				Name:     REFRESH_TOKEN,
-				Value:    "",
-				Expires:  time.Now().Add(time.Second * -300),
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   true,
-			}
-
-			http.SetCookie(w, voidCookie)
-
-			l.Msg("the refresh token has been invalidated").Status(http.StatusUnauthorized).Log().Payload(&pl).Write(w)
+		// Fetch the request token's database record
+		refToken, err := fetchRefreshTokenRecord(refreshCookie, &w)
+		if refToken == nil && err != nil {
+			// Token has been invalidated due to its non-existence or invalidity.
+			l.Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 			return
 		}
 
-		token, ok := rawToken.(models.Token)
-		if !ok {
-			l.Msg("cannot assert data type to models.Token").Status(http.StatusInternalServerError).Log().Payload(&pl).Write(w)
-			return
-		}
+		// Set the HTTP context with the auth-gratend user's nickname.
+		ctx := context.WithValue(r.Context(), "nickname", refToken.Nickname)
 
-		ctx := context.WithValue(r.Context(), "nickname", token.Nickname)
-		noteUsersActivity(token.Nickname)
+		// Register the user's activity = refresh the LastTimeActive datetime field.
+		noteUsersActivity(refToken.Nickname)
 		r = r.WithContext(ctx)
 
+		// Continue with the HTTP request's propragation.
 		next.ServeHTTP(w, r)
 		return
 	})
+}
+
+//
+//  Helper functions
+//
+
+// invalidateRefreshToken is a helper function to invalidate the refresh HTTP cookie (token). The function sends the invalidated HTTP cookie in the response headers.
+func invalidateRefreshToken(l *common.Logger, w *http.ResponseWriter) bool {
+	// Refresh token is invalid = not found in the Token database => user unauthenticated, invalidate the refresh token.
+	voidCookie := &http.Cookie{
+		Name:     REFRESH_TOKEN,
+		Value:    "",
+		Expires:  time.Now().Add(time.Second * -300),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	// Set the invalidated refresh HTTP cookie.
+	http.SetCookie(*w, voidCookie)
+
+	// Log the message if the logger is present.
+	if l != nil {
+		l.Msg("the refresh token has been invalidated, please log-in again").Status(http.StatusUnauthorized).Log().Payload(payload).Write(*w)
+	}
+
+	return true
+}
+
+// fetchRefreshTokenRecord is a helper function to check the refresh token is valid and exists in the database.
+func fetchRefreshTokenRecord(refreshCookie *http.Cookie, w *http.ResponseWriter) (*models.Token, error) {
+	// Get the refresh token's fingerprint.
+	refreshSum := sha256.New()
+	refreshSum.Write([]byte(refreshCookie.Value))
+	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+
+	// Fetch the refresh token details from the Token database.
+	rawToken, found := db.TokenCache.Get(refreshTokenSum)
+	if !found {
+		invalidateRefreshToken(nil, w)
+		return nil, fmt.Errorf("refresh token's reference has not been found in the database")
+	}
+
+	// Assert the Token model type to the raw output from the database.
+	token, ok := rawToken.(models.Token)
+	if !ok {
+		return nil, fmt.Errorf("cannot assert data type to models.Token, try again")
+	}
+
+	return &token, nil
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-// authHandler
+// authHandler handles the nickname-hashed-passphrase common dual input and tries to authenticate the user.
 //
 // @Summary 		Auth an user
 // @Description		auth an user
@@ -30,87 +30,100 @@ import (
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "auth")
 
+	// Response body structure.
 	type responseData struct {
 		AuthGranted bool                   `json:"auth_granted"`
 		Users       map[string]models.User `json:"users"`
 	}
 
-	// prepare the payload
+	// Prepare the response payload.
 	pl := &responseData{
 		AuthGranted: false,
 	}
 
 	var user AuthUser
 
-	// decode the request body
+	// Decode the request body.
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
+	// Set the callerID to such user's nickname henceforth.
 	l.CallerID = user.Nickname
 
-	// try to authenticate given user
+	// Try to authenticate given user.
 	grantedUser, ok := authUser(&user)
 	if !ok {
 		l.Msg(common.ERR_AUTH_FAIL).Status(http.StatusBadRequest).Log().Payload(pl).Write(w)
 		return
 	}
 
-	// ok, auth granted so far
-	// let us generate a JWT
+	// Check if the user has been activated yet.
+	if !grantedUser.Active || !grantedUser.Options["active"] {
+		l.Msg(common.ERR_USER_NOT_ACTIVATED).Status(http.StatusBadRequest).Log().Payload(pl).Write(w)
+		return
+	}
+
+	//
+	// OK, auth granted so far. Let us generate a JWT for such user.
 	// https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
+	//
+
 	secret := os.Getenv("APP_PEPPER")
 
+	// Compose the user's personal (access) token content.
 	userClaims := UserClaims{
 		Nickname: grantedUser.Nickname,
+		// Access token is restricted to 15 minutes of its validity.
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		},
 	}
 
-	// get new access token
+	// Get new access token = sign the access token with the server's secret.
 	signedAccessToken, err := NewAccessToken(userClaims, secret)
 	if err != nil {
 		l.Msg(common.ERR_AUTH_ACC_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
+	// Compose the user's personal (refresh) token content. Refresh token is restricted (mainly) to 4 weeks of its validity.
 	refreshClaims := jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(common.TOKEN_TTL).Unix(),
 	}
 
-	// get new refresh token
+	// Get new refresh token = sign the refresh token with the server's secret.
 	signedRefreshToken, err := NewRefreshToken(refreshClaims, secret)
 	if err != nil {
 		l.Msg(common.ERR_AUTH_REF_TOKEN_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
-	// prepare the refresh token's hash
+	// Prepare the refresh token's hash for the database payload.
 	refreshSum := sha256.New()
 	refreshSum.Write([]byte(signedRefreshToken))
 	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
-	// prepare the refresh token struct
+	// Prepare the refresh token struct for the database saving.
 	token := models.Token{
 		Hash:      refreshTokenSum,
-		Nickname:  grantedUser.Nickname,
 		CreatedAt: time.Now(),
+		Nickname:  grantedUser.Nickname,
 		TTL:       common.TOKEN_TTL,
 	}
 
-	// save new refresh token's hash to the database
+	// Save new refresh token's hash to the Token database.
 	if saved := db.TokenCache.Set(refreshTokenSum, token); !saved {
 		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
 		return
 	}
 
-	// compose the access cookie
+	// Compose the access HTTP cookie.
 	accessCookie := &http.Cookie{
-		Name:     "access-token",
+		Name:     ACCESS_TOKEN,
 		Value:    signedAccessToken,
 		Expires:  time.Now().Add(time.Minute * 15),
 		Path:     "/",
@@ -119,9 +132,9 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	}
 
-	// compose the refresh cookie
+	// Compose the refresh HTTP cookie.
 	refreshCookie := &http.Cookie{
-		Name:     "refresh-token",
+		Name:     REFRESH_TOKEN,
 		Value:    signedRefreshToken,
 		Expires:  time.Now().Add(common.TOKEN_TTL),
 		Path:     "/",
@@ -130,14 +143,15 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	}
 
-	// set cookies to the response header
+	// Set cookies to the HTTP response header.
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
 
-	// update the payload
+	// Update the response payload = add the granted user to the Users field.
 	users := make(map[string]models.User)
 	users[grantedUser.Nickname] = *grantedUser
 
+	// Flush the sensitive data of such user in the response.
 	pl.Users = *common.FlushUserData(&users, grantedUser.Nickname)
 	pl.AuthGranted = true
 
@@ -157,18 +171,19 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "auth")
 
+	// Response body structure.
 	type responseData struct {
 		AuthGranted bool
 	}
 
-	// prepare the payload
+	// Prepare the response payload.
 	pl := &responseData{
 		AuthGranted: false,
 	}
 
-	// invalidate the access cookie
+	// Invalidate the access HTTP cookie.
 	voidAccessCookie := &http.Cookie{
-		Name:     "access-token",
+		Name:     ACCESS_TOKEN,
 		Value:    "",
 		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
@@ -177,9 +192,9 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
-	// invalidate the refresh cookie
+	// Invalidate the refresh HTTP cookie.
 	voidRefreshCookie := &http.Cookie{
-		Name:     "refresh-token",
+		Name:     REFRESH_TOKEN,
 		Value:    "",
 		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
@@ -188,7 +203,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
-	// set void cookies
+	// Set void HTTP cookies.
 	http.SetCookie(w, voidAccessCookie)
 	http.SetCookie(w, voidRefreshCookie)
 
