@@ -143,6 +143,9 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 			return
 		}
 
+		// Update the LocalStorage.
+		common.SaveUser(&c.user, &ctx)
+
 		toast.Text(common.MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
 	})
@@ -206,6 +209,9 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		}
 
 		toast.Text(common.MSG_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+
+		// Update the LocalStorage.
+		common.SaveUser(&c.user, &ctx)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			// update user's struct in memory
@@ -446,6 +452,9 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 
 		toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
+		// Update the LocalStorage.
+		common.SaveUser(&c.user, &ctx)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
 			//c.user = user
@@ -504,6 +513,9 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 
 		toast.Text(common.MSG_LOCAL_TIME_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
+		// Update the LocalStorage.
+		common.SaveUser(&c.user, &ctx)
+
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user.LocalTimeMode = !localTime
@@ -545,6 +557,9 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		}
 
 		toast.Text(common.MSG_PRIVATE_MODE_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+
+		// Update the LocalStorage.
+		common.SaveUser(&c.user, &ctx)
 
 		// dispatch the good news to client
 		ctx.Dispatch(func(ctx app.Context) {
@@ -666,6 +681,9 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			avatar := "/web/pix/thumb_" + data.Key
 
 			toast.Text(common.MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+
+			// Update the LocalStorage.
+			common.SaveUser(&c.user, &ctx)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()

@@ -55,6 +55,10 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 
 	// Exit if the event is a heartbeat. But notice the last timestamp.
 	if event.Data == "heartbeat" || event.Type == "keepalive" {
+		// Update the timestamp value in the LS.
+		ctx.LocalStorage().Set("lastEventTime", time.Now().Unix())
+
+		// Use the content field too for the same action.
 		ctx.Dispatch(func(ctx app.Context) {
 			h.lastHeartbeatTime = time.Now().Unix()
 		})

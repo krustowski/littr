@@ -122,7 +122,14 @@
   //  })
   //}
 
-  const es = new EventSource("/api/v1/live");
+
+
+
+
+
+
+
+  /*const es = new EventSource("/api/v1/live");
   es.retry = 5000;
 
   es.onerror = (err) => {
@@ -142,13 +149,13 @@
       es.close()
     }*/
 
-    if (event.data === "heartbeat") {
+    /*if (event.data === "heartbeat") {
       /*$(".dot").css("opacity", "1.0");
       $(".dot").stop(true, true).show().fadeOut(19999);*/
-      return
+      //return
     }
 
-    if (event.type === "open") {
+    /*if (event.type === "open") {
       console.log(event)
       //window.LIT.clearCache();
       return
@@ -188,6 +195,14 @@
   es.addEventListener("message", listener);
   es.addEventListener("keepalive", listener);
   es.addEventListener("error", listener);
+*/
+
+
+
+
+
+
+
 
 
   // deregister the service worker
