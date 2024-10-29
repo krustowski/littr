@@ -12,6 +12,8 @@ type ToastInterface interface {
 	Text(string) *Toast
 	Link(string) *Toast
 	Type(string) *Toast
+	SetPrefix(string) *Toast
+	RemovePrefix() *Toast
 	Dispatch(interface{}, func(*Toast, interface{}))
 }
 
@@ -21,6 +23,30 @@ type Toast struct {
 	TText      string
 	TType      string
 	TID        int64
+}
+
+const (
+	// Toast types.
+	TTYPE_ERR     = "error"
+	TTYPE_INFO    = "info"
+	TTYPE_SUCCESS = "success"
+)
+
+var ToastColor = func(ttype string) string {
+	switch ttype {
+	case TTYPE_SUCCESS:
+		return "green10"
+
+	case TTYPE_INFO:
+		return "blue10"
+
+	case TTYPE_ERR:
+	default:
+		return "red10"
+	}
+
+	// Set the unknown option to the INFO color.
+	return "blue10"
 }
 
 func (t *Toast) Context(ctx *app.Context) *Toast {

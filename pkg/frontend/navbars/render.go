@@ -5,30 +5,14 @@ import (
 	"strconv"
 	"time"
 
-	//"go.vxn.dev/littr/pkg/helpers"
-	//"go.vxn.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/frontend/common"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 // top navbar
 func (h *Header) Render() app.UI {
-	toastColor := ""
-
-	switch h.toast.TType {
-	case "success":
-		toastColor = "green10"
-		break
-
-	case "error":
-		toastColor = "red10"
-		break
-
-	default:
-		toastColor = "blue10"
-	}
-
-	// a very nasty way on how to store the timestamp...
+	// A very nasty way on how to store the timestamp...
 	var last int64 = 0
 
 	beat := app.Window().Get("localStorage")
@@ -132,7 +116,7 @@ func (h *Header) Render() app.UI {
 					// snackbar toast
 					app.A().Href(h.toast.TLink).OnClick(h.onClickModalDismiss).Body(
 						app.If(toastText != "",
-							app.Div().ID("snackbar-general").Class("snackbar white-text bottom "+toastColor).Body(
+							app.Div().ID("snackbar-general").Class("snackbar white-text bottom "+common.ToastColor(h.toast.TType)).Body(
 								app.I().Text("info"),
 								app.Span().Text(toastText),
 							),

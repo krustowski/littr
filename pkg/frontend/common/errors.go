@@ -2,13 +2,6 @@
 package common
 
 const (
-	// Toast types.
-	TTYPE_ERR     = "error"
-	TTYPE_INFO    = "info"
-	TTYPE_SUCCESS = "success"
-)
-
-const (
 	// Flow/Posts-related error messages.
 	ERR_INVALID_REPLY      = "no valid reply content entered"
 	ERR_POST_UNAUTH_DELETE = "you can delete your own posts only!"

@@ -4,25 +4,12 @@ import (
 	"log"
 	"net/url"
 
+	"go.vxn.dev/littr/pkg/frontend/common"
+
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
-	toastColor := ""
-
-	switch c.toast.TType {
-	case "success":
-		toastColor = "green10"
-		break
-
-	case "info":
-		toastColor = "blue10"
-		break
-
-	default:
-		toastColor = "red10"
-	}
-
 	devicesToShow := len(c.devices)
 
 	return app.Main().Class("responsive").Body(
@@ -35,7 +22,7 @@ func (c *Content) Render() app.UI {
 		// snackbar
 		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
 			app.If(c.toast.TText != "",
-				app.Div().ID("snackbar").Class("snackbar white-text top active "+toastColor).Body(
+				app.Div().ID("snackbar").Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),
 				),
