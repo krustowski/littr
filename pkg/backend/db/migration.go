@@ -110,6 +110,7 @@ func RunMigrations(l *common.Logger) string {
 		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R))
 	}
 
+	// Remove the prefix for the further Logger instance usage.
 	l.RemovePrefix()
 	return report
 }
