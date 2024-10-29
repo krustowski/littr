@@ -42,10 +42,10 @@ func (c *Content) onClickLink(ctx app.Context, e app.Event) {
 	if !navigator.IsNull() {
 		clipboard := navigator.Get("clipboard")
 		if !clipboard.IsNull() && !clipboard.IsUndefined() {
-			clipboard.Call("writeText", scheme+"://"+host+"/polls/poll/"+key)
+			clipboard.Call("writeText", scheme+"://"+host+"/polls/"+key)
 		}
 	}
-	ctx.Navigate("/polls/poll/" + key)
+	ctx.Navigate("/polls/" + key)
 }
 
 // onClickPollOption()

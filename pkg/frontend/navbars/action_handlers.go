@@ -113,11 +113,13 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	case "poll":
 		pollID := slice[1]
 		if pollID == "" {
-			return
-		}
+			text = "new poll has been added"
+			link = "/polls"
+		} else {
 
-		text = "new poll has been added"
-		link = "/polls/poll/" + pollID
+			text = "new poll has been added"
+			link = "/polls/" + pollID
+		}
 	}
 
 	// Instantiate the new toast.
