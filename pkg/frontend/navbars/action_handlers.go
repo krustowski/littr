@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/tmaxmax/go-sse"
@@ -60,11 +61,9 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 		return
 	}
 
-	var baseString string
-
 	// Fetch the user from the LocalStorage.
-	ctx.LocalStorage().Get("user", &baseString)
-	user := common.LoadUser(baseString)
+	var user models.User
+	common.LoadUser(&user, &ctx)
 
 	// Do not parse the message when user has live mode disabled.
 	if !user.LiveMode {

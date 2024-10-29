@@ -4,30 +4,51 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"go.vxn.dev/littr/pkg/models"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-func LoadUser(baseString string) *models.User {
-	var user models.User
+// LoadUser uses the app.Context pointer to load the encoded user string from the LocalStorage to decode it back to the models.User struct.
+func LoadUser(user *models.User, ctx *app.Context) error {
+	var baseString string
+
+	(*ctx).LocalStorage().Get("user", &baseString)
 
 	// Decode the user.
 	str, err := base64.StdEncoding.DecodeString(baseString)
 	if err != nil {
-		log.Println(err.Error())
-		return nil
+		return err
 	}
 
 	// Unmarshal the result to get an User struct.
-	err = json.Unmarshal(str, &user)
+	err = json.Unmarshal(str, user)
 	if err != nil {
-		log.Println(err.Error())
-		return nil
+		return err
 	}
 
-	return &user
+	return nil
 }
+
+// SaveUser uses the app.Context pointer to save the given pointer to models.User and encode it into a JSON string.
+func SaveUser(user *models.User, ctx *app.Context) error {
+	// Encode (marshal) the user model into JSON byte stream.
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("%v", ERR_LOCAL_STORAGE_USER_FAIL)
+	}
+
+	// Save the encoded user data to the LocalStorage.
+	(*ctx).LocalStorage().Set("user", userJSON)
+	(*ctx).LocalStorage().Set("authGranted", true)
+
+	return nil
+}
+
+//
+//  Other attempts.
+//
 
 func LoadUser2(encoded string, user *models.User) error {
 	if encoded == "" {
@@ -52,7 +73,7 @@ func LoadUser2(encoded string, user *models.User) error {
 	return nil
 }
 
-func SaveUser(plain *string, user *models.User) error {
+func SaveUser2(plain *string, user *models.User) error {
 	if plain == nil {
 		return fmt.Errorf("string pointer input is empty")
 	}

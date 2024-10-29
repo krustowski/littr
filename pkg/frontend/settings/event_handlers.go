@@ -556,12 +556,14 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 
 // onClickDeleteAccount()
 func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
+	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
 
-	//ctx.LocalStorage().Set("userLogged", false)
-	ctx.LocalStorage().Set("user", "")
+	// Invalidate the LocalStorage contents.
+	ctx.LocalStorage().Set("authGranted", false)
+	common.SaveUser(&models.User{}, &ctx)
 
 	ctx.Async(func() {
 		input := &common.CallInput{

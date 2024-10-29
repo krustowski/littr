@@ -246,7 +246,8 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		// Now, we can update the current user's flowList on the frontend too.
 		// Update the flowList and update the user struct in the LocalStorage.
 		user.FlowList = flowList
-		ctx.LocalStorage().Set("user", user)
+
+		common.SaveUser(&user, &ctx)
 
 		// Dispatch the changes to match the reality for the UI to rerender.
 		ctx.Dispatch(func(ctx app.Context) {
@@ -405,7 +406,7 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		}
 
 		// Update the current user's state in the LocalStorage.
-		ctx.LocalStorage().Set("user", c.user)
+		common.SaveUser(&c.user, &ctx)
 
 		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
