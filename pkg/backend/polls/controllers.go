@@ -164,6 +164,7 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		Type:      "poll",
 		Nickname:  "system",
 		Content:   "new poll has been added",
+		PollID:    poll.ID,
 		Timestamp: postStamp,
 	}
 
