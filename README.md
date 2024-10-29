@@ -25,7 +25,7 @@ a simple nanoblogging platform for a raw mind _flow_
 + safe photo sharing --- EXIF metadata are removed while image file is uploading
 + passphrase reset via e-mail
 + dark/light mode switch
-+ live in-app event (SSE) notifications --- get alerted when a new post/poll is added to your flow
++ live in-app event (SSE) notifications --- get alerted when a new post/poll is added to your flow --- to be toggable soon
 
 
 ## REST API service
@@ -174,12 +174,16 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 ### roadmap to v1.0.0
 + fix the code smells as scanned by `sonar-scanner`
 + resolve tikets in github and redmine (priv)
-+ write integration and e2e tests
 + [...]
 
 ### roadmap to v0.45
++ integration/e2e tests draft
 
 ### roadmap to v0.44
++ live switch implementation (disable SSE)
++ refix the avatar URL migration procedure (wip)
++ reimplement the SSE client in Go (wip)
++ redesign the flow subviews (profile pages)
 + ~~single poll referenced by ID (singlePoll subpage/view]~~
 + ~~user activation via mail~~ (wip)
 
