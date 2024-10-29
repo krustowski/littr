@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -212,7 +214,6 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 // migrateAvatarURL procedure takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
 func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
-	var urlsChan chan string
 
 	// assert pointers from the interface array
 	for _, raw := range rawElems {
@@ -223,38 +224,60 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit when the users cannot be asserted, or are just nil in general.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// channel for gravatar routines' results
-	urlsChan = make(chan string)
+	var wg sync.WaitGroup
 
-	var wg *sync.WaitGroup
+	// Make multiple channels for the per user run goroutines.
+	var channels = make([]chan avatarResult, len(*users))
+	var i int
 
-	for key, user := range *users {
-		if user.AvatarURL != "" && user.AvatarURL != defaultAvatarImage {
+	// Loop over users to execute one goroutin per user.
+	for _, user := range *users {
+		// Disable this just for tests. Maybe add a feature flag to enable this via an env variable.
+		//if user.AvatarURL != "" && user.AvatarURL != defaultAvatarImage {
+		if !func() bool {
+			val, err := strconv.ParseBool(os.Getenv("RUN_AVATAR_MIGRATION"))
+			if err != nil {
+				return false
+			}
+			return val
+		}() {
 			continue
 		}
 
 		wg.Add(1)
-		go GetGravatarURL(user.Email, urlsChan, wg)
-		url := <-urlsChan
+		channels[i] = make(chan avatarResult)
 
-		if url != user.AvatarURL {
-			user.AvatarURL = url
-
-			if ok := SetOne(UserCache, key, user); !ok {
-				l.Msg("cannot save an avatar: " + key).Status(http.StatusInternalServerError).Log()
-				close(urlsChan)
-				return false
-			}
-			(*users)[key] = user
-		}
+		// Run the gravatar goroutine.
+		go GetGravatarURL(user, channels[i], &wg)
+		i++
 	}
 
-	close(urlsChan)
+	// Retrieve the results = merge the channels into one.
+	results := fanInChannels(channels...)
+	wg.Wait()
+
+	// Collect the results.
+	for result := range results {
+		// Change the avatarURL only if the new URL differs from the previous one.
+		if result.URL != "" && result.URL != result.User.AvatarURL {
+			result.User.AvatarURL = result.URL
+
+			// Update the user's avatar in the User database.
+			if ok := SetOne(UserCache, result.User.Nickname, result.User); !ok {
+				l.Msg("cannot save an avatar: " + result.User.Nickname).Status(http.StatusInternalServerError).Log()
+				return false
+			}
+
+			// Save the user locally within the migrations.
+			(*users)[result.User.Nickname] = result.User
+		}
+	}
 
 	return true
 }
