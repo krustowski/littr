@@ -18,7 +18,7 @@ const (
 	topicRandomNumbers = "numbers"
 )
 
-// Core SSE server struct initialization, the server implements http.Handler interface.
+// Core SSE server as the HTTP handler wrapper.
 var Streamer = &sse.Server{
 	// Joe is the default pubsub service provider.
 	Provider: &sse.Joe{
@@ -45,6 +45,7 @@ var Streamer = &sse.Server{
 			}
 		}
 
+		// Give the default topics if no topic was requested.
 		if len(topics) == 0 {
 			// Provide default topics, if none are given.
 			topics = []string{topicRandomNumbers, topicMetrics}
