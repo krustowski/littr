@@ -116,8 +116,11 @@ func initClient() {
 }
 
 var (
+	// The very main HTTP server struct's pointer.
 	server *http.Server
-	wg     sync.WaitGroup
+
+	// The WaitGroup for the graceful HTTP server shutdown.
+	wg sync.WaitGroup
 )
 
 func initServer() {
@@ -143,7 +146,7 @@ func initServer() {
 
 		// Log and broadcast the message that the server is to shutdown.
 		l.Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
-		live.BroadcastMessage("server-stop", "message")
+		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -259,7 +262,7 @@ func initServer() {
 	// Send the SSE regarding the server start.
 	go func() {
 		time.Sleep(time.Second * 30)
-		live.BroadcastMessage("server-start", "message")
+		live.BroadcastMessage(live.EventPayload{Data: "server-start", Type: "message"})
 	}()
 
 	// Start serving via the created net listener.

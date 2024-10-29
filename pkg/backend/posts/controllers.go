@@ -230,7 +230,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// broadcast a new post to live subscribers
-	live.BroadcastMessage("post,"+post.Nickname, "message")
+	live.BroadcastMessage(live.EventPayload{Data: "post," + post.Nickname, Type: "message"})
 
 	// prepare the payload
 	posts := make(map[string]models.Post)

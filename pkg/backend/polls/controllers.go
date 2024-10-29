@@ -172,8 +172,8 @@ func addNewPoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// broadcast the new poll event
-	live.BroadcastMessage("poll", "message")
+	// Broadcast the new poll event.
+	live.BroadcastMessage(live.EventPayload{Data: "poll," + poll.ID, Type: "message"})
 
 	l.Msg("ok, adding new poll").Status(http.StatusCreated).Log().Payload(nil).Write(w)
 	return

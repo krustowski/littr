@@ -78,22 +78,30 @@ func beat() {
 		}
 
 		// Send the message.
-		BroadcastMessage("heartbeat", "keepalive")
+		BroadcastMessage(EventPayload{Data: "heartbeat", Type: "keepalive"})
 
 		// Sleep for the given period of time.
 		time.Sleep(time.Second * config.HEARTBEAT_SLEEP_TIME)
 	}
 }
 
+// EventPayload is the metastructure to organize the SSE event's data association better.
+// It is an input for the BroadcastMessage function.
+type EventPayload struct {
+	ID   string
+	Type string
+	Data string
+}
+
 // BroadcastMessage is a wrapper function for a SSE message sending.
-func BroadcastMessage(data, eventName string) {
+func BroadcastMessage(payload EventPayload) {
 	// Exit if Streamer is nil.
 	if Streamer == nil {
 		return
 	}
 
 	// Refuse empty data.
-	if data == "" {
+	if payload.Data == "" {
 		return
 	}
 
@@ -101,26 +109,26 @@ func BroadcastMessage(data, eventName string) {
 	msg := &sse.Message{}
 
 	// Ensure a default event ID set.
-	if eventName == "" {
-		eventName = "message"
+	if payload.Type == "" {
+		payload.Type = "message"
 	}
 
 	// Ensure a valid ID is used.
-	id, err := sse.NewID(eventName)
+	id, err := sse.NewID(payload.ID)
 	if err != nil {
 		return
 	}
 	msg.ID = id
 
 	// Ensure a valid event Type is used.
-	typ, err := sse.NewType(eventName)
+	typ, err := sse.NewType(payload.Type)
 	if err != nil {
 		return
 	}
 	msg.Type = typ
 
 	// Append any given data to the event.
-	msg.AppendData(data)
+	msg.AppendData(payload.Data)
 
 	// Broadcast the message to the subscribers.
 	if Streamer != nil {
