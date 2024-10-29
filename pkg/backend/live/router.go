@@ -9,7 +9,7 @@ func Router() chi.Router {
 	r := chi.NewRouter()
 
 	// Mount the Streamer to /live API route.
-	r.Mount("/", Streamer)
+	r.Mount("/", cors(Streamer))
 
 	// Run the keepalive pacemaker.
 	go beat()

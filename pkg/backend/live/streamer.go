@@ -1,6 +1,7 @@
 package live
 
 import (
+	"net/http"
 	"time"
 
 	sse "github.com/tmaxmax/go-sse"
@@ -125,4 +126,13 @@ func BroadcastMessage(data, eventName string) {
 		_ = Streamer.Publish(msg)
 	}
 	return
+}
+
+// cors is a simple HTTP Handler wrapper that serves the CORS-ready headers.
+// https://github.com/tmaxmax/go-sse/blob/master/cmd/complex/main.go
+func cors(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://dev.littr.eu:8080")
+		h.ServeHTTP(w, r)
+	})
 }
