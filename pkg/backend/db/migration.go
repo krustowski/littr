@@ -258,7 +258,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 		return false
 	}
 
-	// Make zero-size channels array for the per user run goroutines. The array is incremented/appended dynamically to ensure proper channel closures.
+	// Make zero-size channel array for the per user run goroutines. The array is incremented/appended dynamically to ensure proper channel closures.
 	var channels = make([]chan avatarResult, 0)
 	//var channels = make([]chan avatarResult, len(*users))
 	var wg sync.WaitGroup
@@ -293,7 +293,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	}
 
 	// Retrieve the results = merge the channels into one. See pkg/backend/db/gravatar.go for more.
-	results := fanInChannels(channels...)
+	results := fanInChannels(l, channels...)
 	wg.Wait()
 
 	// Collect the results.

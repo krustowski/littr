@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -88,8 +89,11 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 }
 
 // fanInChannels is a helper function that collects results from multiple workers.
-func fanInChannels(channels ...chan avatarResult) <-chan avatarResult {
+func fanInChannels(l *common.Logger, channels ...chan avatarResult) <-chan avatarResult {
 	var wg sync.WaitGroup
+
+	// Debug log.
+	l.Msg(fmt.Sprintf("number of channels to fan-in: %d", len(channels))).Status(http.StatusOK).Log()
 
 	// Common output channel.
 	out := make(chan avatarResult)
