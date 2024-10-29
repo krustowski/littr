@@ -108,10 +108,10 @@ func (c *Content) onClickLink(ctx app.Context, e app.Event) {
 	if !navigator.IsNull() {
 		clipboard := navigator.Get("clipboard")
 		if !clipboard.IsNull() && !clipboard.IsUndefined() {
-			clipboard.Call("writeText", scheme+"://"+host+"/flow/post/"+key)
+			clipboard.Call("writeText", scheme+"://"+host+"/flow/posts/"+key)
 		}
 	}
-	ctx.Navigate("/flow/post/" + key)
+	ctx.Navigate("/flow/posts/" + key)
 }
 
 func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {

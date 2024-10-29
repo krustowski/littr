@@ -211,7 +211,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			Title: "littr mention",
 			Icon:  "/web/apple-touch-icon.png",
 			Body:  l.CallerID + " mentioned you in their post",
-			Path:  "/flow/post/" + post.ID,
+			Path:  "/flow/posts/" + post.ID,
 		})
 		if err != nil {
 			l.Msg(common.ERR_PUSH_BODY_COMPOSE_FAIL).Status(http.StatusInternalServerError).Log()

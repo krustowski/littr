@@ -273,7 +273,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		Title: "littr reply",
 		Icon:  "/web/apple-touch-icon.png",
 		Body:  l.CallerID + " replied to your post",
-		Path:  "/flow/post/" + post.ID,
+		Path:  "/flow/posts/" + post.ID,
 	})
 
 	opts := &NotificationOpts{
