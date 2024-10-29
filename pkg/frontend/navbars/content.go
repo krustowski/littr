@@ -55,7 +55,7 @@ type Header struct {
 	toastShow bool
 	toastType string
 
-	// Context cancellation function.
+	// Context cancellation function for the SSE client.
 	sseCancel context.CancelFunc
 }
 

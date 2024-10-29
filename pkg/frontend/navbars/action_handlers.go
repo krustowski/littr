@@ -47,6 +47,7 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 
 // handleGenericEvent is an action handler that receives new SSE events, parses them, and shows notifications.
 func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
+	// Fetch the SSE event.
 	event, ok := a.Value.(sse.Event)
 	if !ok {
 		// Cannot assert the event.
@@ -70,24 +71,28 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	common.LoadUser(&user, &ctx)
 
 	// Do not parse the message when user has live mode disabled.
-	if !user.LiveMode {
+	/*if !user.LiveMode {
 		return
-	}
+	}*/
+
+	//
+	//  Parse the event data
+	//
+
+	var text string
+	var link string
 
 	// Explode the data CSV string.
 	slice := strings.Split(event.Data, ",")
-	text := ""
 
 	switch slice[0] {
 	// Server is stopping, being stopped, restarting etc.
 	case "server-stop":
 		text = "server is restarting..."
-		break
 
 	// Server is booting up (just started).
 	case "server-start":
 		text = "server has just started"
-		break
 
 	// New post added.
 	case "post":
@@ -103,32 +108,35 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 
 		// Notify the user via toast.
 		text = "new post added by " + author
-		break
 
 	// New poll added.
 	case "poll":
+		pollID := slice[1]
+		if pollID == "" {
+			return
+		}
+
 		text = "new poll has been added"
-		break
+		link = "/polls/poll/" + pollID
 	}
+
+	// Instantiate the new toast.
+	//toast := common.Toast{AppContext: &ctx}
 
 	// Show the snack bar the nasty way.
 	snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() && text != "" {
 		snack.Get("classList").Call("add", "active")
-		snack.Set("innerHTML", "<i>info</i>"+text)
+		snack.Set("innerHTML", "<a href=\""+link+"\"><i>info</i>"+text+"</a>")
 	}
 
-	// Change the title to indicate a new event.
+	// Change the page's title to indicate a new event present.
 	title := app.Window().Get("document")
 	if !title.IsNull() && !strings.Contains(title.Get("title").String(), "(*)") {
 		prevTitle := title.Get("title").String()
 		title.Set("title", "(*) "+prevTitle)
 	}
 
-	// Won't trigger the render for some reason... see the bypass ^^
-	/*ctx.Dispatch(func(ctx app.Context) {
-		//h.toastText = "new post added above"
-		//h.toastType = "info"
-	})*/
+	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
 	return
 }
