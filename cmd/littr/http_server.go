@@ -177,21 +177,24 @@ func initServer() {
 	// Create a new go-chi muxer.
 	r := chi.NewRouter()
 
+	// Cleans out double slashes.
 	r.Use(middleware.CleanPath)
-	//r.Use(middleware.Logger)
+
+	// Ensures the muxer should survive the panic.
 	r.Use(middleware.Recoverer)
 
 	// Enable a proactive data compression.
 	compressor := middleware.NewCompressor(
 		flate.BestCompression,
-		"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
+		"application/wasm", "text/css", "image/svg+xml", "image/gif",
+		//"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
 	)
 	r.Use(compressor.Handler)
 
 	// Create a custom network connection listener.
 	listener, err := net.Listen("tcp", ":"+config.ServerPort)
 	if err != nil {
-		// Cannot listen on such address = permission issue?
+		// Cannot listen on such address = a permission issue?
 		panic(err)
 	}
 	defer listener.Close()
