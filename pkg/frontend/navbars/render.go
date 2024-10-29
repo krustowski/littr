@@ -15,6 +15,7 @@ func (h *Header) Render() app.UI {
 	// A very nasty way on how to store the timestamp...
 	var last int64 = 0
 
+	// The last beat's timestamp fetch procedure.
 	beat := app.Window().Get("localStorage")
 	if !beat.IsNull() && !beat.Call("getItem", "lastEventTime").IsNull() {
 		str := beat.Call("getItem", "lastEventTime").String()
@@ -27,22 +28,27 @@ func (h *Header) Render() app.UI {
 		last = int64(lastInt)
 	}
 
+	// The very SSE online status (last ~15 seconds).
 	sseConnStatus := "disconnected"
 	if last > 0 && (time.Now().Unix()-last) < 45 {
 		sseConnStatus = "connected"
 	}
 
+	// Set the toast default content.
 	toastText := h.toast.TText
 	if toastText == "" {
 		toastText = "new post added to the flow"
 	}
 
+	// Link to the settings view.
 	settingsHref := "/settings"
 
+	// If not authorized, hide the bar and its items.
 	if !h.authGranted {
 		settingsHref = "#"
 	}
 
+	// Render.
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(

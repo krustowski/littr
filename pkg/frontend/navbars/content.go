@@ -81,26 +81,27 @@ func (h *Header) OnAppUpdate(ctx app.Context) {
 
 	ctx.LocalStorage().Set("newUpdate", true)
 
-	// force reload the app on update
+	// Force reload the app on update.
 	//ctx.Reload()
 }
 
 func (h *Header) OnMount(ctx app.Context) {
+	// Register the app's indicators.
 	h.appInstallable = ctx.IsAppInstallable()
 	h.onlineState = true
 
-	//authGranted := h.tryCookies(ctx)
+	// Get the current auth state from LocalStorage.
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
-	// redirect client to the unauthorized zone
+	// Redirect client to the unauthorized zone.
 	path := ctx.Page().URL().Path
 	if !authGranted && path != "/" && path != "/login" && path != "/register" && !strings.Contains(path, "/reset") && path != "/tos" {
 		ctx.Navigate("/login")
 		return
 	}
 
-	// redirect auth'd client from the unauthorized zone
+	// Redirect auth'd client from the unauthorized zone.
 	if authGranted && (path == "/" || path == "/login" || path == "/register" || path == "/reset") {
 		ctx.Navigate("/flow")
 		return
@@ -108,21 +109,24 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	// Test the Go SSE client implementation.
 	// Tests: blocks the client goroutine, therefore no other HTTP request is possible anymore when this implementation is started.
+	// Conclusion: must be run in async.
 	//common.SSEClient()
 
-	// create event listener for SSE messages
-	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
+	// Create event listener for SSE messages.
+	//h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
 	//h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
 	h.keyDownEventListener = app.Window().AddEventListener("keydown", h.onKeyDown)
 
+	// General action to dismiss all items in the UI.
 	ctx.Handle("dismiss-general", h.handleDismiss)
+	ctx.Handle("generic-event", h.handleGenericEvent)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
 		h.pagePath = path
 	})
 
-	// keep the update button on until clicked
+	// Keep the update button on until clicked.
 	var newUpdate bool
 	ctx.LocalStorage().Get("newUpdate", &newUpdate)
 
@@ -130,7 +134,7 @@ func (h *Header) OnMount(ctx app.Context) {
 		h.updateAvailable = true
 	}
 
-	h.onlineState = true // this is a guess
+	/*h.onlineState = true // this is a guess
 	// this may not be implemented
 	nav := app.Window().Get("navigator")
 	if nav.Truthy() {
@@ -150,14 +154,14 @@ func (h *Header) OnMount(ctx app.Context) {
 		h.onlineState = false
 		//call(false)
 		return nil
-	}))
+	}))*/
 }
 
 func (h *Header) OnNav(ctx app.Context) {
 	// New context. Notify the context on common syscalls.
 	var cctx context.Context
-
 	cctx, h.sseCancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
 	//defer h.sseCancel()
 
 	// A HTTP request with context.
@@ -169,15 +173,17 @@ func (h *Header) OnNav(ctx app.Context) {
 
 		// Subscribe to any event, regardless the type.
 		conn.SubscribeToAll(func(event sse.Event) {
-			switch event.Type {
+			ctx.NewActionWithValue("generic-event", event)
+
+			fmt.Printf("%s: %s\n", event.Type, event.Data)
+			/*switch event.Type {
 			case "keepalive", "ops":
 				fmt.Printf("%s: %s\n", event.Type, event.Data)
 			case "server-stop":
 				fmt.Println("server closed!")
 				h.sseCancel()
-			default: // no event name
-				fmt.Printf("%s: %s\n", event.Type, event.Data)
-			}
+			default: // no event name*/
+			//}
 		})
 
 		// Create a new connection.

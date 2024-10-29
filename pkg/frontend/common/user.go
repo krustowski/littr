@@ -4,11 +4,32 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func LoadUser(encoded string, user *models.User) error {
+func LoadUser(baseString string) *models.User {
+	var user models.User
+
+	// Decode the user.
+	str, err := base64.StdEncoding.DecodeString(baseString)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
+	// Unmarshal the result to get an User struct.
+	err = json.Unmarshal(str, &user)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
+	return &user
+}
+
+func LoadUser2(encoded string, user *models.User) error {
 	if encoded == "" {
 		return fmt.Errorf("string input is empty")
 	}

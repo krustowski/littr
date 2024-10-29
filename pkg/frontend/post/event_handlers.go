@@ -89,13 +89,13 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		}
 
 		var encoded string
-		var user models.User
+		var user *models.User
 
 		ctx.LocalStorage().Get("user", &encoded)
 
 		// Decode and unmarshal the local storage user data.
-		if err := common.LoadUser(encoded, &user); err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		if user = common.LoadUser(encoded); user == nil {
+			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
 

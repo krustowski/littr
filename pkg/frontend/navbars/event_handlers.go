@@ -1,31 +1,32 @@
 package navbars
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"log"
 	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/helpers"
-	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
+// onKeyDown is a callback to handle the key-down event: this allows one tho controll the app using their keyboard more effectivelly.
 func (h *Header) onKeyDown(ctx app.Context, e app.Event) {
+	// Was the key Escape/Esc? Then cast general item dismissal.
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss-general")
 		return
 	}
 
+	// Fetch the auth state.
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
+	// Do not continue when unacthenticated/unauthorized.
 	if !authGranted {
 		return
 	}
 
+	// List of inputs, that blocks the refresh event.
 	var inputs = []string{
 		"post-textarea",
 		"poll-question",
@@ -42,10 +43,12 @@ func (h *Header) onKeyDown(ctx app.Context, e app.Event) {
 		"website-input",
 	}
 
+	// If any input is active (is written in for example), then do not register the R key.
 	if helpers.Contains(inputs, app.Window().Get("document").Get("activeElement").Get("id").String()) {
 		return
 	}
 
+	// Use keys 1-6 to navigate through the UI.
 	switch e.Get("key").String() {
 	case "1":
 		ctx.Navigate("/stats")
@@ -62,85 +65,12 @@ func (h *Header) onKeyDown(ctx app.Context, e app.Event) {
 	}
 }
 
+// onMessage is a callback called when a new message/event is received.
 func (h *Header) onMessage(ctx app.Context, e app.Event) {
-	data := e.JSValue().Get("data").String()
+	// Get the JS data.
+	_ = e.JSValue().Get("data").String()
 
-	if data == "heartbeat" {
-		return
-	}
-
-	var baseString string
-	var user models.User
-	ctx.LocalStorage().Get("user", &baseString)
-
-	str, err := base64.StdEncoding.DecodeString(baseString)
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	err = json.Unmarshal(str, &user)
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	// do not parse the message when user has live mode disabled
-	/*if !user.LiveMode {
-		return
-	}*/
-
-	// explode the data CSV string
-	slice := strings.Split(data, ",")
-	text := ""
-
-	switch slice[0] {
-	case "server-stop":
-		// server is stoping/restarting
-		text = "server is restarting..."
-		break
-
-	case "server-start":
-		// server is booting up
-		text = "server has just started"
-		break
-
-	case "post":
-		author := slice[1]
-		if author == user.Nickname {
-			return
-		}
-
-		if flowed, found := user.FlowList[author]; !flowed || !found {
-			return
-		}
-
-		text = "new post added by " + author
-		break
-
-	case "poll":
-		text = "new poll has been added"
-		break
-	}
-
-	// show the snack bar the nasty way
-	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() && text != "" {
-		snack.Get("classList").Call("add", "active")
-		snack.Set("innerHTML", "<i>info</i>"+text)
-	}
-
-	// change title to indicate a new event
-	title := app.Window().Get("document")
-	if !title.IsNull() && !strings.Contains(title.Get("title").String(), "(*)") {
-		prevTitle := title.Get("title").String()
-		title.Set("title", "(*) "+prevTitle)
-	}
-
-	// won't trigger the render for some reason... see the bypass ^^
-	/*ctx.Dispatch(func(ctx app.Context) {
-		//h.toastText = "new post added above"
-		//h.toastType = "info"
-	})*/
-	return
+	// ... => see navbars/action_handlers.go
 }
 
 func (h *Header) onInstallButtonClicked(ctx app.Context, e app.Event) {
