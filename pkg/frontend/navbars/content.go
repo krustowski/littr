@@ -2,12 +2,19 @@
 package navbars
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/tmaxmax/go-sse"
 )
 
 const (
@@ -17,34 +24,51 @@ const (
 type Header struct {
 	app.Compo
 
+	// Boolean app's indicators.
 	updateAvailable bool
 	appInstallable  bool
 
+	// Auth&user-related fields.
 	authGranted bool
 	user        models.User
 
+	// Modal fields.
 	modalInfoShow   bool
 	modalLogoutShow bool
 
+	// Experimental function.
 	onlineState bool
 
 	pagePath string
 
+	// EventListener functions.
 	keyDownEventListener   func()
 	eventListenerMessage   func()
 	eventListenerKeepAlive func()
-	lastHeartbeatTime      int64
 
+	// Helper field to catch the timestamp of the last received keepalive event.
+	lastHeartbeatTime int64
+
+	// Toast-related fields.
 	toast     common.Toast
 	toastText string
 	toastShow bool
 	toastType string
+
+	// Context cancellation function.
+	sseCancel context.CancelFunc
 }
 
 type Footer struct {
 	app.Compo
 
 	authGranted bool
+}
+
+func (h *Header) OnAppInstallChange(ctx app.Context) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.appInstallable = ctx.IsAppInstallable()
+	})
 }
 
 func (h *Header) OnAppUpdate(ctx app.Context) {
@@ -82,9 +106,13 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
+	// Test the Go SSE client implementation.
+	// Tests: blocks the client goroutine, therefore no other HTTP request is possible anymore when this implementation is started.
+	//common.SSEClient()
+
 	// create event listener for SSE messages
 	h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
-	h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
+	//h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
 	h.keyDownEventListener = app.Window().AddEventListener("keydown", h.onKeyDown)
 
 	ctx.Handle("dismiss-general", h.handleDismiss)
@@ -125,15 +153,45 @@ func (h *Header) OnMount(ctx app.Context) {
 	}))
 }
 
+func (h *Header) OnNav(ctx app.Context) {
+	// New context. Notify the context on common syscalls.
+	var cctx context.Context
+
+	cctx, h.sseCancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	//defer h.sseCancel()
+
+	// A HTTP request with context.
+	req, _ := http.NewRequestWithContext(cctx, http.MethodGet, common.URL+"/api/v1/live", http.NoBody)
+
+	ctx.Async(func() {
+		// New SSE connection.
+		conn := common.Client.NewConnection(req)
+
+		// Subscribe to any event, regardless the type.
+		conn.SubscribeToAll(func(event sse.Event) {
+			switch event.Type {
+			case "keepalive", "ops":
+				fmt.Printf("%s: %s\n", event.Type, event.Data)
+			case "server-stop":
+				fmt.Println("server closed!")
+				h.sseCancel()
+			default: // no event name
+				fmt.Printf("%s: %s\n", event.Type, event.Data)
+			}
+		})
+
+		// Create a new connection.
+		if err := conn.Connect(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		return
+	})
+}
+
 func (f *Footer) OnMount(ctx app.Context) {
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
 	f.authGranted = authGranted
-}
-
-func (h *Header) OnAppInstallChange(ctx app.Context) {
-	ctx.Dispatch(func(ctx app.Context) {
-		h.appInstallable = ctx.IsAppInstallable()
-	})
 }
