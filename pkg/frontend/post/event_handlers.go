@@ -88,10 +88,10 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		var user *models.User
+		var user models.User
 
 		// Decode and unmarshal the local storage user data.
-		if err := common.LoadUser(user, &ctx); err != nil || user == nil {
+		if err := common.LoadUser(&user, &ctx); err != nil {
 			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
