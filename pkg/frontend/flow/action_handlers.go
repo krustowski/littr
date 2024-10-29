@@ -394,10 +394,13 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 		posts, users := c.fetchFlowPage(opts)
 
 		ctx.Dispatch(func(ctx app.Context) {
-			c.posts = *posts
-			c.users = *users
-
-			c.user = (*users)[c.key]
+			if posts != nil {
+				c.posts = *posts
+			}
+			if users != nil {
+				c.users = *users
+				c.user = (*users)[c.key]
+			}
 
 			c.loaderShow = false
 			c.loaderShowImage = false

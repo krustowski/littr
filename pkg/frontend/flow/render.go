@@ -344,10 +344,20 @@ func (c *Content) Render() app.UI {
 						return nil
 					}
 
-					systemLink := "/polls"
-					if post.Nickname == "system" && post.Type == "user" {
-						systemLink = "/flow/user/" + post.Figure
-					}
+					systemLink := func() string {
+						// A system post about a new poll.
+						if post.PollID != "" {
+							return "/polls/" + post.PollID
+						}
+
+						// A system post about a new user.
+						if post.Nickname == "system" && post.Type == "user" {
+							return "/flow/users/" + post.Figure
+						}
+
+						// A system post about a new poll (legacy).
+						return "/polls"
+					}()
 
 					return app.Tr().Class().Class("bottom-padding").Body(
 						// special system post
