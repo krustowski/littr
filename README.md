@@ -187,7 +187,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + ~~single poll referenced by ID (singlePoll subpage/view]~~
 + ~~user activation via mail~~ (wip)
 
-### roasmap to v0.43
+### roadmap to v0.43
 + ~~design and implement new Token model~~ (wip)
 + ~~enable cache metrics gauges~~
 - ~~fix the streamer: event type broadcasting~~
