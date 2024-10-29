@@ -58,7 +58,7 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 		tmplPayload = &TemplatePayload{
 			Nickname:       nickname,
 			MainURL:        mainURL,
-			ActivationLink: "https://" + mainURL + "/activate/" + payload.UUID,
+			ActivationLink: "https://" + mainURL + "/activation/" + payload.UUID,
 			TemplateSrc:    "/opt/templates/activation.tmpl",
 		}
 
