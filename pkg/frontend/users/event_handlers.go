@@ -363,7 +363,7 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 	}*/
 
 	// Navigate to the counterpart user's flow.
-	ctx.Navigate("/flow/user/" + key)
+	ctx.Navigate("/flow/users/" + key)
 }
 
 // oncLickUserShade is a callback function that enables shadeList toggling.

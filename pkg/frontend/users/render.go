@@ -181,7 +181,7 @@ func (c *Content) Render() app.UI {
 
 				app.Div().Class("row center-align").Body(
 					app.H5().Class().Body(
-						app.A().Href("/flow/user/"+c.userInModal.Nickname).Text(c.userInModal.Nickname),
+						app.A().Href("/flow/users/"+c.userInModal.Nickname).Text(c.userInModal.Nickname),
 					),
 
 					app.If(c.userInModal.Web != "",

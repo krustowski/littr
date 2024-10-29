@@ -330,7 +330,7 @@
               .html()
               .replace(
                 /#([\w]+)/g,
-                '<a class="red-text" target=_blank href="/flow/hashtag/$1">#$1</a> '
+                '<a class="red-text" target=_blank href="/flow/hashtags/$1">#$1</a> '
               )
           )
           .addClass('ff')
@@ -341,7 +341,7 @@
               .html()
               .replace(
                 /@([\w]+)/g,
-                '<a class="red-text" target=_blank href="/flow/user/$1">@$1</a> '
+                '<a class="red-text" target=_blank href="/flow/users/$1">@$1</a> '
               )
           )
           .addClass('ff')

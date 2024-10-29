@@ -140,7 +140,7 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	//c.buttonDisabled = true
 
-	ctx.Navigate("/flow/user/" + key)
+	ctx.Navigate("/flow/users/" + key)
 }
 
 // onClickReply acts like a caller function evoked when user click on the reply icon at one's post

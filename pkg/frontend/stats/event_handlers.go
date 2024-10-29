@@ -8,7 +8,7 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	//c.buttonDisabled = true
 
-	ctx.Navigate("/flow/user/" + key)
+	ctx.Navigate("/flow/users/" + key)
 }
 
 func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
