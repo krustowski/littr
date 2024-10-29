@@ -41,9 +41,14 @@ func RunMigrations(l *common.Logger) string {
 	// Define the migration procedures order.
 	var migrationsOrderedList = []migrationProp{
 		{
-			N: "migrateExpired",
-			F: migrateExpired,
-			R: []interface{}{&reqs, &tokens},
+			N: "migrateExpiredReuests",
+			F: migrateExpiredRequests,
+			R: []interface{}{&reqs},
+		},
+		{
+			N: "migrateExpiredTokens",
+			F: migrateExpiredTokens,
+			R: []interface{}{&tokens},
 		},
 		{
 			N: "migrateEmptyDeviceTags",
@@ -110,57 +115,72 @@ func RunMigrations(l *common.Logger) string {
 }
 
 // migrateExpiredRequests procedure loops over requests and removes those expired already.
-func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
+func migrateExpiredRequests(l *common.Logger, rawElems []interface{}) bool {
 	var reqs *map[string]models.Request
-	var tokens *map[string]models.Token
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
+		// Try the reqs pointer.
 		elem, ok := raw.(*map[string]models.Request)
 		if ok {
 			reqs = elem
 			continue
 		}
-
-		elem2, ok := raw.(*map[string]models.Token)
-		if ok {
-			tokens = elem2
-			continue
-		}
 	}
 
+	// Exit if the reqs pointer is nil.
 	if reqs == nil {
 		l.Msg("reqs are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// loop over and compare times with durations, if expired, yeet it
+	// Loop over reqs and compare their times with durations, if expired, yeet them.
 	for uuid, req := range *reqs {
 		if time.Now().After(req.CreatedAt.Add(time.Hour * 24)) {
+			// Expired request = delete it.
 			if deleted := DeleteOne(RequestCache, uuid); !deleted {
 				l.Msg("could not delete request: " + uuid).Status(http.StatusInternalServerError).Log()
-				continue
+				return false
 			}
 
+			// Delete from the reqs map locally within the migrations.
 			delete(*reqs, uuid)
 		}
 	}
 
-	// migrateExpiredTokens subprocedure loop over tokens and removes those beyond the expiry.
-	//func migrateExpiredTokens(l *common.Logger, tokens *map[string]models.Token) bool {
+	return true
+}
+
+// migrateExpiredTokens procedure loop over tokens and removes those beyond the expiry.
+func migrateExpiredTokens(l *common.Logger, rawElems []interface{}) bool {
+	var tokens *map[string]models.Token
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		// Try the tokens pointer.
+		elem, ok := raw.(*map[string]models.Token)
+		if ok {
+			tokens = elem
+			continue
+		}
+	}
+
+	// Exit if the tokens pointer is nil.
 	if tokens == nil {
 		l.Msg("tokens are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// loop over and compare times with durations, if expired, yeet it
+	// Loop over tokens and compare their times with durations, if expired, yeet them.
 	for hash, token := range *tokens {
 		if time.Now().After(token.CreatedAt.Add(common.TOKEN_TTL)) {
+			// Expired token = delete it.
 			if deleted := DeleteOne(TokenCache, hash); !deleted {
 				l.Msg("could not delete token: " + hash).Status(http.StatusInternalServerError).Log()
-				continue
+				return false
 			}
 
+			// Delete from the tokens map locally within the migrations.
 			delete(*tokens, hash)
 		}
 	}
@@ -172,7 +192,7 @@ func migrateExpired(l *common.Logger, rawElems []interface{}) bool {
 func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 	var subs *map[string][]models.Device
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string][]models.Device)
 		if ok {
@@ -181,14 +201,17 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the subs pointer is nil.
 	if subs == nil {
 		l.Msg("subs are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// look for empty tags of subscriptions/devices in nested loops
+	// Look for empty tags of subscriptions/devices in nested loops.
 	for key, devs := range *subs {
 		changed := false
+
+		// Iterate over devices.
 		for idx, dev := range devs {
 			if len(dev.Tags) == 0 {
 				dev.Tags = []string{
@@ -201,10 +224,14 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 		}
 
 		if changed {
+			// Save the changes found and made.
 			if saved := SetOne(SubscriptionCache, key, devs); !saved {
 				l.Msg("cannot save changed dev: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
+
+			// Update the subs map locally within the migrations.
+			(*subs)[key] = devs
 		}
 	}
 
@@ -215,7 +242,7 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -230,10 +257,9 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 		return false
 	}
 
-	var wg sync.WaitGroup
-
 	// Make multiple channels for the per user run goroutines.
 	var channels = make([]chan avatarResult, len(*users))
+	var wg sync.WaitGroup
 	var i int
 
 	// Loop over users to execute one goroutin per user.
@@ -250,6 +276,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 			continue
 		}
 
+		// Add one new worker to the WaitGroup, and create a channel for it.
 		wg.Add(1)
 		channels[i] = make(chan avatarResult)
 
@@ -287,14 +314,16 @@ func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
+		// Try the users pointer.
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
 			users = elem
 			continue
 		}
 
+		// Try the posts pointer.
 		elem2, ok := raw.(*map[string]models.Post)
 		if ok {
 			posts = elem2
@@ -302,19 +331,22 @@ func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
-	// terminate on nil pointer(s)
+	// Exit on nil pointer(s).
 	if users == nil || posts == nil {
 		l.Msg("users or posts are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// loop and delete author-less posts
+	// Loop over posts and delete author-less posts.
 	for key, post := range *posts {
+		// If the post exists, but its author not, delete the post first.
 		if _, found := (*users)[post.Nickname]; !found {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
-				l.Msg("cannot delete user: " + key).Status(http.StatusInternalServerError).Log()
+				l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
+
+			// Delete from the posts map locally within the migrations.
 			delete(*posts, key)
 		}
 	}
@@ -327,14 +359,16 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
+		// Try the users pointer.
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
 			users = elem
 			continue
 		}
 
+		// Try the posts pointer.
 		elem2, ok := raw.(*map[string]models.Post)
 		if ok {
 			posts = elem2
@@ -342,35 +376,41 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if any of the pointer is nil.
 	if users == nil || posts == nil {
-		l.Msg("users or posts are nil").Status(http.StatusInternalServerError).Log()
+		l.Msg("users and/or posts are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
+	// Fetch the bank of user deletion list.
 	bank := &config.UserDeletionList
 
-	// delete all users matching the contents of restricted nickname list
+	// Delete all users matching the contents of restricted nickname list.
 	for key, user := range *users {
 		if helpers.Contains(*bank, user.Nickname) {
 			l.Msg("deleting " + user.Nickname).Status(http.StatusProcessing).Log()
 
+			// Delete the user from the User database.
 			if deleted := DeleteOne(UserCache, key); !deleted {
 				l.Msg("cannot delete an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 
+			// Delete the user locally within the migrations.
 			delete(*users, key)
 		}
 	}
 
-	// delete all user's posts
+	// Delete all user's posts.
 	for key, post := range *posts {
 		if helpers.Contains(*bank, post.Nickname) {
+			// Delete the post from the Flow database.
 			if deleted := DeleteOne(FlowCache, key); !deleted {
 				l.Msg("cannot delete a post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 
+			// Delete the post locally within the migrations.
 			delete(*posts, key)
 		}
 	}
@@ -382,7 +422,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -391,19 +431,26 @@ func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the users pointer is nil.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// loop over users and fix their reg. datetime
+	// Loop over users and fix their registered datetime.
 	for key, user := range *users {
+		// TDA way of defining a first year AD.
 		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
+			// Set the registration time to Sep 1, 2023 by default.
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
+
+			// Update the user in the User database.
 			if ok := SetOne(UserCache, key, user); !ok {
 				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
+
+			// Update the users map locally within the migrations.
 			(*users)[key] = user
 		}
 	}
@@ -415,7 +462,7 @@ func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -424,48 +471,63 @@ func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the users pointer is nil.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
+	// Loop over users, create the lists if needed.
 	for key, user := range *users {
-		shadeList := user.ShadeList
 		flowList := user.FlowList
+		shadeList := user.ShadeList
 
+		// Patch the flowList/shadeList nil map.
 		if flowList == nil {
 			flowList = make(map[string]bool)
 		}
+		if shadeList == nil {
+			shadeList = make(map[string]bool)
+		}
 
-		// ShadeList map[string]bool `json:"shade_list"`
-		for name, state := range shadeList {
-			if state && name != user.Nickname {
+		// Loop over the shadeList, making sure that the user themselves is not shaded, nor the system user.
+		for name, shaded := range shadeList {
+			// If shaded and the shaded nickname differs from the user's nickname.
+			if shaded && name != user.Nickname {
 				flowList[name] = false
 				user.FlowList = flowList
-				//setOne(UserCache, key, user)
+
+				// Update the user in the User database. It is enough to save the user later below.
+				/*if saved := setOne(UserCache, key, user); !saved {
+					l.Msg("cannot save user: " + key).Status(http.StatusInternalServerError).Log()
+					return false
+				}*/
 			}
 
 		}
 
-		// ensure that users can see themselves
+		// Ensure that users can see themselves.
 		flowList[key] = true
 		user.FlowList = flowList
+
+		// Save the user again in the User dataabse.
 		if saved := SetOne(UserCache, key, user); !saved {
 			l.Msg("cannot save user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
+		// Update the users map locally within the migrations.
 		(*users)[key] = user
 	}
 
 	return true
 }
 
-// migrateUserUnshade procedure lists all users and unshades manually some explicitly list users
+// migrateUserUnshade procedure lists all users and unshades manually some explicitly list users.
 func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -474,43 +536,55 @@ func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the users pointer is nil.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
+	// Fetch the bank of users to unshade.
 	usersToUnshade := &config.UsersToUnshade
 
+	// Loop over users, find those needing an acute unshading.
 	for key, user := range *users {
 		if !helpers.Contains(*usersToUnshade, key) {
 			continue
 		}
 
+		// Patch the nil shadeList map.
 		shadeList := user.ShadeList
+		if shadeList == nil {
+			shadeList = make(map[string]bool)
+		}
 
+		// Loop over the shadeList, find those needing an acure unshading.
 		for name := range shadeList {
 			if helpers.Contains(*usersToUnshade, name) {
 				shadeList[name] = false
 			}
 		}
 
+		// Update the user's shadeList.
 		user.ShadeList = shadeList
+
+		// Update the user's shadeList in the User database.
 		if ok := SetOne(UserCache, key, user); !ok {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
+		// Update the users map locally within the migrations.
 		(*users)[key] = user
 	}
 
 	return true
 }
 
-// migrateBlankAboutText procedure loops over user accounts and adds "newbie" where the about-text field is blank
+// migrateBlankAboutText procedure loops over user accounts and adds "newbie" where the about-text field is blank.
 func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -519,32 +593,37 @@ func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the users pointer is nil.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
+	// Loop over users to find if anyone has the empty About text string.
 	for key, user := range *users {
 		if len(user.About) == 0 {
+			// Set the default about text (bio).
 			user.About = "newbie"
 		}
 
+		// Update the user in the User database.
 		if saved := SetOne(UserCache, key, user); !saved {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
+		// Update the users map locally within the migrations.
 		(*users)[key] = user
 	}
 
 	return true
 }
 
-// migrateSystemFlowOn procedure ensures everyone has system account in the flow
+// migrateSystemFlowOn procedure ensures everyone has system account in the flow.
 func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
-	// assert pointers from the interface array
+	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
@@ -553,25 +632,30 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
+	// Exit if the users pointer is nil.
 	if users == nil {
 		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
-	// loop over users and fix the system following
+	// Loop over users and fix the system followment.
 	for key, user := range *users {
+		// Patch the flowList nil map.
 		if user.FlowList == nil {
 			user.FlowList = make(map[string]bool)
 		}
 
+		// Set the flowList defaults.
 		user.FlowList[user.Nickname] = true
 		user.FlowList["system"] = true
 
+		// Update the user in the User database.
 		if saved := SetOne(UserCache, key, user); !saved {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
+		// Update the users map locally within the migrations.
 		(*users)[key] = user
 	}
 
@@ -585,12 +669,14 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 
 	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
+		// Try the users pointer.
 		elem, ok := raw.(*map[string]models.User)
 		if ok {
 			users = elem
 			continue
 		}
 
+		// Try the reqs pointer.
 		elem2, ok := raw.(*map[string]models.Request)
 		if ok {
 			reqs = elem2
@@ -598,7 +684,7 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 		}
 	}
 
-	// Fail on nil pointer(s).
+	// Exit on the nil pointer(s).
 	if users == nil || reqs == nil {
 		l.Msg("users and/or reqs are nil").Status(http.StatusInternalServerError).Log()
 		return false
@@ -606,39 +692,49 @@ func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
 
 	// Iterate over requests to find misdeleted requests.
 	for key, req := range *reqs {
-		// Check the request validity = the activation request is still valid and the user has been already activated.
+		// Check the request validity = the activation request could still be valid, but the user has been already activated.
 		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && req.Type == "activation" && ((*users)[req.Nickname].Active || (*users)[req.Nickname].Options["active"]) {
 			// Delete the misdeleted request.
 			if deleted := DeleteOne(RequestCache, key); !deleted {
 				l.Msg("cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
+
+			// Delete from the reqs map locally within the migrations.
+			delete(*reqs, key)
 		}
 	}
 
+	// Just a datetime layout for the upcoming hardcoded datetime parsing.
 	const timeLayout = "2006-Jan-02"
 
 	// Iterate over users to patch the Active bool's state according to the user's registration date.
 	for key, user := range *users {
+		// The date when this migration subprocedure was created. For comparison with the later user registrations.
 		migrationCreationDate, err := time.Parse(timeLayout, "2024-Oct-24")
 		if err != nil {
 			l.Msg("cannot parse the migration createdAt date").Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
-		// The user is not activated and the registration time is (way) before the migration creating datetime = make active.
+		// The user is not activated and the registration time is (way) before the migration creating datetime = make active automatically.
 		if (!user.Active || !user.Options["active"]) && migrationCreationDate.After(user.RegisteredTime) {
 			user.Active = true
 
+			// Patch the nil options map.
 			if user.Options == nil {
 				user.Options = make(map[string]bool)
 			}
 			user.Options["active"] = true
 
+			// Update the user in the User database.
 			if saved := SetOne(UserCache, key, user); !saved {
 				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
+
+			// Update the users map locally within the migrations.
+			(*users)[key] = user
 		}
 	}
 
