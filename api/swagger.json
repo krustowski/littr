@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.10"
+        "version": "0.44.11"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -590,7 +590,7 @@
                 }
             }
         },
-        "/posts/hashtag/{hashtag}": {
+        "/posts/hashtags/{hashtag}": {
             "get": {
                 "description": "get hashtagged post list",
                 "produces": [

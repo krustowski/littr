@@ -531,7 +531,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {object}  common.APIResponse{data=posts.fetchHashtaggedPosts.responseData}
 // @Failure      400  {object}  common.APIResponse
 // @Failure      500  {object}  common.APIResponse
-// @Router       /posts/hashtag/{hashtag} [get]
+// @Router       /posts/hashtags/{hashtag} [get]
 func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 

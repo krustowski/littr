@@ -52,7 +52,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		}
 
 		if opts.Hashtag != "" {
-			url = "/api/v1/posts/hashtag/" + opts.Hashtag
+			url = "/api/v1/posts/hashtags/" + opts.Hashtag
 		}
 
 		if opts.SinglePostID == "" && opts.UserFlowNick == "" && opts.Hashtag == "" {
