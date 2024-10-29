@@ -9,7 +9,7 @@ import (
 // initClientCommon is a web application router initialization helper function. It maps various routes to their frontend view conterparts.
 func initClientCommon() {
 	app.Route("/", &fe.WelcomeView{})
-	app.RouteWithRegexp("/activation/\\w+", &fe.LoginView{})
+	app.RouteWithRegexp("/activate/\\w+", &fe.LoginView{})
 	app.Route("/flow", &fe.FlowView{})
 	app.RouteWithRegexp("/flow/post/\\d+", &fe.FlowView{})
 	app.RouteWithRegexp("/flow/hashtag/\\w+", &fe.FlowView{})
