@@ -76,7 +76,7 @@ func SSEClient() {
 var Client = sse.Client{
 	// Standard HTTP client.
 	HTTPClient: &http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: 30 * time.Second,
 	},
 	// Callback function when the connection is to be reastablished.
 	OnRetry: func(err error, duration time.Duration) {
@@ -87,12 +87,12 @@ var Client = sse.Client{
 	ResponseValidator: DefaultValidator,
 	// The connection tuning.
 	Backoff: sse.Backoff{
-		InitialInterval: 500 * time.Millisecond,
+		InitialInterval: 1000 * time.Millisecond,
 		Multiplier:      float64(1.5),
 		// Jitter: range (0, 1)
 		Jitter:         float64(0.5),
-		MaxInterval:    30 * time.Second,
+		MaxInterval:    10 * time.Second,
 		MaxElapsedTime: 45 * time.Second,
-		MaxRetries:     30,
+		MaxRetries:     15,
 	},
 }

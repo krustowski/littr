@@ -24,21 +24,23 @@ func (c *Content) parseFlowURI(ctx app.Context) URIParts {
 		Hashtag:      "",
 	}
 
+	// Split the URI by '/'.
 	url := strings.Split(ctx.Page().URL().Path, "/")
 
+	// Into at least 4 fields. ( '' / 'flow' / 'posts' / '{ID}' )
 	if len(url) > 3 && url[3] != "" {
 		switch url[2] {
-		case "post":
+		case "posts":
 			parts.SinglePost = true
 			parts.SinglePostID = url[3]
 			break
 
-		case "user":
+		case "users":
 			parts.UserFlow = true
 			parts.UserFlowNick = url[3]
 			break
 
-		case "hashtag":
+		case "hashtags":
 			parts.Hashtag = url[3]
 			break
 		}
