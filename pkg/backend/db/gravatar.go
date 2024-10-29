@@ -35,6 +35,16 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 		defer wg.Done()
 	}
 
+	// Defer the channel closure if it is not nil.
+	if channel != nil {
+		defer close(channel)
+	}
+
+	// A little patch to catch the emailLess accounts naturally (hotfix).
+	if user.Email == "" {
+		return defaultAvatarURL
+	}
+
 	// Preprocess the e-mail address: make it lowercase.
 	email := strings.ToLower(user.Email)
 	size := 200
@@ -51,22 +61,27 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 
 	// Make a GET request towards the Gravatar service.
 	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode != 200 {
+	// On error use the default image URL instead.
+	if err != nil {
 		url = defaultAvatarImage
 	} else {
-		resp.Body.Close()
+		defer resp.Body.Close()
+
+		// If the service could not be reached, use the default image.
+		if resp.StatusCode != 200 {
+			url = defaultAvatarImage
+		}
 	}
 
-	// Write the result instance.
+	// Compose the result instance.
 	result := avatarResult{
 		User: user,
 		URL:  url,
 	}
 
-	// Maybe we are running in a goroutine...
+	// Write the result to the channel if not nil (already closed for example).
 	if channel != nil {
 		channel <- result
-		close(channel)
 	}
 
 	return url

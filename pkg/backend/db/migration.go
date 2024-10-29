@@ -258,8 +258,9 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 		return false
 	}
 
-	// Make multiple channels for the per user run goroutines.
-	var channels = make([]chan avatarResult, len(*users))
+	// Make zero-size channels array for the per user run goroutines. The array is incremented/appended dynamically to ensure proper channel closures.
+	var channels = make([]chan avatarResult, 0)
+	//var channels = make([]chan avatarResult, len(*users))
 	var wg sync.WaitGroup
 	var i int
 
@@ -277,16 +278,21 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 			continue
 		}
 
+		// System user has no e-mail address for example.
+		if user.Email == "" {
+			continue
+		}
+
 		// Add one new worker to the WaitGroup, and create a channel for it.
 		wg.Add(1)
-		channels[i] = make(chan avatarResult)
+		channels = append(channels, make(chan avatarResult))
 
-		// Run the gravatar goroutine.
+		// Run the gravatar goroutine, increment the chan/goroutines count.
 		go GetGravatarURL(user, channels[i], &wg)
 		i++
 	}
 
-	// Retrieve the results = merge the channels into one.
+	// Retrieve the results = merge the channels into one. See pkg/backend/db/gravatar.go for more.
 	results := fanInChannels(channels...)
 	wg.Wait()
 
