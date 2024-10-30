@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -108,6 +109,9 @@ func RunMigrations(l common.LoggerInterface) string {
 	for _, mig := range migrationsOrderedList {
 		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R))
 	}
+
+	// Run the GC to tidy up.
+	runtime.GC()
 
 	// Remove the prefix for the further Logger instance usage.
 	l.RemovePrefix()
