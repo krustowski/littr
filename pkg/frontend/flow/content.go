@@ -159,6 +159,9 @@ func (c *Content) OnNav(ctx app.Context) {
 			if users != nil {
 				c.user = (*users)[c.key]
 				c.users = *users
+
+				// Also update the user struct in the LS.
+				common.SaveUser(&c.user, &ctx)
 			}
 
 			if posts != nil {
