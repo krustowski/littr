@@ -4,7 +4,7 @@
 package main
 
 import (
-	"compress/flate"
+	//"compress/flate"
 	"context"
 	"errors"
 	"fmt"
@@ -79,8 +79,9 @@ var appHandler = &app.Handler{
 	ThemeColor:      "#000000",
 	Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
 	Env: map[string]string{
-		"APP_VERSION":          os.Getenv("APP_VERSION"),
 		"APP_ENVIRONMENT":      os.Getenv("APP_ENVIRONMENT"),
+		"APP_URL_MAIN":         os.Getenv("APP_URL_MAIN"),
+		"APP_VERSION":          os.Getenv("APP_VERSION"),
 		"REGISTRATION_ENABLED": os.Getenv("REGISTRATION_ENABLED"),
 		"VAPID_PUB_KEY":        os.Getenv("VAPID_PUB_KEY"),
 	},
@@ -184,12 +185,14 @@ func initServer() {
 	r.Use(middleware.Recoverer)
 
 	// Enable a proactive data compression.
-	compressor := middleware.NewCompressor(
-		flate.BestCompression,
-		"application/wasm", "text/css", "image/svg+xml", "image/gif",
+	// https://pkg.go.dev/compress/flate
+	/*compressor := middleware.NewCompressor(
+		flate.NoCompression,
+		"/*",
+		//"application/wasm", "text/css", "image/svg+xml", "image/gif",
 		//"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
 	)
-	r.Use(compressor.Handler)
+	r.Use(compressor.Handler)*/
 
 	// Create a custom network connection listener.
 	listener, err := net.Listen("tcp", ":"+config.ServerPort)
