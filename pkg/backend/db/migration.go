@@ -22,14 +22,14 @@ type migrationProp struct {
 	N string
 
 	// Migration's function handle.
-	F func(*common.Logger, []interface{}) bool
+	F func(common.LoggerInterface, []interface{}) bool
 
 	// Migration's resources to process.
 	R []interface{}
 }
 
 // RunMigrations is a wrapper function for the migration registration and execution.
-func RunMigrations(l *common.Logger) string {
+func RunMigrations(l common.LoggerInterface) string {
 	// Fetch all the data for the migration procedures.
 	users, _ := GetAll(UserCache, models.User{})
 	//polls, _ := GetAll(PollCache, models.Poll{})
@@ -116,7 +116,7 @@ func RunMigrations(l *common.Logger) string {
 }
 
 // migrateExpiredRequests procedure loops over requests and removes those expired already.
-func migrateExpiredRequests(l *common.Logger, rawElems []interface{}) bool {
+func migrateExpiredRequests(l common.LoggerInterface, rawElems []interface{}) bool {
 	var reqs *map[string]models.Request
 
 	// Assert pointers from the interface array.
@@ -153,7 +153,7 @@ func migrateExpiredRequests(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateExpiredTokens procedure loop over tokens and removes those beyond the expiry.
-func migrateExpiredTokens(l *common.Logger, rawElems []interface{}) bool {
+func migrateExpiredTokens(l common.LoggerInterface, rawElems []interface{}) bool {
 	var tokens *map[string]models.Token
 
 	// Assert pointers from the interface array.
@@ -190,7 +190,7 @@ func migrateExpiredTokens(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateEmptyDeviceTags procedure takes care of filling empty device tags arrays.
-func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
+func migrateEmptyDeviceTags(l common.LoggerInterface, rawElems []interface{}) bool {
 	var subs *map[string][]models.Device
 
 	// Assert pointers from the interface array.
@@ -240,7 +240,7 @@ func migrateEmptyDeviceTags(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateAvatarURL procedure takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
-func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
+func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -317,7 +317,7 @@ func migrateAvatarURL(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateFlowPurge procedure deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
-func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
+func migrateFlowPurge(l common.LoggerInterface, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -362,7 +362,7 @@ func migrateFlowPurge(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserDeletion procedure takes care of default users deletion from the database. Function returns bool based on the process result.
-func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
+func migrateUserDeletion(l common.LoggerInterface, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -426,7 +426,7 @@ func migrateUserDeletion(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserRegisteredTime procedure fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
-func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
+func migrateUserRegisteredTime(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -466,7 +466,7 @@ func migrateUserRegisteredTime(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserShadeList procedure lists ShadeList items and ensures user shaded (no mutual following, no replying).
-func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
+func migrateUserShadeList(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -531,7 +531,7 @@ func migrateUserShadeList(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserUnshade procedure lists all users and unshades manually some explicitly list users.
-func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
+func migrateUserUnshade(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -588,7 +588,7 @@ func migrateUserUnshade(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateBlankAboutText procedure loops over user accounts and adds "newbie" where the about-text field is blank.
-func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
+func migrateBlankAboutText(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -627,7 +627,7 @@ func migrateBlankAboutText(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateSystemFlowOn procedure ensures everyone has system account in the flow.
-func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
+func migrateSystemFlowOn(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -670,7 +670,7 @@ func migrateSystemFlowOn(l *common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it alse tries to delete valid, but misdeleted activation requests from its database.
-func migrateUserActiveState(l *common.Logger, rawElems []interface{}) bool {
+func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 	var reqs *map[string]models.Request
 

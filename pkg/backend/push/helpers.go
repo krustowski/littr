@@ -19,7 +19,7 @@ type NotificationOpts struct {
 	Receiver string
 	Devices  *[]models.Device
 	Body     *[]byte
-	Logger   *common.Logger
+	Logger   common.LoggerInterface
 }
 
 func SendNotificationToDevices(opts *NotificationOpts) {

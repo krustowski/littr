@@ -89,7 +89,7 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 }
 
 // fanInChannels is a helper function that collects results from multiple workers.
-func fanInChannels(l *common.Logger, channels ...chan avatarResult) <-chan avatarResult {
+func fanInChannels(l common.LoggerInterface, channels ...chan avatarResult) <-chan avatarResult {
 	var wg sync.WaitGroup
 
 	// Debug log.

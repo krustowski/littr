@@ -16,6 +16,22 @@ const (
 	LOCALHOST6 = "::1"
 )
 
+type LoggerInterface interface {
+	// Basic methods.
+	Msg(message string) *Logger
+	Status(code int) *Logger
+	Error(err error) *Logger
+
+	// Prefix-related methods.
+	SetPrefix(prefix string) *Logger
+	RemovePrefix() *Logger
+
+	// Data methods.
+	Log() *Logger
+	Payload(pl interface{}) *Logger
+	Write(w http.ResponseWriter)
+}
+
 type Logger struct {
 	// CallerID is a nickname of the user calling the API.
 	CallerID string `json:"-"`
