@@ -141,7 +141,7 @@ func initServer() {
 
 	// Handle system calls and signals to properly shutdown the server.
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	// The signals monitoring goroutine.
 	wg.Add(1)
@@ -151,6 +151,9 @@ func initServer() {
 		// Wait for signals.
 		sig := <-sigs
 		signal.Stop(sigs)
+
+		// Reset the timer not to log the whole server's uptime.
+		l.ResetTimer()
 
 		// Log and broadcast the message that the server is to shutdown.
 		l.Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
@@ -196,7 +199,7 @@ func initServer() {
 	// https://pkg.go.dev/compress/flate
 	compressor := middleware.NewCompressor(
 		5,
-		"/*",
+		"image/*",
 		//"application/wasm", "text/css", "image/svg+xml", "image/gif",
 		//"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
 	)
@@ -293,6 +296,9 @@ func initServer() {
 
 	// Wait for the graceful HTTP server shutdown attempt.
 	wg.Wait()
+
+	// Reset the timer not to log the whole server's uptime.
+	l.ResetTimer()
 
 	// This is the final log before the application exits for real!
 	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji

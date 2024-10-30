@@ -26,7 +26,10 @@ type LoggerInterface interface {
 	SetPrefix(prefix string) *Logger
 	RemovePrefix() *Logger
 
-	// Data methods.
+	// Timer-related methods.
+	ResetTimer() *Logger
+
+	// Data-related methods.
 	Log() *Logger
 	Payload(pl interface{}) *Logger
 	Write(w http.ResponseWriter)
@@ -84,7 +87,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		return nil
 	}
 
-	// Start the timer just now.
+	// Start the Timer just now.
 	start := time.Now()
 
 	// Little hotfix for the data dump/load procedure.
@@ -132,7 +135,7 @@ func (l *Logger) encode() string {
 	return string(jsonString[:])
 }
 
-// Println formats the encoded Logger struct into an output string to stdin. Deprecated.
+// Deprecated. Println formats the encoded Logger struct into an output string to stdin.
 func (l *Logger) Println(msg string, code int) bool {
 	l.Code = code
 	l.Message = msg
@@ -146,6 +149,17 @@ func (l *Logger) Println(msg string, code int) bool {
 	return true
 }
 
+// ResetTimer resets the TimerStart timestamp. Usable in the procedures where the logger is passed (???)
+// or not to log the whole HTTP server uptime (the gracefully HTTP server shutdown goroutine).
+func (l *Logger) ResetTimer() *Logger {
+	l.TimerStart = time.Now()
+	return l
+}
+
+//
+//  Prefix-related methods
+//
+
 // SetPrefix sets the log's prefix according to the input <prefix> string.
 func (l *Logger) SetPrefix(prefix string) *Logger {
 	l.Prefix = prefix
@@ -157,6 +171,10 @@ func (l *Logger) RemovePrefix() *Logger {
 	l.Prefix = ""
 	return l
 }
+
+//
+//  Basic methods
+//
 
 // Msg writes the input <msg> string to the Logger struct for its following output.
 func (l *Logger) Msg(msg string) *Logger {
@@ -181,6 +199,10 @@ func (l *Logger) Error(err error) *Logger {
 	l.Err = err
 	return l
 }
+
+//
+//  Data-related methods
+//
 
 // Log write the logger's JSON output to the stdout.
 func (l *Logger) Log() *Logger {
