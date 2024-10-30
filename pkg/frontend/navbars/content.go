@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -164,18 +165,72 @@ func (h *Header) OnMount(ctx app.Context) {
 func (h *Header) OnNav(ctx app.Context) {
 }
 
+// Exclussively used for the SSE client as a whole.
 func (f *Footer) OnMount(ctx app.Context) {
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
 	f.authGranted = authGranted
 
+	// Do not start the SSE client for the unauthenticated visitors at all.
 	if !authGranted {
 		return
 	}
 
-	go func() {
-		//ctx.Async(func() {
+	// Prepare the variable to load the user's data from LS.
+	var user models.User
+	common.LoadUser(&user, &ctx)
+
+	// If the options map is nil, or the liveMode is disabled within, do not continue as well.
+	if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {
+		return
+	}
+
+	// Custom HTTP client full definition.
+	var client = sse.Client{
+		// Standard HTTP client.
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				// Idle conn = keeplive conn
+				// https://pkg.go.dev/net/http#Transport
+				MaxIdleConns:       1,
+				IdleConnTimeout:    20 * time.Second,
+				DisableCompression: true,
+				DisableKeepAlives:  false,
+			},
+		},
+		// Callback function when the connection is to be reastablished.
+		OnRetry: func(err error, duration time.Duration) {
+			fmt.Printf("retrying: %v\n", err)
+			time.Sleep(duration)
+		},
+		// Validation of the response content-type mainly, e.g. DefaultValidator, or NoopValidator.
+		ResponseValidator: common.DefaultValidator,
+		// The connection strategy tuning.
+		Backoff: sse.Backoff{
+			// The initial wait time before a reconnect is attempted.
+			InitialInterval: 500 * time.Millisecond,
+			// How fast should the reconnection time grow.
+			// 1 = constatnt time interval.
+			Multiplier: float64(1.5),
+			// Jitter: range (0, 1).
+			// -1 = no randomization.
+			Jitter: float64(0.5),
+			// How much can the wait time grow.
+			// 0 = grow indefinitely.
+			MaxInterval: 2500 * time.Millisecond,
+			// Stop retrying after such time.
+			// 0 = no limit.
+			MaxElapsedTime: 10000 * time.Millisecond,
+			// The retry count allowed.
+			// 0 = infinite, <0 = no retries.
+			MaxRetries: 0,
+		},
+	}
+
+	ctx.Async(func() {
+		//go func() {
 		// New context. Notify the context on common syscalls.
 		var cctx context.Context
 		cctx, f.sseCancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -186,11 +241,16 @@ func (f *Footer) OnMount(ctx app.Context) {
 		req, _ := http.NewRequestWithContext(cctx, http.MethodGet, common.URL+"/api/v1/live", http.NoBody)
 
 		// New SSE connection.
-		conn := common.Client.NewConnection(req)
+		//conn := common.Client.NewConnection(req)
+		conn := client.NewConnection(req)
 
 		// Subscribe to any event, regardless the type.
 		conn.SubscribeToAll(func(event sse.Event) {
 			ctx.NewActionWithValue("generic-event", event)
+
+			if event.Type == "close" {
+				f.sseCancel()
+			}
 
 			// Print all events.
 			fmt.Printf("%s: %s\n", event.Type, event.Data)
@@ -198,13 +258,13 @@ func (f *Footer) OnMount(ctx app.Context) {
 
 		// Create a new connection.
 		if err := conn.Connect(); err != nil {
-			fmt.Printf("%v\n", err)
+			fmt.Printf("conn error: %v\n", err)
 			//fmt.Fprintln(os.Stderr, err)
 		}
 
 		return
-		//})
-	}()
+	})
+	//}()
 }
 
 func (f *Footer) OnDismount(ctx app.Context) {

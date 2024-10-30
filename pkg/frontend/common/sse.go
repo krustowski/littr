@@ -8,7 +8,7 @@ import (
 	//"os"
 	//"os/signal"
 	//"syscall"
-	"time"
+	//"time"
 
 	//"go.vxn.dev/littr/pkg/config"
 
@@ -36,6 +36,7 @@ var NoopValidator sse.ResponseValidator = func(_ *http.Response) error {
 	return nil
 }
 
+// An example on how to encode topic subscriptions.
 func getRequestURL(sub string) string {
 	q := url.Values{}
 	switch sub {
@@ -61,39 +62,6 @@ var URL = func() string {
 	// Local development use only.
 	return "http://localhost:8080"
 }()
-
-// Custom HTTP client.
-var Client = sse.Client{
-	// Standard HTTP client.
-	HTTPClient: &http.Client{
-		Timeout: 3 * time.Second,
-		Transport: &http.Transport{
-			// Idle = keeplive conn
-			// https://pkg.go.dev/net/http#Transport
-			MaxIdleConns:       1,
-			IdleConnTimeout:    20 * time.Second,
-			DisableCompression: true,
-			DisableKeepAlives:  false,
-		},
-	},
-	// Callback function when the connection is to be reastablished.
-	OnRetry: func(err error, duration time.Duration) {
-		fmt.Printf("conn error: %v\n", err)
-		time.Sleep(duration)
-	},
-	// Validation of the response content-type mainly, e.g. DefaultValidator.
-	ResponseValidator: DefaultValidator,
-	// The connection tuning.
-	Backoff: sse.Backoff{
-		InitialInterval: 500 * time.Millisecond,
-		Multiplier:      float64(1.5),
-		// Jitter: range (0, 1)
-		Jitter:         float64(0.5),
-		MaxInterval:    2 * time.Second,
-		MaxElapsedTime: 2 * time.Second,
-		MaxRetries:     10,
-	},
-}
 
 /*func sSEClient() {
 	// Prepare the context for the client shutdown.
