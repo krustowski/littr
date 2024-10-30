@@ -255,12 +255,13 @@ func initServer() {
 	metrics.RegisterAll()
 
 	// Load the persistent data from the filesystem to memory.
-	l.Msg(db.LoadAll()).Status(http.StatusOK).Log()
-
-	l.Msg("dumped data loaded").Status(http.StatusOK).Log()
+	l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
 
 	// Run data migration procedures to the database schema.
 	l.Msg(db.RunMigrations(l)).Status(http.StatusOK).Log()
+
+	// Mark the database state as fully initialized now.
+	db.MarkLoaded()
 
 	//
 	//  Routes and handlers mounting
