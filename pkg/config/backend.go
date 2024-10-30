@@ -14,7 +14,11 @@ const (
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
 	HEARTBEAT_SLEEP_TIME = 20
 
-	// The anti-duplication variable(s).
+	// Limiter's settings, limit = req per duration.
+	LIMITER_REQS_NUM     = 100
+	LIMITER_DURATION_SEC = 30
+
+	// The anti-duplication const(s).
 	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
 	LIMITER_DISABLED     = "LIMITER_DISABLED"
 	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"

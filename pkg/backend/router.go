@@ -1,5 +1,5 @@
 // @title		littr
-// @version	 	0.44.16
+// @version	 	0.44.17
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -35,7 +35,6 @@ import (
 	"time"
 
 	//"github.com/go-chi/chi/v5/middleware"
-	//"github.com/go-chi/httplog/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 
@@ -52,28 +51,6 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 )
 
-// Custom Logger structure.
-/*var Logger = httplog.NewLogger("littr-logger", httplog.Options{
-	LogLevel: slog.LevelDebug,
-	JSON:     true,
-	Concise:  true,
-	//RequestHeaders: true,
-	//ResponseHeaders: true,
-	MessageFieldName: "message",
-	LevelFieldName:   "severity",
-	TimeFieldFormat:  time.RFC3339,
-	Tags: map[string]string{
-		"version": os.Getenv("APP_VERSION"),
-		"env":     config.AppEnvironment,
-	},
-	QuietDownRoutes: []string{
-		"/",
-		"/ping",
-	},
-	//QuietDownPeriods: 10 * time.Second,
-	SourceFieldName: "source",
-})*/
-
 // The JSON API service root path handler.
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	// Log this route as well.
@@ -86,9 +63,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
-// Simple rate limiter (by IP and URL). Requests per duration.
+// Simple rate limiter (by IP and URL). (Limits Requests per duration, see pkg/config/backend.go for more.)
 // https://github.com/go-chi/httprate
-var limiter = httprate.Limit(33, 10*time.Second,
+var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
 	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
 		// Log the too-many-requests error.
 		common.NewLogger(r, "root").Status(http.StatusTooManyRequests).Log()
