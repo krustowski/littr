@@ -151,7 +151,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	})
 }
 
-// onDismissToast is a callback fucntion that call a new action to handle that request for you.
+// onDismissToast is a callback function that call a new action to handle that request for you.
 func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
 	// Cast a new valueless action.
 	ctx.NewAction("dismiss")
@@ -206,7 +206,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			// Cast the image ready message.
 			toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
-			// Load the image data to the Content strucutre.
+			// Load the image data to the Content structure.
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data

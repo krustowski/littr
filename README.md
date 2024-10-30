@@ -184,7 +184,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + integration/e2e tests draft
 
 ### roadmap to v0.44
-+ improve the API logger (add the request time at least)
++ ~~improve the API logger (add the request time at least)~~
 + live switch implementation (disable SSE)
 + refix the avatar URL migration procedure (wip)
 + reimplement the SSE client in Go (wip)

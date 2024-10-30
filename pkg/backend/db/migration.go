@@ -669,7 +669,7 @@ func migrateSystemFlowOn(l common.LoggerInterface, rawElems []interface{}) bool 
 	return true
 }
 
-// migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it alse tries to delete valid, but misdeleted activation requests from its database.
+// migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it also tries to delete valid, but misdeleted activation requests from its database.
 func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bool {
 	var users *map[string]models.User
 	var reqs *map[string]models.Request

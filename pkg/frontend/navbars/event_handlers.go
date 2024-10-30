@@ -9,7 +9,7 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-// onKeyDown is a callback to handle the key-down event: this allows one tho controll the app using their keyboard more effectivelly.
+// onKeyDown is a callback to handle the key-down event: this allows one to control the app using their keyboard more effectively.
 func (h *Header) onKeyDown(ctx app.Context, e app.Event) {
 	// Was the key Escape/Esc? Then cast general item dismissal.
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {

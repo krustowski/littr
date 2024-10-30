@@ -141,7 +141,7 @@ func (t *Toast) Dispatch(c interface{}, f func(*Toast, interface{})) {
 		// Re-run the custom dispatch implementation.
 		f(tt, cc)
 
-		// Fetch the toast with the previosly rewitten ID.
+		// Fetch the toast with the previously rewritten ID.
 		snack := app.Window().GetElementByID(fmt.Sprintf("snackbar-%d", tt.TID))
 		// If it exists, make it not.
 		if !snack.IsNull() {
