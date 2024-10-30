@@ -9,7 +9,8 @@ func Router() chi.Router {
 	r := chi.NewRouter()
 
 	// Mount the Streamer to /live API route. Wrap the SSE handler in the CORS wrapper.
-	r.Mount("/", cors(Streamer))
+	//r.Mount("/", cors(Streamer))
+	r.Mount("/", Streamer)
 
 	// Run the keepalive pacemaker.
 	go beat()

@@ -1,5 +1,5 @@
 // @title		littr
-// @version	 	0.44.17
+// @version	 	0.44.18
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -29,7 +29,6 @@
 package backend
 
 import (
-	//"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -51,10 +50,23 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 )
 
+// Simple rate limiter (by IP and URL). (Limits Requests per duration, see pkg/config/backend.go for more.)
+// https://github.com/go-chi/httprate
+var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
+	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+		// Log the too-many-requests error.
+		common.NewLogger(r, "base").Status(http.StatusTooManyRequests).Log()
+
+		// Write simple response.
+		http.Error(w, `{"error": "too many requests, slow down"}`, http.StatusTooManyRequests)
+	}),
+	httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+)
+
 // The JSON API service root path handler.
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	// Log this route as well.
-	common.NewLogger(r, "root").Status(http.StatusOK).Log()
+	common.NewLogger(r, "base").Status(http.StatusOK).Log()
 
 	// Write common response.
 	common.WriteResponse(w, common.APIResponse{
@@ -62,19 +74,6 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: time.Now().UnixNano(),
 	}, http.StatusOK)
 }
-
-// Simple rate limiter (by IP and URL). (Limits Requests per duration, see pkg/config/backend.go for more.)
-// https://github.com/go-chi/httprate
-var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
-	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-		// Log the too-many-requests error.
-		common.NewLogger(r, "root").Status(http.StatusTooManyRequests).Log()
-
-		// Write simple response.
-		http.Error(w, `{"error": "too many requests, slow down"}`, http.StatusTooManyRequests)
-	}),
-	httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
-)
 
 // The very main API router.
 func APIRouter() chi.Router {

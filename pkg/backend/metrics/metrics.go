@@ -11,7 +11,7 @@ var (
 	// Registry is a pointer to the Prometheus Registry.
 	Registry *prometheus.Registry
 
-	// Metrics struct
+	// Metrics struct.
 	Metrics *metrics
 )
 
@@ -70,6 +70,7 @@ func RegisterAll() {
 	Registry.MustRegister(Metrics.PollCountMetric, Metrics.PostCountMetric, Metrics.RequestCountMetric, Metrics.SubscriptionCountMetric, Metrics.TokenCountMetric, Metrics.UserCountMetric)
 }
 
+// UpdateCountMetric is an umbrella function to catch all possible scenarios (mostly) where the metrics should be noted down.
 func UpdateCountMetric(cache *core.Cache, count int, absolute bool) {
 	switch cache.Name {
 	case "FlowCache":
