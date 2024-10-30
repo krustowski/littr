@@ -67,6 +67,14 @@ var Client = sse.Client{
 	// Standard HTTP client.
 	HTTPClient: &http.Client{
 		Timeout: 3 * time.Second,
+		Transport: &http.Transport{
+			// Idle = keeplive conn
+			// https://pkg.go.dev/net/http#Transport
+			MaxIdleConns:       1,
+			IdleConnTimeout:    20 * time.Second,
+			DisableCompression: true,
+			DisableKeepAlives:  false,
+		},
 	},
 	// Callback function when the connection is to be reastablished.
 	OnRetry: func(err error, duration time.Duration) {
@@ -74,10 +82,10 @@ var Client = sse.Client{
 		time.Sleep(duration)
 	},
 	// Validation of the response content-type mainly, e.g. DefaultValidator.
-	ResponseValidator: NoopValidator,
+	ResponseValidator: DefaultValidator,
 	// The connection tuning.
 	Backoff: sse.Backoff{
-		InitialInterval: 1000 * time.Millisecond,
+		InitialInterval: 500 * time.Millisecond,
 		Multiplier:      float64(1.5),
 		// Jitter: range (0, 1)
 		Jitter:         float64(0.5),
