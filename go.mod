@@ -6,6 +6,7 @@ require (
 	github.com/SherClockHolmes/webpush-go v1.3.0
 	github.com/dsoprea/go-exif/v3 v3.0.1
 	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/httprate v0.14.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/maxence-charriere/go-app/v9 v9.8.0
@@ -29,7 +30,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.10.0 // indirect
-	github.com/go-chi/httprate v0.14.1 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
