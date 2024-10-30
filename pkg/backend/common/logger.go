@@ -38,9 +38,6 @@ type Logger struct {
 	// Route string is the very route called by user.
 	Route string `json:"route"`
 
-	// Time property hold the actual time of the request processing.
-	Time time.Time `json:"time" validation:"required"`
-
 	// Version is the tagged version of the client's SW (compiled in).
 	Version string `json:"version"`
 
@@ -52,6 +49,15 @@ type Logger struct {
 
 	// Err is a helper error field to hold the error type from the BE logging callback procedure.
 	Err error `json:"-"`
+
+	// TimerStart holds the starting point of the time measurement. To be subtracted and written to the JSON output afterwards.
+	TimerStart time.Time `json:"request_start"`
+
+	// TimeStop is the very stop time mark in terms of the system/application process duration.
+	TimerStop time.Time `json:"request_stop"`
+
+	// TimeDurationNS hold the difference between the start and stop time points regarding the application process making its duration (in nanoseconds).
+	TimerDurationNS time.Duration `json:"request_duration_ns"`
 }
 
 // NewLogger takes the HTTP request structure in (can be nil), and the worker's name (required string) to prepare a new Logger instance.
@@ -62,6 +68,9 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		return nil
 	}
 
+	// Start the timer just now.
+	start := time.Now()
+
 	// Little hotfix for the data dump/load procedure.
 	if r == nil {
 		return &Logger{
@@ -71,8 +80,9 @@ func NewLogger(r *http.Request, worker string) *Logger {
 			Message:    "",
 			Prefix:     "",
 			Route:      "",
-			WorkerName: worker,
+			TimerStart: start,
 			Version:    "system",
+			WorkerName: worker,
 		}
 	}
 
@@ -89,8 +99,9 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		Message:    "",
 		Prefix:     "",
 		Route:      r.URL.String(),
-		WorkerName: worker,
+		TimerStart: start,
 		Version:    r.Header.Get("X-App-Version"),
+		WorkerName: worker,
 	}
 }
 
@@ -109,7 +120,6 @@ func (l *Logger) encode() string {
 func (l *Logger) Println(msg string, code int) bool {
 	l.Code = code
 	l.Message = msg
-	l.Time = time.Now()
 
 	if l.IPAddress == "" {
 		l.IPAddress = LOCALHOST4
@@ -126,6 +136,7 @@ func (l *Logger) SetPrefix(prefix string) *Logger {
 	return l
 }
 
+// RemovePrefix remove preiously prepended string from the Logger struct.
 func (l *Logger) RemovePrefix() *Logger {
 	l.Prefix = ""
 	return l
@@ -157,8 +168,6 @@ func (l *Logger) Error(err error) *Logger {
 
 // Log write the logger's JSON output to the stdout.
 func (l *Logger) Log() *Logger {
-	l.Time = time.Now()
-
 	if l.IPAddress == "" {
 		l.IPAddress = LOCALHOST4
 	}
@@ -166,6 +175,10 @@ func (l *Logger) Log() *Logger {
 	if l.Err != nil {
 		l.Message += " (" + l.Err.Error() + ")"
 	}
+
+	// Stop the count!
+	l.TimerStop = time.Now()
+	l.TimerDurationNS = l.TimerStop.Sub(l.TimerStart)
 
 	fmt.Println(l.encode())
 	return l
