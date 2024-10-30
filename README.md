@@ -119,8 +119,12 @@ make flush kill run
 ```
 make dev
 
-http://localhost:8093/flow
+http://localhost:8080/flow
 ```
+
+### profiling
+
+Debug `pprof`'s index: [http://localhost:8080/debug/pprof/](http://localhost:8080/debug/pprof/)
 
 ### investigating the runtime data
 

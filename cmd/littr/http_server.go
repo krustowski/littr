@@ -21,6 +21,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/metrics"
+	"go.vxn.dev/littr/pkg/backend/pprof"
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/swis/v5/pkg/core"
 
@@ -244,6 +245,9 @@ func initServer() {
 
 	// Mount the very main API router spanning all the backend.
 	r.Mount("/api/v1", be.APIRouter())
+
+	// Mount the pprof profiler router.
+	r.Mount("/debug", pprof.Router())
 
 	// A workaround to serve a proper favicon icon.
 	r.Method("GET", "/favicon.ico", Handler(func(w http.ResponseWriter, r *http.Request) error {
