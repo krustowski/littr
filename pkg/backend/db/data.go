@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/metrics"
@@ -41,6 +42,8 @@ func LoadAll() string {
 	users := makeLoadReport("users", wrapLoadOutput(
 		loadOne(UserCache, usersFile, models.User{})))
 
+	runtime.GC()
+
 	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s, %s", polls, posts, reqs, subs, tokens, users)
 }
 
@@ -64,6 +67,8 @@ func DumpAll() string {
 
 	report += prepareDumpReport("users",
 		dumpOne(UserCache, usersFile, models.User{}))
+
+	runtime.GC()
 
 	return fmt.Sprintf("dump: %s", report)
 }
