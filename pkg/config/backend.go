@@ -40,6 +40,17 @@ var (
 		return fmt.Sprintf("%s", tpl)
 	}()
 
+	// IsLimiterDisabled is a feature flag for the API limiter middleware imported at the APIRouter.
+	IsLimiterDisabled bool = func() bool {
+		if os.Getenv(LIMITER_DISABLED) == "" {
+			return false
+		}
+		if boolVal, err := strconv.ParseBool(os.Getenv(LIMITER_DISABLED)); err != nil {
+			return false
+		}
+		return boolVal
+	}()
+
 	// IsRegistrationEnabled is a boolean to hold the logic for the registration functionality.
 	IsRegistrationEnabled bool = func() bool {
 		if os.Getenv(REGISTRATION_ENABLED) != "" {

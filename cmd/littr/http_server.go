@@ -31,7 +31,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Handler and its ServerHTTP method is a simple implementation of the http.Handler interface.
+// Handler and its ServerHTTP method is a simple implementation of the http.Handler interface. It can be used to wrap various HTTP handlers.
+// https://github.com/go-chi/chi/blob/master/_examples/custom-handler/main.go
 type Handler func(w http.ResponseWriter, r *http.Request) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// appHandler hold the pointer to the very main FE app handler.
+// appHandler holds the pointer to the very main FE app handler.
 var appHandler = &app.Handler{
 	Name:         "littr",
 	ShortName:    "littr",
@@ -170,6 +171,7 @@ func initServer() {
 		}
 
 		l.Msg("graceful shutdown complete").Status(http.StatusOK).Log()
+		// The end of the goroutine.
 	}()
 
 	//
@@ -187,13 +189,13 @@ func initServer() {
 
 	// Enable a proactive data compression.
 	// https://pkg.go.dev/compress/flate
-	/*compressor := middleware.NewCompressor(
-		flate.NoCompression,
+	compressor := middleware.NewCompressor(
+		5,
 		"/*",
 		//"application/wasm", "text/css", "image/svg+xml", "image/gif",
 		//"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
 	)
-	r.Use(compressor.Handler)*/
+	r.Use(compressor.Handler)
 
 	// Create a custom network connection listener.
 	listener, err := net.Listen("tcp", ":"+config.ServerPort)

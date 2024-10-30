@@ -1,5 +1,5 @@
 // @title		littr
-// @version	 	0.44.13
+// @version	 	0.44.14
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -34,9 +34,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	//"github.com/go-chi/chi/v5/middleware"
 	//"github.com/go-chi/httplog/v2"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 
 	"go.vxn.dev/littr/pkg/backend/auth"
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -48,7 +49,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/backend/stats"
 	"go.vxn.dev/littr/pkg/backend/users"
-	//"go.vxn.dev/littr/pkg/config"
+	"go.vxn.dev/littr/pkg/config"
 )
 
 // Custom Logger structure.
@@ -75,11 +76,28 @@ import (
 
 // The JSON API service root path handler.
 func rootHandler(w http.ResponseWriter, r *http.Request) {
+	// Log this route as well.
+	common.NewLogger(r, "root").Status(http.StatusOK).Log()
+
+	// Write common response.
 	common.WriteResponse(w, common.APIResponse{
 		Message:   "littr JSON API service (v" + os.Getenv("APP_VERSION") + ")",
 		Timestamp: time.Now().UnixNano(),
 	}, http.StatusOK)
 }
+
+// Simple rate limiter (by IP and URL). Requests per duration.
+// https://github.com/go-chi/httprate
+var limiter = httprate.Limit(33, 10*time.Second,
+	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+		// Log the too-many-requests error.
+		common.NewLogger(r, "root").Status(http.StatusTooManyRequests).Log()
+
+		// Write simple response.
+		http.Error(w, `{"error": "too many requests, slow down"}`, http.StatusTooManyRequests)
+	}),
+	httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+)
 
 // The very main API router.
 func APIRouter() chi.Router {
@@ -88,18 +106,10 @@ func APIRouter() chi.Router {
 	// Authentication middleware.
 	r.Use(auth.AuthMiddleware)
 
-	// go-chi logger.
-	//r.Use(httplog.RequestLogger(Logger, []string{}))
-
-	// Simple API limiter.
-	/*r.Use(middleware.ThrottleWithOpts(middleware.ThrottleOpts{
-		BacklogLimit:   50,
-		BacklogTimeout: 10 * time.Second,
-		Limit:          200,
-		//StatusCode:     http.StatusServiceUnavailable,
-	}))*/
-
-	//r.Use(system.LoggerMiddleware)
+	// Rate limiter, feature-flagged.
+	if !config.DisableLimiter {
+		r.Use(limiter)
+	}
 
 	r.Get("/", rootHandler)
 
