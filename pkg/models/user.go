@@ -4,6 +4,21 @@ import (
 	"time"
 )
 
+type UserOptionsMap map[string]bool
+
+// DefaultUserOptionsMap can be assigned directly at the register time to a new user, or to be used in the Options migrations as a template.
+var DefaultUserOptionsMap = UserOptionsMap{
+	"active":        false,
+	"gdpr":          true,
+	"private":       false,
+	"uiDarkMode":    true,
+	"liveMode":      true,
+	"localTimeMode": true,
+}
+
+// UserGenericMap is used for user lists mainly at the moment.
+type UserGenericMap map[string]bool
+
 type User struct {
 	// Nickname is a login name of such user.
 	Nickname string `json:"nickname" binding:"required"`
@@ -30,8 +45,7 @@ type User struct {
 	About string `json:"about" default:"newbie"`
 
 	// Options is an umbrella struct/map for the booleans.
-	Options map[string]bool `json:"options"`
-	//Options Options `json:"options,omitempty"`
+	Options UserOptionsMap `json:"options"`
 
 	// Active boolean indicates an activated user's account.
 	Active bool `json:"active"`
@@ -40,13 +54,13 @@ type User struct {
 	Private bool `json:"private"`
 
 	// FlowList is a string map of users, which posts should be added to one's flow page.
-	FlowList map[string]bool `json:"flow_list,omitempty"`
+	FlowList UserGenericMap `json:"flow_list,omitempty"`
 
 	// ShadeList is a map of account/users to be shaded (soft-blocked) from following.
-	ShadeList map[string]bool `json:"shade_list,omitempty"`
+	ShadeList UserGenericMap `json:"shade_list,omitempty"`
 
 	// RequestList is a map of account requested to add this user to their flow --- used with the Private property.
-	RequestList map[string]bool `json:"request_list,omitempty"`
+	RequestList UserGenericMap `json:"request_list,omitempty"`
 
 	// FlowToggle is a single implementation of FlowList.
 	FlowToggle string `json:"flow_toggle"`

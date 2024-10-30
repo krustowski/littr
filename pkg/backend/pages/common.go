@@ -12,9 +12,9 @@ const PAGE_SIZE int = 25
 type PageOptions struct {
 	// common options
 	Caller   models.User
-	CallerID string          `json:"caller_id"`
-	PageNo   int             `json:"page_no"`
-	FlowList map[string]bool `json:"folow_list"`
+	CallerID string                `json:"caller_id"`
+	PageNo   int                   `json:"page_no"`
+	FlowList models.UserGenericMap `json:"folow_list"`
 
 	// data compartments' specifications
 	Flow  FlowOptions `json:"flow_options"`
@@ -42,10 +42,10 @@ type PollOptions struct {
 
 // users subviews' options
 type UserOptions struct {
-	Plain        bool             `json:"plain"`
-	SingleUser   bool             `json:"single_user"`
-	SingleUserID string           `json:"single_user_id"`
-	RequestList  *map[string]bool `json:"request_list"`
+	Plain        bool                   `json:"plain"`
+	SingleUser   bool                   `json:"single_user"`
+	SingleUserID string                 `json:"single_user_id"`
+	RequestList  *models.UserGenericMap `json:"request_list"`
 }
 
 // DTO for GetOnePage pointer output aggregation
