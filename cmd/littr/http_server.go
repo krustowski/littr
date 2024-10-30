@@ -134,6 +134,11 @@ func initServer() {
 	//  Prestart preparations
 	//
 
+	// Check if the server secrets (APP_PEPPER and API_TOKEN) are initialized and not empty.
+	if os.Getenv("APP_PEPPER") == "" || os.Getenv("API_TOKEN") == "" {
+		panic("Any of APP_PEPPER or API_TOKEN environment variables not specified. Could not continue the HTTP server prestart. Terminating now.")
+	}
+
 	// Handle system calls and signals to properly shutdown the server.
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
