@@ -16,13 +16,16 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
+// migrationFunc declares the unified type for any migration function.
+type migrationFunc func(common.LoggerInterface, []interface{}) bool
+
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
 	// Migration's name.
 	N string
 
 	// Migration's function handle.
-	F func(common.LoggerInterface, []interface{}) bool
+	F migrationFunc
 
 	// Migration's resources to process.
 	R []interface{}
@@ -100,6 +103,16 @@ func RunMigrations(l common.LoggerInterface) string {
 			F: migrateUserActiveState,
 			R: []interface{}{&users, &reqs},
 		},
+		{
+			N: "migrateUserOptions",
+			F: migrateUserOptions,
+			R: []interface{}{&users},
+		},
+		/*{
+			N: "migratePolls",
+			F: migratePolls,
+			R: []interface{}{&users, &polls},
+		},*/
 	}
 
 	// Declare the migrations report variable.
@@ -745,6 +758,135 @@ func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bo
 
 			// Update the users map locally within the migrations.
 			(*users)[key] = user
+		}
+	}
+
+	return true
+}
+
+// migrateUserOptions procedure ensures that every user has a proper set of all options according to the legacy models.User fields.
+func migrateUserOptions(l common.LoggerInterface, rawElems []interface{}) bool {
+	var users *map[string]models.User
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		// Try the users pointer.
+		elem, ok := raw.(*map[string]models.User)
+		if ok {
+			users = elem
+			continue
+		}
+	}
+
+	// Exit on the nil pointer(s).
+	if users == nil {
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
+		return false
+	}
+
+	// Loop over all user accounts to patch their (not only nil) options maps.
+	for key, user := range *users {
+		// Patch the possible nil map.
+		if user.Options == nil {
+			user.Options = models.DefaultUserOptionsMap
+		}
+
+		options := user.Options
+
+		// active | ativation | activated: false
+
+		if _, found := options["active"]; !found {
+			options["active"] = user.Active
+		}
+
+		// GDPR | gdpr: true
+
+		if value, found := options["gdpr"]; !value || !found {
+			// Every single user accepts the GDPR notice at the registration time, thus this option should always be true.
+			options["gdpr"] = true
+		}
+
+		// private: false
+
+		if _, found := options["private"]; !found {
+			options["private"] = user.Private
+		}
+
+		// uiDarkMode: true
+
+		if _, found := options["uiDarkMode"]; !found {
+			options["uiDarkMode"] = user.UIDarkMode
+		}
+
+		// liveMode: true
+
+		if value, found := options["liveMode"]; !value || !found {
+			// For now, just sitck with the fact that this option always has got its switch disabled in settings,
+			// thus no one could possibly change it to anything else so far.
+			options["liveMode"] = true
+		}
+
+		// localTimeMode: true
+
+		if _, found := options["localTimeMode"]; !found {
+			options["localTimeMode"] = user.LocalTimeMode
+		}
+
+		// Assign the options map back to its owner, and update the owner in the User database.
+		user.Options = options
+
+		if saved := SetOne(UserCache, key, user); !saved {
+			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
+			return false
+		}
+
+		// Update the users map locally within the migration procedures.
+		(*users)[key] = user
+	}
+
+	return true
+}
+
+// migratePolls procedure loops over all polls making sure that any poll with the non-existing Author will be omitted/deleted.
+func migratePolls(l common.LoggerInterface, rawElems []interface{}) bool {
+	var polls *map[string]models.Poll
+	var users *map[string]models.User
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		// Try the polls pointer.
+		elem, ok := raw.(*map[string]models.Poll)
+		if ok {
+			polls = elem
+			continue
+		}
+
+		// Try the users pointer.
+		elem2, ok := raw.(*map[string]models.User)
+		if ok {
+			users = elem2
+			continue
+		}
+	}
+
+	// Exit on the nil pointer(s).
+	if polls == nil || users == nil {
+		l.Msg("polls and/or users are nil").Status(http.StatusInternalServerError).Log()
+		return false
+	}
+
+	// Loop over all polls to check if their Author is still there.
+	for key, poll := range *polls {
+		// Check the user's existence in the local users export.
+		if _, found := (*users)[poll.Author]; !found {
+			// Delete the poll once for all.
+			if deleted := DeleteOne(PollCache, key); !deleted {
+				l.Msg("cannot delete a poll: " + key).Status(http.StatusInternalServerError).Log()
+				return false
+			}
+
+			// Delete the poll locally too within the migration procedures.
+			delete(*polls, key)
 		}
 	}
 

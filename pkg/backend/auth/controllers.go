@@ -124,7 +124,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the user's login datetime in the User database.
-	grantedUser.LastLoginDate = time.Now()
+	grantedUser.LastLoginTime = time.Now()
 
 	if saved := db.SetOne(db.UserCache, grantedUser.Nickname, grantedUser); !saved {
 		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
