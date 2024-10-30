@@ -107,7 +107,7 @@ func APIRouter() chi.Router {
 	r.Use(auth.AuthMiddleware)
 
 	// Rate limiter, feature-flagged.
-	if !config.DisableLimiter {
+	if !config.IsLimiterDisabled {
 		r.Use(limiter)
 	}
 

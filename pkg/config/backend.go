@@ -16,6 +16,7 @@ const (
 
 	// The anti-duplication variable(s).
 	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
+	LIMITER_DISABLED     = "LIMITER_DISABLED"
 	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
 	SERVER_PORT          = "APP_PORT"
 )
@@ -45,7 +46,8 @@ var (
 		if os.Getenv(LIMITER_DISABLED) == "" {
 			return false
 		}
-		if boolVal, err := strconv.ParseBool(os.Getenv(LIMITER_DISABLED)); err != nil {
+		boolVal, err := strconv.ParseBool(os.Getenv(LIMITER_DISABLED))
+		if err != nil {
 			return false
 		}
 		return boolVal
