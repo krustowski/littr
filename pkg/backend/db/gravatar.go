@@ -14,7 +14,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-// avatarResult is a meta struct to hold the results for various goroutines run in parallel when migrateAvatarURL migration is started.
+// avatarResult is a meta struct to hold the results for the avatar migration's (migrateAvatarURL) channels.
 type avatarResult struct {
 	User models.User
 	URL  string
@@ -64,13 +64,13 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 	resp, err := http.Get(url)
 	// On error use the default image URL instead.
 	if err != nil {
-		url = defaultAvatarImage
+		url = defaultAvatarURL
 	} else {
 		defer resp.Body.Close()
 
 		// If the service could not be reached, use the default image.
 		if resp.StatusCode != 200 {
-			url = defaultAvatarImage
+			url = defaultAvatarURL
 		}
 	}
 

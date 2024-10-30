@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,8 +14,6 @@ import (
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
-
-const defaultAvatarImage = "/web/android-chrome-192x192.png"
 
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
@@ -278,8 +277,8 @@ func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 			continue
 		}
 
-		// System user has no e-mail address for example.
-		if user.Email == "" {
+		// Skip the custom avatar uploaded via the settings view/page.
+		if strings.Contains(user.AvatarURL, "/web/pix/thumb_") {
 			continue
 		}
 
@@ -718,7 +717,7 @@ func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bo
 	// Iterate over users to patch the Active bool's state according to the user's registration date.
 	for key, user := range *users {
 		// The date when this migration subprocedure was created. For comparison with the later user registrations.
-		migrationCreationDate, err := time.Parse(timeLayout, "2024-Oct-24")
+		migrationCreationDate, err := time.Parse(timeLayout, "2024-Oct-28")
 		if err != nil {
 			l.Msg("cannot parse the migration createdAt date").Status(http.StatusInternalServerError).Log()
 			return false
