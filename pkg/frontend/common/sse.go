@@ -1,29 +1,20 @@
 package common
 
 import (
-	"context"
+	//"context"
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"os/signal"
-	"syscall"
+	//"os"
+	//"os/signal"
+	//"syscall"
 	"time"
 
 	//"go.vxn.dev/littr/pkg/config"
 
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/tmaxmax/go-sse"
 )
-
-var URL = func() string {
-	// Use APP_URL_MAIN env variables in prod and staging environments.
-	if os.Getenv("APP_URL_MAIN") != "" {
-		return "https://" + os.Getenv("APP_URL_MAIN")
-	}
-
-	// Local development use only.
-	return "http://localhost:8080"
-}()
 
 // Default response validator.
 // https://pkg.go.dev/github.com/tmaxmax/go-sse@v0.8.0#ResponseValidator
@@ -60,7 +51,43 @@ func getRequestURL(sub string) string {
 	return URL + "/api/v1/live?" + q.Encode()
 }
 
-func SSEClient() {
+// URL is a simple lambda function to retrieve the URL for a new SSE connection.
+var URL = func() string {
+	// Use APP_URL_MAIN env variables in prod and staging environments.
+	if app.Getenv("APP_URL_MAIN") != "" {
+		return "https://" + app.Getenv("APP_URL_MAIN")
+	}
+
+	// Local development use only.
+	return "http://localhost:8080"
+}()
+
+// Custom HTTP client.
+var Client = sse.Client{
+	// Standard HTTP client.
+	HTTPClient: &http.Client{
+		Timeout: 3 * time.Second,
+	},
+	// Callback function when the connection is to be reastablished.
+	OnRetry: func(err error, duration time.Duration) {
+		fmt.Printf("conn error: %v\n", err)
+		time.Sleep(duration)
+	},
+	// Validation of the response content-type mainly, e.g. DefaultValidator.
+	ResponseValidator: NoopValidator,
+	// The connection tuning.
+	Backoff: sse.Backoff{
+		InitialInterval: 1000 * time.Millisecond,
+		Multiplier:      float64(1.5),
+		// Jitter: range (0, 1)
+		Jitter:         float64(0.5),
+		MaxInterval:    2 * time.Second,
+		MaxElapsedTime: 2 * time.Second,
+		MaxRetries:     10,
+	},
+}
+
+/*func sSEClient() {
 	// Prepare the context for the client shutdown.
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -70,29 +97,25 @@ func SSEClient() {
 	// Compose a new connection with the context.
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, getRequestURL(sub), http.NoBody)
 	_ = sse.NewConnection(req)
-}
+}*/
 
-// Custom HTTP client.
-var Client = sse.Client{
-	// Standard HTTP client.
-	HTTPClient: &http.Client{
-		Timeout: 30 * time.Second,
-	},
-	// Callback function when the connection is to be reastablished.
-	OnRetry: func(err error, duration time.Duration) {
-		fmt.Printf("conn error: %v\n", err)
-		time.Sleep(duration)
-	},
-	// Validation of the response content-type mainly.
-	ResponseValidator: DefaultValidator,
-	// The connection tuning.
-	Backoff: sse.Backoff{
-		InitialInterval: 1000 * time.Millisecond,
-		Multiplier:      float64(1.5),
-		// Jitter: range (0, 1)
-		Jitter:         float64(0.5),
-		MaxInterval:    10 * time.Second,
-		MaxElapsedTime: 45 * time.Second,
-		MaxRetries:     15,
-	},
-}
+// Subscribe to any event, regardless the type.
+/*conn.SubscribeToAll(func(event sse.Event) {
+ctx.NewActionWithValue("generic-event", event)
+
+// Print all events.
+fmt.Printf("%s: %s\n", event.Type, event.Data)
+
+/*switch event.Type {
+case "keepalive", "ops":
+	fmt.Printf("%s: %s\n", event.Type, event.Data)
+case "server-stop":
+	fmt.Println("server closed!")
+	h.sseCancel()
+default: // no event name*/
+//}
+//})
+
+//
+//
+//

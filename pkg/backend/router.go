@@ -1,5 +1,5 @@
 // @title		littr
-// @version	 	0.44.11
+// @version	 	0.44.12
 // @description		a simple nanoblogging platform as PWA built on go-app framework
 // @termsOfService	https://www.littr.eu/tos
 
@@ -29,11 +29,14 @@
 package backend
 
 import (
+	//"log/slog"
 	"net/http"
 	"os"
 	"time"
 
-	chi "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
+	//"github.com/go-chi/chi/v5/middleware"
+	//"github.com/go-chi/httplog/v2"
 
 	"go.vxn.dev/littr/pkg/backend/auth"
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -45,8 +48,32 @@ import (
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/backend/stats"
 	"go.vxn.dev/littr/pkg/backend/users"
+	//"go.vxn.dev/littr/pkg/config"
 )
 
+// Custom Logger structure.
+/*var Logger = httplog.NewLogger("littr-logger", httplog.Options{
+	LogLevel: slog.LevelDebug,
+	JSON:     true,
+	Concise:  true,
+	//RequestHeaders: true,
+	//ResponseHeaders: true,
+	MessageFieldName: "message",
+	LevelFieldName:   "severity",
+	TimeFieldFormat:  time.RFC3339,
+	Tags: map[string]string{
+		"version": os.Getenv("APP_VERSION"),
+		"env":     config.AppEnvironment,
+	},
+	QuietDownRoutes: []string{
+		"/",
+		"/ping",
+	},
+	//QuietDownPeriods: 10 * time.Second,
+	SourceFieldName: "source",
+})*/
+
+// The JSON API service root path handler.
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	common.WriteResponse(w, common.APIResponse{
 		Message:   "littr JSON API service (v" + os.Getenv("APP_VERSION") + ")",
@@ -54,11 +81,24 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
-// the very main API router
+// The very main API router.
 func APIRouter() chi.Router {
 	r := chi.NewRouter()
 
+	// Authentication middleware.
 	r.Use(auth.AuthMiddleware)
+
+	// go-chi logger.
+	//r.Use(httplog.RequestLogger(Logger, []string{}))
+
+	// Simple API limiter.
+	/*r.Use(middleware.ThrottleWithOpts(middleware.ThrottleOpts{
+		BacklogLimit:   50,
+		BacklogTimeout: 10 * time.Second,
+		Limit:          200,
+		//StatusCode:     http.StatusServiceUnavailable,
+	}))*/
+
 	//r.Use(system.LoggerMiddleware)
 
 	r.Get("/", rootHandler)

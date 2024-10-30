@@ -62,7 +62,11 @@ type Header struct {
 type Footer struct {
 	app.Compo
 
+	// Simple authentication indicatior.
 	authGranted bool
+
+	// Context cancellation function for the SSE client.
+	sseCancel context.CancelFunc
 }
 
 func (h *Header) OnAppInstallChange(ctx app.Context) {
@@ -158,41 +162,6 @@ func (h *Header) OnMount(ctx app.Context) {
 }
 
 func (h *Header) OnNav(ctx app.Context) {
-	// New context. Notify the context on common syscalls.
-	var cctx context.Context
-	cctx, h.sseCancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-
-	//defer h.sseCancel()
-
-	// A HTTP request with context.
-	req, _ := http.NewRequestWithContext(cctx, http.MethodGet, common.URL+"/api/v1/live", http.NoBody)
-
-	ctx.Async(func() {
-		// New SSE connection.
-		conn := common.Client.NewConnection(req)
-
-		// Subscribe to any event, regardless the type.
-		conn.SubscribeToAll(func(event sse.Event) {
-			ctx.NewActionWithValue("generic-event", event)
-
-			fmt.Printf("%s: %s\n", event.Type, event.Data)
-			/*switch event.Type {
-			case "keepalive", "ops":
-				fmt.Printf("%s: %s\n", event.Type, event.Data)
-			case "server-stop":
-				fmt.Println("server closed!")
-				h.sseCancel()
-			default: // no event name*/
-			//}
-		})
-
-		// Create a new connection.
-		if err := conn.Connect(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-
-		return
-	})
 }
 
 func (f *Footer) OnMount(ctx app.Context) {
@@ -200,4 +169,44 @@ func (f *Footer) OnMount(ctx app.Context) {
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
 	f.authGranted = authGranted
+
+	if !authGranted {
+		return
+	}
+
+	go func() {
+		//ctx.Async(func() {
+		// New context. Notify the context on common syscalls.
+		var cctx context.Context
+		cctx, f.sseCancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
+		defer f.sseCancel()
+
+		// A HTTP request with context.
+		req, _ := http.NewRequestWithContext(cctx, http.MethodGet, common.URL+"/api/v1/live", http.NoBody)
+
+		// New SSE connection.
+		conn := common.Client.NewConnection(req)
+
+		// Subscribe to any event, regardless the type.
+		conn.SubscribeToAll(func(event sse.Event) {
+			ctx.NewActionWithValue("generic-event", event)
+
+			// Print all events.
+			fmt.Printf("%s: %s\n", event.Type, event.Data)
+		})
+
+		// Create a new connection.
+		if err := conn.Connect(); err != nil {
+			fmt.Printf("%v\n", err)
+			//fmt.Fprintln(os.Stderr, err)
+		}
+
+		return
+		//})
+	}()
+}
+
+func (f *Footer) OnDismount(ctx app.Context) {
+	f.sseCancel()
 }
