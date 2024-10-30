@@ -70,6 +70,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	// https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
 	//
 
+	pl.AuthGranted = true
+
 	secret := os.Getenv("APP_PEPPER")
 
 	// Compose the user's personal (access) token content.
@@ -116,8 +118,16 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save new refresh token's hash to the Token database.
-	if saved := db.TokenCache.Set(refreshTokenSum, token); !saved {
+	if saved := db.SetOne(db.TokenCache, refreshTokenSum, token); !saved {
 		l.Msg(common.ERR_TOKEN_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
+		return
+	}
+
+	// Update the user's login datetime in the User database.
+	grantedUser.LastLoginDate = time.Now()
+
+	if saved := db.SetOne(db.UserCache, grantedUser.Nickname, grantedUser); !saved {
+		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(pl).Write(w)
 		return
 	}
 
