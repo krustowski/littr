@@ -2,6 +2,7 @@ package db
 
 import (
 	"reflect"
+	"sync"
 
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/swis/v5/pkg/core"
@@ -50,6 +51,10 @@ func MarkLoaded() {
 		dbState.loaded = true
 	}
 }
+
+// Mutex should ensure the combined read+write operations (SetOne here specially) are thread safe.
+// https://stackoverflow.com/a/66774210
+var mu sync.Mutex
 
 // GetAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
 func GetAll[T any](cache *core.Cache, model T) (map[string]T, int) {
@@ -114,7 +119,8 @@ func GetOne[T any](cache *core.Cache, key string, model T) (T, bool) {
 }
 
 // SetOne writes the input value of some type to the corresponding cache storing the very same item type (TODO ensure this).
-// Fails if the database state is locked or uninitialized.
+// Fails if the database state is locked or uninitialized. Please note that this very function has to have another sync mechanism implemented,
+// as the combined read+write operation is not considered a thread safe.
 func SetOne[T any](cache *core.Cache, key string, model T) bool {
 	// An initialization check.
 	if !dbState.unlocked || cache == nil {
@@ -123,13 +129,17 @@ func SetOne[T any](cache *core.Cache, key string, model T) bool {
 
 	var doIncrementMetric bool = true
 
+	// Lock the mutex.
+	mu.Lock()
+	defer mu.Unlock()
+
 	// Check for the possible item's existence in such cache instance. The item will be rewritten anyway (unless),
 	// but this is to make sure we are not incrementing the statistics while the count remains the same.
 	control, found := GetOne[T](cache, key, model)
 	if found {
 		doIncrementMetric = !found
 
-		// Check if the control item is deeply equal with the requested item to save. If so, do not save new item.
+		// Check if the control item is deeply equal with the requested item to save. If so, do not save new item and unlock the mutex.
 		if reflect.DeepEqual(control, model) {
 			return true
 		}
