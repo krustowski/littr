@@ -4,7 +4,7 @@
 package main
 
 import (
-	//"compress/flate"
+	"compress/flate"
 	"context"
 	"errors"
 	"fmt"
@@ -45,9 +45,9 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // appHandler holds the pointer to the very main FE app handler.
 var appHandler = &app.Handler{
-	Name:         "littr",
+	Name:         "littr nanoblogger",
 	ShortName:    "littr",
-	Title:        "littr",
+	Title:        "littr nanoblogger",
 	Description:  "A simple nanoblogging platform",
 	Author:       "krusty",
 	LoadingLabel: "loading...",
@@ -119,7 +119,7 @@ func initClient() {
 }
 
 var (
-	// The very main HTTP server struct's pointer.
+	// The very main HTTP server's struct pointer.
 	server *http.Server
 
 	// The WaitGroup for the graceful HTTP server shutdown.
@@ -158,16 +158,20 @@ func initServer() {
 		// Log and broadcast the message that the server is to shutdown.
 		l.Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
-
-		// Fetch a context to send to gracefully shutdown the HTTP server.
-		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
 		// Lock the database so no one can change any data henceforth.
 		db.Lock()
 
 		// Dump all in-memory databases.
 		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+
+		// Fetch a context to send to gracefully shutdown the HTTP server.
+		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Terminate the SSE server.
+		live.Streamer.Shutdown(sctx)
 
 		// Terminate the server from here, give it 5 seconds to shutdown gracefully..
 		if err := server.Shutdown(sctx); err != nil {
@@ -197,15 +201,10 @@ func initServer() {
 
 	// Enable a proactive data compression.
 	// https://pkg.go.dev/compress/flate
-	compressor := middleware.NewCompressor(
-		5,
-		"image/*",
-		//"application/wasm", "text/css", "image/svg+xml", "image/gif",
-		//"application/wasm", "text/css", "image/svg+xml", "application/json", "image/gif", "application/octet-stream",
-	)
+	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "text/css", "image/svg+xml", "image/gif")
 	r.Use(compressor.Handler)
 
-	// Create a custom network connection listener.
+	// Create a custom network TCP connection listener.
 	listener, err := net.Listen("tcp", ":"+config.ServerPort)
 	if err != nil {
 		// Cannot listen on such address = a permission issue?
@@ -220,6 +219,20 @@ func initServer() {
 		WriteTimeout: 0 * time.Second,
 		Handler:      r,
 	}
+
+	// Notify other services that the server is shuting down so they should be closed too.
+	server.RegisterOnShutdown(func() {
+		l := common.NewLogger(nil, "shutdown")
+
+		// Create a new shutdown context.
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		l.Msg("HTTP server shudown registered, closing other services...").Status(http.StatusOK).Log()
+
+		// Shutdown the SSE server handler.
+		live.Streamer.Shutdown(ctx)
+	})
 
 	//
 	//  Database and data initialization
@@ -285,7 +298,7 @@ func initServer() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-start", Type: "message"})
 	}()
 
-	// Start serving via the created net listener.
+	// Start serving using the created net listener.
 	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		l.Msg(fmt.Sprintf("HTTP server error: %s", err.Error())).Status(http.StatusInternalServerError).Log()
 	}
@@ -303,4 +316,7 @@ func initServer() {
 	// This is the final log before the application exits for real!
 	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
 	l.Msg("HTTP server has stopped serving new connections, exit").Status(http.StatusOK).Log()
+
+	defer os.Exit(0)
+	return
 }
