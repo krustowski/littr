@@ -11,7 +11,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/models"
-	"go.vxn.dev/swis/v5/pkg/core"
+	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
 const (
@@ -78,8 +78,8 @@ func DumpAll() string {
  */
 
 type load struct {
-	count int
-	total int
+	count int64
+	total int64
 	err   error
 }
 
@@ -101,7 +101,7 @@ func makeLoadReport(name string, ld load) string {
 	}
 }
 
-func wrapLoadOutput(count, total int, err error) load {
+func wrapLoadOutput(count, total int64, err error) load {
 	return load{
 		count: count,
 		total: total,
@@ -109,11 +109,11 @@ func wrapLoadOutput(count, total int, err error) load {
 	}
 }
 
-func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, error) {
+func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error) {
 	l := common.NewLogger(nil, "data load")
 
-	var count int
-	var total int
+	var count int64
+	var total int64
 
 	rawData, err := os.ReadFile(filepath)
 	if err != nil {
@@ -136,7 +136,7 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, erro
 		return count, total, err
 	}
 
-	total = len(matrix.Items)
+	total = int64(len(matrix.Items))
 
 	for key, val := range matrix.Items {
 		if key == "" || &val == nil {
@@ -153,7 +153,7 @@ func loadOne[T any](cache *core.Cache, filepath string, model T) (int, int, erro
 		count++
 	}
 
-	metrics.UpdateCountMetric(cache, count, true)
+	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	return count, total, nil
 }
@@ -170,11 +170,11 @@ func prepareDumpReport(cacheName string, rep *dumpReport) string {
 }
 
 type dumpReport struct {
-	Total int
+	Total int64
 	Error error
 }
 
-func dumpOne[T any](cache *core.Cache, filepath string, model T) *dumpReport {
+func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
 	// check if the model is usable
@@ -188,7 +188,7 @@ func dumpOne[T any](cache *core.Cache, filepath string, model T) *dumpReport {
 		Items map[string]T `json:"items"`
 	}{}
 
-	var total int
+	var total int64
 
 	// dump the in-memoty running data
 	matrix.Items, total = GetAll(cache, model)

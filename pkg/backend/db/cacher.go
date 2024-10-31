@@ -11,17 +11,78 @@ type Cacher interface {
 
 	// Store takes a key-value pair and stores the value with the associated key into the implementing cache store.
 	// Simple overwrite.
-	Store(key string, value interface{})
+	Store(key string, value interface{}) bool
 
 	// Delete takes a key string and deletes its record in the implementing cache store.
-	Delete(key string)
+	Delete(key string) bool
 
 	// Range loop over all the implementing cache keys and retrieves all the associated values as interface{}.
 	// Returns the pointer to a GenericMap with all keys and their associated values, and the item count.
 	Range() (*GenericMap, int64)
+
+	// GetName returns the implemented cache's name.
+	GetName() string
 }
 
 type GenericMap map[string]interface{}
+
+//
+//  DefaultCache
+//  The legacy implementation of the Cacher interface. The original implementation (not implementing the Cacher interface) comes from swapi/core.Cache.
+//
+
+type DefaultCache struct {
+	// Name of the cache.
+	Name string
+
+	syncMap sync.Map
+}
+
+func NewDefaultCache(name string) *DefaultCache {
+	if name == "" {
+		return nil
+	}
+
+	return &DefaultCache{
+		Name: name,
+	}
+}
+
+func (c *DefaultCache) Load(key string) (interface{}, bool) {
+	return c.syncMap.Load(key)
+}
+
+func (c *DefaultCache) Store(key string, rawV interface{}) bool {
+	c.syncMap.Store(key, rawV)
+	return true
+}
+
+func (c *DefaultCache) Delete(key string) bool {
+	c.syncMap.Delete(key)
+	return true
+}
+
+func (c *DefaultCache) Range() (*GenericMap, int64) {
+	var genericMap = GenericMap{}
+	var counter int64
+
+	c.syncMap.Range(func(rawK, rawV interface{}) bool {
+		key, ok := rawK.(string)
+		if !ok {
+			return false
+		}
+
+		genericMap[key] = rawV
+		counter++
+		return true
+	})
+
+	return &genericMap, counter
+}
+
+func (c *DefaultCache) GetName() string {
+	return c.Name
+}
 
 //
 //  SimpleCache
@@ -29,7 +90,7 @@ type GenericMap map[string]interface{}
 //
 
 type SimpleCache struct {
-	// Name
+	// Name of the cache.
 	Name string
 
 	// Generic string-keyed map protected by Mutex.
@@ -60,11 +121,12 @@ func (c *SimpleCache) Load(key string) (interface{}, bool) {
 	return rawV, true
 }
 
-func (c *SimpleCache) Store(key string, rawV interface{}) {
+func (c *SimpleCache) Store(key string, rawV interface{}) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.mp[key] = rawV
-	return
+
+	return true
 }
 
 func (c *SimpleCache) Range() (*GenericMap, int64) {
@@ -80,6 +142,10 @@ func (c *SimpleCache) Range() (*GenericMap, int64) {
 	}
 
 	return &genericMap, count
+}
+
+func (c *SimpleCache) GetName() string {
+	return c.Name
 }
 
 //
@@ -169,19 +235,6 @@ func (c *SignalCache) Range() (*GenericMap, int64) {
 	return &genericMap, count
 }
 
-//
-//  New main db pkg's export functions.
-//
-
-/*func GetOne[T any](cache Cacher, key string) (*T, bool) {
-	rawV := cache.Load(key)
-	val, ok := rawV.(*T)
-	if !ok {
-		return nil, false
-	}
-
-	return val, true
+func (c *SignalCache) GetName() string {
+	return c.Name
 }
-
-func SetOne(cache Cacher, key string, val interface{}) bool
-func DeleteOne(cache Cacher, key string) bool*/
