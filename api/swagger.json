@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.18"
+        "version": "0.44.19"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -2228,10 +2228,11 @@
                 },
                 "flow_list": {
                     "description": "FlowList is a string map of users, which posts should be added to one's flow page.",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserGenericMap"
+                        }
+                    ]
                 },
                 "flow_toggle": {
                     "description": "FlowToggle is a single implementation of FlowList.",
@@ -2270,10 +2271,11 @@
                 },
                 "options": {
                     "description": "Options is an umbrella struct/map for the booleans.",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserOptionsMap"
+                        }
+                    ]
                 },
                 "passphrase": {
                     "description": "Passphrase is a hashed pass phrase string (binary form).",
@@ -2293,17 +2295,19 @@
                 },
                 "request_list": {
                     "description": "RequestList is a map of account requested to add this user to their flow --- used with the Private property.",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserGenericMap"
+                        }
+                    ]
                 },
                 "shade_list": {
                     "description": "ShadeList is a map of account/users to be shaded (soft-blocked) from following.",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserGenericMap"
+                        }
+                    ]
                 },
                 "tags": {
                     "description": "Tags is an array of possible roles and other various attributes assigned to such user.",
@@ -2316,6 +2320,18 @@
                     "description": "Web is user's personal homepage.",
                     "type": "string"
                 }
+            }
+        },
+        "models.UserGenericMap": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "boolean"
+            }
+        },
+        "models.UserOptionsMap": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "boolean"
             }
         },
         "models.UserStat": {
@@ -2608,6 +2624,9 @@
                 },
                 "local_time_mode": {
                     "type": "boolean"
+                },
+                "options_map": {
+                    "$ref": "#/definitions/models.UserOptionsMap"
                 },
                 "private": {
                     "type": "boolean"
