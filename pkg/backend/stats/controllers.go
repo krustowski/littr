@@ -23,7 +23,7 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
 	type responseData struct {
-		FlowStats map[string]int             `json:"flow_stats"`
+		FlowStats map[string]int64           `json:"flow_stats"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 		Users     map[string]models.User     `json:"users"`
 	}
@@ -40,11 +40,11 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	users, _ := db.GetAll(db.UserCache, models.User{})
 
 	// prepare the maps for export
-	flowStats := make(map[string]int)
+	flowStats := make(map[string]int64)
 	userStats := make(map[string]models.UserStat)
 
-	flowers := make(map[string]int)
-	shades := make(map[string]int)
+	flowers := make(map[string]int64)
+	shades := make(map[string]int64)
 
 	// init the flowStats
 	flowStats["posts"] = postCount

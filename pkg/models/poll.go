@@ -30,7 +30,7 @@ type Poll struct {
 	Author string `json:"author"`
 
 	// ReactionCount counts the number of item's reactions.
-	ReactionCount int `json:"reaction_count"`
+	ReactionCount int64 `json:"reaction_count"`
 
 	// Experimental fields.
 	Hidden  bool     `json:"hidden"`
@@ -43,5 +43,5 @@ type PollOption struct {
 	Content string `json:"content"`
 
 	// Counter hold a number of votes being committed to such option.
-	Counter int `json:"counter"`
+	Counter int64 `json:"counter"`
 }

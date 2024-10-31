@@ -111,11 +111,11 @@ func (c *Content) Render() app.UI {
 
 					userVoted := contains(poll.Voted, c.user.Nickname)
 
-					optionOneShare := 0
-					optionTwoShare := 0
-					optionThreeShare := 0
+					var optionOneShare int64
+					var optionTwoShare int64
+					var optionThreeShare int64
 
-					pollCounterSum := 0
+					var pollCounterSum int64
 					pollCounterSum = poll.OptionOne.Counter + poll.OptionTwo.Counter
 					if poll.OptionThree.Content != "" {
 						pollCounterSum += poll.OptionThree.Counter
@@ -171,11 +171,11 @@ func (c *Content) Render() app.UI {
 
 								// voted option I
 								app.Div().Class("medium-space border").Body(
-									app.Div().Class("bold progress left deep-orange3 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionOneShare)+"% 100%, "+strconv.Itoa(optionOneShare)+"% 0%);"),
+									app.Div().Class("bold progress left deep-orange3 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 0%);"),
 									//app.Progress().Value(strconv.Itoa(optionOneShare)).Max(100).Class("deep-orange-text padding medium bold left"),
 									//app.Div().Class("progress left light-green"),
 									app.Div().Class("middle right-align bold").Body(
-										app.Span().Text(poll.OptionOne.Content+" ("+strconv.Itoa(optionOneShare)+"%)"),
+										app.Span().Text(poll.OptionOne.Content+" ("+strconv.FormatInt(optionOneShare, 10)+"%)"),
 									),
 								),
 
@@ -183,10 +183,10 @@ func (c *Content) Render() app.UI {
 
 								// voted option II
 								app.Div().Class("medium-space border").Body(
-									app.Div().Class("bold progress left deep-orange5 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionTwoShare)+"% 100%, "+strconv.Itoa(optionTwoShare)+"% 0%);").Body(),
+									app.Div().Class("bold progress left deep-orange5 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 0%);").Body(),
 									//app.Progress().Value(strconv.Itoa(optionTwoShare)).Max(100).Class("deep-orange-text padding medium bold left"),
 									app.Div().Class("middle right-align bold").Body(
-										app.Span().Text(poll.OptionTwo.Content+" ("+strconv.Itoa(optionTwoShare)+"%)"),
+										app.Span().Text(poll.OptionTwo.Content+" ("+strconv.FormatInt(optionTwoShare, 10)+"%)"),
 									),
 								),
 
@@ -196,10 +196,10 @@ func (c *Content) Render() app.UI {
 								app.If(poll.OptionThree.Content != "",
 									app.Div().Class("space"),
 									app.Div().Class("medium-space border").Body(
-										app.Div().Class("bold progress left deep-orange9 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.Itoa(optionThreeShare)+"% 100%, "+strconv.Itoa(optionThreeShare)+"% 0%);"),
+										app.Div().Class("bold progress left deep-orange9 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 0%);"),
 										//app.Progress().Value(strconv.Itoa(optionThreeShare)).Max(100).Class("deep-orange-text deep-orange padding medium bold left"),
 										app.Div().Class("middle bold right-align").Body(
-											app.Span().Text(poll.OptionThree.Content+" ("+strconv.Itoa(optionThreeShare)+"%)"),
+											app.Span().Text(poll.OptionThree.Content+" ("+strconv.FormatInt(optionThreeShare, 10)+"%)"),
 										),
 									),
 

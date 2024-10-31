@@ -31,10 +31,10 @@ type Post struct {
 	ReplyToID string `json:"reply_to_id"`
 
 	// ReactionCount counts the number of item's reactions.
-	ReactionCount int `json:"reaction_count"`
+	ReactionCount int64 `json:"reaction_count"`
 
 	// ReplyCount hold the count of replies for such post.
-	ReplyCount int `json:"reply_count"`
+	ReplyCount int64 `json:"reply_count"`
 
 	// Data is a helper field for the actual figure upload.
 	Data []byte `json:"data"`
