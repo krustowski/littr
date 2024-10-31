@@ -73,9 +73,9 @@ func DumpAll() string {
 	return fmt.Sprintf("dump: %s", report)
 }
 
-/*
- *  helper functions --- loadOne stack
- */
+//
+//  helper functions --- loadOne stack
+//
 
 type load struct {
 	count int64
@@ -158,9 +158,9 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 	return count, total, nil
 }
 
-/*
- *  helper functions --- dumpOne
- */
+//
+//  helper functions --- dumpOne
+//
 
 func prepareDumpReport(cacheName string, rep *dumpReport) string {
 	if rep.Error == nil {

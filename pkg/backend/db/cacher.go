@@ -86,7 +86,7 @@ func (c *DefaultCache) GetName() string {
 
 //
 //  SimpleCache
-//  Simple implementation of the Cacher interface.
+//  Simple implementation of the Cacher interface. SimpleCache's map is protected by RWMutex.
 //
 
 type SimpleCache struct {

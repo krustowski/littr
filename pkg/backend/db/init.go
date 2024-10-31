@@ -15,7 +15,7 @@ var (
 
 type Database struct {
 	// Protect the stack as a whole with a proper mutex.
-	mu sync.RWMutex
+	mu *sync.RWMutex
 
 	// Helper booleans to simply track the stack's state.
 	RLocked bool
@@ -44,16 +44,19 @@ func init() {
 	TokenCache = tokenCache
 	UserCache = userCache
 
+	var mu sync.RWMutex
+
 	// Pass the cache pointers to the stack.
 	database = &Database{
 		Members: []Cacher{
-			flowCache,
-			pollCache,
-			requestCache,
-			subscriptionCache,
-			tokenCache,
-			userCache,
+			//flowCache,
+			//pollCache,
+			//requestCache,
+			//subscriptionCache,
+			//tokenCache,
+			//userCache,
 		},
+		mu: &mu,
 	}
 
 	// Explicitly state the defaults.
@@ -71,7 +74,7 @@ func init() {
 //
 
 func Lock() {
-	database.mu.Lock()
+	//(*database.mu).Lock()
 	database.Locked = true
 }
 
@@ -92,6 +95,6 @@ func RUnlock() {
 
 // Release is a special fuction evoked when the lock needs to be released before the backend shutdown not to defer its exit, but to keep the database stack in the read-only state.
 func ReleaseLock() {
-	database.mu.Unlock()
+	//(*database.mu).Unlock()
 	database.Locked = true
 }

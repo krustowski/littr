@@ -112,11 +112,6 @@ var appHandler = &app.Handler{
 	ServiceWorkerTemplate: config.EnchartedSW,
 }
 
-// initClient initializes the router for the client web application (if run in browser for the first time).
-func initClient() {
-	initClientCommon()
-}
-
 var (
 	// The very main HTTP server's struct pointer.
 	server *http.Server
@@ -124,6 +119,11 @@ var (
 	// The WaitGroup for the graceful HTTP server shutdown.
 	wg sync.WaitGroup
 )
+
+// initClient initializes the router for the client web application (if run in browser for the first time).
+func initClient() {
+	initClientCommon()
+}
 
 func initServer() {
 	// Prepare the Logger instance.
@@ -159,15 +159,14 @@ func initServer() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
-		go func() {
-			// Lock the write access to the database.
-			db.Lock()
-			// Release the lock, but keep the database read-only. Keeping the lock blocks the main thread and defers the application shutdown.
-			defer db.ReleaseLock()
+		// "Lock" the write access to the database. <--- causes threadlock and app exit deferals when used with the actual lock !!!
+		db.Lock()
 
-			// Dump all in-memory databases.
-			l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
-		}()
+		// Dump all in-memory databases.
+		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+
+		// Release the lock, but keep the database read-only. The lock blocks the main thread and defers the application shutdown.
+		db.ReleaseLock()
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
