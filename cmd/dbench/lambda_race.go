@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 )
 
@@ -248,8 +249,10 @@ var TestHandler = func(tC *testConfiguration, wgMain *sync.WaitGroup) {
 
 // ReadTestResults is a relatively simple lambda to fetch and print all the test results.
 var ResultHandler = func(tC *testConfiguration) {
+	l := common.NewDummyLogger()
+
 	// Fetch the common fan-in channels channel.
-	chh := db.FanInChannels(nil, tC.TestChannels...)
+	chh := db.FanInChannels(l, tC.TestChannels...)
 
 	// Fetch the result interface{} and assert its type..
 	for R := range chh {
