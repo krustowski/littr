@@ -89,3 +89,9 @@ func RUnlock() {
 	database.mu.RUnlock()
 	database.RLocked = false
 }
+
+// Release is a special fuction evoked when the lock needs to be released before the backend shutdown not to defer its exit, but to keep the database stack in the read-only state.
+func ReleaseLock() {
+	database.mu.Unlock()
+	database.Locked = true
+}

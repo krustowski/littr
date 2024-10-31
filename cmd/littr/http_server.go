@@ -159,11 +159,15 @@ func initServer() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
-		// Lock the write access to the database.
-		db.Lock()
+		go func() {
+			// Lock the write access to the database.
+			db.Lock()
+			// Release the lock, but keep the database read-only. Keeping the lock blocks the main thread and defers the application shutdown.
+			defer db.ReleaseLock()
 
-		// Dump all in-memory databases.
-		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+			// Dump all in-memory databases.
+			l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+		}()
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -220,7 +224,7 @@ func initServer() {
 	}
 
 	// Notify other services that the server is shuting down so they should be closed too.
-	server.RegisterOnShutdown(func() {
+	/*server.RegisterOnShutdown(func() {
 		l := common.NewLogger(nil, "shutdown")
 
 		// Create a new shutdown context.
@@ -230,9 +234,9 @@ func initServer() {
 		l.Msg("HTTP server shudown registered, closing other services...").Status(http.StatusOK).Log()
 
 		// Shutdown the SSE server handler and its Provider.
-		live.Streamer.Provider.Shutdown(ctx)
+		//live.Streamer.Provider.Shutdown(ctx)
 		live.Streamer.Shutdown(ctx)
-	})
+	})*/
 
 	//
 	//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
