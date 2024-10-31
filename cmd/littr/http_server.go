@@ -230,7 +230,8 @@ func initServer() {
 
 		l.Msg("HTTP server shudown registered, closing other services...").Status(http.StatusOK).Log()
 
-		// Shutdown the SSE server handler.
+		// Shutdown the SSE server handler and its Provider.
+		live.Streamer.Provider.Shutdown(ctx)
 		live.Streamer.Shutdown(ctx)
 	})
 
