@@ -14,17 +14,21 @@ func main() {
 		return
 	}
 
-	var wgMain sync.WaitGroup
+	// Ensure this procedure can be executed just once.
+	var once sync.Once
 
-	// Set the workers execution, and start them.
-	wgMain.Add(1)
-	go TestHandler(defaultTestConfiguration, &wgMain)
+	once.Do(func() {
+		var wgMain sync.WaitGroup
 
-	// Wait for all workers to finish (or hit the deadline).
-	wgMain.Wait()
+		// Set the workers execution, and start them.
+		wgMain.Add(1)
+		go TestHandler(defaultTestConfiguration, &wgMain)
 
-	// Fetch and print the test results.
-	ResultHandler(defaultTestConfiguration)
+		// Wait for all workers to finish (or hit the deadline).
+		wgMain.Wait()
 
+		// Fetch and print the test results.
+		ResultHandler(defaultTestConfiguration)
+	})
 	return
 }
