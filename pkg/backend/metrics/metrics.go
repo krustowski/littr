@@ -3,8 +3,7 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-
-	"go.vxn.dev/swis/v5/pkg/core"
+	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
 var (
@@ -71,8 +70,8 @@ func RegisterAll() {
 }
 
 // UpdateCountMetric is an umbrella function to catch all possible scenarios (mostly) where the metrics should be noted down.
-func UpdateCountMetric(cache *core.Cache, count int, absolute bool) {
-	switch cache.Name {
+func UpdateCountMetric(cacheName string, count int64, absolute bool) {
+	switch cacheName {
 	case "FlowCache":
 		if absolute {
 			//Metrics.PostCountMetric.With(prometheus.Labels{"device": "custom name"}).Set(55)

@@ -231,16 +231,10 @@ func fetchRefreshTokenRecord(refreshCookie *http.Cookie, w *http.ResponseWriter)
 	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
 	// Fetch the refresh token details from the Token database.
-	rawToken, found := db.TokenCache.Get(refreshTokenSum)
+	token, found := db.GetOne[models.Token](db.TokenCache, refreshTokenSum, models.Token{})
 	if !found {
 		invalidateRefreshToken(nil, w)
 		return nil, fmt.Errorf("refresh token's reference has not been found in the database")
-	}
-
-	// Assert the Token model type to the raw output from the database.
-	token, ok := rawToken.(models.Token)
-	if !ok {
-		return nil, fmt.Errorf("cannot assert data type to models.Token, try again")
 	}
 
 	return &token, nil
