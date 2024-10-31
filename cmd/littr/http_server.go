@@ -23,7 +23,6 @@ import (
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/backend/pprof"
 	"go.vxn.dev/littr/pkg/config"
-	"go.vxn.dev/swis/v5/pkg/core"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -160,7 +159,7 @@ func initServer() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
-		// Lock the database so no one can change any data henceforth.
+		// Lock the write access to the database.
 		db.Lock()
 
 		// Dump all in-memory databases.
@@ -236,19 +235,11 @@ func initServer() {
 	})
 
 	//
-	//  Database and data initialization
+	//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
 	//
 
-	// Initialize all the in-memory databases (caches).
-	db.FlowCache = &core.Cache{Name: "FlowCache"}
-	db.PollCache = &core.Cache{Name: "PollCache"}
-	db.RequestCache = &core.Cache{Name: "RequestCache"}
-	db.SubscriptionCache = &core.Cache{Name: "SubscriptionCache"}
-	db.TokenCache = &core.Cache{Name: "TokenCache"}
-	db.UserCache = &core.Cache{Name: "UserCache"}
-
-	// Unlock the write access.
-	db.Unlock()
+	// Lock the database stack for read, unlock it for write (see pkg/backend/db/init.go for more).
+	db.RLock()
 
 	l.Msg("caches initialized").Status(http.StatusOK).Log()
 
@@ -261,8 +252,8 @@ func initServer() {
 	// Run data migration procedures to the database schema.
 	l.Msg(db.RunMigrations(l)).Status(http.StatusOK).Log()
 
-	// Mark the database state as fully initialized now.
-	db.MarkLoaded()
+	// Unlock the read access.
+	db.RUnlock()
 
 	//
 	//  Routes and handlers mounting

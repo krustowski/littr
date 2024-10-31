@@ -2,20 +2,15 @@ package db
 
 import (
 	"reflect"
-	"sync"
 
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
-// Mutex should ensure the combined read+write operations (SetOne here specially) are thread safe.
-// https://stackoverflow.com/a/66774210
-var mu sync.Mutex
-
 // GetAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
 func GetAll[T any](cache Cacher, model T) (map[string]T, int64) {
 	// An initialization check.
-	if cache == nil {
+	if cache == nil || database.RLocked {
 		return map[string]T{}, 0
 	}
 
@@ -54,7 +49,7 @@ func GetAll[T any](cache Cacher, model T) (map[string]T, int64) {
 // GetOne fetches just one very item from the given cache instance. As long as the function is generic, the type is asserted automatically, so the type passing is required. Returns the requested item and the its retrieval result as boolean.
 func GetOne[T any](cache Cacher, key string, model T) (T, bool) {
 	// An initialization check.
-	if cache == nil {
+	if cache == nil || database.RLocked {
 		return model, false
 	}
 
@@ -79,15 +74,11 @@ func GetOne[T any](cache Cacher, key string, model T) (T, bool) {
 // as the combined read+write operation is not considered a thread safe.
 func SetOne[T any](cache Cacher, key string, model T) bool {
 	// An initialization check.
-	/*if !dbState.unlocked || cache == nil {
+	if cache == nil || database.Locked {
 		return false
-	}*/
+	}
 
 	var doIncrementMetric bool = true
-
-	// Lock the mutex.
-	mu.Lock()
-	defer mu.Unlock()
 
 	// Check for the possible item's existence in such cache instance. The item will be rewritten anyway (unless),
 	// but this is to make sure we are not incrementing the statistics while the count remains the same.
@@ -115,9 +106,9 @@ func SetOne[T any](cache Cacher, key string, model T) bool {
 // DeleteOne deletes an item from such cache via the requested key value. Fails if the database state is locked.
 func DeleteOne(cache Cacher, key string) bool {
 	// The database state check.
-	/*if !dbState.unlocked {
+	if cache == nil || database.Locked {
 		return false
-	}*/
+	}
 
 	var deleted bool
 

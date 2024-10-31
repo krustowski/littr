@@ -93,8 +93,8 @@ type SimpleCache struct {
 	// Name of the cache.
 	Name string
 
-	// Generic string-keyed map protected by Mutex.
-	mu sync.Mutex
+	// Generic string-keyed map protected by RWMutex.
+	mu sync.RWMutex
 	mp GenericMap
 }
 
@@ -110,9 +110,9 @@ func NewSimpleCache(name string) *SimpleCache {
 }
 
 func (c *SimpleCache) Load(key string) (interface{}, bool) {
-	c.mu.Lock()
+	c.mu.RLock()
 	rawV := c.mp[key]
-	c.mu.Unlock()
+	c.mu.RUnlock()
 
 	if rawV == nil {
 		return nil, false
@@ -129,19 +129,28 @@ func (c *SimpleCache) Store(key string, rawV interface{}) bool {
 	return true
 }
 
-func (c *SimpleCache) Range() (*GenericMap, int64) {
+func (c *SimpleCache) Delete(key string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	delete(c.mp, key)
 
-	var count int64
+	return true
+}
+
+func (c *SimpleCache) Range() (*GenericMap, int64) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	var counter int64
 	var genericMap = GenericMap{}
 
 	// Very expensive operation.
 	for key, rawV := range c.mp {
 		genericMap[key] = rawV
+		counter++
 	}
 
-	return &genericMap, count
+	return &genericMap, counter
 }
 
 func (c *SimpleCache) GetName() string {
@@ -198,22 +207,43 @@ func (c *SignalCache) Load(key string) (interface{}, bool) {
 	return rawV, true
 }
 
+// makeWaitForUpdate is a metafunction to lock the condition.
 func (c *SignalCache) makeWaitForUpdate() {
 	c.c.L.Lock()
 	c.updated = false
 	c.c.L.Unlock()
-
 }
 
-func (c *SignalCache) Store(key string, rawV interface{}) {
-	defer c.c.Broadcast()
+func (c *SignalCache) Store(key string, rawV interface{}) bool {
+	// Make readers wait for an update.
+	c.makeWaitForUpdate()
+
+	// Lock the write access and prepare the Unlock and Broadcast defers.
 	c.c.L.Lock()
+	defer c.c.L.Unlock()
+	defer c.c.Broadcast()
+
+	// Store/rewrite the value.
 	c.mp[key] = rawV
 	c.updated = true
-	c.c.L.Unlock()
+
+	return true
 }
 
-func (c *SignalCache) Delete(key string) {}
+func (c *SignalCache) Delete(key string) bool {
+	// Make readers wait for an update.
+	c.makeWaitForUpdate()
+
+	// Lock the write access and prepare the Unlock and Broadcast defers.
+	c.c.L.Lock()
+	defer c.c.L.Unlock()
+	defer c.c.Broadcast()
+
+	// Delete the value associated with such key.
+	delete(c.mp, key)
+
+	return true
+}
 
 func (c *SignalCache) Range() (*GenericMap, int64) {
 	c.c.L.Lock()
@@ -224,15 +254,16 @@ func (c *SignalCache) Range() (*GenericMap, int64) {
 		c.c.Wait()
 	}
 
-	var count int64
+	var counter int64
 	var genericMap = GenericMap{}
 
 	// Very expensive operation.
 	for key, rawV := range c.mp {
 		genericMap[key] = rawV
+		counter++
 	}
 
-	return &genericMap, count
+	return &genericMap, counter
 }
 
 func (c *SignalCache) GetName() string {
