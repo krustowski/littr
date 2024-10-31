@@ -213,13 +213,13 @@ func (f *Footer) OnMount(ctx app.Context) {
 			InitialInterval: 500 * time.Millisecond,
 			// How fast should the reconnection time grow.
 			// 1 = constatnt time interval.
-			Multiplier: float64(1.5),
+			Multiplier: float64(1.1),
 			// Jitter: range (0, 1).
 			// -1 = no randomization.
 			Jitter: float64(0.5),
 			// How much can the wait time grow.
 			// 0 = grow indefinitely.
-			MaxInterval: 2500 * time.Millisecond,
+			MaxInterval: 2000 * time.Millisecond,
 			// Stop retrying after such time.
 			// 0 = no limit.
 			MaxElapsedTime: 10000 * time.Millisecond,
@@ -248,9 +248,9 @@ func (f *Footer) OnMount(ctx app.Context) {
 		conn.SubscribeToAll(func(event sse.Event) {
 			ctx.NewActionWithValue("generic-event", event)
 
-			if event.Type == "close" {
+			/*if event.Type == "close" {
 				f.sseCancel()
-			}
+			}*/
 
 			// Print all events.
 			fmt.Printf("%s: %s\n", event.Type, event.Data)
