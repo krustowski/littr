@@ -201,7 +201,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 //
 
 // invalidateRefreshToken is a helper function to invalidate the refresh HTTP cookie (token). The function sends the invalidated HTTP cookie in the response headers.
-func invalidateRefreshToken(l common.LoggerInterface, w *http.ResponseWriter) bool {
+func invalidateRefreshToken(l common.Logger, w *http.ResponseWriter) bool {
 	// Refresh token is invalid = not found in the Token database => user unauthenticated, invalidate the refresh token.
 	voidCookie := &http.Cookie{
 		Name:     REFRESH_TOKEN,

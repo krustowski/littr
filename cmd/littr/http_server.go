@@ -253,7 +253,7 @@ func initServer() {
 	l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
 
 	// Run data migration procedures to the database schema.
-	l.Msg(db.RunMigrations(l)).Status(http.StatusOK).Log()
+	l.Msg(db.RunMigrations()).Status(http.StatusOK).Log()
 
 	// Unlock the read access.
 	db.RUnlock()

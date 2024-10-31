@@ -8,6 +8,25 @@ import (
 	"time"
 )
 
+type Logger interface {
+	// Basic methods.
+	Msg(message string) Logger
+	Status(code int) Logger
+	Error(err error) Logger
+
+	// Prefix-related methods.
+	SetPrefix(prefix string) Logger
+	RemovePrefix() Logger
+
+	// Timer-related methods.
+	ResetTimer() Logger
+
+	// Data-related methods.
+	Log() Logger
+	Payload(pl interface{}) Logger
+	Write(w http.ResponseWriter)
+}
+
 const (
 	// Localhost as the IPv4 address.
 	LOCALHOST4 = "127.0.0.1"
@@ -16,26 +35,7 @@ const (
 	LOCALHOST6 = "::1"
 )
 
-type LoggerInterface interface {
-	// Basic methods.
-	Msg(message string) *Logger
-	Status(code int) *Logger
-	Error(err error) *Logger
-
-	// Prefix-related methods.
-	SetPrefix(prefix string) *Logger
-	RemovePrefix() *Logger
-
-	// Timer-related methods.
-	ResetTimer() *Logger
-
-	// Data-related methods.
-	Log() *Logger
-	Payload(pl interface{}) *Logger
-	Write(w http.ResponseWriter)
-}
-
-type Logger struct {
+type DefaultLogger struct {
 	// CallerID is a nickname of the user calling the API.
 	CallerID string `json:"-"`
 
@@ -81,7 +81,7 @@ type Logger struct {
 
 // NewLogger takes the HTTP request structure in (can be nil), and the worker's name (required string) to prepare a new Logger instance.
 // Returns a pointer to the new Logger instance.
-func NewLogger(r *http.Request, worker string) *Logger {
+func NewLogger(r *http.Request, worker string) *DefaultLogger {
 	// Worker name has to be set always.
 	if worker == "" {
 		return nil
@@ -92,7 +92,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 
 	// Little hotfix for the data dump/load procedure.
 	if r == nil {
-		return &Logger{
+		return &DefaultLogger{
 			CallerID:   "system",
 			IPAddress:  LOCALHOST4,
 			Method:     "",
@@ -111,7 +111,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 		callerID = "system"
 	}
 
-	return &Logger{
+	return &DefaultLogger{
 		CallerID:   callerID,
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
@@ -125,7 +125,7 @@ func NewLogger(r *http.Request, worker string) *Logger {
 }
 
 // encode works as a simple macro returning JSON-encoded string of the Logger struct.
-func (l *Logger) encode() string {
+func (l *DefaultLogger) encode() string {
 	jsonString, err := json.Marshal(l)
 	if err != nil {
 		fmt.Println("error marshalling Logger struct (", err.Error(), ")")
@@ -136,7 +136,7 @@ func (l *Logger) encode() string {
 }
 
 // Deprecated. Println formats the encoded Logger struct into an output string to stdin.
-func (l *Logger) Println(msg string, code int) bool {
+func (l *DefaultLogger) Println(msg string, code int) bool {
 	l.Code = code
 	l.Message = msg
 
@@ -151,7 +151,7 @@ func (l *Logger) Println(msg string, code int) bool {
 
 // ResetTimer resets the TimerStart timestamp. Usable in the procedures where the logger is passed (???)
 // or not to log the whole HTTP server uptime (the gracefully HTTP server shutdown goroutine).
-func (l *Logger) ResetTimer() *Logger {
+func (l DefaultLogger) ResetTimer() Logger {
 	l.TimerStart = time.Now()
 	return l
 }
@@ -161,13 +161,13 @@ func (l *Logger) ResetTimer() *Logger {
 //
 
 // SetPrefix sets the log's prefix according to the input <prefix> string.
-func (l *Logger) SetPrefix(prefix string) *Logger {
+func (l DefaultLogger) SetPrefix(prefix string) Logger {
 	l.Prefix = prefix
 	return l
 }
 
 // RemovePrefix remove preiously prepended string from the Logger struct.
-func (l *Logger) RemovePrefix() *Logger {
+func (l DefaultLogger) RemovePrefix() Logger {
 	l.Prefix = ""
 	return l
 }
@@ -177,7 +177,7 @@ func (l *Logger) RemovePrefix() *Logger {
 //
 
 // Msg writes the input <msg> string to the Logger struct for its following output.
-func (l *Logger) Msg(msg string) *Logger {
+func (l DefaultLogger) Msg(msg string) Logger {
 	var message string
 
 	if l.Prefix != "" {
@@ -189,13 +189,13 @@ func (l *Logger) Msg(msg string) *Logger {
 }
 
 // Status writes the HTTP Status code (as integer) for the following logger output.
-func (l *Logger) Status(code int) *Logger {
+func (l DefaultLogger) Status(code int) Logger {
 	l.Code = code
 	return l
 }
 
 // Error takes an error and holds it in the Logger structure for the possible output.
-func (l *Logger) Error(err error) *Logger {
+func (l DefaultLogger) Error(err error) Logger {
 	l.Err = err
 	return l
 }
@@ -205,7 +205,7 @@ func (l *Logger) Error(err error) *Logger {
 //
 
 // Log write the logger's JSON output to the stdout.
-func (l *Logger) Log() *Logger {
+func (l DefaultLogger) Log() Logger {
 	if l.IPAddress == "" {
 		l.IPAddress = LOCALHOST4
 	}
@@ -223,7 +223,7 @@ func (l *Logger) Log() *Logger {
 }
 
 // Payload takes and prepares the HTTP response's body payload. The input can be nil.
-func (l *Logger) Payload(pl interface{}) *Logger {
+func (l DefaultLogger) Payload(pl interface{}) Logger {
 	// construct the generic API response
 	l.Response = &APIResponse{
 		Message:   l.Message,
@@ -235,7 +235,7 @@ func (l *Logger) Payload(pl interface{}) *Logger {
 }
 
 // Write writes the HTTP headers and sends the response to the client.
-func (l *Logger) Write(w http.ResponseWriter) {
+func (l DefaultLogger) Write(w http.ResponseWriter) {
 	jsonData, err := json.Marshal(l.Response)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -248,3 +248,47 @@ func (l *Logger) Write(w http.ResponseWriter) {
 	io.WriteString(w, fmt.Sprintf("%s", jsonData))
 	return
 }
+
+//
+//  DummyLogger is the dummy implementation of the LoggerInterface. It suits as a blank logger just above the level of a nil.
+//
+
+type DummyLogger struct{}
+
+func NewDummyLogger() *DummyLogger {
+	return &DummyLogger{}
+}
+
+func (l *DummyLogger) Msg(message string) *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) Status(code int) *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) Error(err error) *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) SetPrefix(prefix string) *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) RemovePrefix() *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) ResetTimer() *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) Log() *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) Payload(pl interface{}) *DummyLogger {
+	return l
+}
+
+func (l *DummyLogger) Write(w http.ResponseWriter) {}

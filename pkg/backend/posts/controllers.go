@@ -222,7 +222,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			Receiver: receiverName,
 			Devices:  &devs,
 			Body:     &body,
-			Logger:   l,
+			//Logger:   l,
 		}
 
 		// send the webpush notification(s)

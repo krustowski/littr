@@ -30,7 +30,7 @@ var defaultAvatarURL = func() string {
 }()
 
 // GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
-func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGroup) string {
+func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGroup) string {
 	// Defer the sync.WaitGroup.Done() when run in goroutine.
 	if wg != nil {
 		defer wg.Done()
@@ -82,28 +82,30 @@ func GetGravatarURL(user models.User, channel chan avatarResult, wg *sync.WaitGr
 
 	// Write the result to the channel if not nil (already closed for example).
 	if channel != nil {
-		channel <- result
+		channel <- &result
 	}
 
 	return url
 }
 
-// fanInChannels is a helper function that collects results from multiple workers.
-func fanInChannels(l common.LoggerInterface, channels ...chan avatarResult) <-chan avatarResult {
+// FanInChannels is a helper function that collects results from multiple workers.
+func FanInChannels(l common.Logger, channels ...chan interface{}) <-chan interface{} {
 	var wg sync.WaitGroup
 
 	// Debug log.
-	l.Msg(fmt.Sprintf("number of channels to fan-in: %d", len(channels))).Status(http.StatusOK).Log()
+	if l != nil {
+		l.Msg(fmt.Sprintf("number of channels to fan-in: %d", len(channels))).Status(http.StatusOK).Log()
+	}
 
 	// Common output channel.
-	out := make(chan avatarResult)
+	out := make(chan interface{}, 1)
 
 	// Start a goroutine for each channel to fetch the results.
 	for _, channel := range channels {
 		wg.Add(1)
 
 		// Assign the goroutine a channel, fetch its result and exit.
-		go func(ch <-chan avatarResult) {
+		go func(ch <-chan interface{}) {
 			defer wg.Done()
 			for result := range ch {
 				// Forward the result to the common output channel.

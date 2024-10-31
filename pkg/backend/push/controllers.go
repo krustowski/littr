@@ -280,7 +280,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		Receiver: post.Nickname,
 		Devices:  &devs,
 		Body:     &body,
-		Logger:   l,
+		//Logger:   l,
 	}
 
 	// send the webpush notification(s)

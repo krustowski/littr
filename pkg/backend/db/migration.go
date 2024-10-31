@@ -17,7 +17,7 @@ import (
 )
 
 // migrationFunc declares the unified type for any migration function.
-type migrationFunc func(common.LoggerInterface, []interface{}) bool
+type migrationFunc func(common.Logger, []interface{}) bool
 
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
@@ -32,7 +32,9 @@ type migrationProp struct {
 }
 
 // RunMigrations is a wrapper function for the migration registration and execution.
-func RunMigrations(l common.LoggerInterface) string {
+func RunMigrations() string {
+	l := common.NewLogger(nil, "migrations")
+
 	// Fetch all the data for the migration procedures.
 	users, _ := GetAll(UserCache, models.User{})
 	//polls, _ := GetAll(PollCache, models.Poll{})
@@ -132,7 +134,7 @@ func RunMigrations(l common.LoggerInterface) string {
 }
 
 // migrateExpiredRequests procedure loops over requests and removes those expired already.
-func migrateExpiredRequests(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateExpiredRequests(l common.Logger, rawElems []interface{}) bool {
 	var reqs *map[string]models.Request
 
 	// Assert pointers from the interface array.
@@ -169,7 +171,7 @@ func migrateExpiredRequests(l common.LoggerInterface, rawElems []interface{}) bo
 }
 
 // migrateExpiredTokens procedure loop over tokens and removes those beyond the expiry.
-func migrateExpiredTokens(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 	var tokens *map[string]models.Token
 
 	// Assert pointers from the interface array.
@@ -206,7 +208,7 @@ func migrateExpiredTokens(l common.LoggerInterface, rawElems []interface{}) bool
 }
 
 // migrateEmptyDeviceTags procedure takes care of filling empty device tags arrays.
-func migrateEmptyDeviceTags(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
 	var subs *map[string][]models.Device
 
 	// Assert pointers from the interface array.
@@ -256,7 +258,7 @@ func migrateEmptyDeviceTags(l common.LoggerInterface, rawElems []interface{}) bo
 }
 
 // migrateAvatarURL procedure takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
-func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -275,7 +277,7 @@ func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 	}
 
 	// Make zero-size channel array for the per user run goroutines. The array is incremented/appended dynamically to ensure proper channel closures.
-	var channels = make([]chan avatarResult, 0)
+	var channels = make([]chan interface{}, 0)
 	//var channels = make([]chan avatarResult, len(*users))
 	var wg sync.WaitGroup
 	var i int
@@ -301,7 +303,7 @@ func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 
 		// Add one new worker to the WaitGroup, and create a channel for it.
 		wg.Add(1)
-		channels = append(channels, make(chan avatarResult))
+		channels = append(channels, make(chan interface{}))
 
 		// Run the gravatar goroutine, increment the chan/goroutines count.
 		go GetGravatarURL(user, channels[i], &wg)
@@ -309,11 +311,16 @@ func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 	}
 
 	// Retrieve the results = merge the channels into one. See pkg/backend/db/gravatar.go for more.
-	results := fanInChannels(l, channels...)
+	results := FanInChannels(l, channels...)
 	wg.Wait()
 
 	// Collect the results.
-	for result := range results {
+	for rawR := range results {
+		result, ok := rawR.(*avatarResult)
+		if !ok {
+			l.Msg("corrupted output from avatarResult chan...").Status(http.StatusInternalServerError).Log()
+		}
+
 		// Change the avatarURL only if the new URL differs from the previous one.
 		if result.URL != "" && result.URL != result.User.AvatarURL {
 			result.User.AvatarURL = result.URL
@@ -333,7 +340,7 @@ func migrateAvatarURL(l common.LoggerInterface, rawElems []interface{}) bool {
 }
 
 // migrateFlowPurge procedure deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
-func migrateFlowPurge(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -378,7 +385,7 @@ func migrateFlowPurge(l common.LoggerInterface, rawElems []interface{}) bool {
 }
 
 // migrateUserDeletion procedure takes care of default users deletion from the database. Function returns bool based on the process result.
-func migrateUserDeletion(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -442,7 +449,7 @@ func migrateUserDeletion(l common.LoggerInterface, rawElems []interface{}) bool 
 }
 
 // migrateUserRegisteredTime procedure fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
-func migrateUserRegisteredTime(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -482,7 +489,7 @@ func migrateUserRegisteredTime(l common.LoggerInterface, rawElems []interface{})
 }
 
 // migrateUserShadeList procedure lists ShadeList items and ensures user shaded (no mutual following, no replying).
-func migrateUserShadeList(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserShadeList(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -547,7 +554,7 @@ func migrateUserShadeList(l common.LoggerInterface, rawElems []interface{}) bool
 }
 
 // migrateUserUnshade procedure lists all users and unshades manually some explicitly list users.
-func migrateUserUnshade(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserUnshade(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -604,7 +611,7 @@ func migrateUserUnshade(l common.LoggerInterface, rawElems []interface{}) bool {
 }
 
 // migrateBlankAboutText procedure loops over user accounts and adds "newbie" where the about-text field is blank.
-func migrateBlankAboutText(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateBlankAboutText(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -643,7 +650,7 @@ func migrateBlankAboutText(l common.LoggerInterface, rawElems []interface{}) boo
 }
 
 // migrateSystemFlowOn procedure ensures everyone has system account in the flow.
-func migrateSystemFlowOn(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateSystemFlowOn(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -686,7 +693,7 @@ func migrateSystemFlowOn(l common.LoggerInterface, rawElems []interface{}) bool 
 }
 
 // migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it also tries to delete valid, but misdeleted activation requests from its database.
-func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 	var reqs *map[string]models.Request
 
@@ -765,7 +772,7 @@ func migrateUserActiveState(l common.LoggerInterface, rawElems []interface{}) bo
 }
 
 // migrateUserOptions procedure ensures that every user has a proper set of all options according to the legacy models.User fields.
-func migrateUserOptions(l common.LoggerInterface, rawElems []interface{}) bool {
+func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -848,7 +855,7 @@ func migrateUserOptions(l common.LoggerInterface, rawElems []interface{}) bool {
 }
 
 // migratePolls procedure loops over all polls making sure that any poll with the non-existing Author will be omitted/deleted.
-func migratePolls(l common.LoggerInterface, rawElems []interface{}) bool {
+func migratePolls(l common.Logger, rawElems []interface{}) bool {
 	var polls *map[string]models.Poll
 	var users *map[string]models.User
 

@@ -19,11 +19,12 @@ type NotificationOpts struct {
 	Receiver string
 	Devices  *[]models.Device
 	Body     *[]byte
-	Logger   common.LoggerInterface
+	//Logger   common.Logger
 }
 
 func SendNotificationToDevices(opts *NotificationOpts) {
-	l := opts.Logger
+	l := common.NewLogger(nil, "notifs")
+	//l := opts.Logger
 	stringifiedBody := string(*opts.Body)
 
 	var tag string
