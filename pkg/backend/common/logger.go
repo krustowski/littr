@@ -259,36 +259,36 @@ func NewDummyLogger() *DummyLogger {
 	return &DummyLogger{}
 }
 
-func (l *DummyLogger) Msg(message string) *DummyLogger {
+func (l DummyLogger) Msg(message string) Logger {
 	return l
 }
 
-func (l *DummyLogger) Status(code int) *DummyLogger {
+func (l DummyLogger) Status(code int) Logger {
 	return l
 }
 
-func (l *DummyLogger) Error(err error) *DummyLogger {
+func (l DummyLogger) Error(_ error) Logger {
 	return l
 }
 
-func (l *DummyLogger) SetPrefix(prefix string) *DummyLogger {
+func (l DummyLogger) SetPrefix(prefix string) Logger {
 	return l
 }
 
-func (l *DummyLogger) RemovePrefix() *DummyLogger {
+func (l DummyLogger) RemovePrefix() Logger {
 	return l
 }
 
-func (l *DummyLogger) ResetTimer() *DummyLogger {
+func (l DummyLogger) ResetTimer() Logger {
 	return l
 }
 
-func (l *DummyLogger) Log() *DummyLogger {
+func (l DummyLogger) Log() Logger {
 	return l
 }
 
-func (l *DummyLogger) Payload(pl interface{}) *DummyLogger {
+func (l DummyLogger) Payload(pl interface{}) Logger {
 	return l
 }
 
-func (l *DummyLogger) Write(w http.ResponseWriter) {}
+func (l DummyLogger) Write(w http.ResponseWriter) {}
