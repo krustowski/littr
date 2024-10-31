@@ -697,34 +697,35 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	type requestData struct {
-		UIDarkMode    bool   `json:"dark_mode"`
-		LiveMode      bool   `json:"live_mode"`
-		LocalTimeMode bool   `json:"local_time_mode"`
-		Private       bool   `json:"private"`
-		AboutText     string `json:"about_you"`
-		WebsiteLink   string `json:"website_link"`
+		UIDarkMode    bool                  `json:"dark_mode"`
+		LiveMode      bool                  `json:"live_mode"`
+		LocalTimeMode bool                  `json:"local_time_mode"`
+		Private       bool                  `json:"private"`
+		AboutText     string                `json:"about_you"`
+		WebsiteLink   string                `json:"website_link"`
+		OptionsMap    models.UserOptionsMap `json:"options_map"`
 	}
 
-	// skip blank callerID
+	// Skip the blank callerID.
 	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// take the param from path
+	// Take the param from path.
 	userID := chi.URLParam(r, "userID")
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// check for the possible user's data forgery attempt
+	// Check for the possible user's data forgery attempt.
 	if l.CallerID != userID {
 		l.Msg(common.ERR_USER_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// fetch the requested user's record form the database
+	// Fetch the requested user's record form the database.
 	user, found := db.GetOne(db.UserCache, userID, models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
@@ -737,52 +738,52 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 
 	var reqData requestData
 
-	// decode the incoming data
+	// Decode the incoming data.
 	if err := common.UnmarshalRequestData(r, &reqData); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// patch the nil map
+	// Patch the nil map.
 	if user.Options == nil {
-		user.Options = make(map[string]bool)
+		user.Options = models.UserOptionsMap{}
 	}
 
-	// toggle dark mode to light mode and vice versa
+	// Toggle dark mode to light mode and vice versa.
 	if reqData.UIDarkMode != user.UIDarkMode {
 		user.UIDarkMode = !user.UIDarkMode
 		user.Options["uiDarkMode"] = reqData.UIDarkMode
 	}
 
-	// toggle the live mode
+	// Toggle the live mode.
 	if reqData.LiveMode != user.LiveMode {
 		user.LiveMode = !user.LiveMode
 		user.Options["liveMode"] = reqData.LiveMode
 	}
 
-	// toggle the local time mode
+	// Toggle the local time mode.
 	if reqData.LocalTimeMode != user.LocalTimeMode {
 		user.LocalTimeMode = !user.LocalTimeMode
 		user.Options["localTimeMode"] = reqData.LocalTimeMode
 	}
 
-	// toggle the private mode
+	// Toggle the private mode.
 	if reqData.Private != user.Private {
 		user.Private = !user.Private
 		user.Options["private"] = reqData.Private
 	}
 
-	// change the about text if present and differs from the current one
+	// Change the about text if present and differs from the current one.
 	if reqData.AboutText != "" && reqData.AboutText != user.About {
 		user.About = reqData.AboutText
 	}
 
-	// change the website link if present and differs from the current one
+	// Change the website link if present and differs from the current one.
 	if reqData.WebsiteLink != "" && reqData.WebsiteLink != user.Web {
 		user.Web = reqData.WebsiteLink
 	}
 
-	// save the updated user's record back to the database
+	// Save the updated user's record back to the database.
 	if saved := db.SetOne(db.UserCache, userID, user); !saved {
 		l.Msg(common.ERR_USER_UPDATE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -808,38 +809,38 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
-	// skip blank callerID
+	// Skip blank callerID.
 	if l.CallerID == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// take the param from path
+	// Take the param from path.
 	userID := chi.URLParam(r, "userID")
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// check for possible user's data forgery attempt
+	// Check for possible user's data forgery attempt.
 	if userID != l.CallerID {
 		l.Msg(common.ERR_USER_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// look for such user requested in the database
+	// Look for such user requested in the database.
 	if _, found := db.GetOne(db.UserCache, userID, models.User{}); !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete requested user record from database
+	// Delete requested user record from database.
 	if deleted := db.DeleteOne(db.UserCache, userID); !deleted {
 		l.Msg(common.ERR_USER_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// delete user's subscriptions/registered devices
+	// Delete user's subscriptions/registered devices.
 	if deleted := db.DeleteOne(db.SubscriptionCache, userID); !deleted {
 		l.Msg(common.ERR_SUBSCRIPTION_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -847,19 +848,19 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	var void string
 
-	// delete all user's posts and polls, and tokens
-	// fetch all posts, polls, and tokens to find mathing ones to delete
+	// Delete all user's posts and polls, and tokens.
+	// Fetch all posts, polls, and tokens to find mathing ones to delete.
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
 	polls, _ := db.GetAll(db.PollCache, models.Poll{})
 	tokens, _ := db.GetAll(db.TokenCache, void)
 
-	// loop over posts and delete authored ones + linked fungures
+	// Loop over posts and delete authored ones + linked fungures.
 	for postID, post := range posts {
 		if post.Nickname != userID {
 			continue
 		}
 
-		// delete such user's post
+		// Delete such user's post
 		if deleted := db.DeleteOne(db.FlowCache, postID); !deleted {
 			l.Msg("could not delete deleted user's post (" + postID + ")").Status(http.StatusInternalServerError).Log()
 			//continue
