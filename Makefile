@@ -110,7 +110,7 @@ info:
 #
 
 .PHONY: dev
-dev: fmt build run logs
+dev: version fmt build run logs
 
 .PHONY: prod
 prod: run logs
@@ -164,11 +164,8 @@ test_local: fmt
 	@echo -e "\n${YELLOW} Running unit/integration tests using the local runtime... ${RESET}\n"
 	@go test $(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
 
-.PHONY: prebuild
-prebuild: version fmt
-
 .PHONY: build
-build: prebuild
+build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
