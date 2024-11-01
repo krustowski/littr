@@ -141,7 +141,7 @@ docs: config
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up littr-swagger -d --force-recreate
 
 .PHONY: test_local
-test_local: 
+test_local: fmt
 	@echo -e "\n${YELLOW} Running unit/integration tests using the local runtime... ${RESET}\n"
 	@go test $(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
 

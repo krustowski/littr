@@ -181,7 +181,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.45
-+ write integration/e2e tests draft
++ write integration/e2e tests draft (wip)
 
 ### roadmap to v0.44
 + ~~fix the invalid overally metrics states after the backend reload~~
