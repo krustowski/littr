@@ -167,8 +167,8 @@ run:
 		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
 	fi
 
-.PHONY: run-test
-run-test:	
+.PHONY: run_test
+run_test:	
 	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
@@ -271,3 +271,14 @@ push_mirror:
 	@echo -e "\n${YELLOW} Pushing to the mirror repository... ${RESET}\n"
 	@git push mirror master --follow-tags
 	
+.PHONY: sonar_scan
+sonar_scan:
+	@if [ \( -n "${SONAR_URL}" \) -a \( -z "${SONAR_PROJECT_TOKEN}" \) ]; \
+		then \
+		sonar-scanner \
+		-Dsonar.projectKey=${APP_NAME} \
+		-Dsonar.sources=. \
+		-Dsonar.host.url=${SONAR_URL}   \
+		-Dsonar.login=${SONAR_PROJECT_TOKEN}; \
+		fi
+
