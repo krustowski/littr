@@ -7,8 +7,14 @@ workflow:
     - when: never
 
 stages:         
+  - test
   - build
   - deploy
+
+test-local:
+  stage: test
+  script:
+    - make test_local
 
 build-image:  
   stage: build
