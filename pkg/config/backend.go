@@ -8,8 +8,11 @@ import (
 )
 
 const (
-	// Default server port if not specified elsewhere.
+	// Default HTTP server port if not specified elsewhere.
 	DEFAULT_PORT = "8054"
+
+	// Default HTTP port to run Go tests.
+	DEFAULT_TEST_PORT = "8777"
 
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
 	HEARTBEAT_SLEEP_TIME = 20
@@ -20,6 +23,8 @@ const (
 
 	// The anti-duplication const(s).
 	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
+	APP_PORT             = "APP_PORT"
+	DOCKER_INTERNAL_PORT = "DOCKER_INTERNAL_PORT"
 	LIMITER_DISABLED     = "LIMITER_DISABLED"
 	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
 	SERVER_PORT          = "SERVER_PORT"
@@ -74,6 +79,15 @@ var (
 	ServerPort = func() string {
 		if os.Getenv(SERVER_PORT) != "" {
 			return os.Getenv(SERVER_PORT)
+		}
+
+		// Try the alternative(s) if SERVER_PORT is blank.
+		if os.Getenv(DOCKER_INTERNAL_PORT) != "" {
+			return os.Getenv(DOCKER_INTERNAL_PORT)
+		}
+
+		if os.Getenv(APP_PORT) != "" {
+			return os.Getenv(APP_PORT)
 		}
 
 		return DEFAULT_PORT

@@ -12,11 +12,12 @@ import (
 	"testing"
 	"time"
 
+	"go.vxn.dev/littr/pkg/config"
+
 	chi "github.com/go-chi/chi/v5"
 	sse "github.com/tmaxmax/go-sse"
 )
 
-var streamerTestPort = "8777"
 var streamerTestURI = "/api/v1/live"
 
 func TestRouterWithStreamer(t *testing.T) {
@@ -26,7 +27,7 @@ func TestRouterWithStreamer(t *testing.T) {
 	r.Mount(streamerTestURI, Streamer)
 
 	// Create a custom network TCP connection listener.
-	listener, err := net.Listen("tcp", ":"+streamerTestPort)
+	listener, err := net.Listen("tcp", ":"+config.DEFAULT_TEST_PORT)
 	if err != nil {
 		// Cannot listen on such address = a permission issue?
 		t.Errorf(err.Error())
@@ -41,7 +42,7 @@ func TestRouterWithStreamer(t *testing.T) {
 		Handler:      r,
 	}
 
-	ts := httptest.Server{
+	ts := &httptest.Server{
 		Listener:    listener,
 		EnableHTTP2: false,
 		Config:      serverConfig,
@@ -58,7 +59,7 @@ func TestRouterWithStreamer(t *testing.T) {
 
 	// Spin-off a client SSE goroutine and wait till it dead.
 	wg.Add(1)
-	go testConnectorSSE(t, &wg, "http://localhost:"+streamerTestPort+streamerTestURI)
+	go testConnectorSSE(t, &wg, "http://localhost:"+config.DEFAULT_TEST_PORT+streamerTestURI)
 
 	// Spin another goroutine to handle the deadline.
 	go func() {

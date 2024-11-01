@@ -13,6 +13,10 @@ stages:
 
 test-local:
   stage: test
+  environment: 
+    name: test
+  variables:
+    APP_ENVIRONMENT: 'test'
   script:
     - make test_local
 
