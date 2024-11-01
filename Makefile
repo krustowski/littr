@@ -121,7 +121,7 @@ prod: run logs
 #
 
 .PHONY: fmt
-fmt: version
+fmt:
 	@echo -e "\n${YELLOW} Code reformating (gofmt)... ${RESET}\n"
 	@gofmt -w -s .
 
@@ -129,6 +129,25 @@ fmt: version
 config:
 	@echo -e "\n${YELLOW} Running local configuration setup... ${RESET}\n"
 	@go install github.com/swaggo/swag/cmd/swag@latest
+
+.PHONY: version
+version:
+	@[ -f "./.env" ] && head -n 8 .env | \
+		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(REGISTRY\)=\(.*\)/\1=""/' | \
+		sed -e 's/\(MAIL_SASL_USR\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(MAIL_SASL_PWD\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(MAIL_HOST\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(MAIL_PORT\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(GSC_TOKEN\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_PRIV_KEY\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_PUB_KEY\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(VAPID_SUBSCRIBER\)=\(.*\)/\1=xxx/' | \
+		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
+		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
+		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
+		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' pkg/backend/router.go
 
 .PHONY: docs
 docs: config
@@ -145,8 +164,11 @@ test_local: fmt
 	@echo -e "\n${YELLOW} Running unit/integration tests using the local runtime... ${RESET}\n"
 	@go test $(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
 
+.PHONY: prebuild
+prebuild: version fmt
+
 .PHONY: build
-build: 
+build: prebuild
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
@@ -190,25 +212,6 @@ stop:
 	@echo -e "\n${YELLOW} Stopping and purging project (docker compose down)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
 	@docker compose -f ${DOCKER_COMPOSE_FILE} down
-
-.PHONY: version
-version: 
-	@[ -f "./.env" ] && head -n 8 .env | \
-		sed -e 's/\(APP_PEPPER\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(REGISTRY\)=\(.*\)/\1=""/' | \
-		sed -e 's/\(MAIL_SASL_USR\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(MAIL_SASL_PWD\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(MAIL_HOST\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(MAIL_PORT\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(GSC_TOKEN\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(GSC_URL\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(VAPID_PRIV_KEY\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(VAPID_PUB_KEY\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(VAPID_SUBSCRIBER\)=\(.*\)/\1=xxx/' | \
-		sed -e 's/\(LOKI_URL\)=\(.*\)/\1=http:\/\/loki.example.com\/loki\/api\/v1\/push/' | \
-		sed -e 's/\(APP_URLS_TRAEFIK\)=\(.*\)/\1=`littr.example.com`/' | \
-		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
-		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' pkg/backend/router.go
 
 .PHONY: docs_host
 docs_host:
