@@ -80,6 +80,16 @@ func TestAPIRouter(t *testing.T) {
 	//  Basic route tests
 	//
 
+	if resp, body := testRequest(t, ts, "GET", "/afdshfajshfafd", nil); resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Response: %d", resp.StatusCode)
+		t.Errorf(body)
+	}
+
+	if resp, body := testRequest(t, ts, "POST", "/afdshfajshfafd", nil); resp.StatusCode != http.StatusMethodNotAllowed && resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Response: %d", resp.StatusCode)
+		t.Errorf(body)
+	}
+
 	if resp, body := testRequest(t, ts, "GET", ROUTE_PREFIX, nil); resp.StatusCode == http.StatusOK {
 		var data common.APIResponse
 

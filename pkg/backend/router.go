@@ -50,6 +50,32 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 )
 
+var (
+	// Default HTTP 404 response.
+	NotFoundHandler = func(w http.ResponseWriter, r *http.Request) {
+		dummyRootLoggerWriter(w, r, "page not found", http.StatusNotFound)
+	}
+
+	// Default HTTP 405 response.
+	MethodNotAllowedHandler = func(w http.ResponseWriter, r *http.Request) {
+		dummyRootLoggerWriter(w, r, "method not allowed", http.StatusMethodNotAllowed)
+	}
+
+	// The JSON API service root path handler (served at /api/v1).
+	rootHandler = func(w http.ResponseWriter, r *http.Request) {
+		msg := "littr JSON API service (v" + os.Getenv("APP_VERSION") + ")"
+		dummyRootLoggerWriter(w, r, msg, http.StatusOK)
+	}
+
+	// Simple request logger + response writer.
+	dummyRootLoggerWriter = func(w http.ResponseWriter, r *http.Request, msg string, status int) {
+		l := common.NewLogger(r, "root")
+
+		// Log this, and write the common response.
+		l.Msg(msg).Status(status).Log().Payload(nil).Write(w)
+	}
+)
+
 // Simple rate limiter (by IP and URL). (Limits Requests per duration, see pkg/config/backend.go for more.)
 // https://github.com/go-chi/httprate
 var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
@@ -63,18 +89,6 @@ var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SE
 	httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 )
 
-// The JSON API service root path handler.
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	// Log this route as well.
-	common.NewLogger(r, "base").Status(http.StatusOK).Log()
-
-	// Write common response.
-	common.WriteResponse(w, common.APIResponse{
-		Message:   "littr JSON API service (v" + os.Getenv("APP_VERSION") + ")",
-		Timestamp: time.Now().UnixNano(),
-	}, http.StatusOK)
-}
-
 // The very main API router.
 func APIRouter() chi.Router {
 	r := chi.NewRouter()
@@ -87,6 +101,7 @@ func APIRouter() chi.Router {
 		r.Use(limiter)
 	}
 
+	// Served at /api/v1.
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.Router())

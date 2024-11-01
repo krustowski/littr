@@ -262,6 +262,10 @@ func initServer() {
 	//  Routes and handlers mounting
 	//
 
+	// At first define default ones (see pkb/backend/router.go for details).
+	r.NotFound(http.HandlerFunc(be.NotFoundHandler))
+	r.MethodNotAllowed(http.HandlerFunc(be.MethodNotAllowedHandler))
+
 	// Mount the very main API router spanning all the backend.
 	r.Mount("/api/v1", be.APIRouter())
 
