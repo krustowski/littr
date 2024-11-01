@@ -10,6 +10,7 @@ import (
 	//sse "github.com/alexandrevicenzi/go-sse"
 	//sse "github.com/r3labs/sse/v2"
 
+	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/config"
 )
 
@@ -71,9 +72,12 @@ var Streamer = &sse.Server{
 // @Failure      500  {object}  nil
 // @Router       /live [get]
 func beat() {
+	l := common.NewLogger(nil, "pacemaker")
+
 	for {
 		// Break the loop if Streamer is nil.
 		if Streamer == nil {
+			l.Msg("the SSE streamer is nil, stopping the pacemaker...").Status(http.StatusInternalServerError).Log()
 			break
 		}
 
