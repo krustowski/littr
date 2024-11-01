@@ -5,16 +5,15 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func Router() chi.Router {
+func PollRouter(pollController *PollController) chi.Router {
 	r := chi.NewRouter()
 
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", getPolls)
-		r.Post("/", addNewPoll)
-		r.Get("/{pollID}", getSinglePoll)
-		r.Put("/{pollID}", updatePoll)
-		r.Delete("/{pollID}", deletePoll)
-	})
+	r.Get("/", pollController.GetAll)
+	r.Post("/", pollController.Create)
+	r.Get("/{pollID}", pollController.GetByID)
+	r.Put("/{pollID}", pollController.Update)
+	r.Patch("/{pollID}", pollController.Update)
+	r.Delete("/{pollID}", pollController.Delete)
 
 	return r
 }

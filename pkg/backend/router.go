@@ -108,7 +108,23 @@ func APIRouter() chi.Router {
 	//r.Mount("/docs", docs.Router())
 	r.Mount("/dump", db.Router())
 	r.Mount("/live", live.Router())
-	r.Mount("/polls", polls.Router())
+
+	// 0.44.21.
+
+	// Init repository
+	pollRepository := polls.NewPollRepository(db.PollCache)
+
+	// Init service
+	pollService := polls.NewPollService(pollRepository)
+
+	// Init controller
+	pollController := polls.NewPollController(pollService)
+
+	// Init router
+	r.Mount("/polls", polls.PollRouter(pollController))
+
+	// 0.44.21.
+
 	r.Mount("/posts", posts.Router())
 	r.Mount("/push", push.Router())
 	r.Mount("/stats", stats.Router())
