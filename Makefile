@@ -140,6 +140,11 @@ docs: config
 		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up littr-swagger -d --force-recreate \
 		|| docker compose -f ${DOCKER_COMPOSE_FILE} up littr-swagger -d --force-recreate
 
+.PHONY: test_local
+test_local: 
+	@echo -e "\n${YELLOW} Running unit/integration tests using the local runtime... ${RESET}\n"
+	@go test $(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
+
 .PHONY: build
 build: 
 	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
@@ -167,8 +172,8 @@ run:
 		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
 	fi
 
-.PHONY: run_test
-run_test:	
+.PHONY: run_test_env
+run_test_env:	
 	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
