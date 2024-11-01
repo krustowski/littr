@@ -17,7 +17,7 @@ import (
 )
 
 // These URL paths are to be skipped by the authentication middleware.
-var pathExceptions = []string{
+var PathExceptions = []string{
 	"/api/v1",
 	"/api/v1/auth",
 	"/api/v1/auth/logout",
@@ -47,7 +47,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		  }*/
 
 		// Skip those HTTP routes.
-		if helpers.Contains(pathExceptions, r.URL.Path) || (r.URL.Path == "/api/v1/users" && r.Method == "POST") {
+		if helpers.Contains(PathExceptions, r.URL.Path) || (r.URL.Path == "/api/v1/users" && r.Method == "POST") {
 			next.ServeHTTP(w, r)
 			return
 		}
