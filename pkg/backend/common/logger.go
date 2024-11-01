@@ -242,6 +242,11 @@ func (l DefaultLogger) Write(w http.ResponseWriter) {
 		return
 	}
 
+	// Default HTTP code with no body.
+	if l.Response == nil && jsonData == nil {
+		l.Code = http.StatusNoContent
+	}
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(l.Code)
 
