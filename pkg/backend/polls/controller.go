@@ -1,10 +1,11 @@
 package polls
 
 import (
+	"context"
 	"net/http"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	//"go.vxn.dev/littr/pkg/models"
+	"go.vxn.dev/littr/pkg/models"
 	//chi "github.com/go-chi/chi/v5"
 )
 
@@ -37,9 +38,32 @@ var getAllPollController = (&PollController{}).GetAll
 // @Failure      500  {object}  common.APIResponse "the poll saving process failed"
 // @Router       /polls [post]
 func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "polls")
+	l := common.NewLogger(r, "pollController")
 
-	l.Msg("new poll created successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	// Skip the blank callerID.
+	if l.CallerID == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	var DTOIn *models.Poll
+	var DTOOut interface{}
+
+	// Decode the received data.
+	if err := common.UnmarshalRequestData(r, DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	ctx := context.WithValue(r.Context(), "lmao", "rofl")
+
+	// Create the poll at pollService.
+	if err := c.pollService.Create(ctx, DTOIn); err != nil {
+		l.Msg("could not create a new poll: " + err.Error()).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("new poll created successfully").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
 	return
 }
 
@@ -57,7 +81,7 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  common.APIResponse
 // @Router       /polls/{pollID} [put]
 func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "polls")
+	l := common.NewLogger(r, "pollController")
 
 	l.Msg("poll has been updated successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
@@ -94,7 +118,7 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   common.APIResponse
 // @Router       /polls [get]
 func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "polls")
+	l := common.NewLogger(r, "pollController")
 
 	l.Msg("listing all polls").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
@@ -112,7 +136,7 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Failure      404  {object}  common.APIResponse
 // @Router       /polls/{pollID} [get]
 func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "polls")
+	l := common.NewLogger(r, "pollController")
 
 	l.Msg("returning the requested poll's data").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
