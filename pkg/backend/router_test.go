@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -75,29 +74,15 @@ func TestAPIRouter(t *testing.T) {
 	}
 
 	//
-	//  Configurate and start the server
+	//  Configurate and start the listener and server
 	//
 
 	// Create a custom network TCP connection listener.
-	listener, err := net.Listen("tcp", ":"+config.DEFAULT_TEST_PORT)
-	if err != nil {
-		// Cannot listen on such address = a permission issue?
-		t.Errorf(err.Error())
-	}
+	listener := config.PrepareTestListener(t)
 	defer listener.Close()
 
 	// Create a custom HTTP server configuration for the test server for SSE.
-	serverConfig := &http.Server{
-		Addr: listener.Addr().String(),
-		//ReadTimeout: 0 * time.Second,
-		WriteTimeout: 0 * time.Second,
-		Handler:      r,
-	}
-
-	ts := &httptest.Server{
-		Listener: listener,
-		Config:   serverConfig,
-	}
+	ts := config.PrepareTestServer(t, listener, r)
 
 	// Start the HTTP server.
 	ts.Start()
