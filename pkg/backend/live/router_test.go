@@ -2,9 +2,7 @@ package live
 
 import (
 	"context"
-	"net"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/signal"
 	"sync"
@@ -26,29 +24,11 @@ func TestRouterWithStreamer(t *testing.T) {
 	// For the Streamer configuration check pkg/backend/live/streamer.go
 	r.Mount(streamerTestURI, Streamer)
 
-	// Create a custom network TCP connection listener.
-	listener, err := net.Listen("tcp", ":"+config.DEFAULT_TEST_PORT)
-	if err != nil {
-		// Cannot listen on such address = a permission issue?
-		t.Errorf(err.Error())
-	}
+	// Fetch test net listener and test HTTP server configuration.
+	listener := config.PrepareTestListener(t)
 	defer listener.Close()
 
-	// Create a custom HTTP server configuration for the test server for SSE.
-	serverConfig := &http.Server{
-		Addr: listener.Addr().String(),
-		//ReadTimeout: 0 * time.Second,
-		WriteTimeout: 0 * time.Second,
-		Handler:      r,
-	}
-
-	ts := &httptest.Server{
-		Listener:    listener,
-		EnableHTTP2: false,
-		Config:      serverConfig,
-	}
-
-	// Start the HTTP server.
+	ts := config.PrepareTestServer(t, listener, r)
 	ts.Start()
 	defer ts.Close()
 
