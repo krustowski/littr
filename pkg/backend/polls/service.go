@@ -7,31 +7,30 @@ import (
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
-type PollServiceInterface interface {
-	Create(ctx context.Context, poll *models.Poll) error
-	Update(ctx context.Context, poll *models.Poll) error
-	Delete(ctx context.Context, pollID string) error
-	FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error)
-	FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error)
-}
-
 //
-// PollServiceInterface implementation
+// models.PollServiceInterface implementation
 //
 
 type PollService struct {
-	pollRepository db.PollRepositoryInterface
-	postRepository db.PostRepositoryInterface
-	userRepository db.UserRepositoryInterface
+	pollRepository models.PollRepositoryInterface
+	postRepository models.PostRepositoryInterface
+	userRepository models.UserRepositoryInterface
 }
 
-func NewPollService(pollRepository db.PollRepositoryInterface, postRepository db.PostRepositoryInterface, userRepository db.UserRepositoryInterface) *PollService {
+func NewPollService(
+	pollRepository models.PollRepositoryInterface,
+	postRepository models.PostRepositoryInterface,
+	userRepository models.UserRepositoryInterface,
+) models.PollServiceInterface {
+	if pollRepository == nil || postRepository == nil || userRepository == nil {
+		return nil
+	}
+
 	return &PollService{
 		pollRepository: pollRepository,
 		postRepository: postRepository,
@@ -41,7 +40,7 @@ func NewPollService(pollRepository db.PollRepositoryInterface, postRepository db
 
 func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("callerID").(string)
+	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
 		return fmt.Errorf(common.ERR_CALLER_FAIL)
 	}
@@ -136,10 +135,10 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 	}
 
 	// Request the caller from the user repository.
-	/*caller, err := s.userRepository.GetByID(callerID)
+	caller, err := s.userRepository.GetByID(callerID)
 	if err != nil {
 		return nil, nil, err
-	}*/
+	}
 
 	// Hide foreign poll's authors and voters.
 	for key, poll := range *polls {
@@ -165,15 +164,15 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 		(*polls)[key] = poll
 	}
 
-	return polls, nil, nil
+	return polls, caller, nil
 }
 
 func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error) {
 	// Fetch the caller's ID from the context.
-	/*callerID, ok := ctx.Value("nickname").(string)
+	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
 		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}*/
+	}
 
 	// Fetch the poll.
 	poll, err := s.pollRepository.GetByID(pollID)
@@ -182,10 +181,10 @@ func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll
 	}
 
 	// Request the caller from the user repository.
-	/*caller, err := s.userRepository.GetByID(callerID)
+	caller, err := s.userRepository.GetByID(callerID)
 	if err != nil {
 		return nil, nil, err
-	}*/
+	}
 
-	return poll, nil, nil
+	return poll, caller, nil
 }

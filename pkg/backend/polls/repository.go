@@ -9,12 +9,16 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-// The implementation of pkg/backend/db.PollRepositoryInterface.
+// The implementation of pkg/models.PollRepositoryInterface.
 type PollRepository struct {
 	cache db.Cacher
 }
 
-func NewPollRepository(cache db.Cacher) db.PollRepositoryInterface {
+func NewPollRepository(cache db.Cacher) models.PollRepositoryInterface {
+	if cache == nil {
+		return nil
+	}
+
 	return &PollRepository{
 		cache: cache,
 	}
@@ -50,12 +54,12 @@ func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
 	}
 
 	// Assert the type
-	poll, ok := rawPoll.(*models.Poll)
+	poll, ok := rawPoll.(models.Poll)
 	if !ok {
 		return nil, fmt.Errorf("poll's data corrupted")
 	}
 
-	return poll, nil
+	return &poll, nil
 }
 
 func (r *PollRepository) Save(poll *models.Poll) error {
@@ -67,15 +71,6 @@ func (r *PollRepository) Save(poll *models.Poll) error {
 
 	return nil
 }
-
-/*func (r *PollRepository) Update(poll *models.Poll) error {
-	updated := r.cache.Store(poll.ID, poll)
-	if !updated {
-		return fmt.Errorf("poll data could not be updated in the database")
-	}
-
-	return nil
-}*/
 
 func (r *PollRepository) Delete(pollID string) error {
 	// Simple poll's deleting.

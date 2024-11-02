@@ -12,12 +12,16 @@ import (
 )
 
 type PollController struct {
-	pollService PollServiceInterface
+	pollService models.PollServiceInterface
 }
 
-func NewPollController(service PollServiceInterface) *PollController {
+func NewPollController(pollService models.PollServiceInterface) *PollController {
+	if pollService == nil {
+		return nil
+	}
+
 	return &PollController{
-		pollService: service,
+		pollService: pollService,
 	}
 }
 
@@ -49,23 +53,23 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn *models.Poll
+	var DTOIn models.Poll
 
 	// Decode the received data.
-	if err := common.UnmarshalRequestData(r, DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
 		return
 	}
 
 	// Create the poll at pollService.
-	if err := c.pollService.Create(r.Context(), DTOIn); err != nil {
+	if err := c.pollService.Create(r.Context(), &DTOIn); err != nil {
 		l.Msg("could not create a new poll").Status(http.StatusInternalServerError).Error(err).Log()
 		l.Msg("could not create a new poll").Status(http.StatusInternalServerError).Payload(nil).Write(w)
 		return
 	}
 
-	l.Msg("new poll created successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	l.Msg("new poll created successfully").Status(http.StatusCreated).Log().Payload(nil).Write(w)
 	return
 }
 
@@ -244,8 +248,8 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Compose the DTO-out from pollService.
 	poll, user, err := c.pollService.FindByID(r.Context(), pollID)
 	if err != nil {
-		l.Msg("could not fetch many polls").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not fetch many polls").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not fetch requested poll").Status(http.StatusInternalServerError).Error(err).Log()
+		l.Msg("could not fetch requested poll").Status(http.StatusInternalServerError).Payload(nil).Write(w)
 		return
 	}
 
