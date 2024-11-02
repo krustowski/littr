@@ -89,16 +89,31 @@ var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SE
 )
 
 // The very main API router.
-func APIRouter() chi.Router {
+func NewAPIRouter() chi.Router {
 	r := chi.NewRouter()
 
-	// Authentication middleware.
+	// Use the authentication middleware.
 	r.Use(auth.AuthMiddleware)
 
-	// Rate limiter, feature-flagged.
+	// Use the rate limiter, feature-flagged.
 	if !config.IsLimiterDisabled {
 		r.Use(limiter)
 	}
+
+	// Init repositories for services.
+	pollRepository := polls.NewPollRepository(db.PollCache)
+	postRepository := posts.NewPostRepository(db.FlowCache)
+	userRepository := users.NewUserRepository(db.UserCache)
+
+	// Init services for controllers.
+	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
+
+	// Init controllers for routers.
+	pollController := polls.NewPollController(pollService)
+
+	//
+	//  API subpkg routers registering
+	//
 
 	// Served at /api/v1.
 	r.Get("/", rootHandler)
@@ -108,23 +123,7 @@ func APIRouter() chi.Router {
 	r.Mount("/dump", db.Router())
 	r.Mount("/live", live.Router())
 
-	// 0.44.21.
-
-	// Init repositories
-	pollRepository := polls.NewPollRepository(db.PollCache)
-	//postRepository := posts.NewPostRepository(db.FlowCache)
-	//userRepository := users.NewUserRepository(db.UserCache)
-
-	// Init service
-	pollService := polls.NewPollService(pollRepository, nil, nil)
-
-	// Init controller
-	pollController := polls.NewPollController(pollService)
-
-	// Init router
 	r.Mount("/polls", polls.NewPollRouter(pollController))
-
-	// 0.44.21.
 
 	r.Mount("/posts", posts.Router())
 	r.Mount("/push", push.Router())
