@@ -18,14 +18,14 @@ import (
 
 var streamerTestURI = "/api/v1/live"
 
-func TestRouterWithStreamer(t *testing.T) {
+func TestLiveRouterWithStreamer(t *testing.T) {
 	r := chi.NewRouter()
 
 	// For the Streamer configuration check pkg/backend/live/streamer.go
 	r.Mount(streamerTestURI, Streamer)
 
 	// Fetch test net listener and test HTTP server configuration.
-	listener := config.PrepareTestListener(t)
+	listener := config.PrepareTestListenerWithPort(t, config.DEFAULT_TEST_SSE_PORT)
 	defer listener.Close()
 
 	ts := config.PrepareTestServer(t, listener, r)
@@ -39,9 +39,9 @@ func TestRouterWithStreamer(t *testing.T) {
 
 	// Spin-off a client SSE goroutine and wait till it dead.
 	wg.Add(1)
-	go testConnectorSSE(t, &wg, "http://localhost:"+config.DEFAULT_TEST_PORT+streamerTestURI)
+	go testConnectorSSE(t, &wg, "http://localhost:"+config.DEFAULT_TEST_SSE_PORT+streamerTestURI)
 
-	var timeout = 5 * time.Second
+	var timeout = 4 * time.Second
 
 	// Spin another goroutine to handle the deadline.
 	go func() {

@@ -14,7 +14,19 @@ func PrepareTestListener(t *testing.T) net.Listener {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", ":"+DEFAULT_TEST_PORT)
+	return PrepareTestListenerWithPort(t, DEFAULT_TEST_PORT)
+}
+
+func PrepareTestListenerWithPort(t *testing.T, port string) net.Listener {
+	if t == nil {
+		return nil
+	}
+
+	if port == "" {
+		t.Errorf("listener's port not specified")
+	}
+
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		// Cannot listen on such address = a permission issue or already used
 		t.Errorf(err.Error())

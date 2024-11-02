@@ -12,7 +12,8 @@ const (
 	DEFAULT_PORT = "8054"
 
 	// Default HTTP port to run Go tests.
-	DEFAULT_TEST_PORT = "8777"
+	DEFAULT_TEST_PORT     = "8777"
+	DEFAULT_TEST_SSE_PORT = "8778"
 
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
 	HEARTBEAT_SLEEP_TIME = 20
