@@ -44,18 +44,18 @@ func RandStringBytesMaskImprSrcUnsafe(n int) string {
 }
 
 //
-//  String + StringWithCharset
+//  RandomString + RandomStringWithCharset
 //  https://www.calhoun.io/creating-random-strings-in-go/
 //
 
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-func String(length int) string {
-	return StringWithCharset(length, letterBytes)
+func RandomString(length int) string {
+	return RandomStringWithCharset(length, letterBytes)
 }
 
-func StringWithCharset(length int, charset string) string {
+func RandomStringWithCharset(length int, charset string) string {
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = charset[seededRand.Intn(len(charset))]

@@ -49,8 +49,8 @@ type testConfiguration struct {
 }
 
 // Common Cacher testing function type(s).
-type testOperationFuncOriginal func(id int, c db.Cacher, K string, V interface{}, wgTest *sync.WaitGroup, ch chan interface{})
 type testOperationFunc func(wO *workerOptions)
+type testOperationFuncOriginal func(id int, c db.Cacher, K string, V interface{}, wgTest *sync.WaitGroup, ch chan interface{})
 
 type workerOptions struct {
 	// The implemented and initialized Cacher interface form the Cacher bank.
@@ -147,7 +147,7 @@ var GenerateKeys = func(N, L int) []string {
 	var keys []string
 
 	for i := 0; i < N; i++ {
-		keys = append(keys, String(L))
+		keys = append(keys, RandomString(L))
 	}
 
 	return keys
