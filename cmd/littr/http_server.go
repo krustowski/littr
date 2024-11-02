@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -238,7 +239,16 @@ func initServer() {
 	l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
 
 	// Run data migration procedures to the database schema.
-	l.Msg(db.RunMigrations()).Status(http.StatusOK).Log()
+	migrationsReport := db.RunMigrations()
+
+	migrationsStatus := func() int {
+		if strings.Contains(migrationsReport, "false") {
+			return http.StatusInternalServerError
+		}
+		return http.StatusOK
+	}()
+
+	l.Msg(migrationsReport).Status(migrationsStatus).Log()
 
 	// Unlock the read access.
 	db.RUnlock()
@@ -252,7 +262,7 @@ func initServer() {
 	r.MethodNotAllowed(http.HandlerFunc(be.MethodNotAllowedHandler))
 
 	// Mount the very main API router spanning all the backend.
-	r.Mount("/api/v1", be.APIRouter())
+	r.Mount("/api/v1", be.NewAPIRouter())
 
 	// Mount the pprof profiler router.
 	r.Mount("/debug", pprof.Router())
