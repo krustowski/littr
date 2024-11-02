@@ -9,6 +9,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
+	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -93,9 +94,41 @@ func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 }
 
 func (s *PollService) Update(ctx context.Context, poll *models.Poll) error {
-	//err := s.pollRepository.Store(poll)
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf(common.ERR_CALLER_FAIL)
+	}
 
-	return fmt.Errorf("not yet implemented")
+	// Fetch the actual poll to verify its content to be updated..
+	dbPoll, err := s.pollRepository.GetByID(poll.ID)
+	if err != nil {
+		return err
+	}
+
+	// Check the poll's ownership. The author cannot vote on such poll.
+	if dbPoll.Author == callerID {
+		return fmt.Errorf(common.ERR_POLL_SELF_VOTE)
+	}
+
+	// Has the callerID already voted?
+	if helpers.Contains(dbPoll.Voted, callerID) {
+		return fmt.Errorf(common.ERR_POLL_EXISTING_VOTE)
+	}
+
+	// Verify that only one vote had been passed in; suppress vote count forgery.
+	if (poll.OptionOne.Counter + poll.OptionTwo.Counter + poll.OptionThree.Counter) != (dbPoll.OptionOne.Counter + dbPoll.OptionTwo.Counter + dbPoll.OptionThree.Counter + 1) {
+		return fmt.Errorf(common.ERR_POLL_INVALID_VOTE_COUNT)
+	}
+
+	// Now, update the poll's data.
+	dbPoll.Voted = append(dbPoll.Voted, callerID)
+	dbPoll.OptionOne.Counter = poll.OptionOne.Counter
+	dbPoll.OptionTwo.Counter = poll.OptionTwo.Counter
+	dbPoll.OptionThree.Counter = poll.OptionThree.Counter
+
+	// Save the changes in repository.
+	return s.pollRepository.Save(dbPoll)
 }
 
 func (s *PollService) Delete(ctx context.Context, pollID string) error {

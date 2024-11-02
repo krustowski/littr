@@ -102,10 +102,10 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn *models.Poll
+	var DTOIn models.Poll
 
 	// Decode the received data.
-	if err := common.UnmarshalRequestData(r, DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
 		return
@@ -114,7 +114,7 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := context.WithValue(r.Context(), "pollID", pollID)
 
 	// Dispatch the update request to the pollService.
-	if err := c.pollService.Update(ctx, DTOIn); err != nil {
+	if err := c.pollService.Update(ctx, &DTOIn); err != nil {
 		l.Msg("could not update the poll:").Status(decideStatusFromError(err)).Error(err).Log()
 		l.Msg("could not update the poll:").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
@@ -265,13 +265,21 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 //
 
 var decideStatusFromError = func(err error) int {
+	// HTTP 200 condition.
 	if err == nil {
 		return http.StatusOK
 	}
 
+	// HTTP 403 conditions.
+	if err.Error() == common.ERR_POLL_SELF_VOTE || err.Error() == common.ERR_POLL_EXISTING_VOTE || err.Error() == common.ERR_POLL_INVALID_VOTE_COUNT {
+		return http.StatusForbidden
+	}
+
+	// HTTP 404 condition.
 	if err.Error() == common.ERR_POLL_NOT_FOUND {
 		return http.StatusNotFound
 	}
 
+	// HTTP 500 as default.
 	return http.StatusInternalServerError
 }
