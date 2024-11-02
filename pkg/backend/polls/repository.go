@@ -43,6 +43,7 @@ func (r *PollRepository) GetAll(pageOpts interface{}) (*map[string]models.Poll, 
 }
 
 func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
+	// Fetch the poll from the cache.
 	rawPoll, found := r.cache.Load(pollID)
 	if !found {
 		return nil, fmt.Errorf("requested poll not found")
@@ -58,6 +59,7 @@ func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
 }
 
 func (r *PollRepository) Save(poll *models.Poll) error {
+	// Store the poll using its key in the cache.
 	saved := r.cache.Store(poll.ID, poll)
 	if !saved {
 		return fmt.Errorf("an error occurred while saving a poll")
@@ -66,16 +68,17 @@ func (r *PollRepository) Save(poll *models.Poll) error {
 	return nil
 }
 
-func (r *PollRepository) Update(poll *models.Poll) error {
+/*func (r *PollRepository) Update(poll *models.Poll) error {
 	updated := r.cache.Store(poll.ID, poll)
 	if !updated {
 		return fmt.Errorf("poll data could not be updated in the database")
 	}
 
 	return nil
-}
+}*/
 
 func (r *PollRepository) Delete(pollID string) error {
+	// Simple poll's deleting.
 	deleted := r.cache.Delete(pollID)
 	if !deleted {
 		return fmt.Errorf("poll data could not be purged from the database")

@@ -94,9 +94,9 @@ func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 }
 
 func (s *PollService) Update(ctx context.Context, poll *models.Poll) error {
-	err := s.pollRepository.Update(poll)
+	//err := s.pollRepository.Store(poll)
 
-	return err
+	return fmt.Errorf("not yet implemented")
 }
 
 func (s *PollService) Delete(ctx context.Context, pollID string) error {

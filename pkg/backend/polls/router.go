@@ -5,7 +5,7 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func PollRouter(pollController *PollController) chi.Router {
+func NewPollRouter(pollController *PollController) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/", pollController.GetAll)
