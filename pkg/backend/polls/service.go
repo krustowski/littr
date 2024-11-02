@@ -9,6 +9,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/live"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -16,8 +17,8 @@ type PollServiceInterface interface {
 	Create(ctx context.Context, poll *models.Poll) error
 	Update(ctx context.Context, poll *models.Poll) error
 	Delete(ctx context.Context, pollID string) error
-	FindAll(ctx context.Context) ([]*models.Poll, error)
-	FindByID(ctx context.Context, pollID string) (*models.Poll, error)
+	FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error)
+	FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error)
 }
 
 //
@@ -27,6 +28,15 @@ type PollServiceInterface interface {
 type PollService struct {
 	pollRepository db.PollRepositoryInterface
 	postRepository db.PostRepositoryInterface
+	userRepository db.UserRepositoryInterface
+}
+
+func NewPollService(pollRepository db.PollRepositoryInterface, postRepository db.PostRepositoryInterface, userRepository db.UserRepositoryInterface) *PollService {
+	return &PollService{
+		pollRepository: pollRepository,
+		postRepository: postRepository,
+		userRepository: userRepository,
+	}
 }
 
 func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
@@ -95,30 +105,87 @@ func (s *PollService) Delete(ctx context.Context, pollID string) error {
 	return err
 }
 
-func (s *PollService) FindAll(ctx context.Context) ([]*models.Poll, error) {
-	polls, err := s.pollRepository.GetAll()
-	if err != nil {
-		return nil, err
+func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error) {
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
 	}
 
-	return polls, nil
+	// Fetch the pageNo from the context.
+	pageNo, ok := ctx.Value("pageNo").(int)
+	if !ok {
+		return nil, nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
+	}
+
+	// Compose a pagination options object to paginate polls.
+	opts := &pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Polls: pages.PollOptions{
+			Plain: true,
+		},
+	}
+
+	// Request the page of polls from the poll repository.
+	polls, err := s.pollRepository.GetAll(opts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Request the caller from the user repository.
+	/*caller, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, nil, err
+	}*/
+
+	// Hide foreign poll's authors and voters.
+	for key, poll := range *polls {
+		var votedList []string
+
+		// Loop over voters, anonymize them.
+		for _, voter := range poll.Voted {
+			if voter == callerID {
+				votedList = append(votedList, callerID)
+			} else {
+				votedList = append(votedList, "voter")
+			}
+		}
+
+		poll.Voted = votedList
+
+		if poll.Author == callerID {
+			continue
+		}
+
+		poll.Author = ""
+		//(*pagePtrs.Polls)[key] = poll
+		(*polls)[key] = poll
+	}
+
+	return polls, nil, nil
 }
 
-func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll, error) {
+func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error) {
+	// Fetch the caller's ID from the context.
+	/*callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
+	}*/
+
+	// Fetch the poll.
 	poll, err := s.pollRepository.GetByID(pollID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return poll, nil
-}
+	// Request the caller from the user repository.
+	/*caller, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, nil, err
+	}*/
 
-//
-//
-//
-
-func NewPollService(pollRepository db.PollRepositoryInterface) *PollService {
-	return &PollService{
-		pollRepository: pollRepository,
-	}
+	return poll, nil, nil
 }

@@ -3,37 +3,43 @@ package polls
 import (
 	"fmt"
 
+	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
-// Repository implementation
-
+// The implementation of pkg/backend/db.PollRepositoryInterface.
 type PollRepository struct {
 	cache db.Cacher
 }
 
-func (r *PollRepository) GetAll() ([]*models.Poll, error) {
-	rawPolls, count := r.cache.Range()
+func NewPollRepository(cache db.Cacher) db.PollRepositoryInterface {
+	return &PollRepository{
+		cache: cache,
+	}
+}
 
-	if count == 0 {
+func (r *PollRepository) GetAll(pageOpts interface{}) (*map[string]models.Poll, error) {
+	// Assert type for pageOptions.
+	opts, ok := pageOpts.(*pages.PageOptions)
+	if !ok {
+		return nil, fmt.Errorf("cannot read the page options at the repository level")
+	}
+
+	// Fetch page according to the calling user (in options).
+	pagePtrs := pages.GetOnePage(*opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Polls == nil || (*pagePtrs.Polls) == nil {
+		return nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
+	}
+
+	// If zero items were fetched, no need to continue asserting types.
+	if len(*pagePtrs.Polls) == 0 {
 		return nil, fmt.Errorf("no polls found in the database")
 	}
 
-	// Prepare the output array.
-	polls := make([]*models.Poll, 0)
+	return pagePtrs.Polls, nil
 
-	// Assert the model type.
-	for _, rawPoll := range *rawPolls {
-		poll, ok := rawPoll.(*models.Poll)
-		if !ok {
-			continue
-		}
-
-		polls = append(polls, poll)
-	}
-
-	return polls, nil
 }
 
 func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
@@ -61,8 +67,6 @@ func (r *PollRepository) Save(poll *models.Poll) error {
 }
 
 func (r *PollRepository) Update(poll *models.Poll) error {
-	//data := ...
-
 	updated := r.cache.Store(poll.ID, poll)
 	if !updated {
 		return fmt.Errorf("poll data could not be updated in the database")
@@ -78,14 +82,4 @@ func (r *PollRepository) Delete(pollID string) error {
 	}
 
 	return nil
-}
-
-//
-//
-//
-
-func NewPollRepository(cache db.Cacher) db.PollRepositoryInterface {
-	return &PollRepository{
-		cache: cache,
-	}
 }
