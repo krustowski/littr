@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.21"
+        "version": "0.44.22"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -254,7 +254,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/polls.getPolls.responseData"
+                                            "$ref": "#/definitions/polls.GetAll.responseData"
                                         }
                                     }
                                 }
@@ -351,7 +351,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/polls.getSinglePoll.responseData"
+                                            "$ref": "#/definitions/polls.GetByID.responseData"
                                         }
                                     }
                                 }
@@ -2359,7 +2359,7 @@
                 }
             }
         },
-        "polls.getPolls.responseData": {
+        "polls.GetAll.responseData": {
             "type": "object",
             "properties": {
                 "polls": {
@@ -2373,7 +2373,7 @@
                 }
             }
         },
-        "polls.getSinglePoll.responseData": {
+        "polls.GetByID.responseData": {
             "type": "object",
             "properties": {
                 "poll": {

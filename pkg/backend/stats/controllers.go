@@ -22,7 +22,7 @@ import (
 func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
-	type ResponseData struct {
+	type responseData struct {
 		FlowStats map[string]int64           `json:"flow_stats"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 		Users     map[string]models.User     `json:"users"`
@@ -122,7 +122,7 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		flowStats["votes"] += poll.OptionThree.Counter
 	}
 
-	pl := &ResponseData{
+	pl := &responseData{
 		FlowStats: flowStats,
 		UserStats: userStats,
 		Users:     *common.FlushUserData(&users, l.CallerID()),
