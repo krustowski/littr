@@ -20,8 +20,6 @@ import (
 // @Router       /dump [get]
 func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "dump")
-	l.CallerID = "system"
-	l.Version = "system"
 
 	// check the incoming API token
 	token := r.Header.Get(common.HDR_DUMP_TOKEN)

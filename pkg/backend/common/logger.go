@@ -93,7 +93,7 @@ func NewLogger(r *http.Request, worker string) Logger {
 
 	// Decide the version's name.
 	version := func() string {
-		if r.Header.Get("X-App-Version") != "" {
+		if r != nil && r.Header.Get("X-App-Version") != "" {
 			return r.Header.Get("X-App-Version")
 		}
 

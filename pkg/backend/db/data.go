@@ -117,12 +117,12 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 
 	rawData, err := os.ReadFile(filepath)
 	if err != nil {
-		l.Println(err.Error(), http.StatusInternalServerError)
+		l.Error(err).Status(http.StatusInternalServerError).Log()
 		return count, total, err
 	}
 
 	if string(rawData) == "" {
-		l.Println("empty data on input", http.StatusBadRequest)
+		l.Msg("empty data on input").Status(http.StatusBadRequest).Log()
 		return count, total, errors.New("empty data on input")
 	}
 
@@ -132,7 +132,7 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 
 	err = json.Unmarshal(rawData, &matrix)
 	if err != nil {
-		l.Println(err.Error(), http.StatusInternalServerError)
+		l.Error(err).Status(http.StatusInternalServerError).Log()
 		return count, total, err
 	}
 
@@ -145,9 +145,8 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 
 		if saved := SetOne(cache, key, val); !saved {
 			msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
-			l.Println(msg, http.StatusInternalServerError)
+			l.Msg(msg).Status(http.StatusInternalServerError).Log()
 			return count, total, fmt.Errorf(msg)
-			//continue
 		}
 
 		count++

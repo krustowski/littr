@@ -47,13 +47,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check the callerID record in the database
-	caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{})
 	if !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -68,7 +68,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: l.CallerID,
+		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -85,7 +85,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//(*pagePtrs.Users)[l.CallerID] = caller
+	//(*pagePtrs.Users)[l.CallerID()] = caller
 
 	// fetch all data for the calculations
 	posts, _ := db.GetAll(db.FlowCache, models.Post{})
@@ -126,12 +126,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// flush unwanted properties in users map
-	users := *common.FlushUserData(pagePtrs.Users, l.CallerID)
+	users := *common.FlushUserData(pagePtrs.Users, l.CallerID())
 
 	// prepare the response payload
 	pl := &responseData{
 		Users:     users,
-		User:      users[l.CallerID],
+		User:      users[l.CallerID()],
 		UserStats: stats,
 	}
 
@@ -160,31 +160,31 @@ func getOneUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// check the callerID record in the database
-	caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{})
 	if !ok {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// fetch user's devices
-	devs, _ := db.GetOne(db.SubscriptionCache, l.CallerID, []models.Device{})
+	devs, _ := db.GetOne(db.SubscriptionCache, l.CallerID(), []models.Device{})
 
 	// helper struct for the data flush
 	users := make(map[string]models.User)
-	users[l.CallerID] = caller
+	users[l.CallerID()] = caller
 
 	// flush sensitive user data
-	users = *common.FlushUserData(&users, l.CallerID)
+	users = *common.FlushUserData(&users, l.CallerID())
 
 	// compose the response payloaad
 	pl := &responseData{
-		User:      users[l.CallerID],
+		User:      users[l.CallerID()],
 		Devices:   devs,
 		PublicKey: os.Getenv("VAPID_PUB_KEY"),
 	}
@@ -389,7 +389,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -410,7 +410,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// mismatching user's name from the caller's ID
-	if user.Nickname != l.CallerID || userID != l.CallerID || userID != user.Nickname {
+	if user.Nickname != l.CallerID() || userID != l.CallerID() || userID != user.Nickname {
 		l.Msg(common.ERR_USER_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -455,7 +455,7 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -468,13 +468,13 @@ func updateUserPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for possible user's record forgery attempt
-	if l.CallerID != userID {
+	if l.CallerID() != userID {
 		l.Msg(common.ERR_USER_PASSPHRASE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// fetch requested user's database record
-	user, found := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	user, found := db.GetOne(db.UserCache, l.CallerID(), models.User{})
 	if !found {
 		l.Msg(common.ERR_USER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -541,13 +541,13 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Skip the blank callerID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Fetch the caller user record.
-	caller, found := db.GetOne(db.UserCache, l.CallerID, models.User{})
+	caller, found := db.GetOne(db.UserCache, l.CallerID(), models.User{})
 	if !found {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
@@ -561,7 +561,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for possible user's record forgery attempt
-	/*if l.CallerID != userID {
+	/*if l.CallerID() != userID {
 		l.Msg(common.ERR_USER_PASSPHRASE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}*/
@@ -612,7 +612,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 
 			// Check if the caller is shaded by the counterpart.
 			if counterpart, exists := db.GetOne(db.UserCache, key, models.User{}); exists {
-				if counterpart.Private && key != l.CallerID {
+				if counterpart.Private && key != l.CallerID() {
 					// cannot add this user to one's flow, as the following
 					// has to be requested and allowed by the counterpart
 					user.FlowList[key] = false
@@ -644,7 +644,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 		// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
 		for key, value := range reqData.RequestList {
 			// Only allow to change the caller's record in the remote/counterpart's requestList.
-			if key != l.CallerID {
+			if key != l.CallerID() {
 				continue
 			}
 
@@ -661,7 +661,7 @@ func updateUserList(w http.ResponseWriter, r *http.Request) {
 		// Loop over the ShadeList records and change the user's values accordingly (enforce the proper shadeList changing!).
 		for key, value := range reqData.ShadeList {
 			// To change the shadeList, one has to be its owner.
-			if user.Nickname != l.CallerID {
+			if user.Nickname != l.CallerID() {
 				continue
 			}
 
@@ -707,7 +707,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Skip the blank callerID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -720,7 +720,7 @@ func updateUserOption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for the possible user's data forgery attempt.
-	if l.CallerID != userID {
+	if l.CallerID() != userID {
 		l.Msg(common.ERR_USER_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -810,7 +810,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "users")
 
 	// Skip blank callerID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -823,7 +823,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for possible user's data forgery attempt.
-	if userID != l.CallerID {
+	if userID != l.CallerID() {
 		l.Msg(common.ERR_USER_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -937,7 +937,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -967,7 +967,7 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 
 	// set the page options
 	opts := pages.PageOptions{
-		CallerID: l.CallerID,
+		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -987,18 +987,18 @@ func getUserPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// include caller in the user export
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID] = caller
+		(*pagePtrs.Users)[l.CallerID()] = caller
 	}
 
 	// prepare the payload
 	pl := &responseData{
 		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID),
-		Key:   l.CallerID,
+		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Key:   l.CallerID(),
 	}
 
 	l.Msg("ok, dumping user's flow posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
@@ -1331,7 +1331,7 @@ func postUserAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Skip the blank callerID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -1344,7 +1344,7 @@ func postUserAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for the possible user's data forgery attempt.
-	if l.CallerID != userID {
+	if l.CallerID() != userID {
 		l.Msg(common.ERR_USER_AVATAR_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}

@@ -50,7 +50,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set the callerID to such user's nickname henceforth.
-	l.CallerID = user.Nickname
+	//l.CallerID = user.Nickname
 
 	// Try to authenticate given user.
 	grantedUser, ok := authUser(&user)

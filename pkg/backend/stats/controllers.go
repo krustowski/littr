@@ -22,14 +22,14 @@ import (
 func getStats(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
-	type responseData struct {
+	type ResponseData struct {
 		FlowStats map[string]int64           `json:"flow_stats"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 		Users     map[string]models.User     `json:"users"`
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -122,10 +122,10 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		flowStats["votes"] += poll.OptionThree.Counter
 	}
 
-	pl := &responseData{
+	pl := &ResponseData{
 		FlowStats: flowStats,
 		UserStats: userStats,
-		Users:     *common.FlushUserData(&users, l.CallerID),
+		Users:     *common.FlushUserData(&users, l.CallerID()),
 	}
 
 	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(pl).Write(w)

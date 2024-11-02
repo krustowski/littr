@@ -44,7 +44,7 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
 
 	// Skip the blank caller's ID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -86,7 +86,7 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
 
 	// Skip the blank caller's ID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -136,7 +136,7 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
 
 	// Skip the blank caller's ID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -167,7 +167,7 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Produce      json
 // @Param    	 X-Page-No header string true "page number"
-// @Success      200  {object}   common.APIResponse{data=polls.getAllPollController.responseData}
+// @Success      200  {object}   common.APIResponse{data=polls.GetAll.responseData}
 // @Failure      400  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
 // @Router       /polls [get]
@@ -175,7 +175,7 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
 
 	// Skip the blank caller's ID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -216,7 +216,7 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Produce      json
 // @Param        pollID path string true "poll ID"
-// @Success      200  {object}  common.APIResponse{data=polls.getOnePollController.responseData}
+// @Success      200  {object}  common.APIResponse{data=polls.GetByID.responseData}
 // @Failure      400  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
 // @Router       /polls/{pollID} [get]
@@ -224,7 +224,7 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
 
 	// Skip the blank caller's ID.
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}

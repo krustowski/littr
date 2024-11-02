@@ -47,7 +47,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -70,7 +70,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: l.CallerID,
+		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -88,18 +88,18 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID] = caller
+		(*pagePtrs.Users)[l.CallerID()] = caller
 	}
 
 	// compose the payload
 	pl := &responseData{
 		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID),
-		Key:   l.CallerID,
+		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Key:   l.CallerID(),
 		Count: pages.PAGE_SIZE,
 	}
 
@@ -127,7 +127,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		Posts map[string]models.Post `json:"posts"`
 	}
 
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -147,11 +147,11 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// patch wrongly loaded user data from LocalStorage on FE
 	if post.Nickname == "" {
-		post.Nickname = l.CallerID
+		post.Nickname = l.CallerID()
 	}
 
 	// check the post forgery possibility
-	if l.CallerID != post.Nickname {
+	if l.CallerID() != post.Nickname {
 		l.Msg(common.ERR_POSTER_INVALID).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -197,7 +197,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// do not notify the same person --- OK condition
-		if receiverName == l.CallerID {
+		if receiverName == l.CallerID() {
 			continue
 		}
 
@@ -210,7 +210,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 		body, err := json.Marshal(app.Notification{
 			Title: "littr mention",
 			Icon:  "/web/apple-touch-icon.png",
-			Body:  l.CallerID + " mentioned you in their post",
+			Body:  l.CallerID() + " mentioned you in their post",
 			Path:  "/flow/posts/" + post.ID,
 		})
 		if err != nil {
@@ -263,7 +263,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 		Posts map[string]models.Post `json:"posts"`
 	}
 
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -283,7 +283,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if there is a selfrater
-	if post.Nickname == l.CallerID {
+	if post.Nickname == l.CallerID() {
 		l.Msg(common.ERR_POST_SELF_RATE).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -327,7 +327,7 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 func updatePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -347,7 +347,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for the post update forgery
-	if post.Nickname != l.CallerID {
+	if post.Nickname != l.CallerID() {
 		l.Msg(common.ERR_POST_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -379,7 +379,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, PKG_NAME)
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -399,7 +399,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for the possible post forgery
-	if post.Nickname != l.CallerID {
+	if post.Nickname != l.CallerID() {
 		l.Msg(common.ERR_POST_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
@@ -452,7 +452,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -481,7 +481,7 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: l.CallerID,
+		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -501,18 +501,18 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID] = caller
+		(*pagePtrs.Users)[l.CallerID()] = caller
 	}
 
 	// prepare the payload
 	pl := &responseData{
 		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID),
-		Key:   l.CallerID,
+		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Key:   l.CallerID(),
 	}
 
 	l.Msg("ok, dumping single post and its interactions").Status(http.StatusOK).Log().Payload(pl).Write(w)
@@ -542,7 +542,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// skip blank callerID
-	if l.CallerID == "" {
+	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -571,7 +571,7 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := pages.PageOptions{
-		CallerID: l.CallerID,
+		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
 
@@ -590,18 +590,18 @@ func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID, models.User{}); !ok {
+	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID] = caller
+		(*pagePtrs.Users)[l.CallerID()] = caller
 	}
 
 	// prepare the payload
 	pl := &responseData{
 		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID),
-		Key:   l.CallerID,
+		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Key:   l.CallerID(),
 	}
 
 	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
