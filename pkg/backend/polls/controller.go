@@ -64,8 +64,8 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Create the poll at pollService.
 	if err := c.pollService.Create(r.Context(), &DTOIn); err != nil {
-		l.Msg("could not create a new poll").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not create a new poll").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not create a new poll").Status(decideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not create a new poll").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -115,8 +115,8 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Dispatch the update request to the pollService.
 	if err := c.pollService.Update(ctx, DTOIn); err != nil {
-		l.Msg("could not update the poll:").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not update the poll:").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not update the poll:").Status(decideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not update the poll:").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -154,8 +154,8 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 
 	// Dispatch the delete request to the pollService.
 	if err := c.pollService.Delete(r.Context(), pollID); err != nil {
-		l.Msg("could not delete the poll").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not delete the poll").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not delete the poll").Status(decideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not delete the poll").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -201,8 +201,8 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 	// Compose the DTO-out from pollService.
 	polls, user, err := c.pollService.FindAll(context.WithValue(r.Context(), "pageNo", pageNo))
 	if err != nil {
-		l.Msg("could not fetch all polls").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not fetch all polls").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not fetch all polls").Status(decideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch all polls").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -248,8 +248,8 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Compose the DTO-out from pollService.
 	poll, user, err := c.pollService.FindByID(r.Context(), pollID)
 	if err != nil {
-		l.Msg("could not fetch requested poll").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("could not fetch requested poll").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg("could not fetch requested poll").Status(decideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch requested poll").Status(decideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -258,4 +258,20 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Log the message and write the HTTP response.
 	l.Msg("returning the requested poll's data").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
 	return
+}
+
+//
+//  Helpers
+//
+
+var decideStatusFromError = func(err error) int {
+	if err == nil {
+		return http.StatusOK
+	}
+
+	if err.Error() == common.ERR_POLL_NOT_FOUND {
+		return http.StatusNotFound
+	}
+
+	return http.StatusInternalServerError
 }

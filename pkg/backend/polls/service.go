@@ -99,9 +99,25 @@ func (s *PollService) Update(ctx context.Context, poll *models.Poll) error {
 }
 
 func (s *PollService) Delete(ctx context.Context, pollID string) error {
-	err := s.pollRepository.Delete(pollID)
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf(common.ERR_CALLER_FAIL)
+	}
 
-	return err
+	// Fetch the actual poll to verify it can be deleted at all.
+	poll, err := s.pollRepository.GetByID(pollID)
+	if err != nil {
+		return err
+	}
+
+	// Check the poll's ownership.
+	if poll.Author != callerID {
+		return fmt.Errorf(common.ERR_POLL_DELETE_FOREIGN)
+	}
+
+	// Try to delete the poll.
+	return s.pollRepository.Delete(pollID)
 }
 
 func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error) {
@@ -140,31 +156,13 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 		return nil, nil, err
 	}
 
-	// Hide foreign poll's authors and voters.
-	for key, poll := range *polls {
-		var votedList []string
+	// Patch the polls' data for export.
+	polls = hidePollAuthorAndVoters(polls, callerID)
 
-		// Loop over voters, anonymize them.
-		for _, voter := range poll.Voted {
-			if voter == callerID {
-				votedList = append(votedList, callerID)
-			} else {
-				votedList = append(votedList, "voter")
-			}
-		}
+	// Patch the user's data for export.
+	patchedCaller := (*common.FlushUserData(&map[string]models.User{callerID: *caller}, callerID))[callerID]
 
-		poll.Voted = votedList
-
-		if poll.Author == callerID {
-			continue
-		}
-
-		poll.Author = ""
-		//(*pagePtrs.Polls)[key] = poll
-		(*polls)[key] = poll
-	}
-
-	return polls, caller, nil
+	return polls, &patchedCaller, nil
 }
 
 func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error) {
@@ -186,5 +184,43 @@ func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll
 		return nil, nil, err
 	}
 
-	return poll, caller, nil
+	// Patch the polls' data for export.
+	patchedPoll := (*hidePollAuthorAndVoters(&map[string]models.Poll{pollID: *poll}, callerID))[pollID]
+
+	// Patch the user's data for export.
+	patchedCaller := (*common.FlushUserData(&map[string]models.User{callerID: *caller}, callerID))[callerID]
+
+	return &patchedPoll, &patchedCaller, nil
+}
+
+//
+//  Helpers
+//
+
+func hidePollAuthorAndVoters(polls *map[string]models.Poll, callerID string) *map[string]models.Poll {
+	// Hide foreign poll's authors and voters.
+	for key, poll := range *polls {
+		var votedList []string
+
+		// Loop over voters, anonymize them.
+		for _, voter := range poll.Voted {
+			if voter == callerID {
+				votedList = append(votedList, callerID)
+			} else {
+				votedList = append(votedList, "voter")
+			}
+		}
+
+		// Return new voters list to such poll.
+		poll.Voted = votedList
+
+		// Hide poll's author.
+		if poll.Author != callerID {
+			poll.Author = ""
+		}
+
+		(*polls)[key] = poll
+	}
+
+	return polls
 }

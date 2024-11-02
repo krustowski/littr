@@ -50,7 +50,7 @@ func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
 	// Fetch the poll from the cache.
 	rawPoll, found := r.cache.Load(pollID)
 	if !found {
-		return nil, fmt.Errorf("requested poll not found")
+		return nil, fmt.Errorf(common.ERR_POLL_NOT_FOUND)
 	}
 
 	// Assert the type
@@ -64,7 +64,7 @@ func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {
 
 func (r *PollRepository) Save(poll *models.Poll) error {
 	// Store the poll using its key in the cache.
-	saved := r.cache.Store(poll.ID, poll)
+	saved := r.cache.Store(poll.ID, *poll)
 	if !saved {
 		return fmt.Errorf("an error occurred while saving a poll")
 	}
