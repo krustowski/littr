@@ -9,14 +9,15 @@ import (
 )
 
 type Logger interface {
-	// Basic methods.
+	// Basic methods: setters.
 	Msg(message string) Logger
 	Status(code int) Logger
 	Error(err error) Logger
-
-	// Prefix-related methods.
 	SetPrefix(prefix string) Logger
 	RemovePrefix() Logger
+
+	// Getters.
+	CallerID() string
 
 	// Timer-related methods.
 	ResetTimer() Logger
@@ -37,7 +38,7 @@ const (
 
 type DefaultLogger struct {
 	// CallerID is a nickname of the user calling the API.
-	CallerID string `json:"-"`
+	callerID string `json:"-"`
 
 	// Code integer is a HTTP return code.
 	Code int `json:"code" validation:"required"`
@@ -81,7 +82,7 @@ type DefaultLogger struct {
 
 // NewLogger takes the HTTP request structure in (can be nil), and the worker's name (required string) to prepare a new Logger instance.
 // Returns a pointer to the new Logger instance.
-func NewLogger(r *http.Request, worker string) *DefaultLogger {
+func NewLogger(r *http.Request, worker string) Logger {
 	// Worker name has to be set always.
 	if worker == "" {
 		return nil
@@ -90,36 +91,45 @@ func NewLogger(r *http.Request, worker string) *DefaultLogger {
 	// Start the Timer just now.
 	start := time.Now()
 
+	// Decide the version's name.
+	version := func() string {
+		if r.Header.Get("X-App-Version") != "" {
+			return r.Header.Get("X-App-Version")
+		}
+
+		return "system"
+	}()
+
 	// Little hotfix for the data dump/load procedure.
 	if r == nil {
 		return &DefaultLogger{
-			CallerID:   "system",
+			callerID:   "system",
 			IPAddress:  LOCALHOST4,
 			Method:     "",
 			Message:    "",
 			Prefix:     "",
 			Route:      "",
 			TimerStart: start,
-			Version:    "system",
+			Version:    version,
 			WorkerName: worker,
 		}
 	}
 
 	// Fetch the caller's nickname, to be checked if not blank afterwards.
 	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok {
+	if !ok || callerID == "" {
 		callerID = "system"
 	}
 
 	return &DefaultLogger{
-		CallerID:   callerID,
+		callerID:   callerID,
 		IPAddress:  r.Header.Get("X-Real-IP"),
 		Method:     r.Method,
 		Message:    "",
 		Prefix:     "",
 		Route:      r.URL.String(),
 		TimerStart: start,
-		Version:    r.Header.Get("X-App-Version"),
+		Version:    version,
 		WorkerName: worker,
 	}
 }
@@ -135,18 +145,9 @@ func (l *DefaultLogger) encode() string {
 	return string(jsonString[:])
 }
 
-// Deprecated. Println formats the encoded Logger struct into an output string to stdin.
-func (l *DefaultLogger) Println(msg string, code int) bool {
-	l.Code = code
-	l.Message = msg
-
-	if l.IPAddress == "" {
-		l.IPAddress = LOCALHOST4
-	}
-
-	fmt.Println(l.encode())
-
-	return true
+// CallerID returns the caller's ID (nickname), that has been (hopefully) decided from the context.
+func (l DefaultLogger) CallerID() string {
+	return l.callerID
 }
 
 // ResetTimer resets the TimerStart timestamp. Usable in the procedures where the logger is passed (???)
@@ -282,6 +283,10 @@ func (l DummyLogger) SetPrefix(prefix string) Logger {
 
 func (l DummyLogger) RemovePrefix() Logger {
 	return l
+}
+
+func (l DummyLogger) CallerID() string {
+	return ""
 }
 
 func (l DummyLogger) ResetTimer() Logger {
