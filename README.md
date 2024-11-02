@@ -181,15 +181,16 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.45
++ add controler+service+repository experiment for polls (wip)
++ live switch implementation (disable SSE)
++ redesign the flow subviews (profile pages)
 + write integration/e2e tests draft (wip)
 
 ### roadmap to v0.44
 + ~~fix the invalid overally metrics states after the backend reload~~
 + ~~improve the API logger (add the request time at least)~~
-+ live switch implementation (disable SSE)
 + ~~refix the avatar URL migration procedure~~ (wip)
 + ~~reimplement the SSE client in Go~~ (wip)
-+ redesign the flow subviews (profile pages)
 + ~~single poll referenced by ID (singlePoll subpage/view]~~
 + ~~user activation via mail~~ (wip)
 
