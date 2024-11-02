@@ -64,7 +64,7 @@ func (r *UserRepository) GetByID(userID string) (*models.User, error) {
 
 func (r *UserRepository) Save(user *models.User) error {
 	// Store the user using its key in the cache.
-	saved := r.cache.Store(user.Nickname, user)
+	saved := r.cache.Store(user.Nickname, *user)
 	if !saved {
 		return fmt.Errorf("an error occurred while saving a user")
 	}

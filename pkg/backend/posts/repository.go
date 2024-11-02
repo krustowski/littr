@@ -64,7 +64,7 @@ func (r *PostRepository) GetByID(postID string) (*models.Post, error) {
 
 func (r *PostRepository) Save(post *models.Post) error {
 	// Store the post using its key in the cache.
-	saved := r.cache.Store(post.ID, post)
+	saved := r.cache.Store(post.ID, *post)
 	if !saved {
 		return fmt.Errorf("an error occurred while saving a post")
 	}
