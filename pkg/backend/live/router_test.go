@@ -41,12 +41,14 @@ func TestRouterWithStreamer(t *testing.T) {
 	wg.Add(1)
 	go testConnectorSSE(t, &wg, "http://localhost:"+config.DEFAULT_TEST_PORT+streamerTestURI)
 
+	var timeout = 5 * time.Second
+
 	// Spin another goroutine to handle the deadline.
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(timeout)
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
-		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		sctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		BroadcastMessage(EventPayload{Data: "server-stop", Type: "close"})

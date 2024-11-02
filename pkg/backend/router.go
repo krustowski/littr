@@ -40,7 +40,6 @@ import (
 	"go.vxn.dev/littr/pkg/backend/auth"
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	//"go.vxn.dev/littr/pkg/backend/docs"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
@@ -111,17 +110,19 @@ func APIRouter() chi.Router {
 
 	// 0.44.21.
 
-	// Init repository
+	// Init repositories
 	pollRepository := polls.NewPollRepository(db.PollCache)
+	//postRepository := posts.NewPostRepository(db.FlowCache)
+	//userRepository := users.NewUserRepository(db.UserCache)
 
 	// Init service
-	pollService := polls.NewPollService(pollRepository)
+	pollService := polls.NewPollService(pollRepository, nil, nil)
 
 	// Init controller
 	pollController := polls.NewPollController(pollService)
 
 	// Init router
-	r.Mount("/polls", polls.PollRouter(pollController))
+	r.Mount("/polls", polls.NewPollRouter(pollController))
 
 	// 0.44.21.
 
