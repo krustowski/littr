@@ -45,6 +45,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/backend/stats"
+	"go.vxn.dev/littr/pkg/backend/tokens"
 	"go.vxn.dev/littr/pkg/backend/users"
 	"go.vxn.dev/littr/pkg/config"
 )
@@ -104,12 +105,15 @@ func NewAPIRouter() chi.Router {
 	pollRepository := polls.NewPollRepository(db.PollCache)
 	postRepository := posts.NewPostRepository(db.FlowCache)
 	userRepository := users.NewUserRepository(db.UserCache)
+	tokenRepository := tokens.NewTokenRepository(db.TokenCache)
 
 	// Init services for controllers.
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
+	userService := users.NewUserService(postRepository, userRepository, tokenRepository)
 
 	// Init controllers for routers.
 	pollController := polls.NewPollController(pollService)
+	userController := users.NewUserController(userService)
 
 	//
 	//  API subpkg routers registering
@@ -119,7 +123,6 @@ func NewAPIRouter() chi.Router {
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.Router())
-	//r.Mount("/docs", docs.Router())
 	r.Mount("/dump", db.Router())
 	r.Mount("/live", live.Router())
 
@@ -128,7 +131,8 @@ func NewAPIRouter() chi.Router {
 	r.Mount("/posts", posts.Router())
 	r.Mount("/push", push.Router())
 	r.Mount("/stats", stats.Router())
-	r.Mount("/users", users.Router())
+
+	r.Mount("/users", users.NewUserRouter(userController))
 
 	return r
 }

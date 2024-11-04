@@ -5,39 +5,35 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func Router() chi.Router {
+func NewUserRouter(userController *UserController) chi.Router {
 	r := chi.NewRouter()
 
 	// Basic routes handlers.
-	r.Get("/", getUsers)
-	r.Post("/", addNewUser)
+	r.Get("/", userController.GetAll)
+	r.Post("/", userController.Create)
 
 	// Handler for the user activation.
-	r.Post("/activation/{uuid}", activationRequestHandler)
+	r.Post("/activation/{uuid}", userController.Activate)
 
 	// Passphrase-related routes handlers.
-	r.Post("/passphrase/request", resetRequestHandler)
-	r.Post("/passphrase/reset", resetPassphraseHandler)
+	r.Post("/passphrase/request", userController.PassphraseResetRequest)
+	r.Post("/passphrase/reset", userController.ResetPassphrase)
 
 	// User getter handlers.
-	r.Get("/{userID}", getOneUser)
-	r.Get("/caller", getOneUser)
+	r.Get("/{userID}", userController.GetByID)
+	r.Get("/caller", userController.GetByID)
 
 	// User modification/deletion handlers.
-	//r.Put("/{nickname}", updateUser)
-	r.Delete("/{userID}", deleteUser)
+	r.Delete("/{userID}", userController.Delete)
 
 	// User's settings modification routes handlers.
-	r.Post("/{userID}/avatar", postUserAvatar)
-	r.Get("/{userID}/posts", getUserPosts)
-	r.Patch("/{userID}/lists", updateUserList)
-	r.Patch("/{userID}/options", updateUserOption)
-	r.Patch("/{userID}/passphrase", updateUserPassphrase)
+	r.Post("/{userID}/avatar", userController.UploadAvatar)
+	r.Get("/{userID}/posts", userController.GetPosts)
 
-	// request-to-follow routes
-	// (depraceted, use /{userID}/lists route instead)
-	//r.Post("/{userID}/request", addToRequestList)
-	//r.Delete("/{userID}/request", removeFromRequestList)
+	r.Patch("/{userID}/{updateType}", userController.Update)
+	//r.Patch("/{userID}/lists", userController.UpdateLists)
+	//r.Patch("/{userID}/options", userController.UpdateOptions)
+	//r.Patch("/{userID}/passphrase", userController.UpdatePassphrase)
 
 	return r
 }

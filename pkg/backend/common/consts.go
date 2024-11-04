@@ -26,6 +26,7 @@ const (
 	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
 	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
 	ERR_TOKEN_SAVE_FAIL     = "could not save new token to database"
+	ERR_TOKEN_NOT_FOUND     = "requested token was not found"
 
 	// Generic error messages
 	ERR_CALLER_BLANK      = "callerID cannot be empty"
@@ -123,4 +124,5 @@ const (
 	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
 	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
+	ERR_USER_UPDATE_REQ_BLANK     = "update request for user not specified"
 )

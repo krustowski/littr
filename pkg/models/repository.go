@@ -5,21 +5,39 @@ package models
 //
 
 type PollRepositoryInterface interface {
-	GetAll(interface{}) (*map[string]Poll, error)
+	GetAll(opts interface{}) (*map[string]Poll, error)
 	GetByID(pollID string) (*Poll, error)
 	Save(poll *Poll) error
 	Delete(pollID string) error
 }
 
 type PostRepositoryInterface interface {
-	GetAll(interface{}) (*map[string]Post, error)
+	GetAll(opts interface{}) (*map[string]Post, error)
 	GetByID(postID string) (*Post, error)
 	Save(post *Post) error
 	Delete(postID string) error
 }
 
+type RequestRepositoryInterface interface {
+	GetByID(reqID string) (*Request, error)
+	Save(req *Request) error
+	Delete(reqID string) error
+}
+
+type SubscriptionRepositoryInterface interface {
+	GetByID(userID string) (*[]Device, error)
+	Save(sub *[]Device) error
+	Delete(userID string) error
+}
+
+type TokenRepositoryInterface interface {
+	GetByID(tokenID string) (*Token, error)
+	Save(token *Token) error
+	Delete(tokenID string) error
+}
+
 type UserRepositoryInterface interface {
-	GetAll(interface{}) (*map[string]User, error)
+	GetAll(opts interface{}) (*map[string]User, error)
 	GetByID(userID string) (*User, error)
 	Save(user *User) error
 	Delete(userID string) error
