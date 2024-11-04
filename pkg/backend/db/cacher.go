@@ -121,6 +121,24 @@ func (c *SimpleCache) Load(key string) (interface{}, bool) {
 	return rawV, true
 }
 
+func (c *SimpleCache) LoadOrStore(key string, rawV interface{}) (interface{}, bool) {
+	// Lock the read access and try to get the keyed value.
+	c.mu.RLock()
+	rawV, found := c.mp[key]
+	c.mu.RUnlock()
+
+	if found {
+		return rawV, true
+	}
+
+	// Otherwise, store the actual value to the key.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.mp[key] = rawV
+
+	return nil, true
+}
+
 func (c *SimpleCache) Store(key string, rawV interface{}) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
