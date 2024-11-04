@@ -126,7 +126,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-	}
+	})
 
 	// Invalidate the refresh HTTP cookie.
 	http.SetCookie(w, &http.Cookie{
@@ -137,9 +137,8 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-	}
+	})
 
 	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(pl).Write(w)
 	return
 }
-

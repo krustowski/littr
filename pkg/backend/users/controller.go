@@ -59,8 +59,8 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Create the user at the UserService.
 	if err := c.userService.Create(r.Context(), &DTOIn); err != nil {
-		l.Msg("could not create a new user").Status(decideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not create a new user").Status(decideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg("could not create a new user").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not create a new user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -117,8 +117,8 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Update the user's data at the UserService.
 	if err := c.userService.Update(context.WithValue(r.Context(), "updateType", updateType), &DTOIn); err != nil {
-		l.Msg("could not update the passphrase").Status(decideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not update the passphrase").Status(decideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -204,28 +204,4 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
-}
-
-//
-//  Helpers
-//
-
-var decideStatusFromError = func(err error) int {
-	// HTTP 200 condition.
-	if err == nil {
-		return http.StatusOK
-	}
-
-	// HTTP 403 conditions.
-	if err.Error() == common.ERR_POLL_SELF_VOTE || err.Error() == common.ERR_POLL_EXISTING_VOTE || err.Error() == common.ERR_POLL_INVALID_VOTE_COUNT {
-		return http.StatusForbidden
-	}
-
-	// HTTP 404 condition.
-	if err.Error() == common.ERR_POLL_NOT_FOUND {
-		return http.StatusNotFound
-	}
-
-	// HTTP 500 as default.
-	return http.StatusInternalServerError
 }

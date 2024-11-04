@@ -35,7 +35,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) Auth(ctx context.Context, authUserI interface{}) (*models.User, []string, error) {
-	authUser, ok := authUserI.(AuthUser)
+	authUser, ok := authUserI.(*AuthUser)
 	if !ok {
 		return nil, nil, fmt.Errorf("cannot assert type AuthUser")
 	}

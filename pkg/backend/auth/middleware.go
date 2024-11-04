@@ -10,6 +10,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
+	"go.vxn.dev/littr/pkg/backend/tokens"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -53,7 +54,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Instantionate the new logger.
-		l := common.NewLogger(r, "auth")
+		l := common.NewLogger(r, "authMiddleware")
 
 		// Prepare the HTTP response payload.
 		payload := &responseData{
@@ -77,7 +78,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Decode the contents of the refresh HTTP cookie, compare the signature with the server's secret.
-		refreshClaims := ParseRefreshToken(refreshCookie.Value, secret)
+		refreshClaims := tokens.ParseRefreshToken(refreshCookie.Value, secret)
 
 		// If the refresh token is expired => user should relogin.
 		if refreshClaims.Valid() != nil {
@@ -86,7 +87,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		var accessCookie *http.Cookie
-		var userClaims *UserClaims
+		var userClaims *tokens.UserClaims
 
 		// Get the access cookie to check its validity.
 		if accessCookie, err = r.Cookie(ACCESS_TOKEN); err != nil {
@@ -94,7 +95,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			//return
 		} else {
 			// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
-			userClaims = ParseAccessToken(accessCookie.Value, secret)
+			userClaims = tokens.ParseAccessToken(accessCookie.Value, secret)
 		}
 
 		// Access cookie is expired (not present), or userClaims can be decoded but the token is invalid (expired).
@@ -120,7 +121,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 
 			// Prepare new access token claims.
-			userClaims := UserClaims{
+			userClaims := tokens.UserClaims{
 				Nickname: refToken.Nickname,
 				// Set the new access token's validity to 15 minutes only.
 				StandardClaims: jwt.StandardClaims{
@@ -130,7 +131,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 
 			// Issue a new access token via the refresh token's validity.
-			accessToken, err := NewAccessToken(userClaims, secret)
+			accessToken, err := tokens.NewAccessToken(userClaims, secret)
 			if err != nil {
 				l.Msg("access token generation failed").Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 				return
