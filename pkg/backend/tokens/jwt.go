@@ -1,4 +1,4 @@
-package auth
+package tokens
 
 // https://pascalallen.medium.com/jwt-authentication-with-go-242215a9b4f8
 

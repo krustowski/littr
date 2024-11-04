@@ -4,11 +4,11 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func Router() chi.Router {
+func NewAuthRouter(authController *AuthController) chi.Router {
 	r := chi.NewRouter()
 
-	r.Post("/", authHandler)
-	r.Post("/logout", logoutHandler)
+	r.Post("/", authController.Auth)
+	r.Post("/logout", authController.Logout)
 
 	return r
 }
