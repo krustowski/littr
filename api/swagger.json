@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.22"
+        "version": "0.44.23"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -60,7 +60,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -78,7 +78,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -96,7 +96,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -114,7 +114,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -149,7 +149,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.logoutHandler.responseData"
+                                            "$ref": "#/definitions/auth.Logout.responseData"
                                         }
                                     }
                                 }
@@ -1161,7 +1161,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -1217,7 +1217,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.authHandler.responseData"
+                                            "$ref": "#/definitions/auth.Auth.responseData"
                                         }
                                     }
                                 }
@@ -1967,9 +1967,88 @@
                     }
                 }
             }
+        },
+        "/users/{userID}/{updateType}": {
+            "patch": {
+                "description": "update user's data",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user's data",
+                "parameters": [
+                    {
+                        "description": "data to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.UserUpdateRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user to update",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "auth.Auth.responseData": {
+            "type": "object",
+            "properties": {
+                "auth_granted": {
+                    "type": "boolean"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                }
+            }
+        },
         "auth.AuthUser": {
             "type": "object",
             "properties": {
@@ -1987,21 +2066,7 @@
                 }
             }
         },
-        "auth.authHandler.responseData": {
-            "type": "object",
-            "properties": {
-                "auth_granted": {
-                    "type": "boolean"
-                },
-                "users": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                }
-            }
-        },
-        "auth.logoutHandler.responseData": {
+        "auth.Logout.responseData": {
             "type": "object",
             "properties": {
                 "authGranted": {
@@ -2497,6 +2562,17 @@
                     "additionalProperties": {
                         "$ref": "#/definitions/models.User"
                     }
+                }
+            }
+        },
+        "users.UserUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "current_passphrase_hex": {
+                    "type": "string"
+                },
+                "new_passphrase_hex": {
+                    "type": "string"
                 }
             }
         },

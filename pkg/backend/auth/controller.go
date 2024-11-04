@@ -102,7 +102,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 // @Tags		auth
 // @Accept		json
 // @Produce		json
-// @Success		200	{object}	common.APIResponse{data=auth.logoutHandler.responseData}
+// @Success		200	{object}	common.APIResponse{data=auth.Logout.responseData}
 // @Router		/auth/logout [post]
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "authController")

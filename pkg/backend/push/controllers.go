@@ -24,7 +24,7 @@ import (
 // @Produce      json
 // @Success      200  {object}   common.APIResponse{data=push.fetchVAPIDKey.responseData}
 // @Failure 	 400  {object}   common.APIResponse
-// @Failure 	 401  {object}   common.APIResponse{data=auth.authHandler.responseData}
+// @Failure 	 401  {object}   common.APIResponse{data=auth.Auth.responseData}
 // @Router       /push/vapid [get]
 func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
