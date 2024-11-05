@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"net/http"
+	"os"
 	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -176,6 +177,18 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAll is the users handler that processes and returns existing users list.
+//
+// @Summary      Get a list of users
+// @Description  get a list of users
+// @Tags         users
+// @Produce      json
+// @Param    	 X-Page-No header string true "page number"
+// @Success      200  {object}   common.APIResponse{data=users.GetAll.responseData}
+// @Failure	 400  {object}   common.APIResponse
+// @Failure	 404  {object}   common.APIResponse
+// @Failure	 500  {object}   common.APIResponse
+// @Router       /users [get]
 func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -195,7 +208,8 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type responseData struct {
-		Users *map[string]models.User `json:"users,omitempty"`
+		User  models.User            `json:"user"`
+		Users map[string]models.User `json:"users,omitempty"`
 	}
 
 	// Compose the DTO-out from userService.
@@ -206,7 +220,10 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DTOOut := &responseData{Users: users}
+	DTOOut := &responseData{
+		User:  (*users)[l.CallerID()],
+		Users: *common.FlushUserData(users, l.CallerID()),
+	}
 
 	// Log the message and write the HTTP response.
 	l.Msg("listing all users").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
@@ -221,6 +238,42 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
+	type responseData struct {
+		User      models.User     `json:"user,omitempty"`
+		Devices   []models.Device `json:"devices"`
+		PublicKey string          `json:"public_key"`
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if userID == "caller" {
+		userID = l.CallerID()
+	}
+
+	// Fetch the requested user.
+	user, err := c.userService.FindByID(context.WithValue(r.Context(), "userID", userID), userID)
+	if err != nil {
+		l.Msg("could not fetch requested user").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch requested user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	patchedUser := (*common.FlushUserData(&map[string]models.User{user.Nickname: *user}, l.CallerID()))[user.Nickname]
+
+	pl := &responseData{
+		User:      patchedUser,
+		Devices:   nil,
+		PublicKey: os.Getenv("VAPID_PUB_KEY"),
+	}
+
+	l.Msg("returning fetch user's data").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	return
 }
 
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {

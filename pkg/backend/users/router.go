@@ -21,7 +21,7 @@ func NewUserRouter(userController *UserController) chi.Router {
 
 	// User getter handlers.
 	r.Get("/{userID}", userController.GetByID)
-	r.Get("/caller", userController.GetByID)
+	//r.Get("/caller", userController.GetByID)
 
 	// User modification/deletion handlers.
 	r.Delete("/{userID}", userController.Delete)

@@ -129,5 +129,20 @@ func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, err
 }
 
 func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User, error) {
-	return nil, fmt.Errorf("not yet implemented")
+	// Fetch the user's ID from the context.
+	userID, ok := ctx.Value("userID").(string)
+	if !ok {
+		return nil, fmt.Errorf(common.ERR_USERID_BLANK)
+	}
+
+	// Request the user's data from repository..
+	user, err := s.userRepository.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Patch the user's data for export.
+	patchedUser := (*common.FlushUserData(&map[string]models.User{userID: *user}, userID))[userID]
+
+	return &patchedUser, nil
 }
