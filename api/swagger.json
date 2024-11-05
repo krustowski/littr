@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.25"
+        "version": "0.44.26"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1258,7 +1258,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/users.getUsers.responseData"
+                                            "$ref": "#/definitions/users.GetAll.responseData"
                                         }
                                     }
                                 }
@@ -1389,56 +1389,9 @@
                 }
             }
         },
-        "/users/caller": {
-            "get": {
-                "description": "get the user's details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get the user's details",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/users.getOneUser.responseData"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/users/passphrase/request": {
             "post": {
-                "description": "request the passphrase recovery link",
+                "description": "reset the passphrase",
                 "consumes": [
                     "application/json"
                 ],
@@ -1448,7 +1401,7 @@
                 "tags": [
                     "users"
                 ],
-                "summary": "Request the passphrase recovery link",
+                "summary": "Reset the passphrase",
                 "parameters": [
                     {
                         "description": "the e-mail address struct",
@@ -1456,7 +1409,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.resetRequestHandler.requestData"
+                            "$ref": "#/definitions/users.PassphraseReset.requestData"
                         }
                     }
                 ],
@@ -1508,7 +1461,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.resetPassphraseHandler.requestData"
+                            "$ref": "#/definitions/users.PassphraseReset.requestData"
                         }
                     }
                 ],
@@ -1541,8 +1494,8 @@
             }
         },
         "/users/{userID}": {
-            "put": {
-                "description": "update the user's details",
+            "get": {
+                "description": "get the user's details",
                 "consumes": [
                     "application/json"
                 ],
@@ -1552,31 +1505,24 @@
                 "tags": [
                     "users"
                 ],
-                "summary": "Update the user's details",
-                "deprecated": true,
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "updated user's ID",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "updated user's body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    }
-                ],
+                "summary": "Get the user's details",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.GetByID.responseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1587,12 +1533,6 @@
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1671,7 +1611,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.postUserAvatar.requestData"
+                            "$ref": "#/definitions/users.UserUpdateRequest"
                         }
                     },
                     {
@@ -1718,140 +1658,22 @@
         },
         "/users/{userID}/lists": {
             "patch": {
-                "description": "update user's list",
+                "description": "update user's data",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user's list",
+                "summary": "Update user's data",
                 "parameters": [
                     {
-                        "description": "new user lists data",
+                        "description": "data to update",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.updateUserList.requestData"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID of the user to update",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/{userID}/options": {
-            "patch": {
-                "description": "update user's option",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update user's option",
-                "parameters": [
-                    {
-                        "description": "new user options' values",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/users.updateUserOption.requestData"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID of the user to update",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/{userID}/passphrase": {
-            "patch": {
-                "description": "update user's passphrase",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update user's passphrase",
-                "parameters": [
-                    {
-                        "description": "new passphrase hash body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/users.updateUserPassphrase.requestData"
+                            "$ref": "#/definitions/users.UserUpdateRequest"
                         }
                     },
                     {
@@ -1902,33 +1724,29 @@
                 }
             }
         },
-        "/users/{userID}/posts": {
-            "get": {
-                "description": "get user posts",
+        "/users/{userID}/options": {
+            "patch": {
+                "description": "update user's data",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Get user posts",
+                "summary": "Update user's data",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "hide replies",
-                        "name": "X-Hide-Replies",
-                        "in": "header"
+                        "description": "data to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.UserUpdateRequest"
+                        }
                     },
                     {
                         "type": "string",
-                        "description": "page number",
-                        "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "user's ID for their posts",
+                        "description": "ID of the user to update",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -1938,23 +1756,29 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/users.getUserPosts.responseData"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -1968,7 +1792,7 @@
                 }
             }
         },
-        "/users/{userID}/{updateType}": {
+        "/users/{userID}/passphrase": {
             "patch": {
                 "description": "update user's data",
                 "produces": [
@@ -2565,18 +2389,21 @@
                 }
             }
         },
-        "users.UserUpdateRequest": {
+        "users.GetAll.responseData": {
             "type": "object",
             "properties": {
-                "current_passphrase_hex": {
-                    "type": "string"
+                "user": {
+                    "$ref": "#/definitions/models.User"
                 },
-                "new_passphrase_hex": {
-                    "type": "string"
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
                 }
             }
         },
-        "users.getOneUser.responseData": {
+        "users.GetByID.responseData": {
             "type": "object",
             "properties": {
                 "devices": {
@@ -2593,49 +2420,23 @@
                 }
             }
         },
-        "users.getUserPosts.responseData": {
+        "users.PassphraseReset.requestData": {
             "type": "object",
             "properties": {
-                "key": {
+                "email": {
                     "type": "string"
                 },
-                "posts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.Post"
-                    }
-                },
-                "users": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.User"
-                    }
+                "uuid": {
+                    "type": "string"
                 }
             }
         },
-        "users.getUsers.responseData": {
+        "users.UserUpdateRequest": {
             "type": "object",
             "properties": {
-                "user": {
-                    "$ref": "#/definitions/models.User"
+                "current_passphrase_hex": {
+                    "type": "string"
                 },
-                "user_stats": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.UserStat"
-                    }
-                },
-                "users": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                }
-            }
-        },
-        "users.postUserAvatar.requestData": {
-            "type": "object",
-            "properties": {
                 "data": {
                     "type": "array",
                     "items": {
@@ -2643,79 +2444,6 @@
                     }
                 },
                 "figure": {
-                    "type": "string"
-                }
-            }
-        },
-        "users.resetPassphraseHandler.requestData": {
-            "type": "object",
-            "properties": {
-                "uuid": {
-                    "type": "string"
-                }
-            }
-        },
-        "users.resetRequestHandler.requestData": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "users.updateUserList.requestData": {
-            "type": "object",
-            "properties": {
-                "flow_list": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "request_list": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "shade_list": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                }
-            }
-        },
-        "users.updateUserOption.requestData": {
-            "type": "object",
-            "properties": {
-                "about_you": {
-                    "type": "string"
-                },
-                "dark_mode": {
-                    "type": "boolean"
-                },
-                "live_mode": {
-                    "type": "boolean"
-                },
-                "local_time_mode": {
-                    "type": "boolean"
-                },
-                "options_map": {
-                    "$ref": "#/definitions/models.UserOptionsMap"
-                },
-                "private": {
-                    "type": "boolean"
-                },
-                "website_link": {
-                    "type": "string"
-                }
-            }
-        },
-        "users.updateUserPassphrase.requestData": {
-            "type": "object",
-            "properties": {
-                "current_passphrase_hex": {
                     "type": "string"
                 },
                 "new_passphrase_hex": {

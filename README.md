@@ -181,7 +181,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.45
-+ add controler+service+repository experiment for polls (wip)
++ add controler+service+repository experiment for polls, users (wip)
 + live switch implementation (disable SSE)
 + redesign the flow subviews (profile pages)
 + write integration/e2e tests draft (wip)
