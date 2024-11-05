@@ -110,11 +110,13 @@ func NewAPIRouter() chi.Router {
 	// Init services for controllers.
 	authService := auth.NewAuthService(tokenRepository, userRepository)
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
+	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
 	userService := users.NewUserService(postRepository, userRepository, tokenRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
 	pollController := polls.NewPollController(pollService)
+	statController := stats.NewStatController(statService)
 	userController := users.NewUserController(userService)
 
 	//
@@ -127,14 +129,14 @@ func NewAPIRouter() chi.Router {
 	r.Mount("/auth", auth.NewAuthRouter(authController))
 
 	r.Mount("/dump", db.Router())
-	r.Mount("/live", live.Router())
 
+	r.Mount("/live", live.NewLiveRouter())
 	r.Mount("/polls", polls.NewPollRouter(pollController))
 
 	r.Mount("/posts", posts.Router())
 	r.Mount("/push", push.Router())
-	r.Mount("/stats", stats.Router())
 
+	r.Mount("/stats", stats.NewStatRouter(statController))
 	r.Mount("/users", users.NewUserRouter(userController))
 
 	return r

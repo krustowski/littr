@@ -178,7 +178,7 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 	}
 
 	// Request the page of polls from the poll repository.
-	polls, err := s.pollRepository.GetAll(opts)
+	polls, err := s.pollRepository.GetPage(opts)
 	if err != nil {
 		return nil, nil, err
 	}

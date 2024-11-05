@@ -24,7 +24,28 @@ func NewPollRepository(cache db.Cacher) models.PollRepositoryInterface {
 	}
 }
 
-func (r *PollRepository) GetAll(pageOpts interface{}) (*map[string]models.Poll, error) {
+func (r *PollRepository) GetAll() (*map[string]models.Poll, error) {
+	rawPolls, count := r.cache.Range()
+	if count == 0 {
+		return nil, fmt.Errorf("no items found")
+	}
+
+	polls := make(map[string]models.Poll)
+
+	// Assert types to fetched interface map.
+	for key, rawPoll := range *rawPolls {
+		poll, ok := rawPoll.(models.Poll)
+		if !ok {
+			return nil, fmt.Errorf("poll's data corrupted")
+		}
+
+		polls[key] = poll
+	}
+
+	return &polls, nil
+}
+
+func (r *PollRepository) GetPage(pageOpts interface{}) (*map[string]models.Poll, error) {
 	// Assert type for pageOptions.
 	opts, ok := pageOpts.(*pages.PageOptions)
 	if !ok {

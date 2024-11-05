@@ -5,10 +5,10 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func Router() chi.Router {
+func NewStatRouter(statController *StatController) chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/", getStats)
+	r.Get("/", statController.GetAll)
 
 	return r
 }

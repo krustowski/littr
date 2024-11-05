@@ -5,14 +5,16 @@ package models
 //
 
 type PollRepositoryInterface interface {
-	GetAll(opts interface{}) (*map[string]Poll, error)
+	GetAll() (*map[string]Poll, error)
+	GetPage(opts interface{}) (*map[string]Poll, error)
 	GetByID(pollID string) (*Poll, error)
 	Save(poll *Poll) error
 	Delete(pollID string) error
 }
 
 type PostRepositoryInterface interface {
-	GetAll(opts interface{}) (*map[string]Post, error)
+	GetAll() (*map[string]Post, error)
+	GetPage(opts interface{}) (*map[string]Post, error)
 	GetByID(postID string) (*Post, error)
 	Save(post *Post) error
 	Delete(postID string) error
@@ -37,7 +39,8 @@ type TokenRepositoryInterface interface {
 }
 
 type UserRepositoryInterface interface {
-	GetAll(opts interface{}) (*map[string]User, error)
+	GetAll() (*map[string]User, error)
+	GetPage(opts interface{}) (*map[string]User, error)
 	GetByID(userID string) (*User, error)
 	Save(user *User) error
 	Delete(userID string) error

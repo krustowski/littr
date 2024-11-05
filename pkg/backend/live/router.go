@@ -5,7 +5,7 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func Router() chi.Router {
+func NewLiveRouter() chi.Router {
 	r := chi.NewRouter()
 
 	// Mount the Streamer to /live API route. Wrap the SSE handler in the CORS wrapper.

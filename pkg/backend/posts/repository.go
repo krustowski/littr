@@ -24,7 +24,28 @@ func NewPostRepository(cache db.Cacher) models.PostRepositoryInterface {
 	}
 }
 
-func (r *PostRepository) GetAll(pageOpts interface{}) (*map[string]models.Post, error) {
+func (r *PostRepository) GetAll() (*map[string]models.Post, error) {
+	rawPosts, count := r.cache.Range()
+	if count == 0 {
+		return nil, fmt.Errorf("no items found")
+	}
+
+	posts := make(map[string]models.Post)
+
+	// Assert types to fetched interface map.
+	for key, rawPost := range *rawPosts {
+		post, ok := rawPost.(models.Post)
+		if !ok {
+			return nil, fmt.Errorf("post's data corrupted")
+		}
+
+		posts[key] = post
+	}
+
+	return &posts, nil
+}
+
+func (r *PostRepository) GetPage(pageOpts interface{}) (*map[string]models.Post, error) {
 	// Assert type for pageOptions.
 	opts, ok := pageOpts.(*pages.PageOptions)
 	if !ok {

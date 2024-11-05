@@ -24,7 +24,28 @@ func NewUserRepository(cache db.Cacher) models.UserRepositoryInterface {
 	}
 }
 
-func (r *UserRepository) GetAll(pageOpts interface{}) (*map[string]models.User, error) {
+func (r *UserRepository) GetAll() (*map[string]models.User, error) {
+	rawUsers, count := r.cache.Range()
+	if count == 0 {
+		return nil, fmt.Errorf("no items found")
+	}
+
+	users := make(map[string]models.User)
+
+	// Assert types to fetched interface map.
+	for key, rawUser := range *rawUsers {
+		user, ok := rawUser.(models.User)
+		if !ok {
+			return nil, fmt.Errorf("user's data corrupted")
+		}
+
+		users[key] = user
+	}
+
+	return &users, nil
+}
+
+func (r *UserRepository) GetPage(pageOpts interface{}) (*map[string]models.User, error) {
 	// Assert type for pageOptions.
 	opts, ok := pageOpts.(*pages.PageOptions)
 	if !ok {

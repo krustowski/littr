@@ -21,6 +21,10 @@ type PollServiceInterface interface {
 	FindByID(ctx context.Context, pollID string) (*Poll, *User, error)
 }
 
+type StatServiceInterface interface {
+	Calculate(ctx context.Context) (*map[string]int64, *map[string]UserStat, *map[string]User, error)
+}
+
 type TokenServiceInterface interface {
 	Create(ctx context.Context, user *User) ([]string, error)
 	Delete(ctx context.Context, tokenID string) error
