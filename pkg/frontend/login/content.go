@@ -38,7 +38,7 @@ func (c *Content) OnNav(ctx app.Context) {
 	// Look if we got the right path format and content = parse the URL.
 	if len(url) > 2 && url[2] != "" {
 		switch url[1] {
-		case "activate":
+		case "activation":
 			activationUUID = url[2]
 		default:
 			return
