@@ -6,9 +6,9 @@ import (
 	//"strconv"
 	//"time"
 
-	//"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/common"
 	//"go.vxn.dev/littr/pkg/backend/live"
-	//"go.vxn.dev/littr/pkg/backend/pages"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	//"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -83,7 +83,49 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 }
 
 func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, error) {
-	return nil, fmt.Errorf("not yet implemented")
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, fmt.Errorf(common.ERR_CALLER_FAIL)
+	}
+
+	// Fetch the pageNo from the context.
+	pageNo, ok := ctx.Value("pageNo").(int)
+	if !ok {
+		return nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
+	}
+
+	// Request the caller from the user repository.
+	caller, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Compose a pagination options object to paginate users.
+	opts := &pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Users: pages.UserOptions{
+			Plain:       true,
+			RequestList: &caller.RequestList,
+		},
+	}
+
+	// Request the page of users from the user repository.
+	users, err := s.userRepository.GetPage(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the caller to users map.
+	(*users)[callerID] = *caller
+
+	// Patch the user's data for export.
+	patchedUsers := common.FlushUserData(users, callerID)
+
+	return patchedUsers, nil
 }
 
 func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User, error) {

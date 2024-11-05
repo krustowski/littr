@@ -3,7 +3,7 @@ package users
 import (
 	"context"
 	"net/http"
-	//"strconv"
+	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -184,6 +184,33 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
+	// Fetch the pageNo from headers.
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
+	pageNo, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log()
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		return
+	}
+
+	type responseData struct {
+		Users *map[string]models.User `json:"users,omitempty"`
+	}
+
+	// Compose the DTO-out from userService.
+	users, err := c.userService.FindAll(context.WithValue(r.Context(), "pageNo", pageNo))
+	if err != nil {
+		l.Msg("could not fetch all users").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch all users").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	DTOOut := &responseData{Users: users}
+
+	// Log the message and write the HTTP response.
+	l.Msg("listing all users").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
+	return
 }
 
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -204,4 +231,5 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
 }

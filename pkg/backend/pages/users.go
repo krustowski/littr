@@ -56,6 +56,10 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		}
 	}
 
+	if opts.Users.RequestList == nil {
+		return PagePointers{}
+	}
+
 	// Add all (for now) users from the requestList to render properly at the top of the users page.
 	for nick, requested := range *opts.Users.RequestList {
 		if requested {
