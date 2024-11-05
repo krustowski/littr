@@ -173,7 +173,7 @@ func (f *Footer) OnMount(ctx app.Context) {
 	f.authGranted = authGranted
 
 	// Do not start the SSE client for the unauthenticated visitors at all.
-	if !authGranted {
+	if !f.authGranted {
 		return
 	}
 
