@@ -14,14 +14,19 @@ import (
 
 type UserController struct {
 	userService models.UserServiceInterface
+	postService models.PostServiceInterface
 }
 
-func NewUserController(userService models.UserServiceInterface) *UserController {
-	if userService == nil {
+func NewUserController(
+	postService models.PostServiceInterface,
+	userService models.UserServiceInterface,
+) *UserController {
+	if postService == nil || userService == nil {
 		return nil
 	}
 
 	return &UserController{
+		postService: postService,
 		userService: userService,
 	}
 }
@@ -69,6 +74,46 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Activate is a handler function to complete the user's activation procedure.
+//
+// @Summary      Activate the user via given UUID
+// @Description  activate the user via given UUID
+// @Tags         users
+// @Produce      json
+// @Param        uuid path string true "UUID from the activation mail"
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/activation/{uuid} [post]
+func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, "userController")
+
+	// Skip the blank caller's ID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the param value from URL's path.
+	uuid := chi.URLParam(r, "uuid")
+	if uuid == "" {
+		l.Msg(common.ERR_REQUEST_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Activate the user at the userService.
+	err := c.userService.Activate(r.Context(), uuid)
+	if err != nil {
+		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("the user has been activated successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
+}
+
 // Update is the users handler that allows the user to change their lists/options/passphrase.
 //
 // @Summary      Update user's data
@@ -83,7 +128,9 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure      404  {object}   common.APIResponse
 // @Failure      409  {object}   common.APIResponse
 // @Failure      500  {object}   common.APIResponse
-// @Router       /users/{userID}/{updateType} [patch]
+// @Router       /users/{userID}/lists [patch]
+// @Router       /users/{userID}/options [patch]
+// @Router       /users/{userID}/passphrase [patch]
 func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -127,6 +174,21 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// UploadAvatar is a handler function to update user's avatar directly in the app.
+//
+// @Summary      Post user's avatar
+// @Description  post user's avatar
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param    	 request body users.UserUpdateRequest true "new avatar data"
+// @Param        userID path string true "user's ID for avatar update"
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      403  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/{userID}/avatar [post]
 func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -135,9 +197,59 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Declare the HTTP response data contents type.
+	type responseData struct {
+		Key string `json:"key"`
+	}
+
+	var DTOIn UserUpdateRequest
+
+	// Decode the incoming request data.
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		return
+	}
+
+	// Call the userService to upload and update the avatar.
+	avatarURL, err := c.userService.UpdateAvatar(r.Context(), &DTOIn)
+	if err != nil {
+		l.Msg("could not update user's avatar").Status(http.StatusBadRequest).Error(err).Log()
+		l.Msg("could not update user's avatar").Status(http.StatusBadRequest).Payload(nil).Write(w)
+		return
+	}
+
+	DTOOut := &responseData{
+		Key: *avatarURL,
+	}
+
+	l.Msg("user's avatar uploaded and updated").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
+	return
 }
 
-func (c *UserController) PassphraseResetRequest(w http.ResponseWriter, r *http.Request) {
+// PassphraseReset handles a new passphrase regeneration.
+//
+// @Summary      Reset the passphrase
+// @Description  reset the passphrase
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param    	 request body users.PassphraseReset.requestData true "the e-mail address struct"
+// @Success      200  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse
+// @Failure      404  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/passphrase/reset [post]
+// @Router       /users/passphrase/request [post]
+func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
 	// Skip the blank caller's ID.
@@ -145,18 +257,51 @@ func (c *UserController) PassphraseResetRequest(w http.ResponseWriter, r *http.R
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
-}
 
-func (c *UserController) ResetPassphrase(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
-
-	// Skip the blank caller's ID.
-	if l.CallerID() == "" {
-		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// Fetch the userID/nickname from the URI.
+	requestType := chi.URLParam(r, "requestType")
+	if requestType == "" {
+		l.Msg(common.ERR_REQUEST_TYPE_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
+	type requestData struct {
+		UUID  string `json:"uuid"`
+		Email string `json:"email"`
+	}
+
+	var DTOIn requestData
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", requestType), &DTOIn)
+	if err != nil {
+		l.Msg("could not process the passphrase reset request").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not process the passphrase reset request").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("passphrase request processed successfully, check your mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
+// Delete is the users handler that processes and deletes given user (oneself) form the database.
+//
+// @Summary      Delete user
+// @Description  delete user
+// @Tags         users
+// @Produce      json
+// @Param        userID path string true "ID of the user to delete"
+// @Success      200  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse
+// @Failure      403  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Failure      500  {object}   common.APIResponse
+// @Router       /users/{userID} [delete]
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -165,16 +310,29 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
-}
 
-func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
-
-	// Skip the blank caller's ID.
-	if l.CallerID() == "" {
-		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	// Take the param from path.
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
+
+	// Check for possible user's data forgery attempt.
+	if userID != l.CallerID() {
+		l.Msg(common.ERR_USER_DELETE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+		return
+	}
+
+	err := c.userService.Delete(r.Context(), userID)
+	if err != nil {
+		l.Msg("could not delete such user").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not delete such user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("user deleted successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	return
 }
 
 // GetAll is the users handler that processes and returns existing users list.
@@ -230,6 +388,17 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// GetByID is the users handler that processes and returns existing user's details according to callerID.
+//
+// @Summary      Get the user's details
+// @Description  get the user's details
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   common.APIResponse{data=users.GetByID.responseData}
+// @Failure      400  {object}   common.APIResponse
+// @Failure      404  {object}   common.APIResponse
+// @Router       /users/{userID} [get]
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 

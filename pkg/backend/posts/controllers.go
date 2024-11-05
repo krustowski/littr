@@ -167,7 +167,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// uploaded figure handling
 	if post.Data != nil && post.Figure != "" {
-		if err, code := image.ProcessBytes(&post, &imgReference); err != nil {
+		if err, code := image.ProcessPost(&post, &imgReference); err != nil {
 			l.Status(code).Error(err).Log().Payload(nil).Write(w)
 			return
 		}

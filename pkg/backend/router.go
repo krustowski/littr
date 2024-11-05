@@ -44,6 +44,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/backend/push"
+	"go.vxn.dev/littr/pkg/backend/requests"
 	"go.vxn.dev/littr/pkg/backend/stats"
 	"go.vxn.dev/littr/pkg/backend/tokens"
 	"go.vxn.dev/littr/pkg/backend/users"
@@ -104,20 +105,22 @@ func NewAPIRouter() chi.Router {
 	// Init repositories for services.
 	pollRepository := polls.NewPollRepository(db.PollCache)
 	postRepository := posts.NewPostRepository(db.FlowCache)
-	userRepository := users.NewUserRepository(db.UserCache)
+	requestRepository := requests.NewRequestRepository(db.RequestCache)
 	tokenRepository := tokens.NewTokenRepository(db.TokenCache)
+	userRepository := users.NewUserRepository(db.UserCache)
 
 	// Init services for controllers.
 	authService := auth.NewAuthService(tokenRepository, userRepository)
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
+	postService := posts.NewPostService(postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
-	userService := users.NewUserService(postRepository, userRepository, tokenRepository)
+	userService := users.NewUserService(postRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
 	pollController := polls.NewPollController(pollService)
 	statController := stats.NewStatController(statService)
-	userController := users.NewUserController(userService)
+	userController := users.NewUserController(postService, userService)
 
 	//
 	//  API subpkg routers registering

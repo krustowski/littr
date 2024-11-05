@@ -3,19 +3,29 @@ package users
 import (
 	"context"
 	"fmt"
-	//"strconv"
-	//"time"
+	netmail "net/mail"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/image"
+	"go.vxn.dev/littr/pkg/backend/mail"
 	//"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
-	//"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/config"
+	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
+
+	uuid "github.com/google/uuid"
 )
 
 type UserUpdateRequest struct {
 	NewPassphraseHex     string `json:"new_passphrase_hex"`
 	CurrentPassphraseHex string `json:"current_passphrase_hex"`
+	AvatarByteData       []byte `json:"data"`
+	AvatarFileName       string `json:"figure"`
 }
 
 //
@@ -23,34 +33,192 @@ type UserUpdateRequest struct {
 //
 
 type UserService struct {
-	postRepository  models.PostRepositoryInterface
-	userRepository  models.UserRepositoryInterface
-	tokenRepository models.TokenRepositoryInterface
+	postRepository    models.PostRepositoryInterface
+	requestRepository models.RequestRepositoryInterface
+	tokenRepository   models.TokenRepositoryInterface
+	userRepository    models.UserRepositoryInterface
 }
 
 func NewUserService(
 	postRepository models.PostRepositoryInterface,
-	userRepository models.UserRepositoryInterface,
+	requestRepository models.RequestRepositoryInterface,
 	tokenRepository models.TokenRepositoryInterface,
+	userRepository models.UserRepositoryInterface,
 ) models.UserServiceInterface {
-	if postRepository == nil || userRepository == nil || tokenRepository == nil {
+	if postRepository == nil || requestRepository == nil || tokenRepository == nil || userRepository == nil {
 		return nil
 	}
 
 	return &UserService{
-		postRepository:  postRepository,
-		userRepository:  userRepository,
-		tokenRepository: tokenRepository,
+		postRepository:    postRepository,
+		requestRepository: requestRepository,
+		tokenRepository:   tokenRepository,
+		userRepository:    userRepository,
 	}
 }
 
 func (s *UserService) Create(ctx context.Context, user *models.User) error {
-	// Fetch the callerID/nickname type from the given context.
-	_, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the user request")
+	// Check if the registration is allowed.
+	if !config.IsRegistrationEnabled {
+		return fmt.Errorf(common.ERR_REGISTRATION_DISABLED)
 	}
 
+	// Block restricted nicknames, use lowercase for comparison.
+	if helpers.Contains(config.UserDeletionList, strings.ToLower(user.Nickname)) {
+		return fmt.Errorf(common.ERR_RESTRICTED_NICKNAME)
+	}
+
+	// Restrict the nickname to contains only some characters explicitly "listed".
+	// https://stackoverflow.com/a/38554480
+	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
+		return fmt.Errorf(common.ERR_NICKNAME_CHARSET_MISMATCH)
+	}
+
+	// Check the nick's length contraints.
+	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
+		return fmt.Errorf(common.ERR_NICKNAME_TOO_LONG_SHORT)
+	}
+
+	// Preprocess the e-mail address: set to lowercase.
+	email := strings.ToLower(user.Email)
+	user.Email = email
+
+	// Validate the e-mail format.
+	// https://stackoverflow.com/a/66624104
+	if _, err := netmail.ParseAddress(email); err != nil {
+		return fmt.Errorf(common.ERR_WRONG_EMAIL_FORMAT)
+	}
+
+	// Check if the e-mail address already used.
+	users, err := s.userRepository.GetAll()
+	if err != nil {
+		return err
+	}
+
+	for key, dbUser := range *users {
+		// Check if the nickname has been already used/taken.
+		if key == user.Nickname {
+			return fmt.Errorf(common.ERR_USER_NICKNAME_TAKEN)
+		}
+
+		// E-mail address match found.
+		if strings.ToLower(dbUser.Email) == user.Email {
+			return fmt.Errorf(common.ERR_EMAIL_ALREADY_USED)
+		}
+	}
+
+	//
+	//  Validation end
+	//
+
+	//
+	//  Set user defaults, save the user struct to database and create a new system post
+	//
+
+	// Set the defaults and a timestamp.
+	user.RegisteredTime = time.Now()
+	user.LastActiveTime = time.Now()
+	user.About = "newbie"
+
+	// New user's umbrella option map.
+	options := map[string]bool{
+		"active":        false,
+		"gdpr":          true,
+		"private":       false,
+		"uiDarkMode":    true,
+		"liveMode":      true,
+		"localTimeMode": true,
+	}
+
+	// Options defaults.
+	user.Options = options
+
+	// Deprecated option setting method.
+	user.GDPR = true
+	user.Active = false
+
+	//
+	//  Request (for activation) composition
+	//
+
+	// Generate new random UUID, aka requestID.
+	randomID := uuid.New().String()
+
+	// Prepare the request data for the database.
+	request := &models.Request{
+		ID:        randomID,
+		Nickname:  user.Nickname,
+		Email:     user.Email,
+		CreatedAt: time.Now(),
+		Type:      "activation",
+	}
+
+	// Save the request via the requestRepository.
+	err = s.requestRepository.Save(request)
+	if err != nil {
+		return fmt.Errorf(common.ERR_REQUEST_SAVE_FAIL)
+	}
+
+	//
+	//  Mailing
+	//
+
+	// Prepare the mail options.
+	mailPayload := mail.MessagePayload{
+		Nickname: user.Nickname,
+		Email:    user.Email,
+		Type:     "user_activation",
+		UUID:     randomID,
+	}
+
+	// Compose a message to send.
+	msg, err := mail.ComposeMail(mailPayload)
+	if err != nil || msg == nil {
+		return fmt.Errorf(common.ERR_MAIL_COMPOSITION_FAIL)
+	}
+
+	// Send the activation mail to such user.
+	if err = mail.SendMail(msg); err != nil {
+		return fmt.Errorf(common.ERR_ACTIVATION_MAIL_FAIL)
+	}
+
+	//
+	//  Save new user
+	//
+
+	err = s.userRepository.Save(user)
+	if err != nil {
+		return fmt.Errorf(common.ERR_USER_SAVE_FAIL)
+	}
+
+	//
+	//  Compose new post
+	//
+
+	// Prepare a timestamp for a very new post to alert others the new user has been added.
+	postStamp := time.Now()
+	postKey := strconv.FormatInt(postStamp.UnixNano(), 10)
+
+	// Compose the post's body.
+	post := &models.Post{
+		ID:        postKey,
+		Type:      "user",
+		Figure:    user.Nickname,
+		Nickname:  "system",
+		Content:   "new user has been added (" + user.Nickname + ")",
+		Timestamp: postStamp,
+	}
+
+	// Save new post to the database.
+	err = s.postRepository.Save(post)
+	if err != nil {
+		return fmt.Errorf(common.ERR_POSTREG_POST_SAVE_FAIL)
+	}
+
+	return nil
+}
+
+func (s *UserService) Activate(ctx context.Context, userID string) error {
 	return fmt.Errorf("not yet implemented")
 }
 
@@ -73,6 +241,81 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 	case "passhrase":
 	default:
 		return fmt.Errorf("unknown request type")
+	}
+
+	return fmt.Errorf("not yet implemented")
+}
+
+func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{}) (*string, error) {
+	// Assert the type for the user update request.
+	data, ok := userRequest.(*UserUpdateRequest)
+	if !ok {
+		return nil, fmt.Errorf("could not decode the user request")
+	}
+
+	// Fetch the callerID/nickname type from the given context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, fmt.Errorf("could not decode the user request")
+	}
+
+	// Fetch the user's data.
+	user, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, err
+	}
+
+	imgData := &image.ImageProcessPayload{
+		ImageByteData: &data.AvatarByteData,
+		ImageFileName: data.AvatarFileName,
+		ImageBaseName: fmt.Sprintf("%d", time.Now().UnixNano()),
+	}
+
+	// Uploaded figure handling.
+	imageBaseURL, err := image.ProcessImageBytes(imgData)
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	//  TODO: remove previous avatar's data
+	//
+
+	user.AvatarURL = "/web/pix/thumb_" + *imageBaseURL
+
+	// Update user's data.
+	err = s.userRepository.Save(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return imageBaseURL, nil
+}
+
+func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
+	// Assert the type for the user update request.
+	_, ok := userRequest.(*UserUpdateRequest)
+	if !ok {
+		return fmt.Errorf("could not decode the user request")
+	}
+
+	// Fetch the callerID/nickname type from the given context.
+	_, ok = ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the user request")
+	}
+
+	// Fetch the pageNo from the context.
+	requestType, ok := ctx.Value("requestType").(string)
+	if !ok {
+		return fmt.Errorf(common.ERR_PAGENO_INCORRECT)
+	}
+
+	switch requestType {
+	case "request":
+	case "reset":
+	default:
+		return fmt.Errorf(common.ERR_REQUEST_TYPE_UNKNOWN)
 	}
 
 	return fmt.Errorf("not yet implemented")
