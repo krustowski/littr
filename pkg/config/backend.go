@@ -101,6 +101,7 @@ var (
 	UserDeletionList []string = []string{
 		"admin",
 		"administrator",
+		"caller",
 		"littr",
 		"moderator",
 		"nickname",
