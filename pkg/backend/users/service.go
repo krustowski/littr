@@ -218,8 +218,61 @@ func (s *UserService) Create(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (s *UserService) Activate(ctx context.Context, userID string) error {
-	return fmt.Errorf("not yet implemented")
+func (s *UserService) Activate(ctx context.Context, UUID string) error {
+	if UUID == "" {
+		return fmt.Errorf(common.ERR_REQUEST_UUID_BLANK)
+	}
+
+	request, err := s.requestRepository.GetByID(UUID)
+	if err != nil {
+		// Hm, could be another error than just ERR_REQUEST_UUID_INVALID...
+		return fmt.Errorf(common.ERR_REQUEST_UUID_INVALID)
+	}
+
+	// Check the request's validity.
+	if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
+		// Delete the expired request from database.
+		err := s.requestRepository.Delete(UUID)
+		if err != nil {
+			return fmt.Errorf(common.ERR_REQUEST_DELETE_FAIL)
+		}
+
+		// Delete the expired inactivated user from database.
+		err = s.userRepository.Delete(request.Nickname)
+		if err != nil {
+			return fmt.Errorf(common.ERR_USER_DELETE_FAIL)
+		}
+
+		return fmt.Errorf(common.ERR_REQUEST_UUID_EXPIRED)
+	}
+
+	// Fetch the request-related user from database.
+	user, err := s.userRepository.GetByID(request.Nickname)
+	if err != nil {
+		return err
+	}
+
+	// Update the user's activation status (a deprecated and a new method).
+	user.Active = true
+
+	if user.Options == nil {
+		user.Options = make(map[string]bool)
+	}
+	user.Options["active"] = true
+
+	// Save the just-activated user back to the database.
+	err = s.userRepository.Save(user)
+	if err != nil {
+		return fmt.Errorf(common.ERR_USER_UPDATE_FAIL)
+	}
+
+	// Delete the request from the request database.
+	err = s.requestRepository.Delete(UUID)
+	if err != nil {
+		return fmt.Errorf(common.ERR_REQUEST_DELETE_FAIL)
+	}
+
+	return nil
 }
 
 func (s *UserService) Update(ctx context.Context, userRequest interface{}) error {

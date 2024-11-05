@@ -103,7 +103,7 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Activate the user at the userService.
-	err := c.userService.Activate(r.Context(), uuid)
+	err := c.userService.Activate(context.WithValue(r.Context(), "uuid", uuid), uuid)
 	if err != nil {
 		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Error(err).Log()
 		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
