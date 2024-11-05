@@ -47,15 +47,20 @@ func NewRequestRepository(cache db.Cacher) models.RequestRepositoryInterface {
 }*/
 
 // GetRequestByID is a static function to export to other services.
-func GetRequestByID(requestID string, r models.RequestRepositoryInterface) (*models.Request, error) {
-	if requestID == "" || r == nil {
-		return nil, fmt.Errorf("requestID is blank, or repository is nil")
+func GetRequestByID(requestID string, cache db.Cacher) (*models.Request, error) {
+	if requestID == "" || cache == nil {
+		return nil, fmt.Errorf("requestID is blank, or cache is nil")
 	}
 
 	// Fetch the request from the cache.
-	request, err := r.GetByID(requestID)
-	if err != nil {
-		return nil, err
+	reqRaw, found := cache.Load(requestID)
+	if !found {
+		return nil, fmt.Errorf("request not found")
+	}
+
+	request, ok := reqRaw.(*models.Request)
+	if !ok {
+		return nil, fmt.Errorf("could not assert type *models.Request")
 	}
 
 	return request, nil
@@ -63,7 +68,7 @@ func GetRequestByID(requestID string, r models.RequestRepositoryInterface) (*mod
 
 func (r *RequestRepository) GetByID(requestID string) (*models.Request, error) {
 	// Use the static function to get such request.
-	request, err := GetRequestByID(requestID, r)
+	request, err := GetRequestByID(requestID, r.cache)
 	if err != nil {
 		return nil, err
 	}

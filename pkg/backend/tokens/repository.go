@@ -47,15 +47,20 @@ func NewTokenRepository(cache db.Cacher) models.TokenRepositoryInterface {
 }*/
 
 // GetTokenByID is a static function to export to other services.
-func GetTokenByID(tokenID string, r models.TokenRepositoryInterface) (*models.Token, error) {
-	if tokenID == "" || r == nil {
-		return nil, fmt.Errorf("tokenID is blank, or repository is nil")
+func GetTokenByID(tokenID string, cache db.Cacher) (*models.Token, error) {
+	if tokenID == "" || cache == nil {
+		return nil, fmt.Errorf("tokenID is blank, or cache is nil")
 	}
 
 	// Fetch the token from the cache.
-	token, err := r.GetByID(tokenID)
-	if err != nil {
-		return nil, err
+	tokRaw, found := cache.Load(tokenID)
+	if !found {
+		return nil, fmt.Errorf("could not find requested token")
+	}
+
+	token, ok := tokRaw.(*models.Token)
+	if !ok {
+		return nil, fmt.Errorf("could not assert type *models.Token")
 	}
 
 	return token, nil
@@ -63,7 +68,7 @@ func GetTokenByID(tokenID string, r models.TokenRepositoryInterface) (*models.To
 
 func (r *TokenRepository) GetByID(tokenID string) (*models.Token, error) {
 	// Use the static function to get such token.
-	token, err := GetTokenByID(tokenID, r)
+	token, err := GetTokenByID(tokenID, r.cache)
 	if err != nil {
 		return nil, err
 	}
