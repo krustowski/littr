@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -24,7 +25,6 @@ var PathExceptions = []string{
 	"/api/v1/auth/logout",
 	"/api/v1/dump",
 	"/api/v1/live",
-	"/api/v1/users/activation/",
 	"/api/v1/users/passphrase/request",
 	"/api/v1/users/passphrase/reset",
 }
@@ -48,7 +48,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		  }*/
 
 		// Skip those HTTP routes.
-		if helpers.Contains(PathExceptions, r.URL.Path) || (r.URL.Path == "/api/v1/users" && r.Method == "POST") {
+		if helpers.Contains(PathExceptions, r.URL.Path) ||
+			(strings.Contains(r.URL.Path, "/users/activation/") && r.Method == "POST") ||
+			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {
 			next.ServeHTTP(w, r)
 			return
 		}
