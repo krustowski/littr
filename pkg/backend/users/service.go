@@ -529,7 +529,7 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		var dbUser models.User
 
 		for _, user := range *users {
-			if strings.ToLower(data.Email) == strings.ToLower(dbUser.Email) {
+			if strings.ToLower(data.Email) == strings.ToLower(user.Email) {
 				found = true
 				dbUser = user
 				break
