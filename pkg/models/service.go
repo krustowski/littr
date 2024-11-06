@@ -26,7 +26,7 @@ type PostServiceInterface interface {
 	Update(ctx context.Context, post *Post) error
 	Delete(ctx context.Context, postID string) error
 	FindAll(ctx context.Context) (*map[string]Post, *User, error)
-	FindPage(ctx context.Context, opts interface{}) (*map[string]Post, *map[string]User, error)
+	//FindPage(ctx context.Context, opts interface{}) (*map[string]Post, *map[string]User, error)
 	FindByID(ctx context.Context, postID string) (*Post, *User, error)
 }
 
@@ -49,4 +49,5 @@ type UserServiceInterface interface {
 	Delete(ctx context.Context, userID string) error
 	FindAll(ctx context.Context) (*map[string]User, error)
 	FindByID(ctx context.Context, userID string) (*User, error)
+	FindPostsByID(ctx context.Context, userID string) (*map[string]Post, *map[string]User, error)
 }

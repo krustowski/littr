@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.36"
+        "version": "0.44.37"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1859,6 +1859,72 @@
                     }
                 }
             }
+        },
+        "/users/{userID}/posts": {
+            "get": {
+                "description": "get user posts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user posts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "hide replies",
+                        "name": "X-Hide-Replies",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "X-Page-No",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ID for their posts",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.GetPosts.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.APIResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2417,6 +2483,26 @@
                 },
                 "user": {
                     "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "users.GetPosts.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
                 }
             }
         },

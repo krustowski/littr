@@ -746,6 +746,64 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	return &patchedUser, nil
 }
 
+func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[string]models.Post, *map[string]models.User, error) {
+	// Fetch the caller's ID from context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, nil, fmt.Errorf("cannot read the nickname value from context")
+	}
+
+	caller, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Fetch the hideReplies value from context.
+	hideReplies, ok := ctx.Value("hideReplies").(bool)
+	if !ok {
+		return nil, nil, fmt.Errorf("cannot read the hideReplies value from context")
+	}
+
+	// Fetch the pageNo value from context.
+	pageNo, ok := ctx.Value("pageNo").(int)
+	if !ok {
+		return nil, nil, fmt.Errorf("cannot read the pageNo value from context")
+	}
+
+	// Set the page options.
+	opts := &pages.PageOptions{
+		CallerID: callerID,
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Flow: pages.FlowOptions{
+			HideReplies:  hideReplies,
+			Plain:        hideReplies == false,
+			UserFlow:     true,
+			UserFlowNick: userID,
+		},
+	}
+
+	// Fetch page according to the calling user (in options).
+	pagePtrs := pages.GetOnePage(*opts)
+	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || (*pagePtrs.Posts) == nil || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
+		return nil, nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
+	}
+
+	// If zero items were fetched, no need to continue asserting types.
+	if len(*pagePtrs.Posts) == 0 {
+		return nil, nil, fmt.Errorf("no posts found in the database")
+	}
+
+	// Include the caller in the users map.
+	(*pagePtrs.Users)[callerID] = *caller
+
+	// Patch the user data export.
+	users := common.FlushUserData(pagePtrs.Users, callerID)
+
+	return pagePtrs.Posts, users, nil
+}
+
 //
 //  Helpers
 //

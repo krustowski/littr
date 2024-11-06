@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 
 	chi "github.com/go-chi/chi/v5"
@@ -457,12 +456,6 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
-	type responseData struct {
-		Users map[string]models.User `json:"users"`
-		Posts map[string]models.Post `json:"posts"`
-		Key   string                 `json:"key"`
-	}
-
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -485,6 +478,8 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := context.WithValue(r.Context(), "pageNo", pageNo)
+
 	// Fetch the optional X-Hide-Replies header's value.
 	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
@@ -493,32 +488,26 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	// Set the page options.
-	opts := &pages.PageOptions{
-		CallerID: l.CallerID(),
-		PageNo:   pageNo,
-		FlowList: nil,
-
-		Flow: pages.FlowOptions{
-			HideReplies:  hideReplies,
-			Plain:        hideReplies == false,
-			UserFlow:     true,
-			UserFlowNick: userID,
-		},
-	}
+	ctx = context.WithValue(ctx, "hideReplies", hideReplies)
 
 	// Fetch posts and associated users.
-	posts, users, err := c.postService.FindPage(r.Context(), opts)
+	posts, users, err := c.userService.FindPostsByID(ctx, userID)
 	if err != nil {
 		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Error(err).Log()
 		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
+	type responseData struct {
+		Users map[string]models.User `json:"users"`
+		Posts map[string]models.Post `json:"posts"`
+		Key   string                 `json:"key"`
+	}
+
 	// Prepare the payload.
 	pl := &responseData{
 		Posts: *posts,
-		Users: *common.FlushUserData(users, l.CallerID()),
+		Users: *users,
 		Key:   l.CallerID(),
 	}
 
