@@ -58,12 +58,12 @@ func GetRequestByID(requestID string, cache db.Cacher) (*models.Request, error) 
 		return nil, fmt.Errorf("request not found")
 	}
 
-	request, ok := reqRaw.(*models.Request)
+	request, ok := reqRaw.(models.Request)
 	if !ok {
 		return nil, fmt.Errorf("could not assert type *models.Request")
 	}
 
-	return request, nil
+	return &request, nil
 }
 
 func (r *RequestRepository) GetByID(requestID string) (*models.Request, error) {

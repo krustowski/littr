@@ -58,12 +58,12 @@ func GetTokenByID(tokenID string, cache db.Cacher) (*models.Token, error) {
 		return nil, fmt.Errorf("could not find requested token")
 	}
 
-	token, ok := tokRaw.(*models.Token)
+	token, ok := tokRaw.(models.Token)
 	if !ok {
 		return nil, fmt.Errorf("could not assert type *models.Token")
 	}
 
-	return token, nil
+	return &token, nil
 }
 
 func (r *TokenRepository) GetByID(tokenID string) (*models.Token, error) {
