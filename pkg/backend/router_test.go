@@ -74,7 +74,7 @@ func TestAPIRouter(t *testing.T) {
 	}
 
 	//
-	//  Configurate and start the listener and server
+	//  Configure and start the listener and server
 	//
 
 	// Create a custom network TCP connection listener.
