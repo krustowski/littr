@@ -13,6 +13,9 @@ var DecideStatusFromError = func(err error) int {
 
 	// HTTP 400 conditions
 	if err.Error() == ERR_USER_NOT_ACTIVATED ||
+		err.Error() == ERR_REQUEST_EMAIL_BLANK ||
+		err.Error() == ERR_REQUEST_UUID_BLANK ||
+		err.Error() == ERR_INPUT_DATA_FAIL ||
 		err.Error() == ERR_PASSPHRASE_REQ_INCOMPLETE ||
 		err.Error() == ERR_REQUEST_UUID_EXPIRED ||
 		err.Error() == ERR_REQUEST_UUID_BLANK ||
@@ -39,6 +42,7 @@ var DecideStatusFromError = func(err error) int {
 
 	// HTTP 404 condition.
 	if err.Error() == ERR_POLL_NOT_FOUND ||
+		err.Error() == ERR_NO_EMAIL_MATCH ||
 		err.Error() == ERR_USER_NOT_FOUND {
 		return http.StatusNotFound
 	}

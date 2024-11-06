@@ -2,8 +2,11 @@ package users
 
 import (
 	"context"
+	"crypto/sha512"
 	"fmt"
+	"math/rand"
 	netmail "net/mail"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,6 +46,10 @@ type UserUpdateRequest struct {
 	// New avatar upload/update request payload.
 	AvatarByteData []byte `json:"data"`
 	AvatarFileName string `json:"figure"`
+
+	// Passphrase reset request
+	UUID  string `json:"uuid"`
+	Email string `json:"email"`
 }
 
 //
@@ -490,13 +497,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 
 func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
 	// Assert the type for the user update request.
-	_, ok := userRequest.(*UserUpdateRequest)
-	if !ok {
-		return fmt.Errorf("could not decode the user request")
-	}
-
-	// Fetch the callerID/nickname type from the given context.
-	_, ok = ctx.Value("nickname").(string)
+	data, ok := userRequest.(*UserUpdateRequest)
 	if !ok {
 		return fmt.Errorf("could not decode the user request")
 	}
@@ -507,14 +508,136 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		return fmt.Errorf(common.ERR_PAGENO_INCORRECT)
 	}
 
+	var mailType string
+	var user *models.User
+
+	var randomPassphrase string
+	var randomUUID string
+
 	switch requestType {
 	case "request":
+		if data.Email == "" {
+			return fmt.Errorf(common.ERR_REQUEST_EMAIL_BLANK)
+		}
+
+		users, err := s.userRepository.GetAll()
+		if err != nil {
+			return err
+		}
+
+		var found bool
+		var dbUser models.User
+
+		for _, user := range *users {
+			if strings.ToLower(data.Email) == strings.ToLower(dbUser.Email) {
+				found = true
+				dbUser = user
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf(common.ERR_NO_EMAIL_MATCH)
+		}
+
+		randomID := uuid.New().String()
+
+		// Prepare the request data for the database.
+		request := &models.Request{
+			ID:        randomID,
+			Nickname:  dbUser.Nickname,
+			Email:     strings.ToLower(data.Email),
+			CreatedAt: time.Now(),
+			Type:      "reset_passphrase",
+		}
+
+		if err := s.requestRepository.Save(request); err != nil {
+			return err
+		}
+
+		mailType = "reset_request"
+		user = &dbUser
+
+		randomUUID = randomID
+
 	case "reset":
+		if data.UUID == "" {
+			return fmt.Errorf(common.ERR_REQUEST_UUID_BLANK)
+		}
+
+		request, err := s.requestRepository.GetByID(data.UUID)
+		if err != nil {
+			return err
+		}
+
+		// Check the request's validity.
+		if request.CreatedAt.Before(time.Now().Add(-24 * time.Hour)) {
+			// Delete the invalid request from the database.
+			if err := s.requestRepository.Delete(data.UUID); err != nil {
+				return fmt.Errorf(common.ERR_REQUEST_DELETE_FAIL)
+			}
+
+			return fmt.Errorf(common.ERR_REQUEST_UUID_EXPIRED)
+		}
+
+		// Preprocess the e-mail address = use the lowecased form.
+		email := strings.ToLower(request.Email)
+		request.Email = email
+
+		dbUser, err := s.userRepository.GetByID(request.Nickname)
+		if err != nil {
+			return err
+		}
+
+		// Reset the passphrase = generete a new one (32 chars long).
+		rand.Seed(time.Now().UnixNano())
+		randomPassphrase = helpers.RandSeq(32)
+		pepper := os.Getenv("APP_PEPPER")
+
+		if pepper == "" {
+			return fmt.Errorf(common.ERR_NO_SERVER_SECRET)
+		}
+
+		// Convert new passphrase into the hexadecimal format with pepper added.
+		passHash := sha512.Sum512([]byte(randomPassphrase + pepper))
+		dbUser.PassphraseHex = fmt.Sprintf("%x", passHash)
+
+		if err := s.userRepository.Save(dbUser); err != nil {
+			return err
+		}
+
+		if err := s.requestRepository.Delete(data.UUID); err != nil {
+			return err
+		}
+
+		mailType = "reset_passphrase"
+		user = dbUser
+
 	default:
 		return fmt.Errorf(common.ERR_REQUEST_TYPE_UNKNOWN)
 	}
 
-	return fmt.Errorf("not yet implemented")
+	// Prepare the mail options.
+	mailPayload := mail.MessagePayload{
+		Nickname:   user.Nickname,
+		Email:      user.Email,
+		Type:       mailType,
+		UUID:       randomUUID,
+		Passphrase: randomPassphrase,
+	}
+
+	// Compose a message to send.
+	msg, err := mail.ComposeMail(mailPayload)
+	if err != nil || msg == nil {
+		return fmt.Errorf(common.ERR_MAIL_COMPOSITION_FAIL)
+	}
+
+	// send the message
+	if err := mail.SendMail(msg); err != nil {
+		return fmt.Errorf(common.ERR_MAIL_NOT_SENT)
+	}
+
+	return nil
 }
 
 func (s *UserService) Delete(ctx context.Context, userID string) error {

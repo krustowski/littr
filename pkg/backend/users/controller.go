@@ -242,7 +242,7 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param    	 request body users.PassphraseReset.requestData true "the e-mail address struct"
+// @Param    	 request body users.UserUpdateRequest true "fill the e-mail address, or UUID fields"
 // @Success      200  {object}  common.APIResponse
 // @Failure      400  {object}  common.APIResponse
 // @Failure      404  {object}  common.APIResponse
@@ -265,12 +265,7 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	type requestData struct {
-		UUID  string `json:"uuid"`
-		Email string `json:"email"`
-	}
-
-	var DTOIn requestData
+	var DTOIn UserUpdateRequest
 
 	// decode the incoming data
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {

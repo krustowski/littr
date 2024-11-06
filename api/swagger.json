@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.32"
+        "version": "0.44.33"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1404,12 +1404,12 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "the e-mail address struct",
+                        "description": "fill the e-mail address, or UUID fields",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.PassphraseReset.requestData"
+                            "$ref": "#/definitions/users.UserUpdateRequest"
                         }
                     }
                 ],
@@ -1456,12 +1456,12 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "the e-mail address struct",
+                        "description": "fill the e-mail address, or UUID fields",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.PassphraseReset.requestData"
+                            "$ref": "#/definitions/users.UserUpdateRequest"
                         }
                     }
                 ],
@@ -2420,17 +2420,6 @@
                 }
             }
         },
-        "users.PassphraseReset.requestData": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "uuid": {
-                    "type": "string"
-                }
-            }
-        },
         "users.UserUpdateRequest": {
             "type": "object",
             "properties": {
@@ -2450,6 +2439,9 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "email": {
+                    "type": "string"
                 },
                 "figure": {
                     "type": "string"
@@ -2488,6 +2480,10 @@
                     "additionalProperties": {
                         "type": "boolean"
                     }
+                },
+                "uuid": {
+                    "description": "Passphrase reset request",
+                    "type": "string"
                 },
                 "website_link": {
                     "type": "string"
