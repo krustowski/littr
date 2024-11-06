@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.31"
+        "version": "0.44.32"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -2434,10 +2434,18 @@
         "users.UserUpdateRequest": {
             "type": "object",
             "properties": {
+                "about_you": {
+                    "type": "string"
+                },
                 "current_passphrase_hex": {
                     "type": "string"
                 },
+                "dark_mode": {
+                    "description": "Options updata request payload (legacy fields).",
+                    "type": "boolean"
+                },
                 "data": {
+                    "description": "New avatar upload/update request payload.",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -2446,7 +2454,42 @@
                 "figure": {
                     "type": "string"
                 },
+                "flow_list": {
+                    "description": "Lists update request payload.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "live_mode": {
+                    "type": "boolean"
+                },
+                "local_time_mode": {
+                    "type": "boolean"
+                },
                 "new_passphrase_hex": {
+                    "description": "New passphrase request payload.",
+                    "type": "string"
+                },
+                "options_map": {
+                    "$ref": "#/definitions/models.UserOptionsMap"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "request_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "shade_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "website_link": {
                     "type": "string"
                 }
             }
