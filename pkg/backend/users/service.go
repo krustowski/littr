@@ -226,7 +226,8 @@ func (s *UserService) Activate(ctx context.Context, UUID string) error {
 	request, err := s.requestRepository.GetByID(UUID)
 	if err != nil {
 		// Hm, could be another error than just ERR_REQUEST_UUID_INVALID...
-		return fmt.Errorf(common.ERR_REQUEST_UUID_INVALID)
+		//return fmt.Errorf(common.ERR_REQUEST_UUID_INVALID)
+		return err
 	}
 
 	// Check the request's validity.
