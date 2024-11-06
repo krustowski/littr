@@ -163,13 +163,14 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	post.ID = key
 	post.Timestamp = timestamp
 
+	// Compose a payload for the image processing.
 	imagePayload := &image.ImageProcessPayload{
 		ImageByteData: &post.Data,
 		ImageFileName: post.Figure,
 		ImageBaseName: post.ID,
 	}
 
-	// uploaded figure handling
+	// Uploaded figure handling.
 	if post.Data != nil && post.Figure != "" {
 		var err error
 		imgReference, err := image.ProcessImageBytes(imagePayload)
@@ -177,7 +178,11 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 			l.Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
-		post.Figure = *imgReference
+
+		// Ensure the image reference pointer is a valid one.
+		if imgReference != nil {
+			post.Figure = *imgReference
+		}
 	}
 
 	// save the post by its key

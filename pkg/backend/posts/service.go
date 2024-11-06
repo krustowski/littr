@@ -136,7 +136,7 @@ func (s *PostService) FindAll(ctx context.Context) (*map[string]models.Post, *mo
 	}
 
 	// Request the page of posts from the post repository.
-	posts, err := s.postRepository.GetPage(opts)
+	posts, _, err := s.postRepository.GetPage(opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -151,6 +151,32 @@ func (s *PostService) FindAll(ctx context.Context) (*map[string]models.Post, *mo
 	patchedCaller := (*common.FlushUserData(&map[string]models.User{callerID: *caller}, callerID))[callerID]
 
 	return posts, &patchedCaller, nil
+}
+
+func (s *PostService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
+	}
+
+	// Request the page of posts from the post repository.
+	posts, users, err := s.postRepository.GetPage(opts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Request the caller from the user repository.
+	caller, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Assign the caller into the users map.
+	(*users)[callerID] = *caller
+
+	// Patch the user's data for export.
+	return posts, common.FlushUserData(users, callerID), nil
 }
 
 func (s *PostService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {

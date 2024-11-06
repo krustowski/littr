@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 
 	chi "github.com/go-chi/chi/v5"
@@ -440,8 +441,27 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// GetPosts fetches posts only from specified user.
+//
+// @Summary      Get user posts
+// @Description  get user posts
+// @Tags         users
+// @Produce      json
+// @Param    	 X-Hide-Replies header string false "hide replies"
+// @Param    	 X-Page-No header string true "page number"
+// @Param        userID path string true "user's ID for their posts"
+// @Success      200  {object}  common.APIResponse{data=users.GetPosts.responseData}
+// @Failure      400  {object}  common.APIResponse
+// @Failure      500  {object}  common.APIResponse
+// @Router       /users/{userID}/posts [get]
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
+
+	type responseData struct {
+		Users map[string]models.User `json:"users"`
+		Posts map[string]models.Post `json:"posts"`
+		Key   string                 `json:"key"`
+	}
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -449,4 +469,59 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch the param from URL path.
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the pageNo from headers.
+	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
+	pageNo, err := strconv.Atoi(pageNoString)
+	if err != nil {
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log()
+		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the optional X-Hide-Replies header's value.
+	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
+	if err != nil {
+		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+		hideReplies = false
+	}
+
+	// Set the page options.
+	opts := &pages.PageOptions{
+		CallerID: l.CallerID(),
+		PageNo:   pageNo,
+		FlowList: nil,
+
+		Flow: pages.FlowOptions{
+			HideReplies:  hideReplies,
+			Plain:        hideReplies == false,
+			UserFlow:     true,
+			UserFlowNick: userID,
+		},
+	}
+
+	// Fetch posts and associated users.
+	posts, users, err := c.postService.FindPage(r.Context(), opts)
+	if err != nil {
+		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
+	// Prepare the payload.
+	pl := &responseData{
+		Posts: *posts,
+		Users: *common.FlushUserData(users, l.CallerID()),
+		Key:   l.CallerID(),
+	}
+
+	l.Msg("listing user's posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	return
 }

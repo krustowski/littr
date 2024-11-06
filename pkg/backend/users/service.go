@@ -729,10 +729,10 @@ func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, err
 
 func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User, error) {
 	// Fetch the user's ID from the context.
-	userID, ok := ctx.Value("userID").(string)
+	/*userID, ok := ctx.Value("userID").(string)
 	if !ok {
 		return nil, fmt.Errorf(common.ERR_USERID_BLANK)
-	}
+	}*/
 
 	// Request the user's data from repository..
 	user, err := s.userRepository.GetByID(userID)

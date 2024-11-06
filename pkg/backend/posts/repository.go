@@ -45,25 +45,25 @@ func (r *PostRepository) GetAll() (*map[string]models.Post, error) {
 	return &posts, nil
 }
 
-func (r *PostRepository) GetPage(pageOpts interface{}) (*map[string]models.Post, error) {
+func (r *PostRepository) GetPage(pageOpts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Assert type for pageOptions.
 	opts, ok := pageOpts.(*pages.PageOptions)
 	if !ok {
-		return nil, fmt.Errorf("cannot read the page options at the repository level")
+		return nil, nil, fmt.Errorf("cannot read the page options at the repository level")
 	}
 
 	// Fetch page according to the calling user (in options).
 	pagePtrs := pages.GetOnePage(*opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || (*pagePtrs.Posts) == nil {
-		return nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
+		return nil, nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
 	}
 
 	// If zero items were fetched, no need to continue asserting types.
 	if len(*pagePtrs.Posts) == 0 {
-		return nil, fmt.Errorf("no posts found in the database")
+		return nil, nil, fmt.Errorf("no posts found in the database")
 	}
 
-	return pagePtrs.Posts, nil
+	return pagePtrs.Posts, pagePtrs.Users, nil
 
 }
 

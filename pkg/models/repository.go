@@ -14,7 +14,7 @@ type PollRepositoryInterface interface {
 
 type PostRepositoryInterface interface {
 	GetAll() (*map[string]Post, error)
-	GetPage(opts interface{}) (*map[string]Post, error)
+	GetPage(opts interface{}) (*map[string]Post, *map[string]User, error)
 	GetByID(postID string) (*Post, error)
 	Save(post *Post) error
 	Delete(postID string) error
