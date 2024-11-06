@@ -163,15 +163,25 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	post.ID = key
 	post.Timestamp = timestamp
 
-	var imgReference string
+	var imgReference *string
+
+	imagePayload := &image.ImageProcessPayload{
+		ImageByteData: &post.Data,
+		ImageFileName: post.Figure,
+		ImageBaseName: post.ID,
+	}
 
 	// uploaded figure handling
 	if post.Data != nil && post.Figure != "" {
-		if err, code := image.ProcessPost(&post, &imgReference); err != nil {
-			l.Status(code).Error(err).Log().Payload(nil).Write(w)
+		var err error
+		imgReference, err = image.ProcessImageBytes(imagePayload)
+		if err != nil {
+			l.Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 			return
 		}
 	}
+
+	post.Figure = *imgReference
 
 	// save the post by its key
 	if saved := db.SetOne(db.FlowCache, key, post); !saved {
