@@ -22,10 +22,27 @@ import (
 )
 
 type UserUpdateRequest struct {
+	// Lists update request payload.
+	FlowList    map[string]bool `json:"flow_list"`
+	RequestList map[string]bool `json:"request_list"`
+	ShadeList   map[string]bool `json:"shade_list"`
+
+	// Options updata request payload (legacy fields).
+	UIDarkMode    bool                  `json:"dark_mode"`
+	LiveMode      bool                  `json:"live_mode"`
+	LocalTimeMode bool                  `json:"local_time_mode"`
+	Private       bool                  `json:"private"`
+	AboutText     string                `json:"about_you"`
+	WebsiteLink   string                `json:"website_link"`
+	OptionsMap    models.UserOptionsMap `json:"options_map"`
+
+	// New passphrase request payload.
 	NewPassphraseHex     string `json:"new_passphrase_hex"`
 	CurrentPassphraseHex string `json:"current_passphrase_hex"`
-	AvatarByteData       []byte `json:"data"`
-	AvatarFileName       string `json:"figure"`
+
+	// New avatar upload/update request payload.
+	AvatarByteData []byte `json:"data"`
+	AvatarFileName string `json:"figure"`
 }
 
 //
@@ -33,14 +50,16 @@ type UserUpdateRequest struct {
 //
 
 type UserService struct {
-	postRepository    models.PostRepositoryInterface
-	requestRepository models.RequestRepositoryInterface
-	tokenRepository   models.TokenRepositoryInterface
-	userRepository    models.UserRepositoryInterface
+	postRepository         models.PostRepositoryInterface
+	subscriptionRepository models.SubscriptionRepositoryInterface
+	requestRepository      models.RequestRepositoryInterface
+	tokenRepository        models.TokenRepositoryInterface
+	userRepository         models.UserRepositoryInterface
 }
 
 func NewUserService(
 	postRepository models.PostRepositoryInterface,
+	subscriptionRepository models.SubscriptionRepositoryInterface,
 	requestRepository models.RequestRepositoryInterface,
 	tokenRepository models.TokenRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
@@ -50,10 +69,11 @@ func NewUserService(
 	}
 
 	return &UserService{
-		postRepository:    postRepository,
-		requestRepository: requestRepository,
-		tokenRepository:   tokenRepository,
-		userRepository:    userRepository,
+		postRepository:         postRepository,
+		subscriptionRepository: subscriptionRepository,
+		requestRepository:      requestRepository,
+		tokenRepository:        tokenRepository,
+		userRepository:         userRepository,
 	}
 }
 
@@ -278,26 +298,148 @@ func (s *UserService) Activate(ctx context.Context, UUID string) error {
 
 func (s *UserService) Update(ctx context.Context, userRequest interface{}) error {
 	// Assert the type for the user update request.
-	_, ok := userRequest.(*UserUpdateRequest)
+	data, ok := userRequest.(*UserUpdateRequest)
 	if !ok {
 		return fmt.Errorf("could not decode the user request")
+	}
+
+	// Fetch the callerID from the given context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the caller's ID")
+	}
+
+	// Fetch the userID from the given context.
+	userID, ok := ctx.Value("userID").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the user's ID")
 	}
 
 	// Fetch the update type from the given context.
 	reqType, ok := ctx.Value("updateType").(string)
 	if !ok {
-		return fmt.Errorf("could not decode the user request")
+		return fmt.Errorf("could not decode the user request type")
 	}
 
 	switch reqType {
 	case "lists":
+		// Fetch the caller from repository.
+		caller, err := s.userRepository.GetByID(callerID)
+		if err != nil {
+			return fmt.Errorf(common.ERR_CALLER_NOT_FOUND)
+		}
+
+		// Fetch requested user by userID from repository.
+		dbUser, err := s.userRepository.GetByID(userID)
+		if err != nil {
+			return fmt.Errorf(common.ERR_USER_NOT_FOUND)
+		}
+
+		// Process the flowList request.
+		if data.FlowList != nil {
+			dbUser = processFlowList(data, dbUser, caller, s.userRepository)
+		}
+
+		// Process the requestList request.
+		if data.RequestList != nil {
+			dbUser = processRequestList(data, dbUser, caller)
+		}
+
+		// Process the shadeList request.
+		if data.ShadeList != nil {
+			dbUser = processShadeList(data, dbUser, caller)
+		}
+
+		if err := s.userRepository.Save(dbUser); err != nil {
+			return err
+		}
+
 	case "options":
-	case "passhrase":
+		if callerID != userID {
+			return fmt.Errorf(common.ERR_USER_UPDATE_FOREIGN)
+		}
+
+		// Fetch requested user by userID from repository.
+		dbUser, err := s.userRepository.GetByID(userID)
+		if err != nil {
+			return fmt.Errorf(common.ERR_USER_NOT_FOUND)
+		}
+		// Patch the nil map.
+		if dbUser.Options == nil {
+			dbUser.Options = models.UserOptionsMap{}
+		}
+
+		// Toggle dark mode to light mode and vice versa.
+		if data.UIDarkMode != dbUser.UIDarkMode {
+			dbUser.UIDarkMode = !dbUser.UIDarkMode
+			dbUser.Options["uiDarkMode"] = data.UIDarkMode
+		}
+
+		// Toggle the live mode.
+		if data.LiveMode != dbUser.LiveMode {
+			dbUser.LiveMode = !dbUser.LiveMode
+			dbUser.Options["liveMode"] = data.LiveMode
+		}
+
+		// Toggle the local time mode.
+		if data.LocalTimeMode != dbUser.LocalTimeMode {
+			dbUser.LocalTimeMode = !dbUser.LocalTimeMode
+			dbUser.Options["localTimeMode"] = data.LocalTimeMode
+		}
+
+		// Toggle the private mode.
+		if data.Private != dbUser.Private {
+			dbUser.Private = !dbUser.Private
+			dbUser.Options["private"] = data.Private
+		}
+
+		// Change the about text if present and differs from the current one.
+		if data.AboutText != "" && data.AboutText != dbUser.About {
+			dbUser.About = data.AboutText
+		}
+
+		// Change the website link if present and differs from the current one.
+		if data.WebsiteLink != "" && data.WebsiteLink != dbUser.Web {
+			dbUser.Web = data.WebsiteLink
+		}
+
+		if err := s.userRepository.Save(dbUser); err != nil {
+			return err
+		}
+
+	case "passphrase":
+		if callerID != userID {
+			return fmt.Errorf(common.ERR_USER_PASSPHRASE_FOREIGN)
+		}
+
+		// Fetch requested user from repository.
+		dbUser, err := s.userRepository.GetByID(userID)
+		if err != nil {
+			return fmt.Errorf(common.ERR_USER_NOT_FOUND)
+		}
+
+		// Check if both new or old passphrase hashes are blank/empty.
+		if data.NewPassphraseHex == "" || data.CurrentPassphraseHex == "" {
+			return fmt.Errorf(common.ERR_PASSPHRASE_REQ_INCOMPLETE)
+		}
+
+		// Check if the current passphrasë́'s hash is correct.
+		if data.CurrentPassphraseHex != dbUser.PassphraseHex {
+			return fmt.Errorf(common.ERR_PASSPHRASE_CURRENT_WRONG)
+		}
+
+		// Update user's passphrase.
+		dbUser.PassphraseHex = data.NewPassphraseHex
+
+		if err := s.userRepository.Save(dbUser); err != nil {
+			return err
+		}
+
 	default:
 		return fmt.Errorf("unknown request type")
 	}
 
-	return fmt.Errorf("not yet implemented")
+	return nil
 }
 
 func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{}) (*string, error) {
@@ -376,7 +518,44 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 }
 
 func (s *UserService) Delete(ctx context.Context, userID string) error {
-	return fmt.Errorf("not yet implemented")
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf(common.ERR_CALLER_FAIL)
+	}
+
+	// Fetch the user's ID from the context.
+	userID, ok = ctx.Value("userID").(string)
+	if !ok {
+		return fmt.Errorf(common.ERR_USERID_BLANK)
+	}
+
+	// Check for possible user's data forgery attempt.
+	if userID != callerID {
+		return fmt.Errorf(common.ERR_USER_DELETE_FOREIGN)
+	}
+
+	// Fetch the user's data.
+	_, err := s.userRepository.GetByID(userID)
+	if err != nil {
+		return fmt.Errorf(common.ERR_USER_NOT_FOUND)
+	}
+
+	// Delete requested user's record from database.
+	if err := s.userRepository.Delete(userID); err != nil {
+		return fmt.Errorf(common.ERR_USER_DELETE_FAIL)
+	}
+
+	// Delete requested user's subscription.
+	if err := s.subscriptionRepository.Delete(userID); err != nil {
+		return fmt.Errorf(common.ERR_SUBSCRIPTION_DELETE_FAIL)
+	}
+
+	//
+	//  Delete all posts, delete polls, delete tokens
+	//
+
+	return nil
 }
 
 func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, error) {
@@ -442,4 +621,96 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	patchedUser := (*common.FlushUserData(&map[string]models.User{userID: *user}, userID))[userID]
 
 	return &patchedUser, nil
+}
+
+//
+//  Helpers
+//
+
+func processFlowList(data *UserUpdateRequest, user *models.User, caller *models.User, r models.UserRepositoryInterface) *models.User {
+	// Process the FlowList if not empty.
+	if user.FlowList == nil {
+		user.FlowList = make(map[string]bool)
+	}
+
+	// Loop over all flowList records.
+	for key, value := range data.FlowList {
+		// Forbid changing the foreign flowList according to the requested flowList records.
+		if user.Nickname != caller.Nickname && key != caller.Nickname {
+			continue
+		}
+
+		// Only allow to change controlling user's field in the foreign flowList.
+		if user.Nickname != caller.Nickname && key == caller.Nickname {
+			user.FlowList[key] = value
+			continue
+		}
+
+		// Set such flowList record according to the request data.
+		if _, found := user.FlowList[key]; found {
+			user.FlowList[key] = value
+		}
+
+		// Check if the caller is shaded by the counterpart.
+		counterpart, err := r.GetByID(key)
+		if err == nil {
+			if counterpart.Private && key != caller.Nickname {
+				// cannot add this user to one's flow, as the following
+				// has to be requested and allowed by the counterpart
+				user.FlowList[key] = false
+				continue
+			}
+
+			// update the flowList record according to the counterpart's shade list state of the user
+			if shaded, found := counterpart.ShadeList[user.Nickname]; !found || (found && !shaded) {
+				user.FlowList[key] = value
+			}
+		}
+
+		// Do not allow to unfollow oneself.
+		if key == user.Nickname {
+			user.FlowList[key] = true
+		}
+
+	}
+	// always allow to see system posts
+	user.FlowList["system"] = true
+
+	return user
+}
+
+func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
+	if user.RequestList == nil {
+		user.RequestList = make(map[string]bool)
+	}
+
+	// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
+	for key, value := range data.RequestList {
+		// Only allow to change the caller's record in the remote/counterpart's requestList.
+		if key != caller.Nickname {
+			continue
+		}
+
+		user.RequestList[key] = value
+	}
+
+	return user
+}
+
+func processShadeList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
+	if user.ShadeList == nil {
+		user.ShadeList = make(map[string]bool)
+	}
+
+	// Loop over the ShadeList records and change the user's values accordingly (enforce the proper shadeList changing!).
+	for key, value := range data.ShadeList {
+		// To change the shadeList, one has to be its owner.
+		if user.Nickname != caller.Nickname {
+			continue
+		}
+
+		user.ShadeList[key] = value
+	}
+
+	return user
 }

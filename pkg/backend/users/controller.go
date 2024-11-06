@@ -149,7 +149,7 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the request type.
 	updateType := chi.URLParam(r, "updateType")
-	if userID == "" {
+	if updateType == "" {
 		l.Msg(common.ERR_USER_UPDATE_REQ_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -164,7 +164,7 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the user's data at the UserService.
-	if err := c.userService.Update(context.WithValue(r.Context(), "updateType", updateType), &DTOIn); err != nil {
+	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), "updateType", updateType), "userID", userID), &DTOIn); err != nil {
 		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Error(err).Log()
 		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return

@@ -13,6 +13,7 @@ var DecideStatusFromError = func(err error) int {
 
 	// HTTP 400 conditions
 	if err.Error() == ERR_USER_NOT_ACTIVATED ||
+		err.Error() == ERR_PASSPHRASE_REQ_INCOMPLETE ||
 		err.Error() == ERR_REQUEST_UUID_EXPIRED ||
 		err.Error() == ERR_REQUEST_UUID_BLANK ||
 		err.Error() == ERR_REQUEST_UUID_INVALID ||
@@ -28,6 +29,8 @@ var DecideStatusFromError = func(err error) int {
 
 	// HTTP 403 conditions.
 	if err.Error() == ERR_POLL_SELF_VOTE ||
+		err.Error() == ERR_USER_DELETE_FOREIGN ||
+		err.Error() == ERR_USER_PASSPHRASE_FOREIGN ||
 		err.Error() == ERR_REGISTRATION_DISABLED ||
 		err.Error() == ERR_POLL_EXISTING_VOTE ||
 		err.Error() == ERR_POLL_INVALID_VOTE_COUNT {
@@ -41,7 +44,8 @@ var DecideStatusFromError = func(err error) int {
 	}
 
 	// HTTP 409 condition
-	if err.Error() == ERR_EMAIL_ALREADY_USED {
+	if err.Error() == ERR_EMAIL_ALREADY_USED ||
+		err.Error() == ERR_PASSPHRASE_CURRENT_WRONG {
 		return http.StatusConflict
 	}
 

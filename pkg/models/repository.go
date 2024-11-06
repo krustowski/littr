@@ -28,7 +28,7 @@ type RequestRepositoryInterface interface {
 
 type SubscriptionRepositoryInterface interface {
 	GetByID(userID string) (*[]Device, error)
-	Save(sub *[]Device) error
+	Save(userID string, sub *[]Device) error
 	Delete(userID string) error
 }
 
