@@ -31,6 +31,8 @@ func NewUserController(
 	}
 }
 
+type stub struct{}
+
 // Create is the users handler that processes input and creates a new user.
 //
 // @Summary      Add new user
@@ -39,11 +41,11 @@ func NewUserController(
 // @Accept       json
 // @Produce      json
 // @Param    	 request body models.User true "new user's request body"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      403  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
+// @Success      200  {object}   common.APIResponse{data=users.stub}
+// @Failure      400  {object}   common.APIResponse{data=users.stub}
+// @Failure      403  {object}   common.APIResponse{data=users.stub}
+// @Failure      409  {object}   common.APIResponse{data=users.stub}
+// @Failure      500  {object}   common.APIResponse{data=users.stub}
 // @Router       /users [post]
 func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -428,15 +430,20 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patchedUser := (*common.FlushUserData(&map[string]models.User{user.Nickname: *user}, l.CallerID()))[user.Nickname]
+	// Patch the user's data or whatever this does.
+	patchedUser := (*common.FlushUserData(
+		&map[string]models.User{
+			user.Nickname: *user,
+		}, l.CallerID()))[user.Nickname]
 
-	pl := &responseData{
+	// Prepare the response payload.
+	DTOOut := &responseData{
 		User:      patchedUser,
 		Devices:   nil,
 		PublicKey: os.Getenv("VAPID_PUB_KEY"),
 	}
 
-	l.Msg("returning fetch user's data").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	l.Msg("returning fetch user's data").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
 	return
 }
 

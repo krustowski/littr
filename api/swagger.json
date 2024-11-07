@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.37"
+        "version": "0.44.38"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1312,31 +1312,91 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/users.stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2165,8 +2225,7 @@
                 },
                 "app_bg_mode": {
                     "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
@@ -2176,6 +2235,13 @@
                     "description": "Color is the user's UI color scheme.",
                     "type": "string",
                     "default": "#000000"
+                },
+                "devices": {
+                    "description": "Devices array holds the subscribed devices. Devices are not exported as the subscribed devices are stored separated.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Device"
+                    }
                 },
                 "email": {
                     "description": "Email is a primary user's e-mail address.",
@@ -2199,8 +2265,7 @@
                 },
                 "gdpr": {
                     "description": "GDPR consent, set to true because it is noted on the registration page so. No user data should\nbe saved if the boolean is false.",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "last_active_time": {
                     "description": "LastLoginTime is an UNIX timestamp of the last action performed by such user.",
@@ -2212,13 +2277,11 @@
                 },
                 "live_mode": {
                     "description": "LiveMode is a feature allowing to show notifications about new posts",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "local_time_mode": {
                     "description": "LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "nickname": {
                     "description": "Nickname is a login name of such user.",
@@ -2575,6 +2638,9 @@
                     "type": "string"
                 }
             }
+        },
+        "users.stub": {
+            "type": "object"
         },
         "webpush.Keys": {
             "type": "object",

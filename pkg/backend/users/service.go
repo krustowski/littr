@@ -71,7 +71,7 @@ func NewUserService(
 	tokenRepository models.TokenRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.UserServiceInterface {
-	if postRepository == nil || requestRepository == nil || tokenRepository == nil || userRepository == nil {
+	if postRepository == nil || requestRepository == nil || subscriptionRepository == nil || tokenRepository == nil || userRepository == nil {
 		return nil
 	}
 
@@ -728,16 +728,30 @@ func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, err
 }
 
 func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User, error) {
-	// Fetch the user's ID from the context.
-	/*userID, ok := ctx.Value("userID").(string)
+	if userID == "" {
+		return nil, fmt.Errorf("userID argument blank")
+	}
+
+	// Fetch the caller's ID from the context.
+	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
 		return nil, fmt.Errorf(common.ERR_USERID_BLANK)
-	}*/
+	}
 
 	// Request the user's data from repository..
 	user, err := s.userRepository.GetByID(userID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Include subscription devices if the userID is the caller's one.
+	if userID == callerID {
+		devs, err := s.subscriptionRepository.GetByID(userID)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Devices = *devs
 	}
 
 	// Patch the user's data for export.
