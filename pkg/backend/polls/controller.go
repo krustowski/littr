@@ -40,9 +40,9 @@ var getAllPollController = (&PollController{}).GetAll
 // @Accept       json
 // @Produce      json
 // @Param    	 request body models.Poll true "new poll's body"
-// @Success      201  {object}  common.APIResponse "success"
-// @Failure      400  {object}  common.APIResponse "bad/malformed input data, invalid cookies"
-// @Failure      500  {object}  common.APIResponse "the poll saving process failed"
+// @Success      201  {object}  common.APIResponse{data=models.Stub} "success"
+// @Failure      400  {object}  common.APIResponse{data=models.Stub} "bad/malformed input data, invalid cookies"
+// @Failure      500  {object}  common.APIResponse{data=models.Stub} "the poll saving process failed"
 // @Router       /polls [post]
 func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
@@ -82,9 +82,9 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param    	 updatedPoll body models.Poll true "update poll's body"
 // @Param        pollID path string true "poll's ID"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Success      200  {object}  common.APIResponse{data=models.Stub}
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /polls/{pollID} [put]
 func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
@@ -131,10 +131,10 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 // @Tags         polls
 // @Produce      json
 // @Param        pollID path string true "poll's ID to delete"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Success      200  {object}  common.APIResponse{data=models.Stub}
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      403  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /polls/{pollID} [delete]
 func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
@@ -172,8 +172,8 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param    	 X-Page-No header string true "page number"
 // @Success      200  {object}   common.APIResponse{data=polls.GetAll.responseData}
-// @Failure      400  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse{data=models.Stub}
+// @Failure      500  {object}   common.APIResponse{data=models.Stub}
 // @Router       /polls [get]
 func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")
@@ -221,8 +221,8 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        pollID path string true "poll ID"
 // @Success      200  {object}  common.APIResponse{data=polls.GetByID.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      404  {object}  common.APIResponse{data=models.Stub}
 // @Router       /polls/{pollID} [get]
 func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "pollController")

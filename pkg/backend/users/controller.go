@@ -12,11 +12,13 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
+// Structure contents definition for the controller.
 type UserController struct {
 	userService models.UserServiceInterface
 	postService models.PostServiceInterface
 }
 
+// NewUserController return a pointer to the new controller instance, that has to be populated with User and Post services.
 func NewUserController(
 	postService models.PostServiceInterface,
 	userService models.UserServiceInterface,
@@ -31,8 +33,6 @@ func NewUserController(
 	}
 }
 
-type stub struct{}
-
 // Create is the users handler that processes input and creates a new user.
 //
 // @Summary      Add new user
@@ -41,11 +41,11 @@ type stub struct{}
 // @Accept       json
 // @Produce      json
 // @Param    	 request body models.User true "new user's request body"
-// @Success      200  {object}   common.APIResponse{data=users.stub}
-// @Failure      400  {object}   common.APIResponse{data=users.stub}
-// @Failure      403  {object}   common.APIResponse{data=users.stub}
-// @Failure      409  {object}   common.APIResponse{data=users.stub}
-// @Failure      500  {object}   common.APIResponse{data=users.stub}
+// @Success      200  {object}   common.APIResponse{data=models.Stub}
+// @Failure      400  {object}   common.APIResponse{data=models.Stub}
+// @Failure      403  {object}   common.APIResponse{data=models.Stub}
+// @Failure      409  {object}   common.APIResponse{data=models.Stub}
+// @Failure      500  {object}   common.APIResponse{data=models.Stub}
 // @Router       /users [post]
 func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -83,10 +83,10 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Produce      json
 // @Param        uuid path string true "UUID from the activation mail"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Success      200  {object}  common.APIResponse{data=models.Stub}
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      404  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /users/activation/{uuid} [post]
 func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -124,12 +124,12 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param    	 request body users.UserUpdateRequest true "data to update"
 // @Param        userID path string true "ID of the user to update"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      403  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
+// @Success      200  {object}   common.APIResponse{data=models.Stub}
+// @Failure      400  {object}   common.APIResponse{data=models.Stub}
+// @Failure      403  {object}   common.APIResponse{data=models.Stub}
+// @Failure      404  {object}   common.APIResponse{data=models.Stub}
+// @Failure      409  {object}   common.APIResponse{data=models.Stub}
+// @Failure      500  {object}   common.APIResponse{data=models.Stub}
 // @Router       /users/{userID}/lists [patch]
 // @Router       /users/{userID}/options [patch]
 // @Router       /users/{userID}/passphrase [patch]
@@ -185,11 +185,11 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param    	 request body users.UserUpdateRequest true "new avatar data"
 // @Param        userID path string true "user's ID for avatar update"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Success      200  {object}  common.APIResponse{data=models.Stub}
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      403  {object}  common.APIResponse{data=models.Stub}
+// @Failure      404  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /users/{userID}/avatar [post]
 func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -245,10 +245,10 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param    	 request body users.UserUpdateRequest true "fill the e-mail address, or UUID fields"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      404  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Success      200  {object}  common.APIResponse{data=models.Stub}
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      404  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /users/passphrase/reset [post]
 // @Router       /users/passphrase/request [post]
 func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request) {
@@ -293,11 +293,11 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 // @Tags         users
 // @Produce      json
 // @Param        userID path string true "ID of the user to delete"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      403  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
+// @Success      200  {object}   common.APIResponse{data=models.Stub}
+// @Failure      400  {object}   common.APIResponse{data=models.Stub}
+// @Failure      403  {object}   common.APIResponse{data=models.Stub}
+// @Failure      404  {object}   common.APIResponse{data=models.Stub}
+// @Failure      500  {object}   common.APIResponse{data=models.Stub}
 // @Router       /users/{userID} [delete]
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -340,9 +340,9 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param    	 X-Page-No header string true "page number"
 // @Success      200  {object}   common.APIResponse{data=users.GetAll.responseData}
-// @Failure	 400  {object}   common.APIResponse
-// @Failure	 404  {object}   common.APIResponse
-// @Failure	 500  {object}   common.APIResponse
+// @Failure	 400  {object}   common.APIResponse{data=models.Stub}
+// @Failure	 404  {object}   common.APIResponse{data=models.Stub}
+// @Failure	 500  {object}   common.APIResponse{data=models.Stub}
 // @Router       /users [get]
 func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -393,8 +393,8 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   common.APIResponse{data=users.GetByID.responseData}
-// @Failure      400  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
+// @Failure      400  {object}   common.APIResponse{data=models.Stub}
+// @Failure      404  {object}   common.APIResponse{data=models.Stub}
 // @Router       /users/{userID} [get]
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -457,8 +457,8 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Param    	 X-Page-No header string true "page number"
 // @Param        userID path string true "user's ID for their posts"
 // @Success      200  {object}  common.APIResponse{data=users.GetPosts.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
+// @Failure      400  {object}  common.APIResponse{data=models.Stub}
+// @Failure      500  {object}  common.APIResponse{data=models.Stub}
 // @Router       /users/{userID}/posts [get]
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
