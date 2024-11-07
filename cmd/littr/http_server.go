@@ -45,14 +45,14 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // appHandler holds the pointer to the very main FE app handler.
 var appHandler = &app.Handler{
-	Name:         "littr nanoblogger",
-	ShortName:    "littr",
-	Title:        "littr nanoblogger",
-	Description:  "A simple nanoblogging platform",
-	Author:       "krusty",
-	LoadingLabel: "loading...",
+	Name:                    "littr nanoblogger",
+	ShortName:               "littr",
+	Title:                   "littr nanoblogger",
+	Description:             "A simple nanoblogging platform",
+	Author:                  "krusty",
+	LoadingLabel:            "loading...",
 	WasmContentLengthHeader: "X-Uncompressed-Content-Length",
-	Lang:         "en",
+	Lang:                    "en",
 	Keywords: []string{
 		"blog",
 		"blogging",
@@ -274,6 +274,20 @@ func initServer() {
 	// Register the Prometheus metrics' handle.
 	r.Handle("/metrics", promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
 		Registry: metrics.Registry,
+	}))
+
+	// Serve custom compressed client binary.
+	r.Method("GET", "/web/app.wasm", Handler(func(w http.ResponseWriter, r *http.Request) error {
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Type", "application/wasm")
+
+		wasmBinary, err := os.ReadFile("/opt/web/app.wasm.gz")
+		if err != nil {
+			return (err)
+		}
+
+		w.Write(wasmBinary)
+		return nil
 	}))
 
 	// Handle the rest using the appHandler defined earlier.
