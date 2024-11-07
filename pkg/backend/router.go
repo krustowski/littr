@@ -102,6 +102,10 @@ func NewAPIRouter() chi.Router {
 		r.Use(limiter)
 	}
 
+	// Define notFound and methodNotAllowed default handlers.
+	r.NotFound(http.HandlerFunc(NotFoundHandler))
+	r.MethodNotAllowed(http.HandlerFunc(MethodNotAllowedHandler))
+
 	// Init repositories for services.
 	pollRepository := polls.NewPollRepository(db.PollCache)
 	postRepository := posts.NewPostRepository(db.FlowCache)
