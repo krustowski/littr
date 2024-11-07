@@ -1,9 +1,9 @@
 #
-# littr / Makefile
+#  littr / Makefile
 #
 
 #
-# VARS
+#  VARS
 #
 
 include .env.example
@@ -86,7 +86,7 @@ export
 
 
 #
-# TARGETS
+#  TARGETS
 #
 
 all: info
@@ -106,7 +106,7 @@ info:
 	@echo -e ""
 
 #
-# deployment targets
+#  deployment targets
 #
 
 .PHONY: dev
@@ -117,7 +117,7 @@ prod: run logs
 
 
 #
-# helper targets
+#  development targets
 #
 
 .PHONY: fmt
@@ -149,6 +149,37 @@ version:
 		sed -e 's/\(API_TOKEN\)=\(.*\)/\1=xxx/' > .env.example && \
 		sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${APP_VERSION}/' pkg/backend/router.go
 
+.PHONY: sonar_scan
+sonar_scan:
+	@if [ \( -n "${SONAR_URL}" \) -a \( -z "${SONAR_PROJECT_TOKEN}" \) ]; \
+		then \
+		sonar-scanner \
+		-Dsonar.projectKey=${APP_NAME} \
+		-Dsonar.sources=. \
+		-Dsonar.host.url=${SONAR_URL}   \
+		-Dsonar.login=${SONAR_PROJECT_TOKEN}; \
+		fi
+
+.PHONY: push
+push:
+	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
+	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
+	@git push --follow-tags --set-upstream origin master
+	
+.PHONY: push_mirror
+push_mirror:
+	@echo -e "\n${YELLOW} Pushing to the mirror repository... ${RESET}\n"
+	@git push mirror master --follow-tags
+	
+#
+#  build&run targets
+#
+
+.PHONY: docs_host
+docs_host:
+	@echo -e "\n${YELLOW} Updating the host for docs... ${RESET}\n"
+	sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
+
 .PHONY: docs
 docs: config
 	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
@@ -178,6 +209,22 @@ build:
 		DOCKERFILE=prebuilt.dockerfile DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build; \
 	fi
 
+.PHONY: push_to_registry
+push_to_registry:
+	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
+	@[ -n "${REGISTRY}" ] || exit 10
+	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
+		docker push ${DOCKER_IMAGE_TAG}
+	@docker logout ${REGISTRY} > /dev/null
+
+.PHONY: run_test_env
+run_test_env:	
+	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
+	@[ -f ".env" ] || cp .env.example .env
+	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
+		&& docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans \
+		|| docker compose -f ${DOCKER_COMPOSE_TEST_FILE} up --force-recreate --detach --remove-orphans
+
 .PHONY: run
 run:	
 	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
@@ -192,13 +239,34 @@ run:
 		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
 	fi
 
-.PHONY: run_test_env
-run_test_env:	
-	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
-	@[ -f ".env" ] || cp .env.example .env
-	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
-		&& docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans \
-		|| docker compose -f ${DOCKER_COMPOSE_TEST_FILE} up --force-recreate --detach --remove-orphans
+#
+#  profiling targets
+#
+
+GO_TOOL_PPROF = go tool pprof
+NOL := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
+LIST = $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
+.PHONY: kill_pprof
+kill_pprof:
+	@echo -e "\n${YELLOW} Killing all profiling instances... ${RESET}\n"
+	@for INST in ${LIST}; do kill $${INST}; done
+
+PPROF_SOURCE ?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
+.PHONY: run_pprof
+run_pprof: kill_pprof
+	@echo -e "\n${YELLOW} Starting profiling instances (run kill_pprof to kill them)... ${RESET}\n"
+	@go build -pkgdir pkg/ -o littr cmd/littr/main.go cmd/littr/http_server.go cmd/littr/init_client.go
+	@ mkdir -p .tmp
+	@curl -sL ${PPROF_SOURCE}/allocs?debug=1 > .tmp/alloc.out
+	@curl -sL ${PPROF_SOURCE}/goroutine?debug=1 > .tmp/goroutine.out
+	@curl -sL ${PPROF_SOURCE}/heap?debug=1 > .tmp/heap.out
+	@go tool pprof -http=127.0.0.1:8081 littr .tmp/alloc.out &
+	@go tool pprof -http=127.0.0.1:8082 littr .tmp/goroutine.out &
+	@go tool pprof -http=127.0.0.1:8083 littr .tmp/heap.out &
+	
+#
+#  runtime (live system operation) targets
+#
 
 .PHONY: logs
 logs:
@@ -211,17 +279,6 @@ stop:
 	@[ -f ".env" ] || cp .env.example .env
 	@docker compose -f ${DOCKER_COMPOSE_FILE} down
 
-.PHONY: docs_host
-docs_host:
-	@echo -e "\n${YELLOW} Updating the host for docs... ${RESET}\n"
-	sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
-
-.PHONY: push
-push:
-	@echo -e "\n${YELLOW} Pushing to git with tags... ${RESET}\n"
-	@git tag -fa 'v${APP_VERSION}' -m 'v${APP_VERSION}'
-	@git push --follow-tags --set-upstream origin master
-	
 .PHONY: sh
 sh:
 	@echo -e "\n${YELLOW} Attaching container's (${DOCKER_CONTAINER_NAME})... ${RESET}\n"
@@ -259,32 +316,8 @@ backup: fetch_running_dump
 	@echo -e "\n${YELLOW} Making the backup archive... ${RESET}\n"
 	@tar czvf /mnt/backup/littr/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_DIR}
 
-.PHONY: push_to_registry
-push_to_registry:
-	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
-	@[ -n "${REGISTRY}" ] || exit 10
-	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
-		docker push ${DOCKER_IMAGE_TAG}
-	@docker logout ${REGISTRY} > /dev/null
-
 .PHONY: sse_client
 sse_client:
 	@echo -e "\n${YELLOW} Starting the SSE client... ${RESET}\n"
 	@go run cmd/sse_client/main.go
-
-.PHONY: push_mirror
-push_mirror:
-	@echo -e "\n${YELLOW} Pushing to the mirror repository... ${RESET}\n"
-	@git push mirror master --follow-tags
-	
-.PHONY: sonar_scan
-sonar_scan:
-	@if [ \( -n "${SONAR_URL}" \) -a \( -z "${SONAR_PROJECT_TOKEN}" \) ]; \
-		then \
-		sonar-scanner \
-		-Dsonar.projectKey=${APP_NAME} \
-		-Dsonar.sources=. \
-		-Dsonar.host.url=${SONAR_URL}   \
-		-Dsonar.login=${SONAR_PROJECT_TOKEN}; \
-		fi
 
