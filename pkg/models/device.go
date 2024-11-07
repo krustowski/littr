@@ -8,10 +8,9 @@ import (
 	//"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-// Helper struct to see how the data is stored in the database.
+// Helper struct to see how the data is stored in the database. The map key is an userID parameter.
 type Devices struct {
-	//Devices map[string]Device `json:"items"`
-	Devices []Device `json:"items"`
+	Devices map[string][]Device `json:"items"`
 }
 
 // SubscriptionDevice

@@ -81,20 +81,23 @@ type User struct {
 	LastActiveTime time.Time `json:"last_active_time"`
 
 	// searched is a bool indicating a status for the search engine.
-	Searched bool `json:"-" default:"true"`
+	Searched bool `json:"-"`
 
 	// GDPR consent, set to true because it is noted on the registration page so. No user data should
 	// be saved if the boolean is false.
-	GDPR bool `json:"gdpr" default:"true"`
+	GDPR bool `json:"gdpr"`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	UIDarkMode bool `json:"app_bg_mode" default:"true"`
+	UIDarkMode bool `json:"app_bg_mode"`
 
 	// LiveMode is a feature allowing to show notifications about new posts
-	LiveMode bool `json:"live_mode" default:"true"`
+	LiveMode bool `json:"live_mode"`
 
 	// LocalTimeMode is a feature to show any post's datetime in the local time according to the client's/user's device setting.
-	LocalTimeMode bool `json:"local_time_mode" default:"true"`
+	LocalTimeMode bool `json:"local_time_mode"`
+
+	// Devices array holds the subscribed devices. Devices are not exported as the subscribed devices are stored separated.
+	Devices []Device `json"-"`
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags"`
