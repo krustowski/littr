@@ -47,6 +47,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 		-o littr \
 		cmd/littr/
 
+RUN gzip web/app.wasm
 
 #
 # stage 1 -- release
@@ -70,7 +71,7 @@ COPY --chown=1000:1000 --chmod=700 test/data/.gitkeep /opt/pix/
 COPY --chown=1000:1000 --chmod=700 pkg/backend/mail/templates/ /opt/templates/
 
 COPY --from=littr-build /go/src/littr/littr /opt/littr
-COPY --from=littr-build /go/src/littr/web/app.wasm /opt/web/app.wasm
+COPY --from=littr-build /go/src/littr/web/app.wasm.gz /opt/web/app.wasm.gz
 
 # workaround for pix
 RUN cd /opt/web && ln -s ../pix .
