@@ -51,6 +51,7 @@ var appHandler = &app.Handler{
 	Description:  "A simple nanoblogging platform",
 	Author:       "krusty",
 	LoadingLabel: "loading...",
+	WasmContentLengthHeader: "X-Uncompressed-Content-Length",
 	Lang:         "en",
 	Keywords: []string{
 		"blog",
@@ -191,40 +192,6 @@ func initServer() {
 	}()
 
 	//
-	//  Muxer, listener and server initialization
-	//
-
-	// Create a new go-chi muxer.
-	r := chi.NewRouter()
-
-	// Cleans out double slashes.
-	r.Use(middleware.CleanPath)
-
-	// Ensures the muxer should survive the panic.
-	r.Use(middleware.Recoverer)
-
-	// Enable a proactive data compression.
-	// https://pkg.go.dev/compress/flate
-	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "text/css", "image/svg+xml", "image/gif")
-	r.Use(compressor.Handler)
-
-	// Create a custom network TCP connection listener.
-	listener, err := net.Listen("tcp", ":"+config.ServerPort)
-	if err != nil {
-		// Cannot listen on such address = a permission issue?
-		panic(err)
-	}
-	defer listener.Close()
-
-	// Create a custom HTTP server.
-	server = &http.Server{
-		Addr: listener.Addr().String(),
-		//ReadTimeout: 0 * time.Second,
-		WriteTimeout: 0 * time.Second,
-		Handler:      r,
-	}
-
-	//
 	//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
 	//
 
@@ -255,12 +222,42 @@ func initServer() {
 	db.RUnlock()
 
 	//
-	//  Routes and handlers mounting
+	//  Muxer, listener and server initialization
 	//
 
-	// At first define default ones (see pkg/backend/router.go for details).
-	//r.NotFound(http.HandlerFunc(be.NotFoundHandler))
-	//r.MethodNotAllowed(http.HandlerFunc(be.MethodNotAllowedHandler))
+	// Create a new go-chi muxer.
+	r := chi.NewRouter()
+
+	// Cleans out double slashes.
+	r.Use(middleware.CleanPath)
+
+	// Ensures the muxer should survive the panic.
+	r.Use(middleware.Recoverer)
+
+	// Enable a proactive data compression.
+	// https://pkg.go.dev/compress/flate
+	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "text/css", "image/svg+xml", "image/gif")
+	r.Use(compressor.Handler)
+
+	// Create a custom network TCP connection listener.
+	listener, err := net.Listen("tcp", ":"+config.ServerPort)
+	if err != nil {
+		// Cannot listen on such address = a permission issue?
+		panic(err)
+	}
+	defer listener.Close()
+
+	// Create a custom HTTP server. WriteTimeout is set to 0 (infinite) due to the SSE subserver present.
+	server = &http.Server{
+		Addr: listener.Addr().String(),
+		//ReadTimeout: 0 * time.Second,
+		WriteTimeout: 0 * time.Second,
+		Handler:      r,
+	}
+
+	//
+	//  Routes and handlers mounting
+	//
 
 	// Mount the very main API router spanning all the backend.
 	r.Mount("/api/v1", be.NewAPIRouter())
