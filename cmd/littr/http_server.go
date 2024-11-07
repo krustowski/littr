@@ -129,6 +129,7 @@ func initClient() {
 func initServer() {
 	// Prepare the Logger instance.
 	l := common.NewLogger(nil, "initServer")
+	l.Msg("littr server starting (init phase)...").Status(http.StatusOK).Log()
 
 	//
 	//  Prestart preparations
@@ -152,11 +153,11 @@ func initServer() {
 		sig := <-sigs
 		signal.Stop(sigs)
 
-		// Reset the timer not to log the whole server's uptime.
-		l.ResetTimer()
+		// Create a shutdown logger.
+		l := common.NewLogger(nil, "shutdown")
 
 		// Log and broadcast the message that the server is to shutdown.
-		l.Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
+		l.ResetTimer().Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
@@ -164,7 +165,7 @@ func initServer() {
 		db.Lock()
 
 		// Dump all in-memory databases.
-		l.Msg(db.DumpAll()).Status(http.StatusOK).Log()
+		l.ResetTimer().Msg(db.DumpAll()).Status(http.StatusOK).Log()
 
 		// Release the lock, but keep the database read-only. The lock blocks the main thread and defers the application shutdown.
 		db.ReleaseLock()
@@ -257,9 +258,9 @@ func initServer() {
 	//  Routes and handlers mounting
 	//
 
-	// At first define default ones (see pkb/backend/router.go for details).
-	r.NotFound(http.HandlerFunc(be.NotFoundHandler))
-	r.MethodNotAllowed(http.HandlerFunc(be.MethodNotAllowedHandler))
+	// At first define default ones (see pkg/backend/router.go for details).
+	//r.NotFound(http.HandlerFunc(be.NotFoundHandler))
+	//r.MethodNotAllowed(http.HandlerFunc(be.MethodNotAllowedHandler))
 
 	// Mount the very main API router spanning all the backend.
 	r.Mount("/api/v1", be.NewAPIRouter())
@@ -285,7 +286,7 @@ func initServer() {
 	//  Start the server
 	//
 
-	l.Msg("starting the server (v" + os.Getenv("APP_VERSION") + ")...").Status(http.StatusOK).Log()
+	l.Msg("starting the HTTP server (app v" + os.Getenv("APP_VERSION") + ")...").Status(http.StatusOK).Log()
 
 	// Send the SSE regarding the server start.
 	go func() {
@@ -295,7 +296,8 @@ func initServer() {
 
 	// Start serving using the created net listener.
 	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		l.Msg(fmt.Sprintf("HTTP server error: %s", err.Error())).Status(http.StatusInternalServerError).Log()
+		// Reset the timer not to log the whole server's uptime.
+		l.ResetTimer().Msg(fmt.Sprintf("HTTP server error: %s", err.Error())).Status(http.StatusInternalServerError).Log()
 	}
 
 	//
@@ -305,12 +307,9 @@ func initServer() {
 	// Wait for the graceful HTTP server shutdown attempt.
 	wg.Wait()
 
-	// Reset the timer not to log the whole server's uptime.
-	l.ResetTimer()
-
-	// This is the final log before the application exits for real!
+	// This is the final log before the application exits for real! Reset the timer not to log the whole server's uptime.
 	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
-	l.Msg("HTTP server has stopped serving new connections, exit").Status(http.StatusOK).Log()
+	l.ResetTimer().Msg("HTTP server has stopped serving new connections, exit").Status(http.StatusOK).Log()
 
 	defer os.Exit(0)
 	return
