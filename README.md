@@ -1,6 +1,6 @@
 ![littr logo](/web/android-chrome-192x192.png)
 
-# littr (formerly litter-go)
+# littr nanoblogger
 
 [![Go Reference](https://pkg.go.dev/badge/go.vxn.dev/littr.svg)](https://pkg.go.dev/go.vxn.dev/littr)
 [![Go Report Card](https://goreportcard.com/badge/go.vxn.dev/littr)](https://goreportcard.com/report/go.vxn.dev/littr)
@@ -8,7 +8,7 @@
 [![littr CI/CD test and build pipeline](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml)
 [![littr CI/CD deployment pipeline](https://github.com/krustowski/littr/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/deployment.yml)
 
-a simple nanoblogging platform for a raw mind _flow_
+A simple nanoblogging platform for a raw mind _flow_.
 
 [read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post)
 
@@ -181,7 +181,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + [...]
 
 ### roadmap to v0.45
-+ add controler+service+repository experiment for polls, users, posts (wip)
++ add controler+service+repository experiment for ~~polls~~, ~~users~~, posts (wip)
 + live switch implementation (disable SSE)
 + redesign the flow subviews (profile pages)
 + ~~write integration/e2e tests draft~~ (wip)
@@ -199,7 +199,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + ~~enable cache metrics gauges~~
 - ~~fix the streamer: event type broadcasting~~
 + ~~refactor mailing on BE~~
-+ unify options under the umbrella user.Options map (wip)
++ ~~union options under the umbrella user.Options map~~ (wip)
 + ~~update swagger docs, ensure proper params, inputs, responses etc are valid~~ (wip)
 
 ### roadmap to v0.42
