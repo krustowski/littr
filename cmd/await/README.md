@@ -15,8 +15,12 @@ In shell run these:
 cd cmd/await
 mkdir -p web
 
+# to make it run, execute these
 GOOS=js GOARCH=wasm go build -o web/app.wasm main.go
 go run main.go
+
+# ...or just in the appropriate folder
+make run
 ```
 
 Then:

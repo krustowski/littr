@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -23,14 +24,56 @@ func (m *MyApp) Render() app.UI {
 	)
 }
 
+// RequestInit is an options struct for the Fetch API usage.
+// https://developer.mozilla.org/en-US/docs/Web/API/RequestInit
+type RequestInit struct {
+	Body           string            `json:"body"`
+	Cache          string            `json:"cache" default:"default"`
+	Credentials    string            `json:"credentials" default:"same-origin"`
+	Headers        map[string]string `json:"headers"`
+	Keepalive      bool              `json:"keepalive" default:"false"`
+	Method         string            `json:"method" default:"GET"`
+	Mode           string            `json:"mode" default:"cors"`
+	Priority       string            `json:"priority" default:"auto"`
+	Redirect       string            `json:"redirect" default:"follow"`
+	Referrer       string            `json:"referrer" default:"about:client"`
+	ReferrerPolicy string            `json:"referrerPolicy"`
+	Signal         interface{}       `json:"signal"`
+}
+
+// Usable map for export to JSValue via app.ValueOf(x)
+var DefaultRequestInit = map[string]interface{}{
+	"body":           nil,
+	"cache":          "default",
+	"credentials":    "same-origin",
+	"headers":        map[string]interface{}{},
+	"keepalive":      "false",
+	"method":         "GET",
+	"mode":           "cors",
+	"priority":       "auto",
+	"redirect":       "follow",
+	"referrer":       "about:client",
+	"referrerPolicy": "",
+	"signal":         nil,
+}
+
+func NewRequestInitOptions() *RequestInit {
+	return &RequestInit{}
+}
+
 func (m *MyApp) onFetchData(ctx app.Context, e app.Event) {
 	go func() {
 		url := "http://localhost:8081/api/v1"
 
-		fetch := app.Window().Get("fetch")
+		goOpts := DefaultRequestInit
+		goOpts["method"] = "POST"
 
-		promise := fetch.Invoke(url)
+		signal := app.Window().Get("AbortSignal").Call("timeout", app.ValueOf(5))
+		jsOpts := app.ValueOf(goOpts)
+		jsOpts.Set("signal", signal)
 
+		//promise := app.Window().Call("fetch", url, app.ValueOf(opts))
+		promise := app.Window().Call("fetch", url, jsOpts)
 		promise.Then(func(response app.Value) {
 			if response.Get("status").Int() != 200 {
 				// Notify the UI's component.
@@ -47,24 +90,26 @@ func (m *MyApp) onFetchData(ctx app.Context, e app.Event) {
 				// {}
 				//fmt.Printf("%s\n", app.Window().Get("JSON").Call("stringify", response).String())
 
-				response.Call("json").Then(func(result app.Value) {
+				subpromise := response.Call("json")
+				subpromise.Then(func(result app.Value) {
 					// [object Object]
 					//fmt.Printf("%s\n", result.Call("toString").String())
 
 					// {"message": "lmao"}
 					//fmt.Printf("%s\n", app.Window().Get("JSON").Call("stringify", result).String())
-					rawJSON := app.Window().Get("JSON").Call("stringify", result).String()
+					rawJSON := app.Window().Get("JSON").Call("stringify", result)
+					//rawJSON.Call("catch", app.Window().Get("catchError"))
 
 					var resultMap map[string]interface{}
 
 					// Unmarshal the raw string to []byte stream JSON to the interface map.
-					if err := json.Unmarshal([]byte(rawJSON), &resultMap); err != nil {
+					if err := json.Unmarshal([]byte(rawJSON.String()), &resultMap); err != nil {
 						fmt.Printf("%s\n", err.Error())
 					}
 
 					// Update the UI's component.
 					ctx.Dispatch(func(ctx app.Context) {
-						m.Data = rawJSON
+						m.Data = rawJSON.String()
 					})
 
 					// Assert type string.
@@ -76,27 +121,52 @@ func (m *MyApp) onFetchData(ctx app.Context, e app.Event) {
 					// Logs "msg: lmao" to console.
 					fmt.Printf("msg: %s\n", msg)
 				})
+				subpromise.Call("catch", app.Window().Get("catchError"))
 			}
 		})
 
-		// Handle fetch errors
-		promise.Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-			err := args[0].Get("message").String()
-
-			// Log to console.
-			fmt.Printf("Fetch error: %s\n", err)
-
-			// Update the UI's component.
-			ctx.Dispatch(func(ctx app.Context) {
-				m.Data = err
-			})
-
-			return nil
-		}))
+		promise.Call("catch", app.Window().Get("catchError"))
 	}()
 }
 
+// Handle fetch errors
+var catchError = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	//defer catchError.Release()
+	err := args[0].Get("message").String()
+
+	//app.Window().Get("console").Call("log", app.ValueOf("test"))
+	app.Window().Get("console").Call("log", args[0])
+
+	// Log to console.
+	fmt.Printf("Fetch error: %s\n", err)
+
+	// Update the UI's component.
+	/*ctx.Dispatch(func(ctx app.Context) {
+		m.Data = err
+	})*/
+
+	return nil
+})
+
+// Export a Go function to JavaScript to interact with the DOM (for WASM purposes)
+func init() {
+	app.Window().Set("catchError", catchError)
+
+	app.Window().Set("fetchData", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		go func() {
+			fmt.Println("fetchData function called from JavaScript")
+		}()
+		return nil
+	}))
+}
+
+//
+//  dummy HTTP server
+//
+
 func main() {
+	defer catchError.Release()
+
 	app.Route("/", &MyApp{})
 	app.RunWhenOnBrowser()
 
@@ -109,6 +179,8 @@ func main() {
 
 	// Build up a simple "backend API service".
 	r.Get("/api/v1", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		jData, err := json.Marshal(&struct {
 			Message string `json:"message"`
 		}{
@@ -121,17 +193,39 @@ func main() {
 		w.Write(jData)
 	})
 
+	r.Post("/api/v1", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		var data = struct {
+			Test string `json:"test"`
+		}{}
+
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf("{\"error\": \"%s\"}", err.Error())))
+			return
+		}
+
+		err = json.Unmarshal(reqBody, &data)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf("{\"error\": \"%s\"}", err.Error())))
+			return
+		}
+		w.Write([]byte(fmt.Sprintf("{\"lmaoooo\": \"%s\"}", data.Test)))
+
+		/*jData, err := json.Marshal(&struct {
+			Message string `json:"message"`
+		}{
+			Message: data.Test,
+		})
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(jData)*/
+	})
+
 	r.Mount("/", &app.Handler{})
 
 	fmt.Println(server.ListenAndServe())
-}
-
-// Export a Go function to JavaScript to interact with the DOM (for WASM purposes)
-func init() {
-	app.Window().Set("fetchData", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		go func() {
-			fmt.Println("fetchData function called from JavaScript")
-		}()
-		return nil
-	}))
 }
