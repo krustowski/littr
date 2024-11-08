@@ -21,7 +21,7 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 				app.H6().Class("margin-bottom center-align").Body(
 					app.Span().Body(
-						app.Text("a simple nanoblogging platform"),
+						app.Text("A simple nanoblogging platform."),
 					),
 				),
 			),
@@ -29,26 +29,26 @@ func (c *Content) Render() app.UI {
 			app.Div().Class("row no-margin  large-padding").Body(
 				//app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
-					app.Span().Class("deep-orange-text").Text("welcome to "),
+					app.Span().Class("deep-orange-text").Text("Welcome to "),
 					app.Span().Class("deep-orange-text bold").Text("littr"),
 					app.Span().Class("deep-orange-text").Text("! "),
-					app.Span().Text("this site acts as a simple platform for anyone who likes to post short notes, messages, daydreaming ideas and more! you can use it as a personal journal charting your journey through life that can be shared with other accounts"),
+					app.Span().Text("This site acts as a simple platform for anyone who likes to post short notes, messages, daydreaming ideas and more! You can use it as a personal journal charting your journey through life that can be shared with other user accounts."),
 					app.Div().Class("small-space"),
 
-					app.Span().Text("the very main page of this platform is called"),
-					app.Span().Class("deep-orange-text bold").Text(" flow "),
-					app.Span().Text("(shown below); this page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow"),
+					app.Span().Text("The very main page of this platform is called just "),
+					app.Span().Class("deep-orange-text bold").Text("flow"),
+					app.Span().Text(" (shown below). This page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow (that you are following)."),
 					app.Div().Class("small-space"),
 
-					app.Span().Text("to navigate to the "),
-					app.Span().Class("bold").Text("login "),
-					app.Span().Text("page (where the link to "),
-					app.Span().Class("bold").Text("registration "),
-					app.Span().Text("sits as well) use the "),
+					app.Span().Text("To navigate to the "),
+					app.Span().Class("bold").Text("login"),
+					app.Span().Text(" page (where the link to "),
+					app.Span().Class("bold").Text("registration"),
+					app.Span().Text(" sits as well), use the "),
 					app.I().Class("small").Class("deep-orange-text").Body(
 						app.Text("login"),
 					),
-					app.Span().Text(" button in the upper right corner"),
+					app.Span().Text(" button in the upper right corner."),
 				),
 			),
 		),
