@@ -23,5 +23,6 @@ run_data/
 .tmp/
 littr
 
+cmd/await/web/*
 test/jmeter/auth.json
 deployments/*override*

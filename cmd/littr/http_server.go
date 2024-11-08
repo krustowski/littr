@@ -37,9 +37,9 @@ type Handler func(w http.ResponseWriter, r *http.Request) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h(w, r); err != nil {
-		// handle returned error here.
+		// Handle returned error here: write it out to client.
 		w.WriteHeader(500)
-		w.Write([]byte("empty"))
+		w.Write([]byte(err.Error()))
 	}
 }
 
@@ -75,12 +75,14 @@ var appHandler = &app.Handler{
 	},
 	Image: "/web/android-chrome-512x512.svg",
 	//Domain: "www.littr.eu",
+	// Ensure the default light theme is dark.
 	Body: func() app.HTMLBody {
 		return app.Body().Class("dark")
 	},
 	BackgroundColor: "#000000",
 	ThemeColor:      "#000000",
 	Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
+	// Environment constants to be transfered to the app context.
 	Env: map[string]string{
 		"APP_ENVIRONMENT":      os.Getenv("APP_ENVIRONMENT"),
 		"APP_URL_MAIN":         os.Getenv("APP_URL_MAIN"),
@@ -91,15 +93,18 @@ var appHandler = &app.Handler{
 	Preconnect: []string{
 		//"https://cdn.vxn.dev/",
 	},
+	// Web fonts.
 	Fonts: []string{
 		"https://cdn.vxn.dev/css/material-symbols-outlined.woff2",
 		//"https://cdn.jsdelivr.net/npm/beercss@3.5.0/dist/cdn/material-symbols-outlined.woff2",
 	},
+	// CSS styles files.
 	Styles: []string{
 		"https://cdn.vxn.dev/css/beercss-3.7.0-custom.min.css",
 		"https://cdn.vxn.dev/css/sortable.min.css",
 		"/web/littr.css",
 	},
+	// JS script files.
 	Scripts: []string{
 		"https://cdn.vxn.dev/js/jquery.min.js",
 		"https://cdn.vxn.dev/js/beer.min.js",
@@ -175,20 +180,22 @@ func initServer() {
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		// Terminate the SSE server.
-		live.Streamer.Shutdown(sctx)
+		// Terminate the SSE server. Method Shutdown below implicitly shuts down the SSE Provider.
+		if live.Streamer != nil {
+			live.Streamer.Shutdown(sctx)
+		}
 
-		// Terminate the server from here, give it 5 seconds to shutdown gracefully..
+		// Terminate the HTTP server from here, give it 5 seconds to shutdown gracefully..
 		if err := server.Shutdown(sctx); err != nil {
 			l.Msg(fmt.Sprintf("HTTP server shutdown error: %s, force terminitaing the server..., ", err.Error())).Status(http.StatusInternalServerError).Log()
 
-			// Force terminate the server if failed to stop gracefully.
+			// Force terminate the HTTP server if failed to stop gracefully.
 			server.Close()
 			return
 		}
 
 		l.Msg("graceful shutdown complete").Status(http.StatusOK).Log()
-		// The end of the goroutine.
+		// The graceful end of the goroutine = the program is about to exit.
 	}()
 
 	//
@@ -228,7 +235,7 @@ func initServer() {
 	// Create a new go-chi muxer.
 	r := chi.NewRouter()
 
-	// Cleans out double slashes.
+	// Cleans out multiple slashes in the URI path.
 	r.Use(middleware.CleanPath)
 
 	// Ensures the muxer should survive the panic.
@@ -283,7 +290,7 @@ func initServer() {
 
 		wasmBinary, err := os.ReadFile("/opt/web/app.wasm.gz")
 		if err != nil {
-			return (err)
+			return err
 		}
 
 		w.Write(wasmBinary)
