@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/live"
@@ -68,9 +70,19 @@ func NewRequestInitOptions() *RequestInit {
 	return &RequestInit{}
 }
 
+type Event struct {
+	ID   string
+	Type string
+	Data string
+}
+
+func (e *Event) Format() string {
+	return fmt.Sprintf("ID:\t%s\nType:\t%s\nData:\t%s", e.ID, e.Type, e.Data)
+}
+
 func (m *MyApp) onListenToSSE(ctx app.Context, e app.Event) {
 	// Create a fetch request to read the stream
-	promise := app.Window().Call("fetch", "http://localhost:8081/api/v1/live", map[string]interface{}{
+	promise := app.Window().Call("fetch", "/api/v1/live", map[string]interface{}{
 		"cache":     "no-cache",
 		"keepalive": true,
 		"headers": map[string]interface{}{
@@ -94,14 +106,46 @@ func (m *MyApp) onListenToSSE(ctx app.Context, e app.Event) {
 				value := chunk.Get("value")
 
 				if done {
-					fmt.Println("stream closed.")
+					fmt.Println("stream closed")
 					return
 				}
 
 				// Process the chunk
 				decoder := app.Window().Get("TextDecoder").New("utf-8")
 				text := decoder.Call("decode", value)
-				fmt.Println("Received data:", text.String())
+				//fmt.Println("Received data:", text.String())
+
+				// Read again and associate fields.
+				r := strings.NewReader(text.String())
+				b := bufio.NewReader(r)
+
+				event := Event{}
+
+				if len(strings.Split(text.String(), "\n")) >= 3 {
+					for i := 0; i < 3; i++ {
+						lineB, err := b.ReadSlice(byte('\n'))
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+
+						//
+						line := strings.Join(
+							strings.Split(
+								string(lineB), ":")[1:], " ")
+
+						switch i {
+						case 0:
+							event.ID = line
+						case 1:
+							event.Type = line
+						case 2:
+							event.Data = line
+						}
+					}
+				}
+
+				fmt.Printf("%s\n", event.Format())
 
 				/*ctx.Dispatch(func(ctx app.Context) {
 					m.dataSSE = text.String()
