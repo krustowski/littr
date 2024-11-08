@@ -42,7 +42,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-		
+
 			if len(line) == 0 {
 				continue
 			}
@@ -73,10 +73,10 @@ func main() {
 	//
 
 	fmt.Printf("imports: %d\n", len(imports))
-	
+
 	var keys []string
-	
-	for key, _ := range imports {
+
+	for key := range imports {
 		keys = append(keys, key)
 	}
 

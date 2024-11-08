@@ -46,6 +46,8 @@ func main() {
 		}
 	})
 
+	fmt.Println("starting SSE client, listening towards: "+URL)
+
 	if err := conn.Connect(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
