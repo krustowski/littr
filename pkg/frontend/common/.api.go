@@ -15,33 +15,6 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-var (
-	// those vars are used during the build --- linker (ld) bakes the values in
-	AppVersion     string
-	AppPepper      string
-	VapidPublicKey string
-)
-
-// DTO-in structure for the API call.
-type CallInput struct {
-	Method      string
-	Url         string
-	CallerID    string
-	PageNo      int
-	HideReplies bool
-
-	// payload body for the API call
-	Data interface{}
-}
-
-// standardized common response from API
-type Response struct {
-	Code      int
-	Message   string      `json:"message"`
-	Timestamp int64       `json:"timestamp"`
-	Data      interface{} `json:"data"`
-}
-
 // ng-func
 func FetchData(input *CallInput, output *Response) bool {
 	var req *http.Request
