@@ -63,8 +63,15 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 
 			sub := dev.Subscription
 
+			websub := &webpush.Subscription{
+				Endpoint: sub.Endpoint,
+				Keys: webpush.Keys{
+					Auth:   sub.Keys.Auth,
+					P256dh: sub.Keys.P256dh,
+				},
+			}
 			// fire the notification
-			res, err := webpush.SendNotification(*body, &sub, &webpush.Options{
+			res, err := webpush.SendNotification(*body, websub, &webpush.Options{
 				Subscriber:      os.Getenv("VAPID_SUBSCRIBER"),
 				VAPIDPublicKey:  os.Getenv("VAPID_PUB_KEY"),
 				VAPIDPrivateKey: os.Getenv("VAPID_PRIV_KEY"),

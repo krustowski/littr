@@ -3,8 +3,7 @@ package models
 
 import (
 	"time"
-
-	"github.com/SherClockHolmes/webpush-go"
+	//"github.com/SherClockHolmes/webpush-go"
 	//"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -30,5 +29,16 @@ type Device struct {
 
 	// The very subscription struct/details.
 	//Subscription app.NotificationSubscription `json:"subscription"`
-	Subscription webpush.Subscription `json:"subscription"`
+	//Subscription webpush.Subscription `json:"subscription"`
+	Subscription Subscription `json:"subscription"`
+}
+
+type Subscription struct {
+	Endpoint string `json:"endpoint"`
+	Keys     Keys   `json:"keys"`
+}
+
+type Keys struct {
+	Auth   string `json:"auth"`
+	P256dh string `json:"p256dh"`
 }

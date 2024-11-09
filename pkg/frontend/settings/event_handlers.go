@@ -11,7 +11,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/SherClockHolmes/webpush-go"
+	//"github.com/SherClockHolmes/webpush-go"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -401,9 +401,9 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		// we need to convert type app.NotificationSubscription into webpush.Subscription
-		webSub := webpush.Subscription{
+		webSub := models.Subscription{
 			Endpoint: sub.Endpoint,
-			Keys: webpush.Keys{
+			Keys: models.Keys{
 				Auth:   sub.Keys.Auth,
 				P256dh: sub.Keys.P256dh,
 			},
