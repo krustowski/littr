@@ -1,7 +1,6 @@
 package common
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -75,7 +74,8 @@ func FetchData(input *CallInput, output *Response) bool {
 
 	init["url"] = input.Url
 
-	if input.Data != nil && init["method"] != "GET" {
+	// Convert body into a string.
+	if input.Data != nil && (init["method"] != "GET" || init["method"] != "HEAD") {
 		jsonData, err := json.Marshal(input.Data)
 		if err != nil {
 			return false
@@ -102,105 +102,6 @@ func FetchData(input *CallInput, output *Response) bool {
 	output.Code = code
 
 	return true
-}
-
-// FetchSSE is an early implementation of the SSE client using only await fetch() as the base function.
-func FetchSSE(ch chan Event) {
-	defer func() {
-		if ch != nil {
-			close(ch)
-		}
-	}()
-
-	// Create a fetch request to read the stream
-	promise := app.Window().Call("fetch", "/api/v1/live", map[string]interface{}{
-		"cache":     "no-cache",
-		"keepalive": true,
-		"headers": map[string]interface{}{
-			"Accept": "text/event-stream",
-		},
-	})
-
-	// Handle the Promise result using a callback
-	then := app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		response := args[0]
-		reader := response.Get("body").Call("getReader")
-
-		// Define a function to recursively read chunks
-		var readChunk app.Value
-
-		readChunk = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-			readPromise := reader.Call("read")
-			readPromise.Then(func(chunk app.Value) {
-				// Get `done` and `value` from the resolved promise
-				done := chunk.Get("done").Bool()
-				value := chunk.Get("value")
-
-				if done {
-					fmt.Println("stream closed")
-					close(ch)
-					return
-				}
-
-				// Process the chunk
-				decoder := app.Window().Get("TextDecoder").New("utf-8")
-				text := decoder.Call("decode", value)
-				//fmt.Println("Received data:", text.String())
-
-				// Read again and associate fields.
-				r := strings.NewReader(text.String())
-				b := bufio.NewReader(r)
-
-				event := Event{}
-
-				if len(strings.Split(text.String(), "\n")) >= 3 {
-					for i := 0; i < 3; i++ {
-						lineB, err := b.ReadSlice(byte('\n'))
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-
-						//
-						line := strings.Join(
-							strings.Split(
-								string(lineB), ":")[1:], " ")
-
-						// Associate the line to event's fields.
-						switch i {
-						case 0:
-							event.LastEventID = line
-						case 1:
-							event.Type = line
-						case 2:
-							event.Data = line
-						}
-					}
-				}
-
-				fmt.Printf("%s\n", event.Format())
-
-				// Pass the received event to the channel.
-				if ch != nil {
-					ch <- event
-				}
-
-				// Continue reading the next chunk.
-				readChunk.Invoke()
-				return
-			})
-			return nil
-		})
-
-		// Start the first read.
-		readChunk.Invoke()
-		return nil
-	})
-
-	// Start the fetch and handle it in the `then` callback.
-	promise.Call("then", then)
-
-	return
 }
 
 // Fetch is a raw implementation of http.Client to omit the `net/*` packages completely. The main purpose is to further optimize the disk and memory space needed by the WASM app client.
@@ -296,15 +197,3 @@ var catchError = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 
 	return err
 })
-
-// Export a Go function to JavaScript to interact with the DOM (for WASM purposes)
-/*func init() {
-	app.Window().Set("catchError", catchError)
-
-	app.Window().Set("fetchData", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		go func() {
-			fmt.Println("fetchData function called from JavaScript")
-		}()
-		return nil
-	}))
-}*/
