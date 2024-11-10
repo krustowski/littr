@@ -4,18 +4,18 @@ package navbars
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
+	//"net/http"
+	//"os"
+	//"os/signal"
 	"strings"
-	"syscall"
-	"time"
+	//"syscall"
+	//"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
-	"github.com/tmaxmax/go-sse"
+	//"github.com/tmaxmax/go-sse"
 )
 
 const (
@@ -42,11 +42,6 @@ type Header struct {
 
 	pagePath string
 
-	// EventListener functions.
-	keyDownEventListener   func()
-	eventListenerMessage   func()
-	eventListenerKeepAlive func()
-
 	// Helper field to catch the timestamp of the last received keepalive event.
 	lastHeartbeatTime int64
 
@@ -58,6 +53,9 @@ type Header struct {
 
 	// Context cancellation function for the SSE client.
 	sseCancel context.CancelFunc
+
+	// Event channel.
+	sseChan chan common.Event
 }
 
 type Footer struct {
@@ -95,6 +93,18 @@ func (h *Header) OnMount(ctx app.Context) {
 	h.appInstallable = ctx.IsAppInstallable()
 	h.onlineState = true
 
+	// Keep the update button on until clicked.
+	var newUpdate bool
+	ctx.LocalStorage().Get("newUpdate", &newUpdate)
+
+	if newUpdate {
+		h.updateAvailable = true
+	}
+
+	//
+	//  Auth-based navigations
+	//
+
 	// Get the current auth state from LocalStorage.
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
@@ -112,57 +122,75 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
-	// Test the Go SSE client implementation.
-	// Tests: blocks the client goroutine, therefore no other HTTP request is possible anymore when this implementation is started.
-	// Conclusion: must be run in async.
-	//common.SSEClient()
+	//
+	//  Event Listeners
+	//
 
-	// Create event listener for SSE messages.
-	//h.eventListenerMessage = app.Window().AddEventListener("message", h.onMessage)
-	//h.eventListenerKeepAlive = app.Window().AddEventListener("keepalive", h.onMessage)
-	h.keyDownEventListener = app.Window().AddEventListener("keydown", h.onKeyDown)
+	// Custom SSE client implementation.
+	if !app.Window().Get(common.JS_LITTR_SSE).Get("running").Bool() {
+		fmt.Println("Connecting to the SSE stream...")
+		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
+	}
+
+	/*app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
+	snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() && text != "" {
+		snack.Get("classList").Call("add", "active")
+		snack.Set("innerHTML", "<a href=\""+link+"\"><i>info</i>"+text+"</a>")
+	}
+		return nil
+	}))*/
+
+	addOnce := map[string]interface{}{"once": true}
+
+	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		snack := app.Window().GetElementByID("snackbar-general")
+		if !snack.IsNull() {
+			snack.Get("classList").Call("add", "active")
+			snack.Set("innerHTML", "<a href=\""+""+"\"><i>info</i>"+"you have gone offline"+"</a>")
+		}
+		return nil
+	}), addOnce)
+
+	app.Window().Call("addEventListener", "close", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		ctx.NewActionWithValue("generic-event", args[0])
+		return nil
+	}), addOnce)
+
+	app.Window().Call("addEventListener", "keepalive", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		ctx.NewActionWithValue("generic-event", args[0])
+		return nil
+	}), addOnce)
+
+	app.Window().Call("addEventListener", "message", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		ctx.NewActionWithValue("generic-event", args[0])
+		return nil
+	}), addOnce)
+
+	app.Window().Call("addEventListener", "keydown", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		ctx.NewActionWithValue("keydown", args[0])
+		return nil
+	}), addOnce)
+
+	//
+	//  Action handlers
+	//
 
 	// General action to dismiss all items in the UI.
 	ctx.Handle("dismiss-general", h.handleDismiss)
 	ctx.Handle("generic-event", h.handleGenericEvent)
+	ctx.Handle("keydown", h.handleKeydown)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
 		h.pagePath = path
 	})
-
-	// Keep the update button on until clicked.
-	var newUpdate bool
-	ctx.LocalStorage().Get("newUpdate", &newUpdate)
-
-	if newUpdate {
-		h.updateAvailable = true
-	}
-
-	/*h.onlineState = true // this is a guess
-	// this may not be implemented
-	nav := app.Window().Get("navigator")
-	if nav.Truthy() {
-		onLine := nav.Get("onLine")
-		if !onLine.IsUndefined() {
-			h.onlineState = onLine.Bool()
-		}
-	}
-
-	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
-		h.onlineState = true
-		//call(true)
-		return nil
-	}))
-
-	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) any {
-		h.onlineState = false
-		//call(false)
-		return nil
-	}))*/
 }
 
 func (h *Header) OnNav(ctx app.Context) {
+}
+
+func (h *Header) OnDismount(ctx app.Context) {
 }
 
 // Exclussively used for the SSE client as a whole.
@@ -174,7 +202,7 @@ func (f *Footer) OnMount(ctx app.Context) {
 
 	// Do not start the SSE client for the unauthenticated visitors at all.
 	if !f.authGranted {
-		return
+		//return
 	}
 
 	// Prepare the variable to load the user's data from LS.
@@ -182,12 +210,16 @@ func (f *Footer) OnMount(ctx app.Context) {
 	common.LoadUser(&user, &ctx)
 
 	// If the options map is nil, or the liveMode is disabled within, do not continue as well.
-	if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {
+	/*if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {
 		return
-	}
+	}*/
+
+	//
+	//  sse.Client
+	//
 
 	// Custom HTTP client full definition.
-	var client = sse.Client{
+	/*var client = sse.Client{
 		// Standard HTTP client.
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -252,8 +284,8 @@ func (f *Footer) OnMount(ctx app.Context) {
 				f.sseCancel()
 			}*/
 
-			// Print all events.
-			fmt.Printf("%s: %s\n", event.Type, event.Data)
+	// Print all events.
+	/*fmt.Printf("%s: %s\n", event.Type, event.Data)
 		})
 
 		// Create a new connection.
@@ -264,9 +296,9 @@ func (f *Footer) OnMount(ctx app.Context) {
 
 		return
 	})
-	//}()
+	//}()*/
 }
 
 func (f *Footer) OnDismount(ctx app.Context) {
-	f.sseCancel()
+	//f.sseCancel()
 }

@@ -16,9 +16,9 @@ func (h *Header) Render() app.UI {
 	var last int64 = 0
 
 	// The last beat's timestamp fetch procedure.
-	beat := app.Window().Get("localStorage")
-	if !beat.IsNull() && !beat.Call("getItem", "lastEventTime").IsNull() {
-		str := beat.Call("getItem", "lastEventTime").String()
+	LS := app.Window().Get("localStorage")
+	if !LS.IsNull() && !LS.Call("getItem", "lastEventTime").IsNull() {
+		str := LS.Call("getItem", "lastEventTime").String()
 
 		lastInt, err := strconv.Atoi(str)
 		if err != nil {

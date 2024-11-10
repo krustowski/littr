@@ -1,14 +1,16 @@
 package navbars
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
-	"github.com/tmaxmax/go-sse"
+	//"github.com/tmaxmax/go-sse"
 )
 
 func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
@@ -48,11 +50,20 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 // handleGenericEvent is an action handler that receives new SSE events, parses them, and shows notifications.
 func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	// Fetch the SSE event.
-	event, ok := a.Value.(sse.Event)
+	//event, ok := a.Value.(sse.Event)
+	//event, ok := a.Value.(common.Event)
+	ev, ok := a.Value.(app.Value)
 	if !ok {
 		// Cannot assert the event.
 		return
 	}
+
+	if ev.Get("eventName").IsNull() || ev.Get("data").IsNull() {
+		return
+	}
+	event := common.Event{Type: ev.Get("eventName").String(), Data: ev.Get("data").String()}
+
+	fmt.Printf("%s: %s\n", event.Type, event.Data)
 
 	// Exit if the event is a heartbeat. But notice the last timestamp.
 	if event.Data == "heartbeat" || event.Type == "keepalive" {
@@ -66,6 +77,15 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 		return
 	}
 
+	// Abort the further stream listening, set time timer for a reconnect.
+	/*if event.Type == "close" || event.Type == "server-stop" {
+		app.Window().Get(common.JS_LITTR_SSE).Call("abort")
+
+		fmt.Println("SSE client closed, setting a timeout for a reconnection...")
+		app.Window().Get(common.JS_LITTR_SSE).Set("reconnection_timeout", 20000)
+		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
+	}*/
+
 	// Fetch the user from the LocalStorage.
 	var user models.User
 	common.LoadUser(&user, &ctx)
@@ -75,52 +95,7 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 		return
 	}*/
 
-	//
-	//  Parse the event data
-	//
-
-	var text string
-	var link string
-
-	// Explode the data CSV string.
-	slice := strings.Split(event.Data, ",")
-
-	switch slice[0] {
-	// Server is stopping, being stopped, restarting etc.
-	case "server-stop":
-		text = "server is restarting..."
-
-	// Server is booting up (just started).
-	case "server-start":
-		text = "server has just started"
-
-	// New post added.
-	case "post":
-		author := slice[1]
-		if author == user.Nickname {
-			return
-		}
-
-		// Exit when the author is not followed, nor is found in the user's flowList.
-		if flowed, found := user.FlowList[author]; !flowed || !found {
-			return
-		}
-
-		// Notify the user via toast.
-		text = "new post added by " + author
-
-	// New poll added.
-	case "poll":
-		pollID := slice[1]
-		if pollID == "" {
-			text = "new poll has been added"
-			link = "/polls"
-		} else {
-
-			text = "new poll has been added"
-			link = "/polls/" + pollID
-		}
-	}
+	text, link := event.ParseEventData(&user)
 
 	// Instantiate the new toast.
 	//toast := common.Toast{AppContext: &ctx}
@@ -141,4 +116,65 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 
 	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
 	return
+}
+
+// onKeyDown is a callback to handle the key-down event: this allows one to control the app using their keyboard more effectively.
+func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
+	event, ok := a.Value.(app.Value)
+	if !ok {
+		return
+	}
+
+	// Was the key Escape/Esc? Then cast general item dismissal.
+	if event.Get("key").String() == "Escape" || event.Get("key").String() == "Esc" {
+		ctx.NewAction("dismiss-general")
+		return
+	}
+
+	// Fetch the auth state.
+	var authGranted bool
+	ctx.LocalStorage().Get("authGranted", &authGranted)
+
+	// Do not continue when unacthenticated/unauthorized.
+	if !authGranted {
+		return
+	}
+
+	// List of inputs, that blocks the refresh event.
+	var inputs = []string{
+		"post-textarea",
+		"poll-question",
+		"poll-option-i",
+		"poll-option-ii",
+		"poll-option-iii",
+		"reply-textarea",
+		"fig-upload",
+		"search",
+		"passphrase-current",
+		"passphrase-new",
+		"passphrase-new-again",
+		"about-you-textarea",
+		"website-input",
+	}
+
+	// If any input is active (is written in for example), then do not register the R key.
+	if helpers.Contains(inputs, app.Window().Get("document").Get("activeElement").Get("id").String()) {
+		return
+	}
+
+	// Use keys 1-6 to navigate through the UI.
+	switch event.Get("key").String() {
+	case "1":
+		ctx.Navigate("/stats")
+	case "2":
+		ctx.Navigate("/users")
+	case "3":
+		ctx.Navigate("/post")
+	case "4":
+		ctx.Navigate("/polls")
+	case "5":
+		ctx.Navigate("/flow")
+	case "6":
+		ctx.Navigate("/settings")
+	}
 }
