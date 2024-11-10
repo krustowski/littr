@@ -247,7 +247,7 @@ func (m *MyApp) onFetchData(ctx app.Context, e app.Event) {
 				})
 				subpromise.Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 					ctx.Dispatch(func(ctx app.Context) {
-						m.Data = this.Get("result").String()
+						//m.Data = this.Get("result").String()
 					})
 
 					return args[0].Get("message").String()

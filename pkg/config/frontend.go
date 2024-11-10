@@ -6,4 +6,6 @@ var (
 
 	// MaxPostLength is the maximal length of the fully shown post in the flow. Posts longer than that are to be shorten/hidden.
 	MaxPostLength int = 500
+
+	MAX_SSE_RETRY_COUNT int = 50
 )
