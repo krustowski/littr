@@ -14,7 +14,7 @@ require (
 	github.com/sizeofint/webpanimation v0.0.0-20210809145948-1d2b32119882
 	github.com/tmaxmax/go-sse v0.8.0
 	github.com/wneessen/go-mail v0.5.2
-	golang.org/x/image v0.21.0
+	golang.org/x/image v0.22.0
 )
 
 require (
@@ -30,10 +30,10 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
