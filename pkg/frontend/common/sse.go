@@ -1,13 +1,17 @@
 package common
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"go.vxn.dev/littr/pkg/config"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -50,8 +54,6 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		return "ServiceAlreadyRunningError"
 	}
 
-	//fmt.Printf("starting %s\n", this.Get("name").String())
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
@@ -81,11 +83,23 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 })
 
 var reconnect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	if app.Window().Get(JS_LITTR_SSE).Get("reconnRunning").Bool() {
+		return nil
+	}
+	app.Window().Get(JS_LITTR_SSE).Set("reconnRunning", true)
+
 	timeout := app.Window().Get(JS_LITTR_SSE).Get("reconnTimeout").Int()
 	if timeout <= 0 {
 		return nil
 	}
 
+	// Use the firstTimeout when the app is loaded for the first time. Invalide it right after its value usage.
+	if app.Window().Get(JS_LITTR_SSE).Get("firstTimeout").Int() > 0 {
+		timeout = app.Window().Get(JS_LITTR_SSE).Get("firstTimeout").Int()
+		app.Window().Get(JS_LITTR_SSE).Set("firstTimeout", 0)
+	}
+
+	// No need to reconnect if the service is running.
 	if app.Window().Get(JS_LITTR_SSE).Get("running").Bool() {
 		return nil
 	}
@@ -127,9 +141,7 @@ var reconnect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 var stop = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 	fmt.Println("Stopping littr SSE client")
 
-	if !this.Get("running").IsUndefined() {
-		this.Set("running", false)
-	}
+	this.Set("running", false)
 
 	this.Call("tryReconnect")
 	return nil
@@ -140,6 +152,10 @@ var abort = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 
 	this.Set("running", false)
 	this.Get("controller").Call("abort")
+
+	var ac = app.Window().Get("AbortController").New()
+	this.Set("controller", ac)
+	fetchOpts.Set("signal", ac.Get("signal"))
 
 	this.Call("tryReconnect")
 	return nil
@@ -158,7 +174,9 @@ func init() {
 			"fetchOpts":     map[string]interface{}{},
 			"controller":    nil,
 			"running":       false,
+			"reconnRunning": false,
 			"reconnTimeout": 15000,
+			"firstTimeout":  2000,
 			// Methods
 			"connect":      nil,
 			"stop":         nil,
@@ -177,23 +195,6 @@ func init() {
 	app.Window().Get(JS_LITTR_SSE).Set("stop", stop)
 	app.Window().Get(JS_LITTR_SSE).Set("abort", abort)
 	app.Window().Get(JS_LITTR_SSE).Set("tryReconnect", reconnect)
-
-	fmt.Println("Connecting to the SSE stream...")
-	app.Window().Get(JS_LITTR_SSE).Call("tryReconnect")
-
-	//
-	//  SSE Event
-	//
-
-	// Export littrEventSSE object.
-	if app.Window().Get(JS_LITTR_EVENT).IsUndefined() {
-		app.Window().Set(JS_LITTR_EVENT, map[string]interface{}{
-			"id":        "",
-			"type":      "",
-			"data":      "",
-			"translate": nil,
-		})
-	}
 }
 
 // FetchSSE is an early implementation of the SSE client using only await fetch() as the base function.
@@ -227,6 +228,7 @@ func FetchSSE(ch chan string) {
 		}
 
 		fmt.Println("Connected")
+		app.Window().Get(JS_LITTR_SSE).Set("reconnRunning", false)
 
 		// Define a function to recursively read chunks.
 		var readChunk app.Value
@@ -257,7 +259,8 @@ func FetchSSE(ch chan string) {
 				text := decoder.Call("decode", value).String()
 
 				event := NewSSEEvent(text)
-				fmt.Printf("%s\n", event.Dump())
+				fmt.Printf("%s\n", text)
+				//fmt.Printf("%s\n", event.Dump())
 
 				// Create a new HTML DOM event.
 				domE := app.Window().Get("document").Call("createEvent", "HTMLEvents")
@@ -267,6 +270,45 @@ func FetchSSE(ch chan string) {
 
 				// Send the HTML event (handled by eventListeners).
 				app.Window().Call("dispatchEvent", domE)
+
+				// The last beat's timestamp save procedure.
+				LS := app.Window().Get("localStorage")
+				if !LS.IsNull() {
+					LS.Call("setItem", "lastEventTime", time.Now().UnixNano())
+				}
+
+				var user models.User
+				var userStr string
+
+				LS = app.Window().Get("localStorage")
+				if !LS.IsNull() && !LS.Call("getItem", "user").IsUndefined() {
+					userStr = LS.Call("getItem", "user").String()
+				}
+
+				// Decode the user.
+				str, err := base64.StdEncoding.DecodeString(strings.Trim(userStr, "\""))
+				if err != nil {
+					fmt.Println(err.Error())
+					return nil
+				}
+
+				// Unmarshal the result to get an User struct.
+				err = json.Unmarshal(str, &user)
+				if err != nil {
+					fmt.Println(err.Error())
+					return nil
+				}
+
+				toastText, toastLink := event.ParseEventData(&user)
+
+				// Show the generic snackbar.
+				if toastText != "" {
+					snack := app.Window().GetElementByID("snackbar-general")
+					if !snack.IsNull() && text != "" {
+						snack.Get("classList").Call("add", "active")
+						snack.Set("innerHTML", "<a href=\""+toastLink+"\"><i>info</i>"+toastText+"</a>")
+					}
+				}
 
 				// Continue reading the next chunk.
 				if app.Window().Get(JS_LITTR_SSE).Get("running").Bool() {
@@ -278,6 +320,10 @@ func FetchSSE(ch chan string) {
 			})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 				err := args[0].Get("name").String()
 				fmt.Println("Body reader error caught: ", err)
+
+				if err == "TypeError" {
+					fmt.Println(args[0].Get("message").String())
+				}
 
 				if ch != nil {
 					ch <- fmt.Sprintf(err)
