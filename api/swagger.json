@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.44.39"
+        "version": "0.44.40"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -2775,10 +2775,10 @@
             "type": "object",
             "properties": {
                 "subscription": {
-                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`",
+                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`\nSubscription webpush.Subscription `json:\"subscription\"`",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/webpush.Subscription"
+                            "$ref": "#/definitions/models.Subscription"
                         }
                     ]
                 },
@@ -2799,6 +2799,17 @@
                 },
                 "uuid": {
                     "description": "Unique identification of the app on the current device.\nhttps://go-app.dev/reference#Context",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Keys": {
+            "type": "object",
+            "properties": {
+                "auth": {
+                    "type": "string"
+                },
+                "p256dh": {
                     "type": "string"
                 }
             }
@@ -2942,6 +2953,17 @@
         },
         "models.Stub": {
             "type": "object"
+        },
+        "models.Subscription": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "keys": {
+                    "$ref": "#/definitions/models.Keys"
+                }
+            }
         },
         "models.User": {
             "type": "object",
@@ -3371,28 +3393,6 @@
                 },
                 "website_link": {
                     "type": "string"
-                }
-            }
-        },
-        "webpush.Keys": {
-            "type": "object",
-            "properties": {
-                "auth": {
-                    "type": "string"
-                },
-                "p256dh": {
-                    "type": "string"
-                }
-            }
-        },
-        "webpush.Subscription": {
-            "type": "object",
-            "properties": {
-                "endpoint": {
-                    "type": "string"
-                },
-                "keys": {
-                    "$ref": "#/definitions/webpush.Keys"
                 }
             }
         }

@@ -35,6 +35,8 @@ MAIL_SASL_USR ?=
 MAIL_SASL_PWD ?=
 
 # go environment
+#COMMON_BUILD_LDFLAGS=-s -w
+COMMON_BUILD_LDFLAGS=
 GOARCH := $(shell go env GOARCH)
 GOCACHE?=/home/${USER}/.cache/go-build
 GOMODCACHE?=/home/${USER}/go/pkg/mod
