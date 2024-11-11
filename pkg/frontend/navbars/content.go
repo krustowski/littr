@@ -132,27 +132,19 @@ func (h *Header) OnMount(ctx app.Context) {
 		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
 	}
 
-	/*app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
-	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() && text != "" {
-		snack.Get("classList").Call("add", "active")
-		snack.Set("innerHTML", "<a href=\""+link+"\"><i>info</i>"+text+"</a>")
-	}
+	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
+		common.ShowGenericToast("you are back online", "", false)
 		return nil
-	}))*/
+	}))
 
-	addOnce := map[string]interface{}{"once": true}
+	//addOnce := map[string]interface{}{"once": true}
 
 	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		snack := app.Window().GetElementByID("snackbar-general")
-		if !snack.IsNull() {
-			snack.Get("classList").Call("add", "active")
-			snack.Set("innerHTML", "<a href=\""+""+"\"><i>info</i>"+"you have gone offline"+"</a>")
-		}
+		common.ShowGenericToast("you have gone offline", "", true)
 		return nil
-	}), addOnce)
+	}))
 
-	app.Window().Call("addEventListener", "close", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	/*app.Window().Call("addEventListener", "close", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		ctx.NewActionWithValue("generic-event", args[0])
 		return nil
 	}), addOnce)
@@ -165,12 +157,12 @@ func (h *Header) OnMount(ctx app.Context) {
 	app.Window().Call("addEventListener", "message", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		ctx.NewActionWithValue("generic-event", args[0])
 		return nil
-	}), addOnce)
+	}), addOnce)*/
 
 	app.Window().Call("addEventListener", "keydown", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		ctx.NewActionWithValue("keydown", args[0])
 		return nil
-	}), addOnce)
+	}))
 
 	//
 	//  Action handlers
@@ -178,7 +170,7 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	// General action to dismiss all items in the UI.
 	ctx.Handle("dismiss-general", h.handleDismiss)
-	ctx.Handle("generic-event", h.handleGenericEvent)
+	//ctx.Handle("generic-event", h.handleGenericEvent)
 	ctx.Handle("keydown", h.handleKeydown)
 
 	ctx.Dispatch(func(ctx app.Context) {

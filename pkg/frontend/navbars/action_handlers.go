@@ -1,8 +1,8 @@
 package navbars
 
 import (
-	"fmt"
-	"strings"
+	//"fmt"
+	//"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -14,7 +14,7 @@ import (
 )
 
 func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
-	/*deleteModal := app.Window().GetElementByID("delete-modal")
+	deleteModal := app.Window().GetElementByID("delete-modal")
 	if !deleteModal.IsNull() {
 		deleteModal.Get("classList").Call("remove", "active")
 	}
@@ -22,19 +22,24 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 	userModal := app.Window().GetElementByID("user-modal")
 	if !userModal.IsNull() {
 		userModal.Get("classList").Call("remove", "active")
-	}*/
-
-	snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() {
-		snack.Get("classList").Call("remove", "active")
 	}
 
+	infoModal := app.Window().GetElementByID("info-modal")
+	if !infoModal.IsNull() {
+		infoModal.Get("classList").Call("remove", "active")
+	}
+
+	/*snack := app.Window().GetElementByID("snackbar-general")
+	if !snack.IsNull() {
+		snack.Get("classList").Call("remove", "active")
+	}*/
+
 	// change title back to the clean one
-	title := app.Window().Get("document")
+	/*title := app.Window().Get("document")
 	if !title.IsNull() && strings.Contains(title.Get("title").String(), "(*)") {
 		prevTitle := title.Get("title").String()
 		title.Set("title", prevTitle[4:])
-	}
+	}*/
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalInfoShow = false
@@ -63,7 +68,7 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	}
 	event := common.Event{Type: ev.Get("eventName").String(), Data: ev.Get("data").String()}
 
-	fmt.Printf("%s: %s\n", event.Type, event.Data)
+	//fmt.Printf("%s: %s\n", event.Type, event.Data)
 
 	// Exit if the event is a heartbeat. But notice the last timestamp.
 	if event.Data == "heartbeat" || event.Type == "keepalive" {
@@ -95,24 +100,24 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 		return
 	}*/
 
-	text, link := event.ParseEventData(&user)
+	//text, link := event.ParseEventData(&user)
 
 	// Instantiate the new toast.
 	//toast := common.Toast{AppContext: &ctx}
 
 	// Show the snack bar the nasty way.
-	snack := app.Window().GetElementByID("snackbar-general")
+	/*snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() && text != "" {
 		snack.Get("classList").Call("add", "active")
 		snack.Set("innerHTML", "<a href=\""+link+"\"><i>info</i>"+text+"</a>")
-	}
+	}*/
 
 	// Change the page's title to indicate a new event present.
-	title := app.Window().Get("document")
+	/*title := app.Window().Get("document")
 	if !title.IsNull() && !strings.Contains(title.Get("title").String(), "(*)") {
 		prevTitle := title.Get("title").String()
 		title.Set("title", "(*) "+prevTitle)
-	}
+	}*/
 
 	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
 	return

@@ -111,20 +111,12 @@ func (h *Header) Render() app.UI {
 						),
 					),
 
-					// snackbar offline mode
-					app.If(!h.onlineState,
-						app.Div().OnClick(h.onClickModalDismiss).Class("snackbar red10 white-text top active").Body(
-							app.I().Text("warning").Class("amber-text"),
-							app.Span().Text("no internet connection"),
-						),
-					),
-
 					// snackbar toast
-					app.A().Href(h.toast.TLink).OnClick(h.onClickModalDismiss).Body(
+					app.A().ID("snackbar-general-link").Href("").OnClick(h.onClickModalDismiss).Body(
 						app.If(toastText != "",
 							app.Div().ID("snackbar-general").Class("snackbar white-text bottom "+common.ToastColor(h.toast.TType)).Body(
-								app.I().Text("info"),
-								app.Span().Text(toastText),
+							//app.I().Text("info"),
+							//app.Span().Text(toastText),
 							),
 						),
 					),
