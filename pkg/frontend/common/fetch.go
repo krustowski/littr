@@ -35,10 +35,13 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
-// Usable map for export to JSValue via app.ValueOf(x)
+// RequestInit object. Usable map for export to JSValue via app.ValueOf(x)
 var DefaultRequestInit = map[string]interface{}{
-	"body":           nil,
-	"cache":          "default",
+	// Serialized JSON string.
+	"body": nil,
+	// Caching options: default, no-store, reload, no-cache, force-cache, only-if-cached.
+	"cache": "default",
+	// Credential control options: omit, same-site (def.), include.
 	"credentials":    "same-origin",
 	"headers":        map[string]interface{}{},
 	"keepalive":      false,
@@ -49,9 +52,7 @@ var DefaultRequestInit = map[string]interface{}{
 	"referrer":       "about:client",
 	"referrerPolicy": "",
 	"signal":         nil,
-	// Other custom options.
-	"callerID": "",
-	"url":      "",
+	"url":            "",
 }
 
 // FetchData is a metafunction for input options conversion for the main, lighter Fetch() function.
@@ -99,6 +100,7 @@ func FetchData(input *CallInput, output *Response) bool {
 		return false
 	}
 
+	// Assign the HTTP response code.
 	output.Code = code
 
 	return true
@@ -116,13 +118,16 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 	chS := make(chan string, 1)
 
 	defer func() {
+		close(chC)
 		close(chE)
 		close(chS)
 	}()
 
 	// The initial fetch call with options to get the promise.
 	promise := app.Window().Call("fetch", (*input)["url"], *input)
-	promise.Then(func(response app.Value) {
+	promise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		response := args[0]
+
 		//
 		//  Response handling
 		//
@@ -130,7 +135,7 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 			chC <- response.Get("status").Int()
 			chE <- fmt.Errorf("unexpected HTTP status code: %d (%s)", response.Get("status").Int(), response.Get("statusText").String())
 			chS <- ""
-			return
+			return nil
 		}
 
 		//
@@ -140,24 +145,26 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 			// Another promise getter via the JSON function call upon the response object.
 			// --> fetch(url).then(response => response.json())
 			subpromise := response.Call("json")
-			subpromise.Then(func(result app.Value) {
+			subpromise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+				result := args[0]
+
 				// Preprocess the response to be unserializable. And send to output.
 				chC <- 200
 				chS <- app.Window().Get("JSON").Call("stringify", result).String()
 				chE <- nil
-				return
-			})
-			subpromise.Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+				return nil
+
+			})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 				chC <- 500
 				chE <- fmt.Errorf("%s\n", args[0].Get("message").String())
 				chS <- ""
 				return nil
 			}))
 		}
-	})
+		return nil
 
-	// Error catching callback for the main fetch() promise.
-	promise.Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		// Error catching callback for the main fetch() promise.
+	})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		chE <- fmt.Errorf("%s", args[0].Get("message").String())
 		chS <- ""
 		return nil
@@ -178,22 +185,3 @@ var handleStatus = func(response app.Value) string {
 	}
 	return ""
 }
-
-// Handle fetch errors
-var catchError = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-	//defer catchError.Release()
-	err := args[0].Get("message").String()
-
-	//app.Window().Get("console").Call("log", app.ValueOf("test"))
-	app.Window().Get("console").Call("log", args[0])
-
-	// Log to console.
-	fmt.Printf("Fetch error: %s\n", err)
-
-	// Update the UI's component.
-	/*ctx.Dispatch(func(ctx app.Context) {
-		m.Data = err
-	})*/
-
-	return err
-})

@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/signal"
+	//"os"
+	//"os/signal"
 	"strings"
-	"syscall"
+	//"syscall"
 	"time"
 
 	"go.vxn.dev/littr/pkg/config"
@@ -16,8 +16,10 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-const JS_LITTR_SSE = "littrServiceSSE"
-const JS_LITTR_EVENT = "littrEventSSE"
+const (
+	JS_LITTR_SSE   = "littrServiceSSE"
+	JS_LITTR_EVENT = "littrEventSSE"
+)
 
 //
 //  Service options for fetch().
@@ -54,7 +56,7 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		return "ServiceAlreadyRunningError"
 	}
 
-	sigs := make(chan os.Signal, 1)
+	/*sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	// The signals monitoring goroutine.
@@ -67,7 +69,7 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 
 		this.Call("abort")
 		app.Window().Get(JS_LITTR_SSE).Set("running", false)
-	}()
+	}()*/
 
 	// Run the main fetch() logic, and look for errors.
 	go FetchSSE(chE)
@@ -170,13 +172,15 @@ func init() {
 	// Export littrServiceSSE object.
 	if app.Window().Get(JS_LITTR_SSE).IsUndefined() {
 		app.Window().Set(JS_LITTR_SSE, map[string]interface{}{
-			"name":          "littr SSE client",
+			"name": "littr SSE client",
+			// Options
 			"fetchOpts":     map[string]interface{}{},
 			"controller":    nil,
-			"running":       false,
-			"reconnRunning": false,
 			"reconnTimeout": 15000,
 			"firstTimeout":  2000,
+			// Runtime booleans
+			"running":       false,
+			"reconnRunning": false,
 			// Methods
 			"connect":      nil,
 			"stop":         nil,
@@ -185,12 +189,15 @@ func init() {
 		})
 	}
 
+	// Set the abort controller signal callback.
 	var aController = app.Window().Get("AbortController").New()
 	app.Window().Get(JS_LITTR_SSE).Set("controller", aController)
 	fetchOpts.Set("signal", aController.Get("signal"))
 
+	// Set the options.
 	app.Window().Get(JS_LITTR_SSE).Set("fetchOpts", fetchOpts)
 
+	// Set the methods.
 	app.Window().Get(JS_LITTR_SSE).Set("connect", connect)
 	app.Window().Get(JS_LITTR_SSE).Set("stop", stop)
 	app.Window().Get(JS_LITTR_SSE).Set("abort", abort)
@@ -299,16 +306,10 @@ func FetchSSE(ch chan string) {
 					return nil
 				}
 
-				toastText, toastLink := event.ParseEventData(&user)
+				toastText, toastLink, keep := event.ParseEventData(&user)
 
-				// Show the generic snackbar.
-				if toastText != "" {
-					snack := app.Window().GetElementByID("snackbar-general")
-					if !snack.IsNull() && text != "" {
-						snack.Get("classList").Call("add", "active")
-						snack.Set("innerHTML", "<a href=\""+toastLink+"\"><i>info</i>"+toastText+"</a>")
-					}
-				}
+				// Show the generic snackbar/toast.
+				ShowGenericToast(toastText, toastLink, keep)
 
 				// Continue reading the next chunk.
 				if app.Window().Get(JS_LITTR_SSE).Get("running").Bool() {
@@ -317,6 +318,7 @@ func FetchSSE(ch chan string) {
 
 				return nil
 
+				// Catch errors.
 			})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 				err := args[0].Get("name").String()
 				fmt.Println("Body reader error caught: ", err)
@@ -340,6 +342,7 @@ func FetchSSE(ch chan string) {
 		readChunk.Invoke()
 		return nil
 
+		// Catch errors.
 	})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		err := args[0].Get("name").String()
 

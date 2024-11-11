@@ -53,13 +53,18 @@ func NewSSEEvent(input string) *Event {
 	return event
 }
 
-func (e *Event) ParseEventData(user *models.User) (string, string) {
+func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 	//
 	//  Parse the event data
 	//
 
 	var text string
 	var link string
+	var keep bool = false
+
+	if e.Data == "heartbeat" {
+		return "", "", keep
+	}
 
 	// Explode the data CSV string.
 	slice := strings.Split(e.Data, ",")
@@ -71,21 +76,24 @@ func (e *Event) ParseEventData(user *models.User) (string, string) {
 
 	// Server is booting up (just started).
 	case "server-start":
-		text = "server has just started"
+		text = "server has just (re)started"
+		keep = true
 
 	// New post added.
 	case "post":
 		author := slice[1]
 		if author == user.Nickname {
-			return "", ""
+			return "", "", keep
 		}
 
 		// Exit when the author is not followed, nor is found in the user's flowList.
 		if user != nil {
 			if flowed, found := user.FlowList[author]; !flowed || !found {
-				return "", ""
+				return "", "", keep
 			}
 		}
+
+		keep = true
 
 		// Notify the user via toast.
 		text = "new post added by " + author
@@ -103,5 +111,5 @@ func (e *Event) ParseEventData(user *models.User) (string, string) {
 		}
 	}
 
-	return text, link
+	return text, link, keep
 }
