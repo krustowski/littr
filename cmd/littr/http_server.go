@@ -270,7 +270,7 @@ func initServer() {
 	r.Mount("/api/v1", be.NewAPIRouter())
 
 	// Mount the pprof profiler router.
-	r.Mount("/debug", pprof.Router())
+	r.Mount("/debug/pprof", pprof.NewRouter())
 
 	// A workaround to serve a proper favicon icon.
 	r.Method("GET", "/favicon.ico", Handler(func(w http.ResponseWriter, r *http.Request) error {
