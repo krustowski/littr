@@ -82,7 +82,7 @@ var appHandler = &app.Handler{
 	BackgroundColor: "#000000",
 	ThemeColor:      "#000000",
 	Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
-	// Environment constants to be transfered to the app context.
+	// Environment constants to be transferred to the app context.
 	Env: map[string]string{
 		"APP_ENVIRONMENT":      os.Getenv("APP_ENVIRONMENT"),
 		"APP_URL_MAIN":         os.Getenv("APP_URL_MAIN"),
