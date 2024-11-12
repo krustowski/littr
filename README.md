@@ -184,6 +184,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + add controler+service+repository experiment for ~~polls~~, ~~users~~, posts (wip)
 + live switch implementation (disable SSE)
 + redesign the flow subviews (profile pages)
++ ~~reimplement JS fetch() function to omit `http.Client` from FE~~
 + ~~write integration/e2e tests draft~~ (wip)
 
 ### roadmap to v0.44
