@@ -46,7 +46,9 @@ type Header struct {
 	lastHeartbeatTime int64
 
 	// Toast-related fields.
-	toast     common.Toast
+	toastTop    common.Toast
+	toastBottom common.Toast
+
 	toastText string
 	toastShow bool
 	toastType string
@@ -133,14 +135,30 @@ func (h *Header) OnMount(ctx app.Context) {
 	}
 
 	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
-		common.ShowGenericToast("you are back online", "", false)
+		tPl := &common.ToastPayload{
+			Name:  "generic-snackbar-bottom",
+			Text:  "you are back online",
+			Link:  "",
+			Color: "blue10",
+			Keep:  false,
+		}
+
+		common.ShowGenericToast(tPl)
 		return nil
 	}))
 
 	//addOnce := map[string]interface{}{"once": true}
 
 	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		common.ShowGenericToast("you have gone offline", "", true)
+		tPl := &common.ToastPayload{
+			Name:  "generic-snackbar-bottom",
+			Text:  "you have gone offline",
+			Link:  "",
+			Color: "blue10",
+			Keep:  true,
+		}
+
+		common.ShowGenericToast(tPl)
 		return nil
 	}))
 

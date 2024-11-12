@@ -308,8 +308,16 @@ func FetchSSE(ch chan string) {
 
 				toastText, toastLink, keep := event.ParseEventData(&user)
 
+				tPl := &ToastPayload{
+					Name:  "generic-snackbar-bottom",
+					Text:  toastText,
+					Link:  toastLink,
+					Color: "blue10",
+					Keep:  keep,
+				}
+
 				// Show the generic snackbar/toast.
-				ShowGenericToast(toastText, toastLink, keep)
+				ShowGenericToast(tPl)
 
 				// Continue reading the next chunk.
 				if app.Window().Get(JS_LITTR_SSE).Get("running").Bool() {

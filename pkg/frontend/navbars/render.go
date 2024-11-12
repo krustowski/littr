@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.vxn.dev/littr/pkg/frontend/common"
+	//"go.vxn.dev/littr/pkg/frontend/common"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -35,9 +35,11 @@ func (h *Header) Render() app.UI {
 	}
 
 	// Set the toast default content.
-	toastText := h.toast.TText
-	if toastText == "" {
-		toastText = "new post added to the flow"
+	toastTopText := h.toastTop.TText
+
+	toastBottomText := h.toastBottom.TText
+	if toastBottomText == "" {
+		toastBottomText = "new post added to the flow"
 	}
 
 	// Link to the settings view.
@@ -111,10 +113,19 @@ func (h *Header) Render() app.UI {
 						),
 					),
 
-					// snackbar toast
-					app.A().ID("snackbar-general-link").Href("").OnClick(h.onClickModalDismiss).Body(
-						app.If(toastText != "",
-							app.Div().ID("snackbar-general").Class("snackbar white-text bottom "+common.ToastColor(h.toast.TType)).Body(
+					// snackbar toast top
+					app.A().ID("snackbar-general-top-link").Href("").Body(
+						app.If(toastTopText != "",
+							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Body(
+							//app.I().Text("info"),
+							//app.Span().Text(toastText),
+							),
+						),
+					),
+					// snackbar toast bottom
+					app.A().ID("snackbar-general-bottom-link").Href("").Body(
+						app.If(toastBottomText != "",
+							app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Body(
 							//app.I().Text("info"),
 							//app.Span().Text(toastText),
 							),

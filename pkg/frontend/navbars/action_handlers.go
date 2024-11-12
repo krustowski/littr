@@ -48,7 +48,7 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 		h.toastShow = false
 		h.toastText = ""
 		h.toastType = ""
-		h.toast.TText = ""
+		//h.toast.TText = ""
 	})
 }
 
