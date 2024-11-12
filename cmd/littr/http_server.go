@@ -243,7 +243,7 @@ func initServer() {
 
 	// Enable a proactive data compression.
 	// https://pkg.go.dev/compress/flate
-	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "text/css", "image/svg+xml", "image/gif")
+	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "image/svg+xml", "image/gif")
 	r.Use(compressor.Handler)
 
 	// Create a custom network TCP connection listener.
