@@ -167,12 +167,12 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Update the user's data at the UserService.
 	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), "updateType", updateType), "userID", userID), &DTOIn); err != nil {
-		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not update the passphrase").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg("could not update the user").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not update the user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
-	l.Msg("ok, passphrase updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
