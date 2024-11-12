@@ -133,7 +133,7 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 		//
 		//  Response handling
 		//
-		if response.Get("status").Int() != 200 {
+		if response.Get("status").Int() != 200 && response.Get("status").Int() != 201 {
 			chC <- response.Get("status").Int()
 			chE <- fmt.Errorf("unexpected HTTP status code: %d (%s)", response.Get("status").Int(), response.Get("statusText").String())
 			chS <- ""
@@ -157,7 +157,7 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 				result := args[0]
 
 				// Preprocess the response to be unserializable. And send to output.
-				chC <- 200
+				chC <- response.Get("status").Int()
 				chS <- app.Window().Get("JSON").Call("stringify", result).String()
 				chE <- nil
 
