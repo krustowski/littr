@@ -1,6 +1,7 @@
 package users
 
 import (
+	//"fmt"
 	//"log"
 	"strings"
 
@@ -246,8 +247,16 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		// Now, we can update the current user's flowList on the frontend too.
 		// Update the flowList and update the user struct in the LocalStorage.
 		user.FlowList = flowList
+		user.Searched = true
 
-		common.SaveUser(&user, &ctx)
+		common.SaveUser(user.Copy(), &ctx)
+
+		//fmt.Println(user.Nickname)
+		if followed := user.FlowList[key]; followed {
+			toast.Text("user "+key+" added to flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		} else {
+			toast.Text("user "+key+" removed from flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		}
 
 		// Dispatch the changes to match the reality for the UI to rerender.
 		ctx.Dispatch(func(ctx app.Context) {
@@ -256,7 +265,7 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 			// Update the current user.
 			c.users[user.Nickname] = user
 			c.user = user
-			c.user.FlowList = flowList
+			//c.user.FlowList = flowList
 		})
 		return
 	})

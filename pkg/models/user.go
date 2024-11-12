@@ -148,3 +148,7 @@ type UserStat struct {
 	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
 	Searched bool `default:true`
 }
+
+func (u User) Copy() *User {
+	return &u
+}
