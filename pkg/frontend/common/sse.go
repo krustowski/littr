@@ -309,7 +309,7 @@ func FetchSSE(ch chan string) {
 				toastText, toastLink, keep := event.ParseEventData(&user)
 
 				tPl := &ToastPayload{
-					Name:  "generic-snackbar-bottom",
+					Name:  "snackbar-general-bottom",
 					Text:  toastText,
 					Link:  toastLink,
 					Color: "blue10",

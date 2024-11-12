@@ -103,10 +103,10 @@ func (t *Toast) Type(typ string) *Toast {
 	return t
 }
 
-// Render is a wrapper funtion that wraps the function ShowGenericToast() from pkg/frontend/common/snack.go
-func (t *Toast) Render() {
+// Dispatch is a wrapper funtion that wraps the function ShowGenericToast() from pkg/frontend/common/snack.go
+func (t *Toast) Dispatch(...interface{}) {
 	tPl := &ToastPayload{
-		Name:  "snackbar-generic-top",
+		Name:  "snackbar-general-top",
 		Text:  t.TText,
 		Link:  t.TLink,
 		Color: ToastColor(t.TType),
@@ -116,9 +116,9 @@ func (t *Toast) Render() {
 	ShowGenericToast(tPl)
 }
 
-// Dispatch is the final method for the toast's cycle. This method ensures a proper propagation of the toast to such screen to display its content.
+// Deprecated: Dispatch is the final method for the toast's cycle. This method ensures a proper propagation of the toast to such screen to display its content.
 // Custom implementations of the <f> function can be seens in other packages that use this very implementation.
-func (t *Toast) Dispatch(c interface{}, f func(*Toast, interface{})) {
+func (t *Toast) blockedDispatch(c interface{}, f func(*Toast, interface{})) {
 	// If the function and/or Content interface are nil, exit.
 	if f == nil || c == nil {
 		return

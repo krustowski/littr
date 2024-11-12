@@ -136,7 +136,7 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
 		tPl := &common.ToastPayload{
-			Name:  "generic-snackbar-bottom",
+			Name:  "snackbar-general-bottom",
 			Text:  "you are back online",
 			Link:  "",
 			Color: "blue10",
@@ -151,7 +151,7 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		tPl := &common.ToastPayload{
-			Name:  "generic-snackbar-bottom",
+			Name:  "snackbar-general-bottom",
 			Text:  "you have gone offline",
 			Link:  "",
 			Color: "blue10",

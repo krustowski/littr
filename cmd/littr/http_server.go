@@ -4,7 +4,7 @@
 package main
 
 import (
-	"compress/flate"
+	//"compress/flate"
 	"context"
 	"errors"
 	"fmt"
@@ -243,8 +243,8 @@ func initServer() {
 
 	// Enable a proactive data compression.
 	// https://pkg.go.dev/compress/flate
-	compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "image/svg+xml", "image/gif")
-	r.Use(compressor.Handler)
+	/*compressor := middleware.NewCompressor(flate.HuffmanOnly, "application/wasm", "image/svg+xml", "image/gif")
+	r.Use(compressor.Handler)*/
 
 	// Create a custom network TCP connection listener.
 	listener, err := net.Listen("tcp", ":"+config.ServerPort)

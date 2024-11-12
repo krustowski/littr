@@ -54,9 +54,15 @@ func ShowGenericToast(pl *ToastPayload) {
 		return
 	}
 
+	color := "blue10"
+	if pl.Color != "" {
+		color = pl.Color
+	}
+
 	toast := app.Window().GetElementByID(pl.Name)
 	if !toast.IsNull() {
 		// Activate the toast/snackbar. Assign the dismiss lock if requested.
+		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", color)
 		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", "active")
 		app.Window().GetElementByID(pl.Name).Set(DISMISS_LOCK, pl.Keep)
 
@@ -81,20 +87,26 @@ func ShowGenericToast(pl *ToastPayload) {
 			}
 		}
 
+		var timer *time.Timer
+
 		// Register a click event listener.
 		app.Window().GetElementByID(pl.Name).Call("addEventListener", "click", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 			this.Set(DISMISS_LOCK, false)
+
+			if timer != nil {
+				timer.Stop()
+			}
+
 			hideGenericToast(pl.Name)
 			return nil
 		}))
 
 		// Hold the toast on mouseover event.
 		app.Window().GetElementByID(pl.Name).Call("addEventListener", "mouseenter", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;"+pl.Text+"</div><div>(close)</div>")
 			this.Set(DISMISS_LOCK, true)
 			return nil
 		}))
-
-		var timer *time.Timer
 
 		// Handle the timeout of the toast.
 		go func() {

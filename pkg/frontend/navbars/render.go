@@ -36,6 +36,9 @@ func (h *Header) Render() app.UI {
 
 	// Set the toast default content.
 	toastTopText := h.toastTop.TText
+	if toastTopText == "" {
+		toastTopText = "new action just dropped"
+	}
 
 	toastBottomText := h.toastBottom.TText
 	if toastBottomText == "" {
