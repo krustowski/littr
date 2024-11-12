@@ -76,18 +76,26 @@ func FetchData(input *CallInput, output *Response) bool {
 	init["url"] = input.Url
 
 	// Convert body into a string.
-	if input.Data != nil && (init["method"] != "GET" || init["method"] != "HEAD") {
+	if input.Data != nil && init["method"] != "GET" && init["method"] != "HEAD" {
 		jsonData, err := json.Marshal(input.Data)
 		if err != nil {
 			return false
 		}
 
 		init["body"] = string(jsonData)
+	} else {
+		init["body"] = nil
 	}
+
+	// Set the abort controller signal callback.
+	/*var aController = app.Window().Get("AbortController").New()
+	app.Window().Set("fetchController", aController)
+	init["signal"] = aController.Get("signal")*/
 
 	// Call the ligher fetch wrapper.
 	out, code, err := Fetch(&init)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 
@@ -117,12 +125,6 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 	chE := make(chan error, 1)
 	chS := make(chan string, 1)
 
-	defer func() {
-		close(chC)
-		close(chE)
-		close(chS)
-	}()
-
 	// The initial fetch call with options to get the promise.
 	promise := app.Window().Call("fetch", (*input)["url"], *input)
 	promise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
@@ -135,6 +137,12 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 			chC <- response.Get("status").Int()
 			chE <- fmt.Errorf("unexpected HTTP status code: %d (%s)", response.Get("status").Int(), response.Get("statusText").String())
 			chS <- ""
+
+			close(chC)
+			close(chE)
+			close(chS)
+
+			//app.Window().Get("fetchController").Call("abort")
 			return nil
 		}
 
@@ -152,12 +160,24 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 				chC <- 200
 				chS <- app.Window().Get("JSON").Call("stringify", result).String()
 				chE <- nil
+
+				close(chC)
+				close(chE)
+				close(chS)
+
+				//app.Window().Get("fetchController").Call("abort")
 				return nil
 
 			})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 				chC <- 500
 				chE <- fmt.Errorf("%s\n", args[0].Get("message").String())
 				chS <- ""
+
+				close(chC)
+				close(chE)
+				close(chS)
+
+				//app.Window().Get("fetchController").Call("abort")
 				return nil
 			}))
 		}
@@ -167,6 +187,11 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 	})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		chE <- fmt.Errorf("%s", args[0].Get("message").String())
 		chS <- ""
+
+		close(chC)
+		close(chE)
+		close(chS)
+
 		return nil
 	}))
 
@@ -174,6 +199,8 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 	output := <-chS
 	code := <-chC
 	err := <-chE
+
+	//app.Window().Get("fetchController").Call("abort")
 
 	return &output, code, err
 }

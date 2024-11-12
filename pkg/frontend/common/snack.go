@@ -25,7 +25,7 @@ func hideGenericToast() {
 
 	// Set the page title's back.
 	title := app.Window().Get("document")
-	if !title.IsNull() && !toast.Get(DISMISS_LOCK).Bool() && strings.Contains(title.Get("title").String(), "(*)") {
+	if !title.IsNull() && !toast.Get(DISMISS_LOCK).IsUndefined() && !toast.Get(DISMISS_LOCK).Bool() && strings.Contains(title.Get("title").String(), "(*)") {
 		prevTitle := title.Get("title").String()
 		title.Set("title", prevTitle[4:])
 	}
