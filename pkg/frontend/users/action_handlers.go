@@ -300,20 +300,18 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		return
 	}
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.usersButtonDisabled = false
+	})
+
 	// One cannot shade themselves.
 	if c.user.Nickname == key {
-		ctx.Dispatch(func(ctx app.Context) {
-			c.userButtonDisabled = false
-		})
 		return
 	}
 
 	// Fetch the to-be-(un)shaded counterpart user. If not found, simply return the call.
 	userShaded, found := c.users[key]
 	if !found {
-		ctx.Dispatch(func(ctx app.Context) {
-			c.userButtonDisabled = false
-		})
 		return
 	}
 
@@ -419,10 +417,6 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		return
-	})
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.userButtonDisabled = false
 	})
 	return
 }

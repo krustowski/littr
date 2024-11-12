@@ -22,6 +22,10 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 	// Very nasty way of disabling the buttons.
 	c.registerButtonDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.registerButtonDisabled = false
+	})
+
 	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 

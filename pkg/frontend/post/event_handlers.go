@@ -33,7 +33,13 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	// Nasty way on how to disable the buttons. (Use action handler and Dispatch function instead.)
 	c.postButtonsDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.postButtonsDisabled = false
+	})
+
 	ctx.Async(func() {
+		var leave bool
+
 		// Determine the post Type.
 		switch postType {
 		case "poll":
@@ -46,6 +52,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
 				toast.Text(common.ERR_POLL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				leave = true
 				break
 			}
 
@@ -72,6 +79,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			// Allow a just picture posting.
 			if newPost == "" && c.newFigFile == "" {
 				toast.Text(common.ERR_POST_TEXTAREA_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				leave = true
 				break
 			}
 
@@ -80,11 +88,12 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		default:
 			toast.Text(common.ERR_POST_UNKNOWN_TYPE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			leave = true
 			return
 		}
 
 		// Fixing the bug: cannot use return and break together in switch according to Sonar.
-		if c.toast.TText != "" {
+		if leave {
 			return
 		}
 
@@ -191,6 +200,10 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 	// Nasty way on how to disable buttons.
 	c.postButtonsDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.postButtonsDisabled = false
+	})
 
 	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}

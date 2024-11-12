@@ -9,8 +9,8 @@ import (
 // onClick prolly acts like a callback function for the generic user flow's state ((un)flowed toggling).
 func (c *Content) onClick(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
-	ctx.NewActionWithValue("toggle", key)
 	c.usersButtonDisabled = true
+	ctx.NewActionWithValue("toggle", key)
 }
 
 // onClickAllow is a callback function that enables the controlling user to accept the incoming follow request (one must be in the private mode of their profile).
@@ -337,6 +337,10 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 
 	// Nasty way of how to disable duttons (use Dispatch function instead + new action casting).
 	c.usersButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.usersButtonDisabled = false
+	})
 
 	// Check if the user is not block already.
 	if c.user.ShadeList[key] {

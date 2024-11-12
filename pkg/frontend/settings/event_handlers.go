@@ -27,8 +27,11 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
-	// nasty
 	c.settingsButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
 
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
@@ -103,6 +106,10 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 
 	c.settingsButtonDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
 	ctx.Async(func() {
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
@@ -156,6 +163,10 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
 
 	ctx.Async(func() {
 		website := strings.TrimSpace(c.website)
@@ -227,6 +238,10 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
 	c.settingsButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
 
 	uuid := c.interactedUUID
 	if uuid == "" {
@@ -337,6 +352,10 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	source := ctx.JSSrc().Get("id").String()
 
 	c.settingsButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
 
 	if strings.Contains(source, "reply") {
 		tag = "reply"
@@ -478,6 +497,10 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 	c.settingsButtonDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
 	toast := common.Toast{AppContext: &ctx}
 	localTime := c.user.LocalTimeMode
 
@@ -528,6 +551,10 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 	c.settingsButtonDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
@@ -576,6 +603,10 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 
 	c.settingsButtonDisabled = true
 
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
 	// Invalidate the LocalStorage contents.
 	ctx.LocalStorage().Set("authGranted", false)
 	common.SaveUser(&models.User{}, &ctx)
@@ -616,6 +647,10 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 	file := e.Get("target").Get("files").Index(0)
 
 	c.settingsButtonDisabled = true
+
+	defer ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
 
 	ctx.Async(func() {
 		if figData, err := common.ReadFile(file); err != nil {

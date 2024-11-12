@@ -6,11 +6,11 @@ import (
 
 // onClickDelete()
 func (c *Content) onClickDelete(ctx app.Context, e app.Event) {
-	ctx.NewActionWithValue("delete", c.interactedPollKey)
-
 	ctx.Dispatch(func(ctx app.Context) {
 		c.deleteModalButtonsDisabled = true
 	})
+
+	ctx.NewActionWithValue("delete", c.interactedPollKey)
 }
 
 // onClickDeleteButton()
