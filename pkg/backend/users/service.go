@@ -678,6 +678,8 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 	//  Delete all posts, delete polls, delete tokens
 	//
 
+	// TODO
+
 	return nil
 }
 
