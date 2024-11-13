@@ -185,6 +185,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + live switch implementation (disable SSE)
 + ~~redesign the flow subviews (profile pages)~~
 + ~~reimplement JS fetch() function to omit `http.Client` from FE~~
++ ~~save new post/reply drafts to localStorage~~
 + ~~write integration/e2e tests draft~~ (wip)
 
 ### roadmap to v0.44
