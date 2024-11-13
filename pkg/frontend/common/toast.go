@@ -103,7 +103,7 @@ func (t *Toast) Type(typ string) *Toast {
 	return t
 }
 
-// Dispatch is a wrapper funtion that wraps the function ShowGenericToast() from pkg/frontend/common/snack.go
+// Dispatch is a wrapper function that wraps the function ShowGenericToast() from pkg/frontend/common/snack.go.
 func (t *Toast) Dispatch(...interface{}) {
 	tPl := &ToastPayload{
 		Name:  "snackbar-general-top",
