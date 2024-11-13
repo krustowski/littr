@@ -272,6 +272,10 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
+
+				// Save the figure data in LS as a backup.
+				ctx.LocalStorage().Set("newReplyFigFile", file.Get("name").String())
+				ctx.LocalStorage().Set("newReplyFigData", data)
 			})
 			return
 
@@ -337,4 +341,9 @@ func (c *Content) onMouseEnter(ctx app.Context, e app.Event) {
 func (c *Content) onMouseLeave(ctx app.Context, e app.Event) {
 	//ctx.JSSrc().Get("classList").Call("remove", "underline")
 	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1rem")
+}
+
+func (c *Content) onTextareaBlur(ctx app.Context, e app.Event) {
+	// Save a new post draft, if the focus on textarea is lost.
+	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
 }

@@ -149,6 +149,11 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
+		// Delete the draft(s) from LocalStorage.
+		ctx.LocalStorage().Set("newPostDraft", nil)
+		ctx.LocalStorage().Set("newPostFigFile", nil)
+		ctx.LocalStorage().Set("newPostFigData", nil)
+
 		// Redirection according to the post type.
 		if postType == "poll" {
 			ctx.Navigate("/polls")
@@ -223,9 +228,18 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.newFigFile = file.Get("name").String()
 				c.newFigData = data
+
+				// Save the figure data in LS as a backup.
+				ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
+				ctx.LocalStorage().Set("newPostFigData", data)
 			})
 			return
 		}
 		return
 	})
+}
+
+func (c *Content) onTextareaBlur(ctx app.Context, e app.Event) {
+	// Save a new post draft, if the focus on textarea is lost.
+	ctx.LocalStorage().Set("newPostDraft", ctx.JSSrc().Get("value").String())
 }

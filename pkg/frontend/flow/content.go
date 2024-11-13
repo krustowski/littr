@@ -2,6 +2,7 @@
 package flow
 
 import (
+	"encoding/base64"
 	//"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -92,6 +93,15 @@ func (c *Content) OnMount(ctx app.Context) {
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
+
+	// Load the saved draft from localStorage.
+	ctx.LocalStorage().Get("newReplyDraft", &c.replyPostContent)
+	ctx.LocalStorage().Get("newReplyFigFile", &c.newFigFile)
+
+	var data string
+	ctx.LocalStorage().Get("newReplyFigData", &data)
+
+	c.newFigData, _ = base64.StdEncoding.DecodeString(data)
 }
 
 func (c *Content) OnDismount() {

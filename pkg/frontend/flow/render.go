@@ -184,7 +184,7 @@ func (c *Content) Render() app.UI {
 
 				app.Div().Class("field label textarea border extra deep-orange-text").Body(
 					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
-					app.Textarea().Class("active").Name("replyPost").Text(c.replyPostContent).OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea"),
+					app.Textarea().Class("active").Name("replyPost").Text(c.replyPostContent).OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea").OnBlur(c.onTextareaBlur),
 					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
 					//app.Label().Text("text").Class("active"),
 				),

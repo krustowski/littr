@@ -238,6 +238,11 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			posts[k] = p
 		}
 
+		// Delete the draft(s) from LocalStorage.
+		ctx.LocalStorage().Set("newReplyDraft", nil)
+		ctx.LocalStorage().Set("newReplyFigFile", nil)
+		ctx.LocalStorage().Set("newReplyFigData", nil)
+
 		ctx.Dispatch(func(ctx app.Context) {
 			// add new post to post list on frontend side to render
 			//c.posts[stringID] = payload
