@@ -60,6 +60,8 @@ func FetchData(input *CallInput, output *Response) bool {
 	init := DefaultRequestInit
 
 	headers := map[string]interface{}{
+		"Content-Type": "application/json",
+		"X-App-Version":  AppVersion,
 		"X-Hide-Replies": input.HideReplies,
 		"X-Page-No":      input.PageNo,
 	}
