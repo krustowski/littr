@@ -33,8 +33,14 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	ctx.Handle("dismiss", c.handleDismiss)
+
+	/*app.Window().Call("addEventListener", "keydown", app.FuncOf(func(this app.Value, args []app.Value) any {
+		key := args[0].Get("key")
+
+		ctx.NewActionWithKey("keydown", key)
+	}))*/
 
 	/*app.Window().Call("addEventListener", "beforeunload", app.FuncOf(func(this app.Value, args []app.Value) any {
 		// https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event

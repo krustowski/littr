@@ -891,9 +891,9 @@ func processRequestList(data *UserUpdateRequest, user *models.User, caller *mode
 	// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
 	for key, value := range data.RequestList {
 		// Only allow to change the caller's record in the remote/counterpart's requestList.
-		if key != caller.Nickname {
+		/*if key != caller.Nickname {
 			continue
-		}
+		}*/
 
 		user.RequestList[key] = value
 	}

@@ -145,6 +145,19 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 		return
 	}
 
+	// Fetch the post textarea.
+	textarea := app.Window().GetElementByID("post-textarea")
+
+	// Otherwise utilize the CTRL-Enter combination and send the post in.
+	if event.Get("ctrlKey").Bool() && event.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
+		// If null, we null.
+		if textarea.IsNull() {
+			return
+		}
+
+		app.Window().GetElementByID("post").Call("click")
+	}
+
 	// List of inputs, that blocks the refresh event.
 	var inputs = []string{
 		"post-textarea",
