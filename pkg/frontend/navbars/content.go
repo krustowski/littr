@@ -58,6 +58,8 @@ type Header struct {
 
 	// Event channel.
 	sseChan chan common.Event
+
+	processingKeydown bool
 }
 
 type Footer struct {
@@ -124,17 +126,64 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
-	//
-	//  Event Listeners
-	//
-
 	// Custom SSE client implementation.
 	if !app.Window().Get(common.JS_LITTR_SSE).Get("running").Bool() {
 		fmt.Println("Connecting to the SSE stream...")
 		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
 	}
 
-	app.Window().Call("addEventListener", "online", app.FuncOf(func(this app.Value, args []app.Value) any {
+	//
+	//  Event Listeners
+	//
+
+	var addTrackedEventListener = app.FuncOf(func(this app.Value, args []app.Value) any {
+		const eventRegistry = "eventRegistry"
+
+		if len(args) < 3 {
+			return nil
+		}
+
+		element := args[0]
+		eventType := args[1]
+		listener := args[2]
+
+		if element.Type() != app.TypeObject || eventType.Type() != app.TypeString || listener.Type() != app.TypeFunction {
+			return nil
+		}
+
+		registry := app.Window().Get(eventRegistry)
+
+		if registry.IsNull() || registry.IsUndefined() {
+			app.Window().Set(eventRegistry, app.Window().Get("Array").New())
+			registry = app.Window().Get(eventRegistry)
+		}
+
+		for i := 0; i < registry.Length(); i++ {
+			elem := registry.Index(i)
+
+			if elem.Get("element").Equal(element) && elem.Get("eventType").Equal(eventType) {
+				return nil
+			}
+		}
+
+		fmt.Println("adding new eventListener:", eventType.String())
+
+		registry.Call("push", map[string]interface{}{
+			"element":   element,
+			"eventType": eventType,
+			"listener":  listener,
+		})
+
+		element.Call("addEventListener", eventType, listener)
+
+		return nil
+	})
+
+	if app.Window().Get("addTrackedEventListener").IsNull() || app.Window().Get("addTrackedEventListener").IsUndefined() {
+		app.Window().Set("addTrackedEventListener", addTrackedEventListener)
+	}
+
+	var onlineHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
 			Text:  "you are back online",
@@ -145,11 +194,9 @@ func (h *Header) OnMount(ctx app.Context) {
 
 		common.ShowGenericToast(tPl)
 		return nil
-	}))
+	})
 
-	//addOnce := map[string]interface{}{"once": true}
-
-	app.Window().Call("addEventListener", "offline", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	var offlineHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
 			Text:  "you have gone offline",
@@ -160,27 +207,17 @@ func (h *Header) OnMount(ctx app.Context) {
 
 		common.ShowGenericToast(tPl)
 		return nil
-	}))
+	})
 
-	/*app.Window().Call("addEventListener", "close", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		ctx.NewActionWithValue("generic-event", args[0])
-		return nil
-	}), addOnce)
-
-	app.Window().Call("addEventListener", "keepalive", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		ctx.NewActionWithValue("generic-event", args[0])
-		return nil
-	}), addOnce)
-
-	app.Window().Call("addEventListener", "message", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-		ctx.NewActionWithValue("generic-event", args[0])
-		return nil
-	}), addOnce)*/
-
-	app.Window().Call("addEventListener", "keydown", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	var keydownHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		ctx.NewActionWithValue("keydown", args[0])
 		return nil
-	}))
+	})
+
+	app.Window().Call("addTrackedEventListener", app.Window(), "online", onlineHandler)
+	app.Window().Call("addTrackedEventListener", app.Window(), "offline", offlineHandler)
+	app.Window().Call("addTrackedEventListener", app.Window(), "keydown", keydownHandler)
+	//app.Window().Call("addTrackedEventListener", app.Window(), "scroll", scrollHandler)
 
 	//
 	//  Action handlers
