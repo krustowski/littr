@@ -125,7 +125,7 @@ func NewAPIRouter() chi.Router {
 	authController := auth.NewAuthController(authService)
 	pollController := polls.NewPollController(pollService)
 	statController := stats.NewStatController(statService)
-	userController := users.NewUserController(postService, userService)
+	userController := users.NewUserController(postService, statService, userService)
 
 	//
 	//  API subpkg routers registering

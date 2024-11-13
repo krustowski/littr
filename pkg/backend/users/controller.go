@@ -14,21 +14,24 @@ import (
 
 // Structure contents definition for the controller.
 type UserController struct {
-	userService models.UserServiceInterface
 	postService models.PostServiceInterface
+	statService models.StatServiceInterface
+	userService models.UserServiceInterface
 }
 
 // NewUserController return a pointer to the new controller instance, that has to be populated with User and Post services.
 func NewUserController(
 	postService models.PostServiceInterface,
+	statService models.StatServiceInterface,
 	userService models.UserServiceInterface,
 ) *UserController {
-	if postService == nil || userService == nil {
+	if postService == nil || statService == nil || userService == nil {
 		return nil
 	}
 
 	return &UserController{
 		postService: postService,
+		statService: statService,
 		userService: userService,
 	}
 }
@@ -363,8 +366,9 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type responseData struct {
-		User  models.User            `json:"user"`
-		Users map[string]models.User `json:"users,omitempty"`
+		User      models.User                `json:"user"`
+		Users     map[string]models.User     `json:"users,omitempty"`
+		UserStats map[string]models.UserStat `json:"user_stats,omitempty"`
 	}
 
 	// Compose the DTO-out from userService.
@@ -375,13 +379,22 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Omit flowStats and exported users map.
+	_, userStats, _, err := c.statService.Calculate(r.Context())
+	if err != nil {
+		l.Msg("could not fetch user stats").Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg("could not fetch user stats").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		return
+	}
+
 	DTOOut := &responseData{
-		User:  (*users)[l.CallerID()],
-		Users: *common.FlushUserData(users, l.CallerID()),
+		User:      (*users)[l.CallerID()],
+		Users:     *common.FlushUserData(users, l.CallerID()),
+		UserStats: *userStats,
 	}
 
 	// Log the message and write the HTTP response.
-	l.Msg("listing all users").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
+	l.Msg("listing all users and their stats").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
 	return
 }
 
