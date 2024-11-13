@@ -14,7 +14,7 @@ APP_NAME=littr
 APP_URLS_TRAEFIK ?= `${HOSTNAME}`
 APP_URL_MAIN ?= ${HOSTNAME}
 PROJECT_NAME=${APP_NAME}-${APP_ENVIRONMENT}
-TZ=Europe/Vienna
+TZ ?= Europe/Vienna
 
 LOKI_URL ?=
 
@@ -38,8 +38,8 @@ MAIL_SASL_PWD ?=
 #COMMON_BUILD_LDFLAGS=-s -w
 COMMON_BUILD_LDFLAGS=
 GOARCH := $(shell go env GOARCH)
-GOCACHE?=/home/${USER}/.cache/go-build
-GOMODCACHE?=/home/${USER}/go/pkg/mod
+GOCACHE ?= /home/${USER}/.cache/go-build
+GOMODCACHE ?= /home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
 # docker environment
