@@ -2,6 +2,8 @@
 package flow
 
 import (
+	"time"
+
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -90,6 +92,22 @@ func (c *Content) OnMount(ctx app.Context) {
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
+
+	go func() {
+		time.Sleep(time.Second * 5)
+
+		userLink := app.Window().GetElementByID("user-flow-link")
+		if !userLink.IsNull() {
+			userLink.Call("addEventListener", "mouseover", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+				this.Get("classList").Call("add", "underline")
+				return nil
+			}))
+			userLink.Call("addEventListener", "mouseout", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+				this.Get("classList").Call("remove", "underline")
+				return nil
+			}))
+		}
+	}()
 }
 
 func (c *Content) OnDismount() {
@@ -131,21 +149,23 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		posts, users := c.fetchFlowPage(opts)
 
-		// try the singlePostID/userFlowNick var if present
+		// The content to render is to show the singlePost view.
 		if parts.SinglePostID != "" && parts.SinglePost && posts != nil {
 			if _, found := (*posts)[parts.SinglePostID]; !found {
 				toast.Text(common.ERR_POST_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			}
 		}
 
+		// The content to render is to show the userFlow view.
 		if parts.UserFlowNick != "" && parts.UserFlow && users != nil {
 			if _, found := (*users)[parts.UserFlowNick]; !found {
 				toast.Text(common.ERR_USER_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			}
 
-			if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
+			// TODO reevaluate this as it is buggy at the moment...
+			/*if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
 				toast.Text("follow the user to see their posts").Type(common.TTYPE_INFO).Dispatch(c, dispatch)
-			}
+			}*/
 
 			isPost = false
 		}
@@ -161,7 +181,7 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.users = *users
 
 				// Also update the user struct in the LS.
-				common.SaveUser(&c.user, &ctx)
+				common.SaveUser(c.user.Copy(), &ctx)
 			}
 
 			if posts != nil {

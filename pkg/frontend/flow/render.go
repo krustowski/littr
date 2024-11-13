@@ -96,9 +96,10 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
+		// SingleUser view (profile mode)
 		app.If(c.userFlowNick != "" && !c.isPost,
+			app.Img().Class("center").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "15rem").Style("border-radius", "50%"),
 			app.Div().Class("row top-padding").Body(
-				app.Img().Class("responsive max left").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "80px").Style("border-radius", "50%"),
 				/*;app.P().Class("max").Body(
 					app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
 					//app.B().Text(post.Nickname).Class("deep-orange-text"),
@@ -386,7 +387,7 @@ func (c *Content) Render() app.UI {
 									app.Img().Title("user's avatar").Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().Class("max").Body(
 										app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(c.onClickUserFlow).ID(post.Nickname).Body(
-											app.Span().Class("large-text bold deep-orange-text").Text(post.Nickname),
+											app.Span().ID("user-flow-link").Class("large-text bold deep-orange-text").Text(post.Nickname).OnMouseEnter(c.onMouseEnter).OnMouseLeave(c.onMouseLeave),
 										),
 										//app.B().Text(post.Nickname).Class("deep-orange-text"),
 									),

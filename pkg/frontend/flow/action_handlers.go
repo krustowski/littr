@@ -362,10 +362,10 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 	// little hack to dismiss navbar's snackbar
-	snack := app.Window().GetElementByID("snackbar-general")
+	/*snack := app.Window().GetElementByID("snackbar-general")
 	if !snack.IsNull() {
 		snack.Get("classList").Call("remove", "active")
-	}
+	}*/
 
 	ctx.Async(func() {
 		// nasty hotfix, TODO

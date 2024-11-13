@@ -93,6 +93,8 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 
 			c.user.FlowList = flowList
 		})
+
+		ctx.NewAction("refresh")
 	})
 }
 
@@ -325,4 +327,14 @@ func (c *Content) onMessage(ctx app.Context, e app.Event) {
 func (c *Content) onClickStar(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	ctx.NewActionWithValue("star", key)
+}
+
+func (c *Content) onMouseEnter(ctx app.Context, e app.Event) {
+	//ctx.JSSrc().Get("classList").Call("add", "underline")
+	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1.2rem")
+}
+
+func (c *Content) onMouseLeave(ctx app.Context, e app.Event) {
+	//ctx.JSSrc().Get("classList").Call("remove", "underline")
+	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1rem")
 }

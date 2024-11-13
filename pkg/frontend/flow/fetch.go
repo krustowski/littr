@@ -112,10 +112,10 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		return nil, nil
 	}
 
-	if len(data.Posts) < 1 {
+	/*if len(data.Posts) < 1 {
 		toast.Text("no posts to show; try adding some folks to your flow, or create a new post!").Type("info").Link("/post").Dispatch(c, dispatch)
 		return nil, nil
-	}
+	}*/
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false
