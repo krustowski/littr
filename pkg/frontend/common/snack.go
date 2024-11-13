@@ -15,8 +15,8 @@ const (
 	DISMISS_LOCK          = "dismissLock"
 )
 
-func hideGenericToast(toastName string) {
-	if toastName == "" {
+func hideGenericToast(toastName, color string) {
+	if toastName == "" || color == "" {
 		return
 	}
 
@@ -25,6 +25,7 @@ func hideGenericToast(toastName string) {
 		//app.Window().GetElementByID(GENERIC_TOAST_NAME).Call("removeEventListener", "mouseenter")
 		//app.Window().GetElementByID(GENERIC_TOAST_NAME).Call("removeEventListener", "click")
 		app.Window().GetElementByID(toastName).Get("classList").Call("remove", "active")
+		app.Window().GetElementByID(toastName).Get("classList").Call("remove", color)
 	}
 
 	// Set the page title's back.
@@ -73,9 +74,9 @@ func ShowGenericToast(pl *ToastPayload) {
 
 		// Update the snackbar's/toast's inner HTML content.
 		if pl.Keep {
-			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;"+pl.Text+"</div><div>(close)</div>")
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div>(close)</div>")
 		} else {
-			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;"+pl.Text+"</div>")
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div>")
 		}
 
 		if pl.Keep {
@@ -97,13 +98,13 @@ func ShowGenericToast(pl *ToastPayload) {
 				timer.Stop()
 			}
 
-			hideGenericToast(pl.Name)
+			hideGenericToast(pl.Name, color)
 			return nil
 		}))
 
 		// Hold the toast on mouseover event.
 		app.Window().GetElementByID(pl.Name).Call("addEventListener", "mouseenter", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;"+pl.Text+"</div><div>(close)</div>")
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div>(close)</div>")
 			this.Set(DISMISS_LOCK, true)
 			return nil
 		}))
@@ -113,7 +114,7 @@ func ShowGenericToast(pl *ToastPayload) {
 			timer = time.NewTimer(time.Millisecond * time.Duration(GENERIC_TOAST_TIMEOUT))
 
 			<-timer.C
-			hideGenericToast(pl.Name)
+			hideGenericToast(pl.Name, color)
 		}()
 	}
 }
