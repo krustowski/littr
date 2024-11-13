@@ -116,7 +116,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		toast.Text("it seems that this flow is very empty, try expanding it").Type("info").Link("/post").Dispatch(c, dispatch)
 	}
 
-	if len(data.Posts) < 1 && opts.UserFlowNick != "" {
+	if len(data.Posts) < 1 && opts.UserFlowNick != "" && c.user.FlowList[opts.UserFlowNick] {
 		toast.Text("this user has apparently not published any posts yet").Type("info").Link("/users").Dispatch(c, dispatch)
 		//return nil, nil
 	}

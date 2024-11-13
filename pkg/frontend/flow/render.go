@@ -108,10 +108,12 @@ func (c *Content) Render() app.UI {
 				//app.If(c.users[c.userFlowNick].About != "",
 				app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 				//),
-				app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-					app.If(c.user.FlowList[c.userFlowNick],
+				app.If(c.user.FlowList[c.userFlowNick],
+					app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Text("unfollow"),
-					).Else(
+					),
+				).Else(
+					app.Button().ID(c.userFlowNick).Class("deep-orange7 border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Text("follow"),
 					),
 				),
