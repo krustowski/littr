@@ -786,6 +786,13 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[st
 		return nil, nil, fmt.Errorf("cannot read the pageNo value from context")
 	}
 
+	// Hijack user's flowList.
+	/*flowList := caller.FlowList
+	if flowList != nil {
+		flowList[userID] = true
+	}
+	caller.FlowList = flowList*/
+
 	// Set the page options.
 	opts := &pages.PageOptions{
 		CallerID: callerID,
@@ -807,9 +814,9 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[st
 	}
 
 	// If zero items were fetched, no need to continue asserting types.
-	if len(*pagePtrs.Posts) == 0 {
+	/*if len(*pagePtrs.Posts) == 0 {
 		return nil, nil, fmt.Errorf("no posts found in the database")
-	}
+	}*/
 
 	// Include the caller in the users map.
 	(*pagePtrs.Users)[callerID] = *caller
