@@ -80,12 +80,12 @@
   window.onscroll = onscroll
 
   // feature detection: online/offline
-  if ('onLine' in navigator) {
+  /*if ('onLine' in navigator) {
     window.addEventListener('load', function () {
       window.addEventListener('online', checkNetwork)
       window.addEventListener('offline', checkNetwork)
     })
-  }
+  }*/
 
   // network status handler
   function checkNetwork() {
