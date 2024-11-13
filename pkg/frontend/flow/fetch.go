@@ -112,10 +112,14 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		return nil, nil
 	}
 
-	/*if len(data.Posts) < 1 {
-		toast.Text("no posts to show; try adding some folks to your flow, or create a new post!").Type("info").Link("/post").Dispatch(c, dispatch)
-		return nil, nil
-	}*/
+	if len(data.Posts) < 1 && opts.UserFlowNick == "" {
+		toast.Text("it seems that this flow is very empty, try expanding it").Type("info").Link("/post").Dispatch(c, dispatch)
+	}
+
+	if len(data.Posts) < 1 && opts.UserFlowNick != "" {
+		toast.Text("this user has apparently not published any posts yet").Type("info").Link("/users").Dispatch(c, dispatch)
+		//return nil, nil
+	}
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.refreshClicked = false

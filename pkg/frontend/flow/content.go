@@ -2,7 +2,7 @@
 package flow
 
 import (
-	"time"
+	//"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -92,22 +92,6 @@ func (c *Content) OnMount(ctx app.Context) {
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
-
-	go func() {
-		time.Sleep(time.Second * 5)
-
-		userLink := app.Window().GetElementByID("user-flow-link")
-		if !userLink.IsNull() {
-			userLink.Call("addEventListener", "mouseover", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-				this.Get("classList").Call("add", "underline")
-				return nil
-			}))
-			userLink.Call("addEventListener", "mouseout", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-				this.Get("classList").Call("remove", "underline")
-				return nil
-			}))
-		}
-	}()
 }
 
 func (c *Content) OnDismount() {
