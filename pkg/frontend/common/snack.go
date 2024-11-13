@@ -15,17 +15,19 @@ const (
 	DISMISS_LOCK          = "dismissLock"
 )
 
-func hideGenericToast(toastName, color string) {
+func hideGenericToast(toastName, color string, ID int64) {
 	if toastName == "" || color == "" {
 		return
 	}
 
 	toast := app.Window().GetElementByID(toastName)
-	if !toast.IsNull() && !toast.Get(DISMISS_LOCK).IsUndefined() && !toast.Get(DISMISS_LOCK).Bool() {
-		//app.Window().GetElementByID(GENERIC_TOAST_NAME).Call("removeEventListener", "mouseenter")
-		//app.Window().GetElementByID(GENERIC_TOAST_NAME).Call("removeEventListener", "click")
-		app.Window().GetElementByID(toastName).Get("classList").Call("remove", "active")
-		app.Window().GetElementByID(toastName).Get("classList").Call("remove", color)
+	if !toast.IsNull() &&
+		!toast.Get(DISMISS_LOCK).IsUndefined() &&
+		!toast.Get(DISMISS_LOCK).Bool() &&
+		!toast.Get("uniqueID").IsUndefined() &&
+		int64(toast.Get("uniqueID").Int()) == ID {
+
+		app.Window().GetElementByID(toastName).Get("classList").Call("remove", "active", color)
 	}
 
 	// Set the page title's back.
@@ -55,17 +57,32 @@ func ShowGenericToast(pl *ToastPayload) {
 		return
 	}
 
-	color := "blue10"
-	if pl.Color != "" {
-		color = pl.Color
-	}
-
 	toast := app.Window().GetElementByID(pl.Name)
 	if !toast.IsNull() {
+		var toastClass = func() string {
+			if strings.Contains(pl.Name, "top") {
+				return "top"
+			}
+
+			return "bottom"
+		}()
+
+		var toastColor = func() string {
+			if pl.Color != "" {
+				return pl.Color
+			}
+
+			return "blue10"
+		}()
+
+		uniqueID := time.Now().Unix()
+
+		app.Window().GetElementByID(pl.Name).Set("className", "")
+
 		// Activate the toast/snackbar. Assign the dismiss lock if requested.
-		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", color)
-		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", "active")
+		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", "snackbar", "white-text", toastClass, toastColor, "active")
 		app.Window().GetElementByID(pl.Name).Set(DISMISS_LOCK, pl.Keep)
+		app.Window().GetElementByID(pl.Name).Set("uniqueID", uniqueID)
 
 		// Set the snackbar's/toast's link.
 		if toastLink := app.Window().GetElementByID(pl.Name + "-link"); !toastLink.IsUndefined() && pl.Link != "" {
@@ -98,7 +115,7 @@ func ShowGenericToast(pl *ToastPayload) {
 				timer.Stop()
 			}
 
-			hideGenericToast(pl.Name, color)
+			hideGenericToast(pl.Name, toastColor, uniqueID)
 			return nil
 		}))
 
@@ -114,7 +131,7 @@ func ShowGenericToast(pl *ToastPayload) {
 			timer = time.NewTimer(time.Millisecond * time.Duration(GENERIC_TOAST_TIMEOUT))
 
 			<-timer.C
-			hideGenericToast(pl.Name, color)
+			hideGenericToast(pl.Name, toastColor, uniqueID)
 		}()
 	}
 }
