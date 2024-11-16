@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -181,6 +182,11 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	// decode the incoming request's body
 	if err := common.UnmarshalRequestData(r, &device); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if reflect.DeepEqual(device, (models.Device{})) {
+		l.Msg(common.ERR_DEVICE_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 

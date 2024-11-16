@@ -90,6 +90,7 @@ const (
 	ERR_NOTIFICATION_RESP_BODY_FAIL = "failed to read the notification's response body"
 	ERR_DEVICE_LIST_UPDATE_FAIL     = "failed to save the updated device list"
 	ERR_UUID_BLANK                  = "uuid param is required"
+	ERR_DEVICE_BLANK                = "submitted device is blank"
 
 	// User-related error messages
 	ERR_USER_DELETE_FOREIGN       = "you cannot delete a foreigner's account"

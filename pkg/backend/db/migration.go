@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -54,6 +55,11 @@ func RunMigrations() string {
 			N: "migrateExpiredTokens",
 			F: migrateExpiredTokens,
 			R: []interface{}{&tokens},
+		},
+		{
+			N: "migrateDeleteBlankDevices",
+			F: migrateDeleteBlankDevices,
+			R: []interface{}{&subs},
 		},
 		{
 			N: "migrateEmptyDeviceTags",
@@ -124,6 +130,8 @@ func RunMigrations() string {
 	for _, mig := range migrationsOrderedList {
 		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R))
 	}
+
+	//report += fmt.Sprintf("; aftermath: posts: %d, requests: %d, subscriptions: %d, tokens: %d, users: %d", len(posts), len(reqs), len(subs), len(tokens), len(users))
 
 	// Run the GC to tidy up.
 	runtime.GC()
@@ -202,6 +210,66 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 			// Delete from the tokens map locally within the migrations.
 			delete(*tokens, hash)
 		}
+	}
+
+	return true
+}
+
+// migrateDeleteBlankDevices procedure ensures blank devices are omitted from the user's device list in SubscriptionCache.
+func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
+	var subs *map[string][]models.Device
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		elem, ok := raw.(*map[string][]models.Device)
+		if ok {
+			subs = elem
+			continue
+		}
+	}
+
+	// Exit if the subs pointer is nil.
+	if subs == nil {
+		l.Msg("subs are nil").Status(http.StatusInternalServerError).Log()
+		return false
+	}
+
+	for userID, devs := range *subs {
+		var newDevs []models.Device
+
+		for _, dev := range devs {
+			if reflect.DeepEqual(dev, (models.Device{})) {
+				continue
+			}
+
+			tags := dev.Tags
+			dev.Tags = nil
+
+			if reflect.DeepEqual(dev, (models.Device{})) {
+				continue
+			}
+
+			dev.Tags = tags
+
+			newDevs = append(newDevs, dev)
+		}
+
+		if len(newDevs) == 0 {
+			if deleted := DeleteOne(SubscriptionCache, userID); !deleted {
+				l.Msg("could not delete devices: " + userID).Status(http.StatusInternalServerError).Log()
+				return false
+			}
+
+			delete(*subs, userID)
+			return true
+		}
+
+		if saved := SetOne(SubscriptionCache, userID, newDevs); !saved {
+			l.Msg("could not save new devices: " + userID).Status(http.StatusInternalServerError).Log()
+			return false
+		}
+
+		(*subs)[userID] = newDevs
 	}
 
 	return true
