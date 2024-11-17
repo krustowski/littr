@@ -70,8 +70,8 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Create the user at the UserService.
 	if err := c.userService.Create(r.Context(), &DTOIn); err != nil {
-		l.Msg("could not create a new user").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not create a new user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -280,8 +280,8 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 
 	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", requestType), &DTOIn)
 	if err != nil {
-		l.Msg("could not process the passphrase reset request").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not process the passphrase reset request").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
