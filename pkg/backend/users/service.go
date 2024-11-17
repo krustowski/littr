@@ -750,10 +750,10 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	if userID == callerID {
 		devs, err := s.subscriptionRepository.GetByID(userID)
 		if err != nil {
-			return nil, err
+			user.Devices = nil
+		} else {
+			user.Devices = *devs
 		}
-
-		user.Devices = *devs
 	}
 
 	// Patch the user's data for export.
