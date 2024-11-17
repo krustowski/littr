@@ -91,7 +91,7 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
 
 	// Load the saved draft from localStorage.
