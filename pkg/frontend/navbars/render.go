@@ -1,11 +1,13 @@
 package navbars
 
 import (
+	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"time"
 
-	//"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
@@ -240,6 +242,21 @@ func (f *Footer) Render() app.UI {
 		return app.Div()
 	}
 
+	var reqCount = func() int64 {
+		var count int64
+
+		if reflect.DeepEqual(f.user, (models.User{})) || f.user.RequestList == nil {
+			return count
+		}
+
+		for _, val := range f.user.RequestList {
+			if val {
+				count++
+			}
+		}
+		return count
+	}()
+
 	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
@@ -250,7 +267,9 @@ func (f *Footer) Render() app.UI {
 				),
 
 				app.A().Class("button circle transparent").Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
-					//app.Div().Class("badge border").Text("5"),
+					app.If(reqCount > 0,
+						app.Div().Class("badge border").Text(fmt.Sprintf("%d", reqCount)),
+					),
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("group")),
 				),

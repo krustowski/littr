@@ -68,6 +68,8 @@ type Footer struct {
 	// Simple authentication indicatior.
 	authGranted bool
 
+	user models.User
+
 	// Context cancellation function for the SSE client.
 	sseCancel context.CancelFunc
 }
@@ -253,8 +255,8 @@ func (f *Footer) OnMount(ctx app.Context) {
 	}
 
 	// Prepare the variable to load the user's data from LS.
-	var user models.User
-	common.LoadUser(&user, &ctx)
+	//var user models.User
+	common.LoadUser(&f.user, &ctx)
 
 	// If the options map is nil, or the liveMode is disabled within, do not continue as well.
 	/*if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {

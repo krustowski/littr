@@ -2,7 +2,6 @@ package login
 
 import (
 	"crypto/sha512"
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -97,14 +96,14 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		user, err := json.Marshal(data.User)
+		/*user, err := json.Marshal(data.User)
 		if err != nil {
 			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
-		}
+		}*/
 
-		// save enrypted user data to their Local browser storage
-		ctx.LocalStorage().Set("user", user)
+		// Save encoded user data to the Local browser storage.
+		common.SaveUser(data.User, &ctx)
 		ctx.LocalStorage().Set("authGranted", true)
 
 		if data.AuthGranted {
