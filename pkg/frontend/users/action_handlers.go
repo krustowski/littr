@@ -320,6 +320,12 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		userShaded.FlowList = make(map[string]bool)
 	}
 
+	if userShaded.RequestList != nil {
+		reqList := userShaded.RequestList
+		reqList[c.user.Nickname] = false
+		userShaded.RequestList = reqList
+	}
+
 	// Fetch and negate the current shade status.
 	shadeListItem := c.user.ShadeList[key]
 
@@ -329,6 +335,11 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 	}
 	if c.user.ShadeList == nil {
 		c.user.ShadeList = make(map[string]bool)
+	}
+	if c.user.RequestList != nil {
+		reqList := c.user.RequestList
+		reqList[userShaded.Nickname] = false
+		c.user.RequestList = reqList
 	}
 
 	// Only (un)shade user accounts different from the controlling user's one.
@@ -348,9 +359,11 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 	ctx.Async(func() {
 		// Prepare the request body data structure.
 		payload := struct {
-			FlowList map[string]bool `json:"flow_list"`
+			FlowList    map[string]bool `json:"flow_list"`
+			RequestList map[string]bool `json:"request_list"`
 		}{
-			FlowList: userShaded.FlowList,
+			FlowList:    userShaded.FlowList,
+			RequestList: userShaded.RequestList,
 		}
 
 		// Compose the API input payload.
@@ -380,11 +393,13 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 		// Prepare the second list update payload.
 		payload2 := struct {
-			FlowList  map[string]bool `json:"flow_list"`
-			ShadeList map[string]bool `json:"shade_list"`
+			FlowList    map[string]bool `json:"flow_list"`
+			ShadeList   map[string]bool `json:"shade_list"`
+			RequestList map[string]bool `json:"request_list"`
 		}{
-			FlowList:  c.user.FlowList,
-			ShadeList: c.user.ShadeList,
+			FlowList:    c.user.FlowList,
+			ShadeList:   c.user.ShadeList,
+			RequestList: c.user.RequestList,
 		}
 
 		// Compsoe the second API call input.
