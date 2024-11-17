@@ -36,13 +36,14 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Response body structure.
 	type responseData struct {
-		AuthGranted bool        `json:"auth_granted"`
-		User        models.User `json:"user"`
+		AuthGranted bool         `json:"auth_granted"`
+		User        *models.User `json:"user"`
 	}
 
 	// Prepare the response payload.
 	pl := &responseData{
 		AuthGranted: false,
+		User:        nil,
 	}
 
 	var user AuthUser
@@ -57,8 +58,8 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	// Try to authenticate given user.
 	grantedUser, tokens, err := c.authService.Auth(r.Context(), &user)
 	if err != nil {
-		l.Msg(common.ERR_AUTH_FAIL).Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg(common.ERR_AUTH_FAIL).Status(common.DecideStatusFromError(err)).Payload(pl).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(pl).Write(w)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Flush the sensitive data of such user in the response.
 	patchedUser := (*common.FlushUserData(&map[string]models.User{grantedUser.Nickname: *grantedUser}, grantedUser.Nickname))[grantedUser.Nickname]
-	pl.User = patchedUser
+	pl.User = &patchedUser
 	pl.AuthGranted = true
 
 	l.Msg("ok, auth granted, sending cookies").Status(http.StatusOK).Log().Payload(pl).Write(w)
