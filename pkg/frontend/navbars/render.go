@@ -250,6 +250,7 @@ func (f *Footer) Render() app.UI {
 				),
 
 				app.A().Class("button circle transparent").Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
+					app.Div().Class("badge border").Text("5"),
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("group")),
 				),

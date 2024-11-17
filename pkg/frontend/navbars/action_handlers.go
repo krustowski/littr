@@ -29,17 +29,10 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 		infoModal.Get("classList").Call("remove", "active")
 	}
 
-	/*snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() {
-		snack.Get("classList").Call("remove", "active")
-	}*/
-
-	// change title back to the clean one
-	/*title := app.Window().Get("document")
-	if !title.IsNull() && strings.Contains(title.Get("title").String(), "(*)") {
-		prevTitle := title.Get("title").String()
-		title.Set("title", prevTitle[4:])
-	}*/
+	replyModal := app.Window().GetElementByID("reply-modal")
+	if !replyModal.IsNull() {
+		replyModal.Get("classList").Call("remove", "active")
+	}
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalInfoShow = false
@@ -48,7 +41,6 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 		h.toastShow = false
 		h.toastText = ""
 		h.toastType = ""
-		//h.toast.TText = ""
 	})
 }
 
@@ -145,17 +137,56 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 		return
 	}
 
+	// Prevent sending actions on ctrl+shfit+R.
+	if event.Get("ctrlKey").Bool() && event.Get("shiftKey").Bool() && (event.Get("key").String() == "r" || event.Get("key").String() == "R") {
+		return
+	}
+
+	// Fetch the reply textarea.
+	textareaReply := app.Window().GetElementByID("reply-textarea")
+
+	if (event.Get("key").String() == "x" ||
+		event.Get("key").String() == "X" ||
+		event.Get("key").String() == "r" ||
+		event.Get("key").String() == "R") &&
+		textareaReply.IsNull() {
+
+		ctx.NewAction("dismiss")
+		ctx.NewAction("clear")
+		ctx.NewActionWithValue("refresh", event.Get("key").String())
+	}
+
 	// Fetch the post textarea.
-	textarea := app.Window().GetElementByID("post-textarea")
+	textareaPost := app.Window().GetElementByID("post-textarea")
 
 	// Otherwise utilize the CTRL-Enter combination and send the post in.
-	if event.Get("ctrlKey").Bool() && event.Get("key").String() == "Enter" && len(textarea.Get("value").String()) != 0 {
-		// If null, we null.
-		if textarea.IsNull() {
+	if event.Get("ctrlKey").Bool() && event.Get("key").String() == "Enter" {
+		// Click the new post button.
+		if !textareaPost.IsNull() && len(textareaPost.Get("value").String()) > 0 {
+			app.Window().GetElementByID("post").Call("click")
 			return
 		}
 
-		app.Window().GetElementByID("post").Call("click")
+		// Click the new reply button.
+		if !textareaReply.IsNull() && len(textareaReply.Get("value").String()) > 0 {
+			app.Window().GetElementByID("reply").Call("click")
+			return
+		}
+
+		win := app.Window()
+
+		// Submit a new poll.
+		if !win.GetElementByID("poll-question").IsNull() &&
+			len(win.GetElementByID("poll-question").Get("value").String()) > 0 &&
+			!win.GetElementByID("poll-option-i").IsNull() &&
+			len(win.GetElementByID("poll-option-i").Get("value").String()) > 0 &&
+			!win.GetElementByID("poll-option-ii").IsNull() &&
+			len(win.GetElementByID("poll-option-ii").Get("value").String()) > 0 &&
+			!win.GetElementByID("poll-option-iii").IsNull() &&
+			len(win.GetElementByID("poll-option-iii").Get("value").String()) > 0 {
+
+			app.Window().GetElementByID("poll").Call("click")
+		}
 	}
 
 	// List of inputs, that blocks the refresh event.
