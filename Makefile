@@ -307,11 +307,12 @@ RUN_DATA_DIR=./.run_data
 fetch_running_dump:
 	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
 	@mkdir -p ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ${RUN_DATA_DIR}
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ${RUN_DATA_DIR}
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json ${RUN_DATA_DIR}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/requests.json ${RUN_DATA_DIR}
 	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json ${RUN_DATA_DIR}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json ${RUN_DATA_DIR}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ${RUN_DATA_DIR}
 	
 .PHONY: backup
 backup: fetch_running_dump
