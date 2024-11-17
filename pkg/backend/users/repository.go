@@ -71,13 +71,13 @@ func (r *UserRepository) GetByID(userID string) (*models.User, error) {
 	// Fetch the user from the cache.
 	rawUser, found := r.cache.Load(userID)
 	if !found {
-		return nil, fmt.Errorf("requested user not found")
+		return nil, fmt.Errorf(common.ERR_USER_NOT_FOUND)
 	}
 
 	// Assert the type
 	user, ok := rawUser.(models.User)
 	if !ok {
-		return nil, fmt.Errorf("user's data corrupted")
+		return nil, fmt.Errorf(common.ERR_USER_DATA_CORRUPTED)
 	}
 
 	return &user, nil
