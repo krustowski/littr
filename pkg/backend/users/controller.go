@@ -438,8 +438,8 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Fetch the requested user.
 	user, err := c.userService.FindByID(context.WithValue(r.Context(), "userID", userID), userID)
 	if err != nil {
-		l.Msg("could not fetch requested user").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not fetch requested user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
