@@ -22,14 +22,14 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 	// Very nasty way of disabling the buttons.
 	c.registerButtonDisabled = true
 
-	defer ctx.Dispatch(func(ctx app.Context) {
-		c.registerButtonDisabled = false
-	})
-
 	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.registerButtonDisabled = false
+		})
+
 		// Trim the padding spaces on the extremities.
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		nickname := strings.TrimSpace(c.nickname)
@@ -124,7 +124,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		toast.Text("registration successfull, check your mail inbox for the activation link").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
-
+		return
 	})
 }
 
