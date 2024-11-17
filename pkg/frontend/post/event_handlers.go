@@ -56,6 +56,10 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 				break
 			}
 
+			if pollOptionIII == "" {
+				pollOptionIII = strings.TrimSpace(app.Window().GetElementByID("poll-option-iii").Get("value").String())
+			}
+
 			// Compose a timestamp and the derived key (content).
 			now := time.Now()
 			content = strconv.FormatInt(now.UnixNano(), 10)

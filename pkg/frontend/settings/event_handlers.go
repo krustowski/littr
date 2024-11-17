@@ -414,7 +414,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.settingsButtonDisabled = false
-				//c.subscribed = false
+				c.subscribed = false
 			})
 			return
 		}

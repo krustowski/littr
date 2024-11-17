@@ -128,9 +128,13 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 	c.settingsButtonDisabled = true
 
-	devs := c.devices
-	newDevs := []models.Device{}
-	for _, dev := range devs {
+	defer func() {
+		c.settingsButtonDisabled = false
+	}()
+
+	var newDevs = make([]models.Device, 0)
+
+	for _, dev := range c.devices {
 		if dev.UUID == ctx.DeviceID() {
 			if len(c.checkTags(dev.Tags, tag)) == 0 {
 				continue
