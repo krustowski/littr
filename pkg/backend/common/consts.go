@@ -29,16 +29,17 @@ const (
 	ERR_TOKEN_NOT_FOUND     = "requested token was not found"
 
 	// Generic error messages
-	ERR_CALLER_BLANK      = "callerID cannot be empty"
-	ERR_CALLER_FAIL       = "could not get caller's name"
-	ERR_CALLER_NOT_FOUND  = "caller not found in the database"
-	ERR_USER_NOT_FOUND    = "user not found in the database"
-	ERR_PAGENO_INCORRECT  = "pageNo has to be specified as integer/number"
-	ERR_PAGE_EXPORT_NIL   = "could not get more pages, one exported map is nil!"
-	ERR_INPUT_DATA_FAIL   = "could not process the input data, try again"
-	ERR_API_TOKEN_BLANK   = "blank API token sent"
-	ERR_API_TOKEN_INVALID = "invalid API token sent"
-	ERR_NO_SERVER_SECRET  = "missing the server's secret (APP_PEPPER)"
+	ERR_CALLER_BLANK        = "callerID cannot be empty"
+	ERR_CALLER_FAIL         = "could not get caller's name"
+	ERR_CALLER_NOT_FOUND    = "caller not found in the database"
+	ERR_USER_NOT_FOUND      = "user not found in the database"
+	ERR_USER_DATA_CORRUPTED = "user's data corrupted"
+	ERR_PAGENO_INCORRECT    = "pageNo has to be specified as integer/number"
+	ERR_PAGE_EXPORT_NIL     = "could not get more pages, one exported map is nil!"
+	ERR_INPUT_DATA_FAIL     = "could not process the input data, try again"
+	ERR_API_TOKEN_BLANK     = "blank API token sent"
+	ERR_API_TOKEN_INVALID   = "invalid API token sent"
+	ERR_NO_SERVER_SECRET    = "missing the server's secret (APP_PEPPER)"
 
 	// Image-processing-related error messages
 	ERR_IMG_DECODE_FAIL      = "image: could not decode to byte stream"

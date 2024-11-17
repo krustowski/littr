@@ -40,7 +40,12 @@ var DecideStatusFromError = func(err error) int {
 		return http.StatusForbidden
 	}
 
-	// HTTP 404 condition.
+	// HTTP 401 conditions.
+	if err.Error() == ERR_AUTH_FAIL {
+		return http.StatusUnauthorized
+	}
+
+	// HTTP 404 conditions.
 	if err.Error() == ERR_POLL_NOT_FOUND ||
 		err.Error() == ERR_NO_EMAIL_MATCH ||
 		err.Error() == ERR_USER_NOT_FOUND {
