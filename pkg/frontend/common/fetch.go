@@ -98,6 +98,7 @@ func FetchData(input *CallInput, output *Response) bool {
 	out, code, err := Fetch(&init)
 	if err != nil {
 		fmt.Println(err.Error())
+		output.Error = err
 		return false
 	}
 
@@ -135,9 +136,10 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 		//
 		//  Response handling
 		//
-		if response.Get("status").Int() != 200 && response.Get("status").Int() != 201 {
+		/*if response.Get("status").Int() != 200 && response.Get("status").Int() != 201 {
 			chC <- response.Get("status").Int()
-			chE <- fmt.Errorf("unexpected HTTP status code: %d (%s)", response.Get("status").Int(), response.Get("statusText").String())
+			chE <- fmt.Errorf("data fetch error")
+			//chE <- fmt.Errorf("unexpected HTTP status code: %d (%s)", response.Get("status").Int(), response.Get("statusText").String())
 			chS <- ""
 
 			close(chC)
@@ -146,43 +148,43 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 
 			//app.Window().Get("fetchController").Call("abort")
 			return nil
-		}
+		}*/
 
 		//
 		//  JSON response handling
 		//
-		if response.Get("ok").Bool() {
-			// Another promise getter via the JSON function call upon the response object.
-			// --> fetch(url).then(response => response.json())
-			subpromise := response.Call("json")
-			subpromise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-				result := args[0]
+		//if response.Get("ok").Bool() {
+		// Another promise getter via the JSON function call upon the response object.
+		// --> fetch(url).then(response => response.json())
+		subpromise := response.Call("json")
+		subpromise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+			result := args[0]
 
-				// Preprocess the response to be unserializable. And send to output.
-				chC <- response.Get("status").Int()
-				chS <- app.Window().Get("JSON").Call("stringify", result).String()
-				chE <- nil
+			// Preprocess the response to be unserializable. And send to output.
+			chC <- response.Get("status").Int()
+			chS <- app.Window().Get("JSON").Call("stringify", result).String()
+			chE <- nil
 
-				close(chC)
-				close(chE)
-				close(chS)
+			close(chC)
+			close(chE)
+			close(chS)
 
-				//app.Window().Get("fetchController").Call("abort")
-				return nil
+			//app.Window().Get("fetchController").Call("abort")
+			return nil
 
-			})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-				chC <- 500
-				chE <- fmt.Errorf("%s\n", args[0].Get("message").String())
-				chS <- ""
+		})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+			chC <- 500
+			chE <- fmt.Errorf("%s\n", args[0].Get("message").String())
+			chS <- ""
 
-				close(chC)
-				close(chE)
-				close(chS)
+			close(chC)
+			close(chE)
+			close(chS)
 
-				//app.Window().Get("fetchController").Call("abort")
-				return nil
-			}))
-		}
+			//app.Window().Get("fetchController").Call("abort")
+			return nil
+		}))
+		//}
 		return nil
 
 		// Error catching callback for the main fetch() promise.

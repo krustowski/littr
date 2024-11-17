@@ -71,6 +71,11 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
+			if output.Error != nil {
+				toast.Text(output.Error.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				return
+			}
+
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
 		}
