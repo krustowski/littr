@@ -23,10 +23,14 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	})
 
 	ctx.Async(func() {
-		// trim the padding spaces on the extremities
+		// Trim the padding spaces on the extremities.
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		nickname := strings.TrimSpace(c.nickname)
 		passphrase := strings.TrimSpace(c.passphrase)
+
+		if nickname == "" && !app.Window().GetElementByID("login-input").IsNull() {
+			nickname = strings.TrimSpace(app.Window().GetElementByID("login-input").Get("value").String())
+		}
 
 		if passphrase == "" && !app.Window().GetElementByID("passphrase-input").IsNull() {
 			passphrase = strings.TrimSpace(app.Window().GetElementByID("passphrase-input").Get("value").String())
@@ -37,7 +41,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// don't allow special chars and spaces in the nickname
+		// Don't allow special chars and spaces in the nickname
 		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
 			toast.Text(common.ERR_LOGIN_CHARS_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
