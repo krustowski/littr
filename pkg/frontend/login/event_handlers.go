@@ -65,7 +65,8 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		type dataModel struct {
 			AuthGranted bool `json:"auth_granted"`
 			//FlowRecords []string `json:"flow_records"`
-			Users map[string]models.User `json:"users"`
+			//Users map[string]models.User `json:"users"`
+			User *models.User `json:"user"`
 		}
 
 		output := &common.Response{Data: &dataModel{}}
@@ -96,7 +97,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		user, err := json.Marshal(data.Users[nickname])
+		user, err := json.Marshal(data.User)
 		if err != nil {
 			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
