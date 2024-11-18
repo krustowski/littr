@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.7"
+        "version": "0.45.8"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3011,10 +3011,6 @@
                             "$ref": "#/definitions/models.UserGenericMap"
                         }
                     ]
-                },
-                "flow_toggle": {
-                    "description": "FlowToggle is a single implementation of FlowList.",
-                    "type": "string"
                 },
                 "full_name": {
                     "description": "FullName is the \"genuine\" name of such user.",
