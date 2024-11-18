@@ -235,7 +235,7 @@ func fetchRefreshTokenRecord(refreshCookie *http.Cookie, w *http.ResponseWriter)
 
 	// Fetch the refresh token details from the Token database.
 	token, found := db.GetOne[models.Token](db.TokenCache, refreshTokenSum, models.Token{})
-	if !found {
+	if !found && w != nil {
 		invalidateRefreshToken(nil, w)
 		return nil, fmt.Errorf("refresh token's reference has not been found in the database")
 	}

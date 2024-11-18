@@ -2,7 +2,10 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
@@ -83,5 +86,44 @@ func (s *AuthService) Auth(ctx context.Context, authUserI interface{}) (*models.
 }
 
 func (s *AuthService) Logout(ctx context.Context) error {
-	return fmt.Errorf("not yet implemented")
+	// Fetch the server's secret.
+	secret := os.Getenv("APP_PEPPER")
+	if secret == "" {
+		return fmt.Errorf(common.ERR_NO_SERVER_SECRET)
+	}
+
+	var refreshCookie *http.Cookie
+	var ok bool
+
+	// Get the refresh cookie to check its validity (not necessary atm).
+	if refreshCookie, ok = ctx.Value("refreshCookie").(*http.Cookie); !ok {
+		return fmt.Errorf(common.ERR_BLANK_REF_TOKEN)
+	}
+
+	// Decode the contents of the refresh HTTP cookie, compare the signature with the server's secret.
+	refreshClaims := tokens.ParseRefreshToken(refreshCookie.Value, secret)
+
+	// If the refresh token is expired => user should relogin.
+	if refreshClaims.Valid() != nil {
+		return fmt.Errorf(common.ERR_INVALID_REF_TOKEN)
+	}
+
+	// Get the refresh token's fingerprint.
+	refreshSum := sha256.New()
+	refreshSum.Write([]byte(refreshCookie.Value))
+	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
+
+	// Fetch the current token from the database = check if exists.
+	token, err := s.tokenRepository.GetByID(refreshTokenSum)
+	if err != nil {
+		return fmt.Errorf(common.ERR_INVALID_REF_TOKEN)
+	}
+
+	// Delete such token not to be prune to hijack anymore.
+	err = s.tokenRepository.Delete(token.Hash)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

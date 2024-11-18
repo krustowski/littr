@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -116,6 +117,17 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	// Prepare the response payload.
 	pl := &responseData{
 		AuthGranted: false,
+	}
+
+	cookie, err := r.Cookie(REFRESH_TOKEN)
+	if err == nil {
+		// Update context with necessary data for the auth service.
+		ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
+
+		// Call the auth service to delete the main session (refresh) token.
+		if err := c.authService.Logout(ctx); err != nil {
+			l.Msg("could not delete associated token").Error(err).Status(http.StatusInternalServerError).Log()
+		}
 	}
 
 	// Invalidate the access HTTP cookie.

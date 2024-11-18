@@ -25,6 +25,8 @@ const (
 	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
 	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
 	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
+	ERR_BLANK_REF_TOKEN     = "no refresh token provided with request"
+	ERR_INVALID_REF_TOKEN   = "invalid refresh token"
 	ERR_TOKEN_SAVE_FAIL     = "could not save new token to database"
 	ERR_TOKEN_NOT_FOUND     = "requested token was not found"
 
