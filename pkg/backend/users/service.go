@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"math/rand"
+	"net/http"
 	netmail "net/mail"
 	"os"
 	"regexp"
@@ -57,6 +58,7 @@ type UserUpdateRequest struct {
 //
 
 type UserService struct {
+	pollRepository         models.PollRepositoryInterface
 	postRepository         models.PostRepositoryInterface
 	subscriptionRepository models.SubscriptionRepositoryInterface
 	requestRepository      models.RequestRepositoryInterface
@@ -65,17 +67,26 @@ type UserService struct {
 }
 
 func NewUserService(
+	pollRepository models.PollRepositoryInterface,
 	postRepository models.PostRepositoryInterface,
 	subscriptionRepository models.SubscriptionRepositoryInterface,
 	requestRepository models.RequestRepositoryInterface,
 	tokenRepository models.TokenRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.UserServiceInterface {
-	if postRepository == nil || requestRepository == nil || subscriptionRepository == nil || tokenRepository == nil || userRepository == nil {
+
+	if pollRepository == nil ||
+		postRepository == nil ||
+		requestRepository == nil ||
+		subscriptionRepository == nil ||
+		tokenRepository == nil ||
+		userRepository == nil {
+
 		return nil
 	}
 
 	return &UserService{
+		pollRepository:         pollRepository,
 		postRepository:         postRepository,
 		subscriptionRepository: subscriptionRepository,
 		requestRepository:      requestRepository,
@@ -492,9 +503,22 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 		return nil, err
 	}
 
-	//
-	//  TODO: remove previous avatar's data
-	//
+	// Prepare the avatarURL to delete the previous avatar (if an uploaded image).
+	prevAvatarURL := user.AvatarURL
+
+	// Create a new regexp object to be used on the prevAvatarURL variable.
+	regex, err := regexp.Compile("^(http|https)://")
+	if err != nil {
+		return nil, fmt.Errorf(common.ERR_AVATAR_URL_REGEXP_FAIL)
+	}
+
+	// Delete the saved avatar from the filesystem.
+	if !regex.MatchString(prevAvatarURL) {
+		fileName := strings.Replace(prevAvatarURL, "/web/", "/opt/", 1)
+		if err := os.Remove(fileName); err != nil {
+			return nil, fmt.Errorf(common.ERR_AVATAR_DELETE_FAIL)
+		}
+	}
 
 	user.AvatarURL = "/web/pix/thumb_" + *imageBaseURL
 
@@ -690,7 +714,72 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 	//  Delete all posts, delete polls, delete tokens
 	//
 
-	// TODO
+	polls, err := s.pollRepository.GetAll()
+	if err != nil {
+		return err
+	}
+
+	posts, err := s.postRepository.GetAll()
+	if err != nil {
+		return err
+	}
+
+	tokens, err := s.tokenRepository.GetAll()
+	if err != nil {
+		return err
+	}
+
+	// Spinoff a goroutine to process all the deletions async.
+	go func(pollRepo models.PollRepositoryInterface, postRepo models.PostRepositoryInterface, tokenRepo models.TokenRepositoryInterface) {
+		l := common.NewLogger(nil, "userDelete")
+
+		for key, poll := range *polls {
+			if poll.Author == userID {
+				// Delete the poll.
+				if err := pollRepo.Delete(key); err != nil {
+					l.Msg("could not delete a poll: " + key).Status(http.StatusInternalServerError).Log()
+					continue
+				}
+			}
+		}
+
+		for key, post := range *posts {
+			if post.Nickname == userID {
+				// Delete the post.
+				if err := postRepo.Delete(key); err != nil {
+					l.Msg("could not delete a post: " + key).Status(http.StatusInternalServerError).Log()
+					continue
+				}
+
+				// Delete associated image and its thumbnail.
+				if post.Figure != "" {
+					err := os.Remove("/opt/pix/thumb_" + post.Figure)
+					if err != nil {
+						l.Msg(common.ERR_POST_DELETE_THUMB).Status(http.StatusInternalServerError).Error(err).Log()
+						continue
+					}
+
+					err = os.Remove("/opt/pix/" + post.Figure)
+					if err != nil {
+						l.Msg(common.ERR_POST_DELETE_FULLIMG).Status(http.StatusInternalServerError).Error(err).Log()
+						continue
+					}
+				}
+			}
+		}
+
+		for key, token := range *tokens {
+			if token.Nickname == userID {
+				// Delete the token.
+				if err := tokenRepo.Delete(key); err != nil {
+					l.Msg("could not delete a token: " + key).Status(http.StatusInternalServerError).Log()
+					continue
+				}
+			}
+		}
+
+		l.Msg("associated data linked to a just deleted user have been purged").Status(http.StatusOK).Log()
+	}(s.pollRepository, s.postRepository, s.tokenRepository)
 
 	return nil
 }

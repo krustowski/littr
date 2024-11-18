@@ -324,14 +324,14 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.userService.Delete(r.Context(), userID)
+	err := c.userService.Delete(context.WithValue(r.Context(), "userID", userID), userID)
 	if err != nil {
-		l.Msg("could not delete such user").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not delete such user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
-	l.Msg("user deleted successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	l.Msg("user deleted successfully, associated data are being deleted concurrently").Status(http.StatusOK).Log().Payload(nil).Write(w)
 	return
 }
 
