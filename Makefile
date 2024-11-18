@@ -42,6 +42,9 @@ GOCACHE ?= /home/${USER}/.cache/go-build
 GOMODCACHE ?= /home/${USER}/go/pkg/mod
 GOOS := $(shell go env GOOS)
 
+# go build -race [...]
+RACE_FLAG ?= ""
+
 # docker environment
 DOCKER_COMPOSE_FILE ?= deployments/docker-compose.yml
 DOCKER_COMPOSE_TEST_FILE ?= deployments/docker-compose-test.yml
