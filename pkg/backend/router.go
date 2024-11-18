@@ -119,7 +119,7 @@ func NewAPIRouter() chi.Router {
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
 	postService := posts.NewPostService(postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
-	userService := users.NewUserService(postRepository, subscriptionRepository, requestRepository, tokenRepository, userRepository)
+	userService := users.NewUserService(pollRepository, postRepository, subscriptionRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)

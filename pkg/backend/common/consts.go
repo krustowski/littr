@@ -133,4 +133,6 @@ const (
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
 	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
 	ERR_USER_UPDATE_REQ_BLANK     = "update request for user not specified"
+	ERR_AVATAR_URL_REGEXP_FAIL    = "failed to compile a regexp object for the previous user's avatarURL"
+	ERR_AVATAR_DELETE_FAIL        = "failed to delete previous user's avatar"
 )
