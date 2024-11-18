@@ -33,6 +33,7 @@ type SubscriptionRepositoryInterface interface {
 }
 
 type TokenRepositoryInterface interface {
+	GetAll() (*map[string]Token, error)
 	GetByID(tokenID string) (*Token, error)
 	Save(token *Token) error
 	Delete(tokenID string) error

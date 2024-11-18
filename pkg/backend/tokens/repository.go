@@ -66,6 +66,27 @@ func GetTokenByID(tokenID string, cache db.Cacher) (*models.Token, error) {
 	return &token, nil
 }
 
+func (r *TokenRepository) GetAll() (*map[string]models.Token, error) {
+	rawTokens, count := r.cache.Range()
+	if count == 0 {
+		return nil, fmt.Errorf("no items found")
+	}
+
+	tokens := make(map[string]models.Token)
+
+	// Assert types to fetched interface map.
+	for key, rawToken := range *rawTokens {
+		token, ok := rawToken.(models.Token)
+		if !ok {
+			return nil, fmt.Errorf("token's data corrupted")
+		}
+
+		tokens[key] = token
+	}
+
+	return &tokens, nil
+}
+
 func (r *TokenRepository) GetByID(tokenID string) (*models.Token, error) {
 	// Use the static function to get such token.
 	token, err := GetTokenByID(tokenID, r.cache)
