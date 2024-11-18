@@ -95,10 +95,10 @@ func (h *Header) onClickLogout(ctx app.Context, e app.Event) {
 			return
 		}
 
-		if output.Code != 200 {
+		/*if output.Code != 200 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(h, dispatch)
 			return
-		}
+		}*/
 
 		ctx.Navigate("/logout")
 	})
