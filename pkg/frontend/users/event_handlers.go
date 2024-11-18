@@ -194,7 +194,7 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 	return
 }
 
-// onClickPrivateOff toggle-offs the previously sent follow request to the counterpart.
+// onClickPrivateOff is to take back the previously sent follow request to the counterpart.
 func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
@@ -259,35 +259,37 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 
 // onClickPrivateOn is a callback function to send a follow request to an account that is in the private mode.
 func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
-	nick := ctx.JSSrc().Get("id").String()
-	if nick == "" {
+	key := ctx.JSSrc().Get("id").String()
+	if key == "" {
 		return
 	}
 
+	// The counterpart.
+	user := c.users[key]
+	requestList := user.RequestList
+
+	// Instantiate new toast struct.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		user := c.users[nick]
-
 		// Patch the nil requestList map.
-		if user.RequestList == nil {
-			user.RequestList = make(map[string]bool)
+		if requestList == nil {
+			requestList = make(map[string]bool)
 		}
-		user.RequestList[c.user.Nickname] = true
+		requestList[c.user.Nickname] = true
 
 		// Prepare the request data structure.
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
 		}{
-			RequestList: user.RequestList,
+			RequestList: requestList,
 		}
 
 		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/users/" + nick + "/lists",
+			Url:         "/api/v1/users/" + key + "/lists",
 			Data:        payload,
-			CallerID:    c.user.Nickname,
 			PageNo:      0,
 			HideReplies: false,
 		}
@@ -298,11 +300,24 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		// Patch the requestList of the counterpart user's.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			requestList[c.user.Nickname] = false
+
+			ctx.Dispatch(func(ctx app.Context) {
+				user.RequestList = requestList
+				c.users[user.Nickname] = user
+			})
+			return
 		}
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			requestList[c.user.Nickname] = false
+
+			ctx.Dispatch(func(ctx app.Context) {
+				user.RequestList = requestList
+				c.users[user.Nickname] = user
+			})
 			return
 		}
 
@@ -310,8 +325,11 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
 		// Dispatch the changes to match the reality in the UI.
+		user.RequestList = requestList
+		user.Searched = true
+
 		ctx.Dispatch(func(ctx app.Context) {
-			c.users[nick] = user
+			c.users[user.Nickname] = user
 		})
 		return
 	})

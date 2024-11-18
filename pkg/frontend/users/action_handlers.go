@@ -256,7 +256,6 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		user.FlowList = flowList
 		common.SaveUser(&user, &ctx)
 
-		c.user.FlowList = flowList
 		ctx.Dispatch(func(ctx app.Context) {
 			user.Searched = true
 

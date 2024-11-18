@@ -355,7 +355,7 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 
 		// Process the requestList request.
 		if data.RequestList != nil {
-			dbUser = processRequestList(data, dbUser, caller, s.userRepository)
+			dbUser = processRequestList(data, dbUser, caller)
 
 			for key, value := range data.RequestList {
 				if value && dbUser.RequestList[key] != data.RequestList[key] {
@@ -907,7 +907,8 @@ func processFlowList(data *UserUpdateRequest, user *models.User, caller *models.
 }
 
 // Simple args legend: <data> coming from the <caller>'s side, <user> is to be updated as the primary counterpart.
-func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User, r models.UserRepositoryInterface) *models.User {
+// The <user> counterpart is barely equal to the <caller> part. Therefore the logic is reversed in comparison to the FlowList logic.
+func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
@@ -915,25 +916,25 @@ func processRequestList(data *UserUpdateRequest, user *models.User, caller *mode
 	// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
 	for key, value := range data.RequestList {
 		// Only allow to change the caller's record in the remote/counterpart's requestList.
-		/*if key != caller.Nickname {
+		if key != caller.Nickname {
 			continue
-		}*/
-
-		// Check if the caller is shaded by the counterpart.
-		counterpart, err := r.GetByID(key)
-		if err == nil {
-			// Update the flowList record according to the counterpart's shade list state of the user.
-			shaded, found := counterpart.ShadeList[caller.Nickname]
-			if value && shaded {
-				continue
-			}
-
-			if !found || (found && !shaded) {
-				user.RequestList[key] = value
-			}
 		}
 
-		user.RequestList[key] = value
+		if user.ShadeList == nil {
+			user.RequestList[key] = value
+			continue
+		}
+
+		// Check the shade state for the <key> user.
+		shaded, found := user.ShadeList[key]
+		if value && found && shaded {
+			user.RequestList[key] = false
+			continue
+		}
+
+		if !found || (found && !shaded) {
+			user.RequestList[key] = value
+		}
 	}
 
 	return user
