@@ -345,11 +345,23 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		// Process the flowList request.
 		if data.FlowList != nil {
 			dbUser = processFlowList(data, dbUser, caller, s.userRepository)
+
+			for key, value := range data.FlowList {
+				if value && dbUser.FlowList[key] != data.FlowList[key] {
+					return fmt.Errorf(common.ERR_USER_SHADED)
+				}
+			}
 		}
 
 		// Process the requestList request.
 		if data.RequestList != nil {
-			dbUser = processRequestList(data, dbUser, caller)
+			dbUser = processRequestList(data, dbUser, caller, s.userRepository)
+
+			for key, value := range data.RequestList {
+				if value && dbUser.RequestList[key] != data.RequestList[key] {
+					return fmt.Errorf(common.ERR_USER_SHADED)
+				}
+			}
 		}
 
 		// Process the shadeList request.
@@ -859,31 +871,43 @@ func processFlowList(data *UserUpdateRequest, user *models.User, caller *models.
 		counterpart, err := r.GetByID(key)
 		if err == nil {
 			if counterpart.Private && key != caller.Nickname {
-				// cannot add this user to one's flow, as the following
-				// has to be requested and allowed by the counterpart
+				// Cannot add this user to one's flow, as the following
+				// has to be requested and allowed by the counterpart.
 				user.FlowList[key] = false
 				continue
 			}
 
-			// update the flowList record according to the counterpart's shade list state of the user
-			if shaded, found := counterpart.ShadeList[user.Nickname]; !found || (found && !shaded) {
+			if counterpart.ShadeList == nil {
+				user.FlowList[key] = value
+				continue
+			}
+
+			// Update the flowList record according to the counterpart's shade list state of the user.
+			shaded, found := counterpart.ShadeList[caller.Nickname]
+			if value && found && shaded {
+				user.FlowList[key] = false
+				continue
+			}
+
+			if !found || (found && !shaded) {
 				user.FlowList[key] = value
 			}
 		}
 
 		// Do not allow to unfollow oneself.
-		if key == user.Nickname {
+		if key == caller.Nickname && user.Nickname == caller.Nickname {
 			user.FlowList[key] = true
 		}
 
 	}
-	// always allow to see system posts
+	// Always allow to see system posts.
 	user.FlowList["system"] = true
 
 	return user
 }
 
-func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
+// Simple args legend: <data> coming from the <caller>'s side, <user> is to be updated as the primary counterpart.
+func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User, r models.UserRepositoryInterface) *models.User {
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
@@ -894,6 +918,20 @@ func processRequestList(data *UserUpdateRequest, user *models.User, caller *mode
 		/*if key != caller.Nickname {
 			continue
 		}*/
+
+		// Check if the caller is shaded by the counterpart.
+		counterpart, err := r.GetByID(key)
+		if err == nil {
+			// Update the flowList record according to the counterpart's shade list state of the user.
+			shaded, found := counterpart.ShadeList[caller.Nickname]
+			if value && shaded {
+				continue
+			}
+
+			if !found || (found && !shaded) {
+				user.RequestList[key] = value
+			}
+		}
 
 		user.RequestList[key] = value
 	}

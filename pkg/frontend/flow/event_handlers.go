@@ -16,7 +16,8 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		return
 	}
 
-	flowList := c.user.FlowList
+	user := c.user
+	flowList := user.FlowList
 
 	if c.user.ShadeList[key] {
 		return
@@ -25,7 +26,6 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 	if flowList == nil {
 		flowList = make(map[string]bool)
 		flowList[c.user.Nickname] = true
-		//c.user.FlowList = flowList
 	}
 
 	toast := common.Toast{AppContext: &ctx}
@@ -60,6 +60,11 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 			c.postButtonsDisabled = true
 		})
 
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.buttonDisabled = false
+			c.postButtonsDisabled = false
+		})
+
 		payload := struct {
 			FlowList map[string]bool `json:"flow_list"`
 		}{
@@ -79,19 +84,22 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			flowList[key] = !flowList[key]
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			flowList[key] = !flowList[key]
 			return
 		}
 
-		ctx.Dispatch(func(ctx app.Context) {
-			c.buttonDisabled = false
-			c.postButtonsDisabled = false
+		user.FlowList = flowList
+		common.SaveUser(&user, &ctx)
 
-			c.user.FlowList = flowList
+		ctx.Dispatch(func(ctx app.Context) {
+			c.user = user
+			c.users[user.Nickname] = user
 		})
 
 		ctx.NewAction("refresh")

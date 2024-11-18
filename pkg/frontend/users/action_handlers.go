@@ -209,8 +209,13 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		// do not save new flow user to local var until it is saved on backend
-		//flowRecords := append(c.flowRecords, flowName)
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.usersButtonDisabled = false
+
+			user.Searched = true
+			c.user = user
+			c.users[c.user.Nickname] = user
+		})
 
 		// Prepare the request body data structure.
 		payload := struct {
@@ -235,38 +240,37 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		// Patch the current user's flowList.
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			flowList[key] = !flowList[key]
 			return
 		}
 
 		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
 		if output.Code != 200 && output.Code != 201 {
 			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			flowList[key] = !flowList[key]
 			return
 		}
 
 		// Now, we can update the current user's flowList on the frontend too.
 		// Update the flowList and update the user struct in the LocalStorage.
 		user.FlowList = flowList
-		user.Searched = true
+		common.SaveUser(&user, &ctx)
 
-		common.SaveUser(user.Copy(), &ctx)
+		c.user.FlowList = flowList
+		ctx.Dispatch(func(ctx app.Context) {
+			user.Searched = true
 
-		//fmt.Println(user.Nickname)
+			c.user = user
+			c.users[user.Nickname] = user
+		})
+
+		// Tweak the text response for a info/success toast.
 		if followed := user.FlowList[key]; followed {
 			toast.Text("user "+key+" added to flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		} else {
 			toast.Text("user "+key+" removed from flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		}
 
-		// Dispatch the changes to match the reality for the UI to rerender.
-		ctx.Dispatch(func(ctx app.Context) {
-			c.usersButtonDisabled = false
-
-			// Update the current user.
-			c.users[user.Nickname] = user
-			c.user = user
-			//c.user.FlowList = flowList
-		})
 		return
 	})
 }

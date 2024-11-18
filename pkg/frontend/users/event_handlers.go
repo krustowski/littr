@@ -114,11 +114,13 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		// Cast the successful update of both lists.
 		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
+		common.SaveUser(&user, &ctx)
+
 		// Dispatch the updated controlling one's flowList.
-		/*ctx.Dispatch(func(ctx app.Context) {
-			//c.user.FlowList = ourFlowList
-			//c.users[c.user.Nickname] = payload
-		})*/
+		ctx.Dispatch(func(ctx app.Context) {
+			c.user = user
+			c.users[c.user.Nickname] = user
+		})
 		return
 	})
 	return
@@ -179,6 +181,8 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 
 		// Cast the successful request removal.
 		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+
+		common.SaveUser(&user, &ctx)
 
 		// Dispatch the changes to match them in the UI.
 		ctx.Dispatch(func(ctx app.Context) {

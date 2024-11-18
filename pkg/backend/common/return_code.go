@@ -32,6 +32,7 @@ var DecideStatusFromError = func(err error) int {
 
 	// HTTP 403 conditions.
 	if err.Error() == ERR_POLL_SELF_VOTE ||
+		err.Error() == ERR_USER_SHADED ||
 		err.Error() == ERR_USER_DELETE_FOREIGN ||
 		err.Error() == ERR_USER_PASSPHRASE_FOREIGN ||
 		err.Error() == ERR_REGISTRATION_DISABLED ||

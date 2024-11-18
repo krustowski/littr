@@ -107,6 +107,7 @@ const (
 	ERR_EMAIL_ALREADY_USED        = "this e-mail address has been already used"
 	ERR_USER_SAVE_FAIL            = "could not save new user to database"
 	ERR_POSTREG_POST_SAVE_FAIL    = "could not save a new post about the new user's addition"
+	ERR_USER_SHADED               = "could not update the flowList, you have probably been shaded"
 	ERR_USER_UPDATE_FOREIGN       = "could not update a foreign's account"
 	ERR_USERID_BLANK              = "userID param is required"
 	ERR_USER_UPDATE_FAIL          = "could not update the user in database"
