@@ -453,6 +453,21 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 				return false
 			}
 
+			// Delete associated image and its thumbnail.
+			if post.Figure != "" {
+				err := os.Remove("/opt/pix/thumb_" + post.Figure)
+				if err != nil {
+					l.Msg(common.ERR_POST_DELETE_THUMB).Status(http.StatusInternalServerError).Error(err).Log()
+					return false
+				}
+
+				err = os.Remove("/opt/pix/" + post.Figure)
+				if err != nil {
+					l.Msg(common.ERR_POST_DELETE_FULLIMG).Status(http.StatusInternalServerError).Error(err).Log()
+					return false
+				}
+			}
+
 			// Delete from the posts map locally within the migrations.
 			delete(*posts, key)
 		}
@@ -515,6 +530,21 @@ func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
 				l.Msg("cannot delete a post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
+			}
+
+			// Delete associated image and its thumbnail.
+			if post.Figure != "" {
+				err := os.Remove("/opt/pix/thumb_" + post.Figure)
+				if err != nil {
+					l.Msg(common.ERR_POST_DELETE_THUMB).Status(http.StatusInternalServerError).Error(err).Log()
+					return false
+				}
+
+				err = os.Remove("/opt/pix/" + post.Figure)
+				if err != nil {
+					l.Msg(common.ERR_POST_DELETE_FULLIMG).Status(http.StatusInternalServerError).Error(err).Log()
+					return false
+				}
 			}
 
 			// Delete the post locally within the migrations.
