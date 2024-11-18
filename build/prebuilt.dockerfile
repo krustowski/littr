@@ -48,7 +48,8 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 		-ldflags "${COMMON_BUILD_LDFLAGS}" \
 		cmd/littr/
 
-RUN gzip web/app.wasm
+#RUN xz web/app.wasm
+RUN gzip -9 web/app.wasm
 
 RUN adduser \
   --disabled-password \
