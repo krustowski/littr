@@ -37,7 +37,7 @@ func RunMigrations() string {
 	l := common.NewLogger(nil, "migrations")
 
 	// Fetch all the data for the migration procedures.
-	//polls, pollCount := GetAll(PollCache, models.Poll{})
+	polls, _ := GetAll(PollCache, models.Poll{})
 	posts, _ := GetAll(FlowCache, models.Post{})
 	reqs, _ := GetAll(RequestCache, models.Request{})
 	subs, _ := GetAll(SubscriptionCache, []models.Device{})
@@ -77,7 +77,7 @@ func RunMigrations() string {
 		{
 			N: "migrateFlowPurge",
 			F: migrateFlowPurge,
-			R: []interface{}{&posts, &users},
+			R: []interface{}{&polls, &posts, &users},
 		},
 		{
 			N: "migrateUserDeletion",
@@ -419,6 +419,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 
 // migrateFlowPurge procedure deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
 func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
+	var polls *map[string]models.Poll
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -437,16 +438,43 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 			posts = elem2
 			continue
 		}
+
+		elem3, ok := raw.(*map[string]models.Poll)
+		if ok {
+			polls = elem3
+			continue
+		}
 	}
 
 	// Exit on nil pointer(s).
-	if users == nil || posts == nil {
-		l.Msg("users or posts are nil").Status(http.StatusInternalServerError).Log()
+	if users == nil || posts == nil || polls == nil {
+		l.Msg("polls, posts, or users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
 	// Loop over posts and delete author-less posts.
 	for key, post := range *posts {
+		// Purge system posts referencing dead items.
+		if post.Nickname == "system" {
+			if post.Type == "user" && post.Figure != "" {
+				if _, found := (*users)[post.Figure]; !found {
+					if deleted := DeleteOne(FlowCache, key); !deleted {
+						l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
+						return false
+					}
+				}
+			}
+
+			if post.Type == "poll" && post.PollID != "" {
+				if _, found := (*polls)[post.PollID]; !found {
+					if deleted := DeleteOne(FlowCache, key); !deleted {
+						l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
+						return false
+					}
+				}
+			}
+		}
+
 		// If the post exists, but its author not, delete the post first.
 		if _, found := (*users)[post.Nickname]; !found {
 			if deleted := DeleteOne(FlowCache, key); !deleted {
