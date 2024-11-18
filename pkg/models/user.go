@@ -62,9 +62,6 @@ type User struct {
 	// RequestList is a map of account requested to add this user to their flow --- used with the Private property.
 	RequestList UserGenericMap `json:"request_list,omitempty"`
 
-	// FlowToggle is a single implementation of FlowList.
-	FlowToggle string `json:"flow_toggle"`
-
 	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
 
