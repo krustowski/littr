@@ -800,7 +800,11 @@ func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 	// Iterate over requests to find misdeleted requests.
 	for key, req := range *reqs {
 		// Check the request validity = the activation request could still be valid, but the user has been already activated.
-		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && req.Type == "activation" && ((*users)[req.Nickname].Active || (*users)[req.Nickname].Options["active"]) {
+		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && 
+			req.Type == "activation" && 
+			((*users)[req.Nickname].Active || 
+			(*users)[req.Nickname].Options["active"]) {
+
 			// Delete the misdeleted request.
 			if deleted := DeleteOne(RequestCache, key); !deleted {
 				l.Msg("cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()

@@ -213,6 +213,9 @@ func initServer() {
 	// Load the persistent data from the filesystem to memory.
 	l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
 
+	// Unlock the read access.
+	db.RUnlock()
+
 	// Run data migration procedures to the database schema.
 	migrationsReport := db.RunMigrations()
 
@@ -224,9 +227,6 @@ func initServer() {
 	}()
 
 	l.Msg(migrationsReport).Status(migrationsStatus).Log()
-
-	// Unlock the read access.
-	db.RUnlock()
 
 	//
 	//  Muxer, listener and server initialization
