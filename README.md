@@ -5,9 +5,6 @@
 [![Go Reference](https://pkg.go.dev/badge/go.vxn.dev/littr.svg)](https://pkg.go.dev/go.vxn.dev/littr)
 [![Go Report Card](https://goreportcard.com/badge/go.vxn.dev/littr)](https://goreportcard.com/report/go.vxn.dev/littr)
 
-[![littr CI/CD test and build pipeline](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/test-and-build.yml)
-[![littr CI/CD deployment pipeline](https://github.com/krustowski/littr/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/krustowski/littr/actions/workflows/deployment.yml)
-
 A simple nanoblogging platform for a raw mind _flow_.
 
 [read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post)
@@ -15,12 +12,12 @@ A simple nanoblogging platform for a raw mind _flow_.
 
 ## features
 
-+ in-memory runtime cache(s)
++ embedded in-memory cache system
 + data persistence on container's restart (on `SIGINT`) in Docker volume(s)
 + flow posts filtering using the FlowList --- simply choose who to follow
 + shade function to block other accounts from following you and reading your posts
 + webpush notification management --- choose which notifications (reply/mention) is your device willing to accept
-+ private acccount --- others have to file a follow request to such account (and have to approved by the acc's owner)
++ private account --- others have to file a follow request to such account (and have to approved by the acc's owner)
 + swift client side (a WebAssebmly binary)
 + safe photo sharing --- EXIF metadata are removed while image file is uploading
 + passphrase reset via e-mail

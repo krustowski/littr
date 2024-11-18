@@ -37,12 +37,15 @@ func RunMigrations() string {
 	l := common.NewLogger(nil, "migrations")
 
 	// Fetch all the data for the migration procedures.
-	users, _ := GetAll(UserCache, models.User{})
-	//polls, _ := GetAll(PollCache, models.Poll{})
+	//polls, pollCount := GetAll(PollCache, models.Poll{})
 	posts, _ := GetAll(FlowCache, models.Post{})
 	reqs, _ := GetAll(RequestCache, models.Request{})
 	subs, _ := GetAll(SubscriptionCache, []models.Device{})
 	tokens, _ := GetAll(TokenCache, models.Token{})
+	users, _ := GetAll(UserCache, models.User{})
+
+	// This is/was just to check whether there are any data entering the migration starter.
+	//l.Msg(fmt.Sprintf("counts: posts, %d, reqs: %d, subs: %d, tokens: %d, users: %d", postCount, reqCount, subCount, tokenCount, userCount)).Status(http.StatusOK).Log()
 
 	// Define the migration procedures order.
 	var migrationsOrderedList = []migrationProp{
@@ -163,6 +166,12 @@ func migrateExpiredRequests(l common.Logger, rawElems []interface{}) bool {
 
 	// Loop over reqs and compare their times with durations, if expired, yeet them.
 	for uuid, req := range *reqs {
+		/*t, err := time.Parse("2006-01-02T15:04:05.000000000-07:00", req.CreatedAt.String())
+		if err != nil {
+			l.Msg("could not parse request's time: " + uuid).Status(http.StatusInternalServerError).Log()
+			return false
+		}*/
+
 		if time.Now().After(req.CreatedAt.Add(time.Hour * 24)) {
 			// Expired request = delete it.
 			if deleted := DeleteOne(RequestCache, uuid); !deleted {
