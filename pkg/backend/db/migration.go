@@ -356,6 +356,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 	// Make zero-size channel array for the per user run goroutines. The array is incremented/appended dynamically to ensure proper channel closures.
 	var channels = make([]chan interface{}, 0)
 	//var channels = make([]chan avatarResult, len(*users))
+	var client = &http.Client{Timeout: 10 * time.Second}
 	var wg sync.WaitGroup
 	var i int
 
@@ -383,7 +384,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 		channels = append(channels, make(chan interface{}, 1))
 
 		// Run the gravatar goroutine, increment the chan/goroutines count.
-		go GetGravatarURL(user, channels[i], &wg)
+		go GetGravatarURL(user, channels[i], &wg, client)
 		i++
 	}
 

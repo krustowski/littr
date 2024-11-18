@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -30,16 +32,21 @@ var defaultAvatarURL = func() string {
 }()
 
 // GetGravatarURL function returns the avatar image location/URL, or it defaults to a app logo.
-func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGroup) string {
-	// Defer the sync.WaitGroup.Done() when run in goroutine.
-	if wg != nil {
-		defer wg.Done()
-	}
+func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGroup, client *http.Client) string {
+	l := common.NewLogger(nil, "gravatar")
 
-	// Defer the channel closure if it is not nil.
-	if channel != nil {
-		defer close(channel)
-	}
+	var result avatarResult
+
+	defer func() {
+		if channel != nil {
+			channel <- &result
+			close(channel)
+		}
+
+		if wg != nil {
+			wg.Done()
+		}
+	}()
 
 	// A little patch to catch the emailLess accounts naturally (hotfix).
 	if user.Email == "" {
@@ -60,29 +67,50 @@ func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGro
 	// Gravatar base URL.
 	url := "https://www.gravatar.com/avatar/" + hashedStringEmail + "?s=" + strconv.Itoa(size) + "&d=" + url.QueryEscape(defaultAvatarURL)
 
+	// Create new contexted request.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		l.Msg("could not create new HTTP request").Error(err).Status(http.StatusInternalServerError).Log()
+
+		result = avatarResult{
+			User: user,
+			URL:  defaultAvatarURL,
+		}
+
+		return defaultAvatarURL
+	}
+
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
+
 	// Make a GET request towards the Gravatar service.
-	resp, err := http.Get(url)
+	resp, err := client.Do(req)
 	// On error use the default image URL instead.
 	if err != nil {
-		url = defaultAvatarURL
-	} else {
-		defer resp.Body.Close()
+		l.Msg("could not make the HTTP request").Error(err).Status(http.StatusInternalServerError).Log()
 
-		// If the service could not be reached, use the default image.
-		if resp.StatusCode != 200 {
-			url = defaultAvatarURL
+		result = avatarResult{
+			User: user,
+			URL:  defaultAvatarURL,
 		}
+
+		return defaultAvatarURL
+	}
+	defer resp.Body.Close()
+
+	// If the service could not be reached, use the default image.
+	if resp.StatusCode != 200 {
+		url = defaultAvatarURL
 	}
 
 	// Compose the result instance.
-	result := avatarResult{
+	result = avatarResult{
 		User: user,
 		URL:  url,
-	}
-
-	// Write the result to the channel if not nil (already closed for example).
-	if channel != nil {
-		channel <- &result
 	}
 
 	return url

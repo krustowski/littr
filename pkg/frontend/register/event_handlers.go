@@ -86,7 +86,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// Fetch the user's Gravatar according to their e-mail address.
-		avatarURL := db.GetGravatarURL(user, nil, nil)
+		avatarURL := db.GetGravatarURL(user, nil, nil, nil)
 		user.AvatarURL = avatarURL
 
 		// Set default flowList items.
