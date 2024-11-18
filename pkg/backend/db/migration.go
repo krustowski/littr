@@ -380,7 +380,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 
 		// Add one new worker to the WaitGroup, and create a channel for it.
 		wg.Add(1)
-		channels = append(channels, make(chan interface{}))
+		channels = append(channels, make(chan interface{}, 1))
 
 		// Run the gravatar goroutine, increment the chan/goroutines count.
 		go GetGravatarURL(user, channels[i], &wg)
@@ -395,7 +395,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 	for rawR := range results {
 		result, ok := rawR.(*avatarResult)
 		if !ok {
-			l.Msg("corrupted output from avatarResult chan...").Status(http.StatusInternalServerError).Log()
+			l.Msg("corrupted output from the avatarResult chan...").Status(http.StatusInternalServerError).Log()
 		}
 
 		// Change the avatarURL only if the new URL differs from the previous one.
@@ -800,10 +800,10 @@ func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 	// Iterate over requests to find misdeleted requests.
 	for key, req := range *reqs {
 		// Check the request validity = the activation request could still be valid, but the user has been already activated.
-		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) && 
-			req.Type == "activation" && 
-			((*users)[req.Nickname].Active || 
-			(*users)[req.Nickname].Options["active"]) {
+		if !time.Now().After(req.CreatedAt.Add(time.Hour*24)) &&
+			req.Type == "activation" &&
+			((*users)[req.Nickname].Active ||
+				(*users)[req.Nickname].Options["active"]) {
 
 			// Delete the misdeleted request.
 			if deleted := DeleteOne(RequestCache, key); !deleted {
