@@ -1,3 +1,6 @@
+//go:build wasm || server
+// +build wasm server
+
 package main
 
 import (

@@ -1,5 +1,5 @@
-//go:build wasm
-// +build wasm
+//go:build wasm || !server
+// +build wasm !server
 
 package main
 
