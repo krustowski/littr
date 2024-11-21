@@ -135,6 +135,8 @@ prod: run logs
 #  development targets
 #
 
+DNS_NAMESERVER ?= 1.1.1.1
+
 .PHONY: check_env config fmt push push_mirror sonar_scan test_local test_local_coverage
 
 check_env:
@@ -161,17 +163,18 @@ push:
 push_mirror:
 	$(call print_info, Pushing tagged commits to mirror/master...)
 	@git push --follow-tags mirror master
-	
-ifeq (${SONAR_URL}${SONAR_PROJECT_TOKEN},)
-sonar_scan:
+
+ifeq (${SONAR_HOST_URL}${SONAR_TOKEN},)
+sonar_check:
 else
-sonar_scan:
+sonar_check:
 	$(call print_info, Starting the sonarqube code analysis...)
-	sonar-scanner \
-		-Dsonar.projectKey=${APP_NAME} \
-		-Dsonar.sources=. \
-		-Dsonar.host.url=${SONAR_URL}   \
-		-Dsonar.login=${SONAR_PROJECT_TOKEN}
+	@docker run --rm \
+		--dns ${DNS_NAMESERVER} \
+		-e SONAR_HOST_URL="${SONAR_HOST_URL}" \
+		-e SONAR_TOKEN="${SONAR_TOKEN}" \
+		-v ".:/usr/src" \
+		sonarsource/sonar-scanner-cli
 endif
 
 test_local: fmt
@@ -198,6 +201,7 @@ define update_semver
 	@[ -f ".env" ] || cp .env.example .env
 	@sed -i 's|APP_VERSION=.*|APP_VERSION=${1}|' .env
 	@sed -i 's|APP_VERSION=.*|APP_VERSION=${1}|' .env.example
+	@sed -i 's|sonar.projectVersion=.*|sonar.projectVersion=${1}|' sonar-project.properties
 	@sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${1}/' pkg/backend/router.go
 endef
 

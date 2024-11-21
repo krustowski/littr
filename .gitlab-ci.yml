@@ -11,6 +11,17 @@ stages:
   - build
   - deploy
 
+
+#
+#  stage test
+#
+
+sonarqube-check:
+  stage: test
+  allow_failure: true
+  script:
+    - make sonar_check
+
 test-local:
   stage: test
   environment: 
@@ -19,6 +30,11 @@ test-local:
     APP_ENVIRONMENT: 'test'
   script:
     - make test_local
+
+
+#
+#  stage build
+#
 
 build-image:  
   stage: build
@@ -29,6 +45,11 @@ build-image:
   script:
     - make build
     - make push_to_registry
+
+
+#
+#  stage deploy
+#
 
 .deploy_common:
   stage: deploy
