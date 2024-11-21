@@ -189,7 +189,8 @@ test_local_coverage: fmt
 .PHONY: major minor patch version
 
 define update_semver
-	@echo "Incrementing semver to ${1}"
+	$(call print_info, Incrementing semver to ${1}...)
+	@[ -f ".env" ] || cp .env.example .env
 	@sed -i 's|APP_VERSION=.*|APP_VERSION=${1}|' .env
 	@sed -i 's|APP_VERSION=.*|APP_VERSION=${1}|' .env.example
 	@sed -i 's/\/\/\(.*[[:blank:]]\)[0-9]*\.[0-9]*\.[0-9]*/\/\/\1${1}/' pkg/backend/router.go
@@ -221,135 +222,151 @@ version:
 
 .PHONY: build docs docs_host push_to_registry run run_test_env
 
-build: 
-	@echo -e "\n${YELLOW} Building the project (docker compose build)... ${RESET}\n"
+ifeq (${REGISTRY},)
+build:
+	$(call print_info, Building the docker image (docker compose build)...)
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
-	@if [ \( -z "${REGISTRY_USER}" \) -o \( -z "${REGISTRY_PASSWORD}" \) ]; \
-	then \
-		DOCKERFILE=full.dockerfile DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build; \
-	else \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"; \
-		DOCKERFILE=prebuilt.dockerfile DOCKER_BUILDKIT=1 docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build; \
-	fi
+	@DOCKERFILE=full.dockerfile DOCKER_BUILDKIT=1 \
+		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build
+else
+build: 
+	$(call print_info, Building the docker image (docker compose build)...)
+	@[ -f ".env" ] || cp .env.example .env
+	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
+	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
+	@DOCKERFILE=prebuilt.dockerfile DOCKER_BUILDKIT=1 \
+		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build
+endif
 
 docs: config
-	@echo -e "\n${YELLOW} Generating OpenAPI documentation... ${RESET}\n"
+	$(call print_info, Generating OpenAPI Swagger documentation...)
 	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
 	@mv docs/swagger.json api/swagger.json
 	@[ -f ".env" ] || cp .env.example .env
-	@[ -f ${DOCKER_COMPOSE_OVERRIDE} ] \
-		&& docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up littr-swagger -d --force-recreate \
-		|| docker compose -f ${DOCKER_COMPOSE_FILE} up littr-swagger -d --force-recreate
+	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
+	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up littr-swagger -d --force-recreate
 
 docs_host:
-	@echo -e "\n${YELLOW} Updating the host for docs... ${RESET}\n"
-	sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
+	$(call print_info, Updating the baseURL in OpenAPI docs according to env...)
+	@sed -i 's/\/\/.*\(@host[[:blank:]]*\)[a-z.0-9]*/\/\/ \1${APP_URL_MAIN}/' pkg/backend/router.go
 
+ifeq (${REGISTRY},)
 push_to_registry:
-	@echo -e "\n${YELLOW} Pushing new image to registry... ${RESET}\n"
-	@[ -n "${REGISTRY}" ] || exit 10
-	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}" && \
-		docker push ${DOCKER_IMAGE_TAG}
+else
+push_to_registry:
+	$(call print_info, Pushing tagged docker image to registry...)
+	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
+	@docker push ${DOCKER_IMAGE_TAG}
 	@docker logout ${REGISTRY} > /dev/null
+endif
 
-run:	
-	@echo -e "\n${YELLOW} Starting project (docker compose up)... ${RESET}\n"
+ifeq (${REGISTRY},)
+run:
+	$(call print_info, Starting the docker compose stack up...)
 	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
-	@if [ \( -n "${REGISTRY_USER}" \) -a \( -n "${REGISTRY_PASSWORD}" \) ]; \
-	then \
-		echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"; \
-		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
-		docker logout "${REGISTRY}" > /dev/null; \
-	else \
-		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans; \
-	fi
-
-run_test_env:	
-	@echo -e "\n${YELLOW} Starting test project (docker compose up)... ${RESET}\n"
+	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
+else
+run:	
+	$(call print_info, Starting the docker compose stack up...)
 	@[ -f ".env" ] || cp .env.example .env
-	@[ -f ${DOCKER_COMPOSE_TEST_OVERRIDE} ] \
-		&& docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans \
-		|| docker compose -f ${DOCKER_COMPOSE_TEST_FILE} up --force-recreate --detach --remove-orphans
+	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
+	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
+	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
+	@docker logout "${REGISTRY}" > /dev/null
+endif
+
+run_test_env:
+	$(call print_info, Starting the docker compose stack up (test env)...)
+	@[ -f ".env" ] || cp .env.example .env
+	@[ -f "${DOCKER_COMPOSE_TEST_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_TEST_OVERRIDE}
+	@docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans
+
 
 #
-#  profiling targets
+#  Profiling targets
 #
+
+GO_TOOL_PPROF := go tool pprof
+NOL  := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
+LIST := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
+PPROF_SOURCE ?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
 
 .PHONY: kill_proff run_proff
 
-GO_TOOL_PPROF = go tool pprof
-NOL := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
-LIST = $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
 kill_pprof:
-	@echo -e "\n${YELLOW} Killing all profiling instances... ${RESET}\n"
+	$(call print_info, Killing all profiling instances...)
 	@for INST in ${LIST}; do kill $${INST}; done
 
-PPROF_SOURCE ?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
 run_pprof: kill_pprof
-	@echo -e "\n${YELLOW} Starting profiling instances (run kill_pprof to kill them)... ${RESET}\n"
-	@go build -pkgdir pkg/ -o littr cmd/littr/main.go cmd/littr/http_server.go cmd/littr/init_client.go
-	@ mkdir -p .tmp
+	$(call print_info, Starting the profiling instances to analyze the runtime...)
+	@go build -tags server \
+		-o ./littr \
+		-pkgdir ./pkg/ \
+		./cmd/littr/
+	@mkdir -p .tmp
 	@curl -sL ${PPROF_SOURCE}/allocs?debug=1 > .tmp/alloc.out
 	@curl -sL ${PPROF_SOURCE}/goroutine?debug=1 > .tmp/goroutine.out
 	@curl -sL ${PPROF_SOURCE}/heap?debug=1 > .tmp/heap.out
-	@go tool pprof -http=127.0.0.1:8081 littr .tmp/alloc.out &
-	@go tool pprof -http=127.0.0.1:8082 littr .tmp/goroutine.out &
-	@go tool pprof -http=127.0.0.1:8083 littr .tmp/heap.out &
+	@go tool pprof -http=127.0.0.1:8081 ./littr .tmp/alloc.out &
+	@go tool pprof -http=127.0.0.1:8082 ./littr .tmp/goroutine.out &
+	@go tool pprof -http=127.0.0.1:8083 ./littr .tmp/heap.out &
 	
 
 #
-#  runtime (live system operation) targets
+#  Runtime (live system operation) targets
 #
+
+BACKUP_PATH    ?= /mnt/backup/littr
+RUN_DATA_PATH  ?= ./.run_data
+DEMO_DATA_PATH ?= ./test/data
 
 .PHONY: backup fetch_running_dump flush kill logs sh sse_client stop
 
 backup: fetch_running_dump
-	@echo -e "\n${YELLOW} Making the backup archive... ${RESET}\n"
-	@tar czvf /mnt/backup/littr/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_DIR}
+	$(call print_info, Creating a backup archive...)
+	@[ -d "${BACKUP_DIR}" ] || exit 5
+	@tar czvf ${BACKUP_PATH}/$(shell date +"%Y-%m-%d-%H:%M:%S").tar.gz ${RUN_DATA_PATH}
 
-RUN_DATA_DIR=./.run_data
 fetch_running_dump:
-	@echo -e "\n${YELLOW} Copying dumped data from the container... ${RESET}\n"
-	@mkdir -p ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/requests.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json ${RUN_DATA_DIR}
-	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ${RUN_DATA_DIR}
+	$(call print_info, Fetching current dump data from the container...)
+	@mkdir -p ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/requests.json ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json ${RUN_DATA_PATH}
+	@docker cp ${DOCKER_CONTAINER_NAME}:/opt/data/users.json ${RUN_DATA_PATH}
 	
 flush:
-	@echo -e "\n${YELLOW} Flushing app data... ${RESET}\n"
-	@docker cp test/data/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
-	@docker cp test/data/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
-	@docker cp test/data/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
-	@docker cp test/data/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
-	@docker cp test/data/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
+	$(call print_info, Flushing the running app data...)
+	@docker cp ${DEMO_DATA_PATH}/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
+	@docker cp ${DEMO_DATA_PATH}/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
+	@docker cp ${DEMO_DATA_PATH}/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
+	@docker cp ${DEMO_DATA_PATH}/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
+	@docker cp ${DEMO_DATA_PATH}/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
 
 kill:
-	@echo -e "\n${YELLOW} Killing the container not to dump running caches... ${RESET}\n"
+	$(call print_info, Killing the running container not to dump its caches...)
 	@[ -f ".env" ] || cp .env.example .env
 	@docker kill ${DOCKER_CONTAINER_NAME}
 
 logs:
-	@echo -e "\n${YELLOW} Fetching container's logs (CTRL-C to exit)... ${RESET}\n"
+	$(call print_info, Attaching and following the container's (${DOCKER_CONTAINER_NAME}) logs...)
 	@docker logs ${DOCKER_CONTAINER_NAME} -f
 
 sh:
-	@echo -e "\n${YELLOW} Attaching container's (${DOCKER_CONTAINER_NAME})... ${RESET}\n"
+	$(call print_info, Attaching the container's (${DOCKER_CONTAINER_NAME}) shell...)
 	@[ -f ".env" ] || cp .env.example .env
 	@docker exec -it ${DOCKER_CONTAINER_NAME} sh
 
 sse_client:
-	@echo -e "\n${YELLOW} Starting the SSE client... ${RESET}\n"
-	@go run cmd/sse_client/main.go
+	$(call print_info, Starting the custom SSE Go client...)
+	@go run ./cmd/sse_client/main.go
 
 stop:  
-	@echo -e "\n${YELLOW} Stopping and purging project (docker compose down)... ${RESET}\n"
+	$(call print_info, Stopping and purging the docker stack (docker compose down)...)
 	@[ -f ".env" ] || cp .env.example .env
 	@docker compose -f ${DOCKER_COMPOSE_FILE} down
 
-tweak:
-	$(call print_info, jezisi kriste dopice uz)
