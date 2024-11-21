@@ -147,6 +147,7 @@ config:
 deps:
 	$(call print_info, Fetching/upgrading dependencies...)
 	@go get -u ./...
+	@go mod tidy
 
 fmt:
 	$(call print_info, Reformatting the code using gofmt tool...)
@@ -176,12 +177,13 @@ endif
 test_local: fmt
 	$(call print_info, Running Go unit/integration tests locally...)
 	@go clean -testcache
-	@go test $(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
+	@go test -tags server \
+		$(shell go list ./... | grep -v cmd/sse_client | grep -v cmd/dbench | grep -v pkg/models | grep -v pkg/helpers | grep -v pkg/frontend)
 
 test_local_coverage: fmt
 	$(call print_info, Running Go code coverage analysis...)
 	@go clean -testcache
-	@go test -v -coverprofile coverage.out ./... && \
+	@go test -tags server -v -coverprofile coverage.out ./... && \
 		go tool cover -html coverage.out
 
 
