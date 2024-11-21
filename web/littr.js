@@ -172,7 +172,7 @@
   // login autosubmit
   window.LIT.checkPassword = function () {
     // hacky way
-    var username = 'body > div > main > div:nth-child(6) > input'
+    /*var username = 'body > div > main > div:nth-child(6) > input'
     var password = 'body > div > main > div:nth-child(7) > input'
 
     if ($(username).length && $(password).length) {
@@ -214,7 +214,7 @@
           }
         })
       })
-    }
+    }*/
   }
 
   // fix links and images
