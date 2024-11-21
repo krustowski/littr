@@ -45,6 +45,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 	--mount=type=cache,target="$GOCACHE" \
 	CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build \
 		-o littr \
+		-tags server \
 		-ldflags "${COMMON_BUILD_LDFLAGS}" \
 		cmd/littr/
 
