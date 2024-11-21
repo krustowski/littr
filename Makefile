@@ -135,7 +135,14 @@ prod: run logs
 #  development targets
 #
 
-.PHONY: fmt config push push_mirror sonar_scan test_local test_local_coverage
+.PHONY: check_env config fmt push push_mirror sonar_scan test_local test_local_coverage
+
+check_env:
+	@[ -f ".env" ] || cp .env.example .env
+
+config:
+	$(call print_info, Running the local environment configuration setup...)
+	@go install github.com/swaggo/swag/cmd/swag@latest
 
 deps:
 	$(call print_info, Fetching/upgrading dependencies...)
@@ -144,10 +151,6 @@ deps:
 fmt:
 	$(call print_info, Reformatting the code using gofmt tool...)
 	@gofmt -w -s .
-
-config:
-	$(call print_info, Running the local environment configuration setup...)
-	@go install github.com/swaggo/swag/cmd/swag@latest
 
 push:
 	$(call print_info, Pushing tagged commits to origin/master...)
@@ -223,27 +226,24 @@ version:
 .PHONY: build docs docs_host push_to_registry run run_test_env
 
 ifeq (${REGISTRY},)
-build:
+build: check_env
 	$(call print_info, Building the docker image (docker compose build)...)
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@DOCKERFILE=full.dockerfile DOCKER_BUILDKIT=1 \
 		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build
 else
-build: 
+build: check_env
 	$(call print_info, Building the docker image (docker compose build)...)
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@DOCKERFILE=prebuilt.dockerfile DOCKER_BUILDKIT=1 \
 		docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} build
 endif
 
-docs: config
+docs: config check_env
 	$(call print_info, Generating OpenAPI Swagger documentation...)
 	@~/go/bin/swag init --parseDependency -ot json -g router.go --dir pkg/backend/ 
 	@mv docs/swagger.json api/swagger.json
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up littr-swagger -d --force-recreate
 
@@ -262,24 +262,21 @@ push_to_registry:
 endif
 
 ifeq (${REGISTRY},)
-run:
+run: check_env
 	$(call print_info, Starting the docker compose stack up...)
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 else
-run:	
+run: check_env
 	$(call print_info, Starting the docker compose stack up...)
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 	@docker logout "${REGISTRY}" > /dev/null
 endif
 
-run_test_env:
+run_test_env: check_env
 	$(call print_info, Starting the docker compose stack up (test env)...)
-	@[ -f ".env" ] || cp .env.example .env
 	@[ -f "${DOCKER_COMPOSE_TEST_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_TEST_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans
 
@@ -347,26 +344,23 @@ flush:
 	@docker cp ${DEMO_DATA_PATH}/tokens.json ${DOCKER_CONTAINER_NAME}:/opt/data/tokens.json
 	@docker cp ${DEMO_DATA_PATH}/users.json ${DOCKER_CONTAINER_NAME}:/opt/data/users.json
 
-kill:
+kill: check_env
 	$(call print_info, Killing the running container not to dump its caches...)
-	@[ -f ".env" ] || cp .env.example .env
 	@docker kill ${DOCKER_CONTAINER_NAME}
 
 logs:
 	$(call print_info, Attaching and following the container's (${DOCKER_CONTAINER_NAME}) logs...)
 	@docker logs ${DOCKER_CONTAINER_NAME} -f
 
-sh:
+sh: check_env
 	$(call print_info, Attaching the container's (${DOCKER_CONTAINER_NAME}) shell...)
-	@[ -f ".env" ] || cp .env.example .env
 	@docker exec -it ${DOCKER_CONTAINER_NAME} sh
 
 sse_client:
 	$(call print_info, Starting the custom SSE Go client...)
 	@go run ./cmd/sse_client/main.go
 
-stop:  
+stop: check_env
 	$(call print_info, Stopping and purging the docker stack (docker compose down)...)
-	@[ -f ".env" ] || cp .env.example .env
 	@docker compose -f ${DOCKER_COMPOSE_FILE} down
 
