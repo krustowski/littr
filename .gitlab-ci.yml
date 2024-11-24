@@ -38,6 +38,8 @@ test-local:
 
 build-image:  
   stage: build
+  needs:
+    - test-local
   rules:
     - if: $APP_PEPPER != null
     - if: $APP_VERSION != null
@@ -54,6 +56,8 @@ build-image:
 .deploy_common:
   stage: deploy
   when: manual
+  needs:
+    - build-image
   before_script:
     - eval $(ssh-agent -s)
     - chmod 400 "$DEPLOY_SSH_KEY"
