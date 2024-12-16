@@ -126,7 +126,7 @@ info:
 
 .PHONY: dev prod
 
-dev: version fmt build run logs
+dev: version fmt build check_docker run logs
 
 prod: run logs
 
@@ -274,12 +274,12 @@ push_to_registry:
 endif
 
 ifeq (${REGISTRY},)
-run: check_env check_docker
+run: check_env
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 else
-run: check_env check_docker
+run: check_env
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
@@ -350,6 +350,7 @@ fetch_running_dump:
 	
 flush:
 	$(call print_info, Flushing the running app data...)
+	[ ! -d ${DEMO_DATA_PATH} ] && exit 6
 	@docker cp ${DEMO_DATA_PATH}/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
 	@docker cp ${DEMO_DATA_PATH}/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
 	@docker cp ${DEMO_DATA_PATH}/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
