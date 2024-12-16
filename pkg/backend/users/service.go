@@ -16,6 +16,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/image"
 	"go.vxn.dev/littr/pkg/backend/mail"
+
 	//"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/config"
@@ -1004,25 +1005,32 @@ func processRequestList(data *UserUpdateRequest, user *models.User, caller *mode
 
 	// Loop over the RequestList records and change the user's values accordingly (enforce the proper requestList changing!).
 	for key, value := range data.RequestList {
-		// Only allow to change the caller's record in the remote/counterpart's requestList.
-		if key != caller.Nickname {
-			continue
-		}
-
-		if user.ShadeList == nil {
-			user.RequestList[key] = value
-			continue
-		}
-
-		// Check the shade state for the <key> user.
-		shaded, found := user.ShadeList[key]
-		if value && found && shaded {
+		// Do not request following on oneself.
+		if user.Nickname == caller.Nickname {
 			user.RequestList[key] = false
 			continue
 		}
 
-		if !found || (found && !shaded) {
-			user.RequestList[key] = value
+		// Caller can only change the status on theirselves at the counterpart's.
+		if key == caller.Nickname {
+			// If the caller is not shaded (the list is empty/nil), proceed and assign the posted value.
+			if len(user.ShadeList) == 0 {
+				user.RequestList[key] = value
+				continue
+			}
+
+			// Check the shade state for the <key> user.
+			shaded, found := user.ShadeList[key]
+			// The caller is shaded, so disallow any such request.
+			if found && shaded {
+				user.RequestList[key] = false
+				continue
+			}
+
+			// User is not shaded => procced and assign the posted value.
+			if !found || (found && !shaded) {
+				user.RequestList[key] = value
+			}
 		}
 	}
 

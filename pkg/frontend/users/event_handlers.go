@@ -25,21 +25,21 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		user := c.user
+		currentUser := c.user
 
 		// Pathc the nil requestMap.
-		if user.RequestList == nil {
-			user.RequestList = make(map[string]bool)
+		if currentUser.RequestList == nil {
+			currentUser.RequestList = make(map[string]bool)
 		}
 
 		// Falsify the incoming nick's request making it allowed soon.
-		user.RequestList[nick] = false
+		currentUser.RequestList[nick] = false
 
 		// Prepare the request data structure.
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
 		}{
-			RequestList: user.RequestList,
+			RequestList: currentUser.RequestList,
 		}
 
 		// Compose the API input payload.
@@ -114,16 +114,14 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		// Cast the successful update of both lists.
 		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
 
-		common.SaveUser(&user, &ctx)
+		common.SaveUser(&currentUser, &ctx)
 
 		// Dispatch the updated controlling one's flowList.
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
-			c.users[c.user.Nickname] = user
+			c.user = currentUser
+			c.users[c.user.Nickname] = currentUser
 		})
-		return
 	})
-	return
 }
 
 // onClickCancel is a callback function to cancel the incoming follow request.
