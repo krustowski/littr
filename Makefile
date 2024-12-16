@@ -9,59 +9,59 @@
 include .env.example
 -include .env
 
-APP_ENVIRONMENT ?= dev
-APP_NAME=littr
-APP_URLS_TRAEFIK ?= `${HOSTNAME}`
-APP_URL_MAIN ?= ${HOSTNAME}
-PROJECT_NAME=${APP_NAME}-${APP_ENVIRONMENT}
-TZ ?= Europe/Vienna
+APP_ENVIRONMENT 	?= dev
+APP_NAME 		:= littr
+APP_URLS_TRAEFIK 	?= `${HOSTNAME}`
+APP_URL_MAIN 		?= ${HOSTNAME}
+PROJECT_NAME 		:= ${APP_NAME}-${APP_ENVIRONMENT}
+TZ 			?= Europe/Vienna
 
-LOKI_URL ?=
+LOKI_URL 		?=
 
-APP_PEPPER ?=
-API_TOKEN ?=
+APP_PEPPER 		?=
+API_TOKEN 		?=
 
-LIMITER_DISABLED ?= false
-REGISTRATION_ENABLED ?= true
+LIMITER_DISABLED 	?= false
+REGISTRATION_ENABLED 	?= true
 
-VAPID_PUB_KEY ?=
-VAPID_PRIV_KEY ?=
-VAPID_SUBSCRIBER ?=
+VAPID_PUB_KEY 		?=
+VAPID_PRIV_KEY 		?=
+VAPID_SUBSCRIBER 	?=
 
-MAIL_HELO ?= localhost
-MAIL_HOST ?=
-MAIL_PORT ?= 25
-MAIL_SASL_USR ?=
-MAIL_SASL_PWD ?=
+MAIL_HELO 		?= localhost
+MAIL_HOST 		?=
+MAIL_PORT 		?= 25
+MAIL_SASL_USR 		?=
+MAIL_SASL_PWD 		?=
 
 # go environment
 #COMMON_BUILD_LDFLAGS=-s -w
-COMMON_BUILD_LDFLAGS=
-GOARCH := $(shell go env GOARCH)
-GOCACHE ?= /home/${USER}/.cache/go-build
-GOMODCACHE ?= /home/${USER}/go/pkg/mod
-GOOS := $(shell go env GOOS)
+COMMON_BUILD_LDFLAGS 	:=
+GOARCH 			:= $(shell go env GOARCH)
+GOCACHE 		?= /home/${USER}/.cache/go-build
+GOMODCACHE 		?= /home/${USER}/go/pkg/mod
+GOOS 			:= $(shell go env GOOS)
 
 # go build -race [...]
-RACE_FLAG ?= ""
+RACE_FLAG 		?= ""
 
 # docker environment
-DOCKER_COMPOSE_FILE ?= deployments/docker-compose.yml
-DOCKER_COMPOSE_TEST_FILE ?= deployments/docker-compose-test.yml
-DOCKER_COMPOSE_OVERRIDE ?= deployments/docker-compose.override.yml
-DOCKER_COMPOSE_TEST_OVERRIDE ?= deployments/docker-compose-test.override.yml
-DOCKER_CONTAINER_NAME ?= ${PROJECT_NAME}-server
+DOCKER_COMPOSE_FILE 		?= deployments/docker-compose.yml
+DOCKER_COMPOSE_TEST_FILE 	?= deployments/docker-compose-test.yml
+DOCKER_COMPOSE_OVERRIDE 	?= deployments/docker-compose.override.yml
+DOCKER_COMPOSE_TEST_OVERRIDE 	?= deployments/docker-compose-test.override.yml
+DOCKER_CONTAINER_NAME 		?= ${PROJECT_NAME}-server
 
-REGISTRY ?= ${APP_NAME}
-DOCKER_BUILD_IMAGE ?= golang:${GOLANG_VERSION}-alpine
-DOCKER_BUILD_IMAGE_RELEASE ?= alpine:${ALPINE_VERSION}
-DOCKER_IMAGE_TAG ?= ${REGISTRY}/littr/backend:${APP_VERSION}-go${GOLANG_VERSION}
+REGISTRY 			?= ${APP_NAME}
+DOCKER_BUILD_IMAGE 		?= golang:${GOLANG_VERSION}-alpine
+DOCKER_BUILD_IMAGE_RELEASE 	?= alpine:${ALPINE_VERSION}
+DOCKER_IMAGE_TAG 		?= ${REGISTRY}/littr/backend:${APP_VERSION}-go${GOLANG_VERSION}
 
-DOCKER_INTERNAL_PORT ?= 8080
-DOCKER_NETWORK_NAME ?= traefik
-DOCKER_USER ?= littr
-DOCKER_VOLUME_DATA_NAME ?= littr-data
-DOCKER_VOLUME_PIX_NAME ?= littr-pix
+DOCKER_INTERNAL_PORT 		?= 8080
+DOCKER_NETWORK_NAME 		?= traefik
+DOCKER_USER 			?= littr
+DOCKER_VOLUME_DATA_NAME 	?= littr-data
+DOCKER_VOLUME_PIX_NAME 		?= littr-pix
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -137,7 +137,13 @@ prod: run logs
 
 DNS_NAMESERVER ?= 1.1.1.1
 
-.PHONY: check_env config fmt push push_mirror sonar_scan test_local test_local_coverage
+.PHONY: check_docker check_env config fmt push push_mirror sonar_scan test_local test_local_coverage
+
+check_docker:
+	@docker inspect ${DOCKER_VOLUME_DATA_NAME} 2>&1 > /dev/null || docker volume create ${DOCKER_VOLUME_DATA_NAME}
+	@docker inspect ${DOCKER_VOLUME_PIX_NAME} 2>&1 > /dev/null || docker volume create ${DOCKER_VOLUME_PIX_NAME}
+	@docker inspect ${DOCKER_NETWORK_NAME} 2>&1 > /dev/null || docker network create ${DOCKER_NETWORK_NAME}
+	@docker plugin inspect grafana/loki-docker-driver:latest 2>&1 > /dev/null || docker plugin install grafana/loki-docker-driver:latest
 
 check_env:
 	@[ -f ".env" ] || cp .env.example .env
@@ -268,12 +274,12 @@ push_to_registry:
 endif
 
 ifeq (${REGISTRY},)
-run: check_env
+run: check_env check_docker
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 else
-run: check_env
+run: check_env check_docker
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
@@ -321,9 +327,9 @@ run_pprof: kill_pprof
 #  Runtime (live system operation) targets
 #
 
-BACKUP_PATH    ?= /mnt/backup/littr
-RUN_DATA_PATH  ?= ./.run_data
-DEMO_DATA_PATH ?= ./test/data
+BACKUP_PATH    		?= /mnt/backup/littr
+RUN_DATA_PATH  		?= ./.run_data
+DEMO_DATA_PATH 		?= ./test/data
 
 .PHONY: backup fetch_running_dump flush kill logs sh sse_client stop
 
