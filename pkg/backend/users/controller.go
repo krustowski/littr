@@ -76,7 +76,6 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("new user created successfully").Status(http.StatusCreated).Log().Payload(nil).Write(w)
-	return
 }
 
 // Activate is a handler function to complete the user's activation procedure.
@@ -116,7 +115,6 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("the user has been activated successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // Update is the users handler that allows the user to change their lists/options/passphrase.
@@ -176,7 +174,7 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
+
 }
 
 // UploadAvatar is a handler function to update user's avatar directly in the app.
@@ -237,7 +235,6 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("user's avatar uploaded and updated").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
-	return
 }
 
 // PassphraseReset handles a new passphrase regeneration.
@@ -286,7 +283,6 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 	}
 
 	l.Msg("passphrase request processed successfully, check your mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // Delete is the users handler that processes and deletes given user (oneself) form the database.
@@ -332,7 +328,6 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("user deleted successfully, associated data are being deleted concurrently").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // GetAll is the users handler that processes and returns existing users list.
@@ -395,7 +390,6 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	// Log the message and write the HTTP response.
 	l.Msg("listing all users and their stats").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
-	return
 }
 
 // GetByID is the users handler that processes and returns existing user's details according to callerID.
@@ -457,7 +451,6 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("returning fetch user's data").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
-	return
 }
 
 // GetPosts fetches posts only from specified user.
@@ -532,5 +525,4 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("listing user's posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }
