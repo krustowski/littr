@@ -9,6 +9,10 @@
 include .env.example
 -include .env
 
+#
+#  Basic common runtime vars
+#
+
 APP_ENVIRONMENT 	?= dev
 APP_NAME 		:= littr
 APP_URLS_TRAEFIK 	?= `${HOSTNAME}`
@@ -21,21 +25,36 @@ LOKI_URL 		?=
 APP_PEPPER 		?=
 API_TOKEN 		?=
 
+#
+#  Defaults for backend
+#
+
 LIMITER_DISABLED 	?= false
 REGISTRATION_ENABLED 	?= true
+
+#
+#  Subscription (webpush) vars
+#
 
 VAPID_PUB_KEY 		?=
 VAPID_PRIV_KEY 		?=
 VAPID_SUBSCRIBER 	?=
 
+#
+#  Mailing vars
+#
+
 MAIL_HELO 		?= localhost
-MAIL_HOST 		?=
+MAIL_HOST 		?= localhost
 MAIL_PORT 		?= 25
 MAIL_SASL_USR 		?=
 MAIL_SASL_PWD 		?=
 
-# go environment
-#COMMON_BUILD_LDFLAGS=-s -w
+#
+#  Go environment vars
+#
+
+#COMMON_BUILD_LDFLAGS	:= -s -w
 COMMON_BUILD_LDFLAGS 	:=
 GOARCH 			:= $(shell go env GOARCH)
 GOCACHE 		?= /home/${USER}/.cache/go-build
@@ -45,7 +64,10 @@ GOOS 			:= $(shell go env GOOS)
 # go build -race [...]
 RACE_FLAG 		?= ""
 
-# docker environment
+#
+#  Docker environment vars 
+#
+
 DOCKER_COMPOSE_FILE 		?= deployments/docker-compose.yml
 DOCKER_COMPOSE_TEST_FILE 	?= deployments/docker-compose-test.yml
 DOCKER_COMPOSE_OVERRIDE 	?= deployments/docker-compose.override.yml
@@ -63,8 +85,11 @@ DOCKER_USER 			?= littr
 DOCKER_VOLUME_DATA_NAME 	?= littr-data
 DOCKER_VOLUME_PIX_NAME 		?= littr-pix
 
-# define standard colors
+#
+#  Define standard colors for CLI
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
+#
+
 ifneq (,$(findstring xterm,${TERM}))
 	BLACK        := $(shell tput -Txterm setaf 0)
 	RED          := $(shell tput -Txterm setaf 1)
@@ -121,7 +146,7 @@ info:
 	@echo -e ""
 
 #
-#  deployment targets
+#  Deployment targets (chains)
 #
 
 .PHONY: dev prod
@@ -130,12 +155,11 @@ dev: version fmt build check_docker run logs
 
 prod: run logs
 
-
 #
-#  development targets
+#  Development targets (inc CI tests)
 #
 
-DNS_NAMESERVER ?= 1.1.1.1
+DNS_NAMESERVER 		?= 1.1.1.1
 
 .PHONY: check_docker check_env config fmt push push_mirror sonar_scan test_local test_local_coverage
 
@@ -195,7 +219,6 @@ test_local_coverage: fmt
 	@go test -tags server -v -coverprofile coverage.out ./... && \
 		go tool cover -html coverage.out
 
-
 #
 #  Versioning (semver incrementing) targets
 #
@@ -229,7 +252,6 @@ patch:
 
 version:
 	$(call print_info, Current version: ${APP_VERSION}...)
-
 
 #
 #  build&run targets (CI mostly)
@@ -292,15 +314,14 @@ run_test_env: check_env
 	@[ -f "${DOCKER_COMPOSE_TEST_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_TEST_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_TEST_FILE} -f ${DOCKER_COMPOSE_TEST_OVERRIDE} up --force-recreate --detach --remove-orphans
 
-
 #
 #  Profiling targets
 #
 
-GO_TOOL_PPROF := go tool pprof
-NOL  := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
-LIST := $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
-PPROF_SOURCE ?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
+GO_TOOL_PPROF 		:= go tool pprof
+NOL  			:= $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
+LIST 			:= $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
+PPROF_SOURCE 		?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
 
 .PHONY: kill_proff run_proff
 
@@ -322,7 +343,6 @@ run_pprof: kill_pprof
 	@go tool pprof -http=127.0.0.1:8082 ./littr .tmp/goroutine.out &
 	@go tool pprof -http=127.0.0.1:8083 ./littr .tmp/heap.out &
 	
-
 #
 #  Runtime (live system operation) targets
 #
@@ -350,7 +370,7 @@ fetch_running_dump:
 	
 flush:
 	$(call print_info, Flushing the running app data...)
-	[ ! -d ${DEMO_DATA_PATH} ] && exit 6
+	@[ ! -d ${DEMO_DATA_PATH} ] && exit 6
 	@docker cp ${DEMO_DATA_PATH}/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
 	@docker cp ${DEMO_DATA_PATH}/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
 	@docker cp ${DEMO_DATA_PATH}/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
