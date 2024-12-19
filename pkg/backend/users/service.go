@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha512"
 	"fmt"
-	"math/rand"
 	"net/http"
 	netmail "net/mail"
 	"os"
@@ -517,7 +516,9 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 	if !regex.MatchString(prevAvatarURL) {
 		fileName := strings.Replace(prevAvatarURL, "/web/", "/opt/", 1)
 		if err := os.Remove(fileName); err != nil {
-			return nil, fmt.Errorf(common.ERR_AVATAR_DELETE_FAIL)
+			// Do not fail on missing file: this prevents uploading a new avatar when
+			// the current one is missing in the filesystem...
+			//return nil, fmt.Errorf(common.ERR_AVATAR_DELETE_FAIL)
 		}
 	}
 
@@ -566,7 +567,7 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		var dbUser models.User
 
 		for _, user := range *users {
-			if strings.ToLower(data.Email) == strings.ToLower(user.Email) {
+			if strings.EqualFold(data.Email, user.Email) {
 				found = true
 				dbUser = user
 				break
@@ -627,7 +628,6 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		}
 
 		// Reset the passphrase = generete a new one (32 chars long).
-		rand.Seed(time.Now().UnixNano())
 		randomPassphrase = helpers.RandSeq(32)
 		pepper := os.Getenv("APP_PEPPER")
 
@@ -903,7 +903,7 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[st
 
 		Flow: pages.FlowOptions{
 			HideReplies:  hideReplies,
-			Plain:        hideReplies == false,
+			Plain:        !hideReplies,
 			UserFlow:     true,
 			UserFlowNick: userID,
 		},

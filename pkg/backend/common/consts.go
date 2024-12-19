@@ -37,7 +37,7 @@ const (
 	ERR_USER_NOT_FOUND      = "user not found in the database"
 	ERR_USER_DATA_CORRUPTED = "user's data corrupted"
 	ERR_PAGENO_INCORRECT    = "pageNo has to be specified as integer/number"
-	ERR_PAGE_EXPORT_NIL     = "could not get more pages, one exported map is nil!"
+	ERR_PAGE_EXPORT_NIL     = "could not get more pages, one exported map is nil"
 	ERR_INPUT_DATA_FAIL     = "could not process the input data, try again"
 	ERR_API_TOKEN_BLANK     = "blank API token sent"
 	ERR_API_TOKEN_INVALID   = "invalid API token sent"
