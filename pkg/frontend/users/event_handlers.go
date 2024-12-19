@@ -70,7 +70,7 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 		// Cast the successful API response in the toast.
 		//toast.Text("requested removed").Type("success").Dispatch(c, dispatch)
 
-		// Prepare the lists for the counterpart. Ensure that the controlling user's account is followed, as well as their own one too.
+		// Prepare the lists for the counterpart. Ensure that the controlling user's account is following, as well as their own one too.
 		fellowFlowList := make(map[string]bool)
 		fellowFlowList[nick] = true
 		fellowFlowList[c.user.Nickname] = true
@@ -136,29 +136,29 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		user := c.user
+		currentUser := c.user
 
 		// Patch the requestList nil map.
-		if user.RequestList == nil {
-			user.RequestList = make(map[string]bool)
+		if currentUser.RequestList == nil {
+			currentUser.RequestList = make(map[string]bool)
 		}
 
 		// Falsify the counterpart's existence in the controlling one's requestList (disable the request).
-		user.RequestList[nick] = false
+		currentUser.RequestList[nick] = false
 
 		// Prepare the request data structure.
 		payload := struct {
 			RequestList map[string]bool `json:"request_list"`
 		}{
-			RequestList: user.RequestList,
+			RequestList: currentUser.RequestList,
 		}
 
 		// Compose the API input payload.
 		input := &common.CallInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Url:         "/api/v1/users/" + currentUser.Nickname + "/lists",
 			Data:        payload,
-			CallerID:    c.user.Nickname,
+			CallerID:    currentUser.Nickname,
 			PageNo:      0,
 			HideReplies: false,
 		}
@@ -180,16 +180,14 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 		// Cast the successful request removal.
 		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 
-		common.SaveUser(&user, &ctx)
+		common.SaveUser(&currentUser, &ctx)
 
 		// Dispatch the changes to match them in the UI.
 		ctx.Dispatch(func(ctx app.Context) {
-			c.user = user
-			c.users[c.user.Nickname] = user
+			c.user = currentUser
+			c.users[c.user.Nickname] = currentUser
 		})
-		return
 	})
-	return
 }
 
 // onClickPrivateOff is to take back the previously sent follow request to the counterpart.

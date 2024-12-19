@@ -96,7 +96,6 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		}*/
 
 		toast.Text(common.MSG_PASSPHRASE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
-		return
 	})
 }
 
@@ -228,9 +227,7 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 			// update user's struct in memory
 			c.user.Web = c.website
 		})
-		return
 	})
-	return
 }
 
 // onClickDeleteSubscription()
@@ -300,9 +297,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 			c.deleteSubscriptionModalShow = false
 			c.devices = newDevs
 		})
-		return
 	})
-	return
 }
 
 // onDarkModeSwitch()
@@ -488,9 +483,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			c.thisDevice = deviceSub
 			c.devices = devs
 		})
-		return
 	})
-	return
 }
 
 // onLocalTimeModeSwitch()
@@ -543,7 +536,6 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user.LocalTimeMode = !localTime
 		})
-		return
 	})
 }
 
@@ -592,7 +584,6 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user.Private = !c.user.Private
 		})
-		return
 	})
 }
 
@@ -637,7 +628,6 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 		//ctx.Navigate("/login")
 		ctx.Navigate("/logout")
 	})
-	return
 }
 
 // handleFigUpload() --> common/image.go TODO
