@@ -12,6 +12,10 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
+const (
+	LOGGER_WORKER_NAME string = "userController"
+)
+
 // Structure contents definition for the controller.
 type UserController struct {
 	postService models.PostServiceInterface
@@ -38,20 +42,20 @@ func NewUserController(
 
 // Create is the users handler that processes input and creates a new user.
 //
-// @Summary      Add new user
-// @Description  add new user
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param    	 request body models.User true "new user's request body"
-// @Success      200  {object}   common.APIResponse{data=models.Stub}
-// @Failure      400  {object}   common.APIResponse{data=models.Stub}
-// @Failure      403  {object}   common.APIResponse{data=models.Stub}
-// @Failure      409  {object}   common.APIResponse{data=models.Stub}
-// @Failure      500  {object}   common.APIResponse{data=models.Stub}
-// @Router       /users [post]
+//	@Summary		Add new user
+//	@Description		This function call provides a method on how to create a new user in the system.
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	users.UserCreateRequest 	true		     "The request body containing all listed fields for a new user's creation."
+//	@Success		201		{object}	common.APIResponse{data=models.Stub} "The request was processed successfully and an user was created."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub} "The request body contains invalid data, or data types."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub} "This response code may occur when the registration is disabled."
+//	@Failure		409		{object}	common.APIResponse{data=models.Stub} "The nickname and/or e-mail fields contain data, that had been already used by someone else."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub} "There is a problem processing the request in the internal server logic. This may occur when a new user cannot be saved to the database for example."
+//	@Router			/users [post]
 func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -59,19 +63,17 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn models.User
+	var DTOIn UserCreateRequest
 
 	// Decode the incoming data.
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Create the user at the UserService.
 	if err := c.userService.Create(r.Context(), &DTOIn); err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -80,18 +82,18 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 
 // Activate is a handler function to complete the user's activation procedure.
 //
-// @Summary      Activate the user via given UUID
-// @Description  activate the user via given UUID
-// @Tags         users
-// @Produce      json
-// @Param        uuid path string true "UUID from the activation mail"
-// @Success      200  {object}  common.APIResponse{data=models.Stub}
-// @Failure      400  {object}  common.APIResponse{data=models.Stub}
-// @Failure      404  {object}  common.APIResponse{data=models.Stub}
-// @Failure      500  {object}  common.APIResponse{data=models.Stub}
-// @Router       /users/activation/{uuid} [post]
+//	@Summary		Activate an user via an UUID string
+//	@Description		This function call provides a method for the new user's activation using a received UUID string.
+//	@Tags			users
+//	@Produce		json
+//	@Param			uuid	path		string	true	"The UUID string from the activation e-mail, that is sent to the new user after a successful registration."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub} "The user was activated successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub} "The request body contains invalid data, or data types."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub} "The UUID string does not match any user in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub} "There is a problem processing the request (e.g. a problem accessing the database)."
+//	@Router			/users/activation/{uuid} [post]
 func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -109,8 +111,7 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	// Activate the user at the userService.
 	err := c.userService.Activate(context.WithValue(r.Context(), "uuid", uuid), uuid)
 	if err != nil {
-		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not activate such user").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -119,23 +120,28 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 
 // Update is the users handler that allows the user to change their lists/options/passphrase.
 //
-// @Summary      Update user's data
-// @Description  update user's data
-// @Tags         users
-// @Produce      json
-// @Param    	 request body users.UserUpdateRequest true "data to update"
-// @Param        userID path string true "ID of the user to update"
-// @Success      200  {object}   common.APIResponse{data=models.Stub}
-// @Failure      400  {object}   common.APIResponse{data=models.Stub}
-// @Failure      403  {object}   common.APIResponse{data=models.Stub}
-// @Failure      404  {object}   common.APIResponse{data=models.Stub}
-// @Failure      409  {object}   common.APIResponse{data=models.Stub}
-// @Failure      500  {object}   common.APIResponse{data=models.Stub}
-// @Router       /users/{userID}/lists [patch]
-// @Router       /users/{userID}/options [patch]
-// @Router       /users/{userID}/passphrase [patch]
-func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
+//	@Summary		Update user's list properties
+//	@Description		This function call enables the caller to modify lists saved with other user's data in the database.
+//	@Description
+//	@Description 		Those lists are KV structures, that hold another user's nickname as key, and a boolean as a value to specify whether such list should apply its logic on such user.
+//	@Description		At least one list has to be specified.
+//	@Tags			users
+//	@Produce		json
+//	@Param			request	body		users.UserUpdateListsRequest	true	"Lists object data as a desired state recipe."
+//	@Param			userID	path		string					true	"ID of the user to update"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"User's lists have been updated."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"This code can occur when one wants to update another user (this feature to be prepared for a possible admin panel function)."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is a processing problem in the internal logic, or some system's component does not behave (e.g. database is unavailable)."
+//	@Router			/users/{userID}/lists [patch]
+func (c *UserController) UpdateLists(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	const (
+		userIDParam     string = "userID"
+		updateTypeParam string = "updateType"
+	)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -144,32 +150,133 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the userID/nickname from the URI.
-	userID := chi.URLParam(r, "userID")
+	userID := chi.URLParam(r, userIDParam)
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// Fetch the request type.
-	updateType := chi.URLParam(r, "updateType")
-	if updateType == "" {
-		l.Msg(common.ERR_USER_UPDATE_REQ_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var DTOIn UserUpdateRequest
+	var DTOIn UserUpdateListsRequest
 
 	// Decode the incoming data.
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Update the user's data at the UserService.
-	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), "updateType", updateType), "userID", userID), &DTOIn); err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "lists"), userIDParam, userID), &DTOIn); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+
+}
+
+// Update is the users handler that allows the user to change their lists/options/passphrase.
+//
+//	@Summary		Update user's option properties
+//	@Description		This function call enables the caller to modify some of their properties (options) saved in the database.
+//	@Description
+//	@Description		Note: the duality in the options' configuration (map vs. separated booleans) reflects the attempt for backward compatibility with older clients (v0.45.18 and older).
+//	@Description		The preferred one is the map configuration.
+//	@Tags			users
+//	@Produce		json
+//	@Param			request	body		users.UserUpdateOptionsRequest	true	"A JSON object containing at least one option with a desired value."
+//	@Param			userID	path		string					true	"ID of the user to update"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"User's options were updated successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Unauthorized attempt to modify a foreign option set."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem (e.g. data could not be saved in database)."
+//	@Router			/users/{userID}/options [patch]
+func (c *UserController) UpdateOptions(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	const (
+		userIDParam     string = "userID"
+		updateTypeParam string = "updateType"
+	)
+
+	// Skip the blank caller's ID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, userIDParam)
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	var DTOIn UserUpdateOptionsRequest
+
+	// Decode the incoming data.
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Update the user's data at the UserService.
+	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "options"), userIDParam, userID), &DTOIn); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
+
+}
+
+// Update is the users handler that allows the user to change their lists/options/passphrase.
+//
+//	@Summary		Update user's passphrase
+//	@Description		This function call enables the caller to modify some of their properties saved in the database.
+//	@Tags			users
+//	@Produce		json
+//	@Param			request	body		users.UserUpdatePassphraseRequest	true	"Hexadecimal representation of the sha512-hashed passphrases."
+//	@Param			userID	path		string					true	"ID of the user to update"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		409		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/{userID}/passphrase [patch]
+func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	const (
+		userIDParam     string = "userID"
+		updateTypeParam string = "updateType"
+	)
+
+	// Skip the blank caller's ID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, userIDParam)
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	var DTOIn UserUpdatePassphraseRequest
+
+	// Decode the incoming data.
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Update the user's data at the UserService.
+	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "passphrase"), userIDParam, userID), &DTOIn); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -179,21 +286,21 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 // UploadAvatar is a handler function to update user's avatar directly in the app.
 //
-// @Summary      Post user's avatar
-// @Description  post user's avatar
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param    	 request body users.UserUpdateRequest true "new avatar data"
-// @Param        userID path string true "user's ID for avatar update"
-// @Success      200  {object}  common.APIResponse{data=models.Stub}
-// @Failure      400  {object}  common.APIResponse{data=models.Stub}
-// @Failure      403  {object}  common.APIResponse{data=models.Stub}
-// @Failure      404  {object}  common.APIResponse{data=models.Stub}
-// @Failure      500  {object}  common.APIResponse{data=models.Stub}
-// @Router       /users/{userID}/avatar [post]
+//	@Summary		Post user's avatar
+//	@Description	post user's avatar
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		users.UserUploadAvatarRequest	true	"The data object containing the new avatar's data."
+//	@Param			userID	path		string					true	"user's ID for avatar update"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/{userID}/avatar [post]
 func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -213,20 +320,18 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		Key string `json:"key"`
 	}
 
-	var DTOIn UserUpdateRequest
+	var DTOIn UserUploadAvatarRequest
 
 	// Decode the incoming request data.
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Call the userService to upload and update the avatar.
 	avatarURL, err := c.userService.UpdateAvatar(r.Context(), &DTOIn)
 	if err != nil {
-		l.Msg("could not update user's avatar").Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg("could not update user's avatar").Status(http.StatusBadRequest).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -239,20 +344,20 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 // PassphraseReset handles a new passphrase regeneration.
 //
-// @Summary      Reset the passphrase
-// @Description  reset the passphrase
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param    	 request body users.UserUpdateRequest true "fill the e-mail address, or UUID fields"
-// @Success      200  {object}  common.APIResponse{data=models.Stub}
-// @Failure      400  {object}  common.APIResponse{data=models.Stub}
-// @Failure      404  {object}  common.APIResponse{data=models.Stub}
-// @Failure      500  {object}  common.APIResponse{data=models.Stub}
-// @Router       /users/passphrase/reset [post]
-// @Router       /users/passphrase/request [post]
+//	@Summary		Reset the passphrase
+//	@Description	reset the passphrase
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		users.UserPassphraseResetRequest	true	"fill the e-mail address, or UUID fields"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/passphrase/reset [post]
+//	@Router			/users/passphrase/request [post]
 func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "userController")
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -267,7 +372,7 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var DTOIn UserUpdateRequest
+	var DTOIn UserPassphraseResetRequest
 
 	// decode the incoming data
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
@@ -287,17 +392,17 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 
 // Delete is the users handler that processes and deletes given user (oneself) form the database.
 //
-// @Summary      Delete user
-// @Description  delete user
-// @Tags         users
-// @Produce      json
-// @Param        userID path string true "ID of the user to delete"
-// @Success      200  {object}   common.APIResponse{data=models.Stub}
-// @Failure      400  {object}   common.APIResponse{data=models.Stub}
-// @Failure      403  {object}   common.APIResponse{data=models.Stub}
-// @Failure      404  {object}   common.APIResponse{data=models.Stub}
-// @Failure      500  {object}   common.APIResponse{data=models.Stub}
-// @Router       /users/{userID} [delete]
+//	@Summary		Delete user
+//	@Description	delete user
+//	@Tags			users
+//	@Produce		json
+//	@Param			userID	path		string	true	"ID of the user to delete"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/{userID} [delete]
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -332,16 +437,16 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 
 // GetAll is the users handler that processes and returns existing users list.
 //
-// @Summary      Get a list of users
-// @Description  get a list of users
-// @Tags         users
-// @Produce      json
-// @Param    	 X-Page-No header string true "page number"
-// @Success      200  {object}   common.APIResponse{data=users.GetAll.responseData}
-// @Failure	 400  {object}   common.APIResponse{data=models.Stub}
-// @Failure	 404  {object}   common.APIResponse{data=models.Stub}
-// @Failure	 500  {object}   common.APIResponse{data=models.Stub}
-// @Router       /users [get]
+//	@Summary		Get a list of users
+//	@Description	get a list of users
+//	@Tags			users
+//	@Produce		json
+//	@Param			X-Page-No	header		string	true	"page number"
+//	@Success		200			{object}	common.APIResponse{data=users.GetAll.responseData}
+//	@Failure		400			{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404			{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500			{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users [get]
 func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -394,15 +499,16 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 // GetByID is the users handler that processes and returns existing user's details according to callerID.
 //
-// @Summary      Get the user's details
-// @Description  get the user's details
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}   common.APIResponse{data=users.GetByID.responseData}
-// @Failure      400  {object}   common.APIResponse{data=models.Stub}
-// @Failure      404  {object}   common.APIResponse{data=models.Stub}
-// @Router       /users/{userID} [get]
+//	@Summary		Get the user's details
+//	@Description	get the user's details
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	common.APIResponse{data=users.GetByID.responseData}
+//	@Failure		400	{object}	common.APIResponse{data=models.Stub}
+//	@Failure		404	{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/caller [get]
+//	@Router			/users/{userID} [get]
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
@@ -455,17 +561,17 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // GetPosts fetches posts only from specified user.
 //
-// @Summary      Get user posts
-// @Description  get user posts
-// @Tags         users
-// @Produce      json
-// @Param    	 X-Hide-Replies header string false "hide replies"
-// @Param    	 X-Page-No header string true "page number"
-// @Param        userID path string true "user's ID for their posts"
-// @Success      200  {object}  common.APIResponse{data=users.GetPosts.responseData}
-// @Failure      400  {object}  common.APIResponse{data=models.Stub}
-// @Failure      500  {object}  common.APIResponse{data=models.Stub}
-// @Router       /users/{userID}/posts [get]
+//	@Summary		Get user posts
+//	@Description	get user posts
+//	@Tags			users
+//	@Produce		json
+//	@Param			X-Hide-Replies	header		string	false	"hide replies"
+//	@Param			X-Page-No		header		string	true	"page number"
+//	@Param			userID			path		string	true	"user's ID for their posts"
+//	@Success		200				{object}	common.APIResponse{data=users.GetPosts.responseData}
+//	@Failure		400				{object}	common.APIResponse{data=models.Stub}
+//	@Failure		500				{object}	common.APIResponse{data=models.Stub}
+//	@Router			/users/{userID}/posts [get]
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
 
