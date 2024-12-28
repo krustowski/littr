@@ -1,29 +1,29 @@
-// @title		littr
-// @version	 	0.45.18
-// @description		a simple nanoblogging platform as PWA built on go-app framework
-// @termsOfService	https://www.littr.eu/tos
+//	@title			littr
+//	@version		0.45.18
+//	@description		A simple nanoblogging platform.
+//	@termsOfService		https://www.littr.eu/tos
 
-// @contact.name	API Support
-// @contact.url		https://www.littr.eu/docs
-// @contact.email	info@littr.eu
+//	@contact.name		API Support
+//	@contact.url		https://www.littr.eu/docs
+//	@contact.email		info@littr.eu
 
-// @license.name	MIT
-// @license.url		https://github.com/krustowski/littr/blob/master/LICENSE
+//	@license.name		MIT
+//	@license.url		https://github.com/krustowski/littr/blob/master/LICENSE
 
-// @host		www.littr.eu
-// @BasePath		/api/v1
-// @accept              json
-// @produce             json
+//	@host			www.littr.eu
+//	@BasePath		/api/v1
+//	@accept			json
+//	@produce		json
 
-// @supportedSubmitMethods	[]
-// @security            	[]
-// @securityDefinitions.basic	BasicAuth
+//	@supportedSubmitMethods		[]
+//	@security			[]
+//	@securityDefinitions.basic	BasicAuth
 
-// @externalDocs.description	OpenAPI
-// @externalDocs.url		https://swagger.io/resources/open-api/
+//	@externalDocs.description	OpenAPI
+//	@externalDocs.url		https://swagger.io/resources/open-api/
 
-// @externalDocs.description	Documentation
-// @externalDocs.url		https://krusty.space/projects/littr/
+//	@externalDocs.description	Documentation
+//	@externalDocs.url		https://krusty.space/projects/littr/
 
 // The umbrella package for the JSON REST API service.
 package backend
