@@ -12,7 +12,6 @@ import (
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
-// top navbar
 func (h *Header) Render() app.UI {
 	// A very nasty way on how to store the timestamp...
 	var last int64 = 0
@@ -55,7 +54,7 @@ func (h *Header) Render() app.UI {
 		settingsHref = "#"
 	}
 
-	// Render.
+	// Top navbar render.
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
@@ -66,7 +65,7 @@ func (h *Header) Render() app.UI {
 							app.Text("build")),
 					),
 				).Else(
-					app.Div().Class(""),
+					app.A().Class("").OnClick(nil).Body(),
 				),
 
 				// show intallation button if available
@@ -78,7 +77,7 @@ func (h *Header) Render() app.UI {
 					),
 				// hotfix to keep the nav items' distances
 				).Else(
-					app.Div().Class(""),
+					app.A().Class("").OnClick(nil).Body(),
 				),
 
 				// app logout modal
@@ -105,6 +104,17 @@ func (h *Header) Render() app.UI {
 
 				// littr header
 				app.Div().Class("row center-align").Body(
+					// snackbar toast top
+					app.A().ID("snackbar-general-top-link").Href("").Body(
+						app.If(toastTopText != "",
+							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Body(
+							//app.I().Text("info"),
+							//app.Span().Text(toastText),
+							),
+						),
+					),
+
+					// littr header
 					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 						app.Span().Body(
 							app.Text(headerString),
@@ -118,15 +128,6 @@ func (h *Header) Render() app.UI {
 						),
 					),
 
-					// snackbar toast top
-					app.A().ID("snackbar-general-top-link").Href("").Body(
-						app.If(toastTopText != "",
-							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Body(
-							//app.I().Text("info"),
-							//app.Span().Text(toastText),
-							),
-						),
-					),
 					// snackbar toast bottom
 					app.A().ID("snackbar-general-bottom-link").Href("").Body(
 						app.If(toastBottomText != "",
@@ -203,7 +204,7 @@ func (h *Header) Render() app.UI {
 					),
 				// hotfix to keep the nav items' distances
 				).Else(
-					app.A().Class("").OnClick(nil),
+					app.A().Class("").OnClick(nil).Body(),
 				),
 
 				// login/logout button

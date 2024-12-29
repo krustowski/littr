@@ -36,11 +36,13 @@ func (c *Content) Render() app.UI {
 			app.Input().ID("passphrase-input").Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
 			app.Label().Text("passphrase").Class("active deep-orange-text"),
 		),
-		app.Article().Class("row surface-container-highest").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
+
+		// Session duration infobox.
+		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				//app.Span().Class("deep-orange-text").Text(" "),
-				app.Span().Text("log-in for 30 days"),
+				app.Span().Text("The login session lasts 30 days."),
 			),
 		),
 		app.Div().Class("space"),

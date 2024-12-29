@@ -11,7 +11,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Body(
 			app.Div().Class("").Body(
 				app.Div().Class("row center-align").Body(
-					app.Img().Src("/web/android-chrome-192x192.png"),
+					app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
 					app.H4().Body(
 						app.Span().Body(
 							app.Text("littr"),
@@ -37,7 +37,7 @@ func (c *Content) Render() app.UI {
 
 					app.Span().Text("The very main page of this platform is called just "),
 					app.Span().Class("deep-orange-text bold").Text("flow"),
-					app.Span().Text(" (shown below). This page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow (that you are following)."),
+					app.Span().Text(". This page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow (that you are following)."),
 					app.Div().Class("small-space"),
 
 					app.Span().Text("To navigate to the "),
@@ -53,7 +53,7 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
-		app.Article().Class("center-align center").Body(
+		/*app.Article().Class("center-align center").Body(
 			app.H6().Class("margin-bottom center-align").Body(
 				app.Span().Body(
 					app.Text("flow page"),
@@ -64,7 +64,7 @@ func (c *Content) Render() app.UI {
 			app.Div().Style("z-index", "5").Class("medium no-padding center-align").Body(
 				app.Img().Class("center-align bottom lazy").Src("https://krusty.space/littr_flow_new_post_live_v0.30.17.jpg").Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
 			),
-		),
+		),*/
 
 		app.Div().Class("medium-space"),
 	)

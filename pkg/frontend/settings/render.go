@@ -420,7 +420,7 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
-		app.Article().Class("row surface-container-highest").Body(
+		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Text("Down below, you can enter a link to your personal homepage. The link will then be visible to others via the user modal on the users (flowers) page."),
 		),
