@@ -7,7 +7,7 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "a simple nanoblogging platform as PWA built on go-app framework",
+        "description": "A simple nanoblogging platform.",
         "title": "littr",
         "termsOfService": "https://www.littr.eu/tos",
         "contact": {
@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.18"
+        "version": "0.45.19"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1397,7 +1397,7 @@
         },
         "/users": {
             "get": {
-                "description": "get a list of users",
+                "description": "This function call retrieves a paginated list of user accounts.",
                 "produces": [
                     "application/json"
                 ],
@@ -1408,15 +1408,14 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "page number",
+                        "description": "Page number (default is 0)",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Requested page of user accounts returned.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1434,25 +1433,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
+                        "description": "Invalid input data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1470,7 +1451,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1490,7 +1471,7 @@
                 }
             },
             "post": {
-                "description": "add new user",
+                "description": "This function call provides a method on how to create a new user in the system.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1503,18 +1484,18 @@
                 "summary": "Add new user",
                 "parameters": [
                     {
-                        "description": "new user's request body",
+                        "description": "The request body containing all listed fields for a new user's creation.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/users.UserCreateRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "The request was processed successfully and an user was created.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1532,7 +1513,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "The request body contains invalid data, or data types.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1550,7 +1531,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "This response code may occur when the registration is disabled.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1568,7 +1549,7 @@
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "The nickname and/or e-mail fields contain data, that had been already used by someone else.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1586,7 +1567,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is a problem processing the request in the internal server logic. This may occur when a new user cannot be saved to the database for example.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1608,23 +1589,112 @@
         },
         "/users/activation/{uuid}": {
             "post": {
-                "description": "activate the user via given UUID",
+                "description": "This function call provides a method for the new user's activation using a received UUID string.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Activate the user via given UUID",
+                "summary": "Activate an user via an UUID string",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "UUID from the activation mail",
+                        "description": "The UUID string from the activation e-mail, that is sent to the new user after a successful registration.",
                         "name": "uuid",
                         "in": "path",
                         "required": true
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "The user was activated successfully.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "The request body contains invalid data, or data types.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "The UUID string does not match any user in the system.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "There is a problem processing the request (e.g. a problem accessing the database).",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/users/caller": {
+            "get": {
+                "description": "get the user's details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get the user's details",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1637,7 +1707,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.Stub"
+                                            "$ref": "#/definitions/users.GetByID.responseData"
                                         }
                                     }
                                 }
@@ -1664,24 +1734,6 @@
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "allOf": [
                                 {
@@ -1703,7 +1755,7 @@
         },
         "/users/passphrase/request": {
             "post": {
-                "description": "reset the passphrase",
+                "description": "This function call is to be called when an user forgets their passphrase and wants a new one.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.\nAs far as the payload (request body) is concerned,",
                 "consumes": [
                     "application/json"
                 ],
@@ -1716,18 +1768,18 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "fill the e-mail address, or UUID fields",
+                        "description": "A common passphrase reset payload.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserPassphraseResetRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The passphrase was changed successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1745,7 +1797,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1763,7 +1815,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1781,7 +1833,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem present (e.g. data could not be saved to the database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -1803,7 +1855,7 @@
         },
         "/users/passphrase/reset": {
             "post": {
-                "description": "reset the passphrase",
+                "description": "This function call is to be called when an user forgets their passphrase and wants a new one.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.\nAs far as the payload (request body) is concerned,",
                 "consumes": [
                     "application/json"
                 ],
@@ -1816,18 +1868,18 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "fill the e-mail address, or UUID fields",
+                        "description": "A common passphrase reset payload.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserPassphraseResetRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The passphrase was changed successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1845,7 +1897,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1863,7 +1915,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1881,7 +1933,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem present (e.g. data could not be saved to the database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -1972,7 +2024,7 @@
                 }
             },
             "delete": {
-                "description": "delete user",
+                "description": "This function call ensures a caller's user account is deleted while all posted items (posts and polls) are purged too. Additionally, all associated requests and tokens are deleted as well.",
                 "produces": [
                     "application/json"
                 ],
@@ -1983,7 +2035,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID of the user to delete",
+                        "description": "ID of the user to be purged",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -1991,7 +2043,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The submitted user account has been deleted.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2009,7 +2061,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2027,7 +2079,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Blocked attemt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2045,7 +2097,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2063,7 +2115,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem present (e.g. data could not be saved to the database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2085,7 +2137,7 @@
         },
         "/users/{userID}/avatar": {
             "post": {
-                "description": "post user's avatar",
+                "description": "This function call presents a method to change one's avatar URL property while also uploading a new picture as a profile photo. Binary data and a figure's extension (JPG, JPEG, PNG) has to be encapsulated into the JSON object as base64 formatted text.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2098,17 +2150,17 @@
                 "summary": "Post user's avatar",
                 "parameters": [
                     {
-                        "description": "new avatar data",
+                        "description": "The data object containing the new avatar's data.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserUploadAvatarRequest"
                         }
                     },
                     {
                         "type": "string",
-                        "description": "user's ID for avatar update",
+                        "description": "User's ID for avatar update.",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -2116,7 +2168,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The avatar was uploaded and updated successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2134,7 +2186,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2152,7 +2204,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Unauthorized attempt to modify a forigner's avatar.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2170,7 +2222,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2188,7 +2240,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem present (e.g. data could not be saved to the database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2210,22 +2262,22 @@
         },
         "/users/{userID}/lists": {
             "patch": {
-                "description": "update user's data",
+                "description": "This function call enables the caller to modify lists saved with other user's data in the database.\n\nThose lists are KV structures, that hold another user's nickname as key, and a boolean as a value to specify whether such list should apply its logic on such user.\nAt least one list has to be specified.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user's data",
+                "summary": "Update user's list properties",
                 "parameters": [
                     {
-                        "description": "data to update",
+                        "description": "Lists object data as a desired state recipe.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserUpdateListsRequest"
                         }
                     },
                     {
@@ -2238,7 +2290,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User's lists have been updated.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2256,7 +2308,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2274,7 +2326,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "This code can occur when one wants to update another user (this feature to be prepared for a possible admin panel function).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2292,25 +2344,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
+                        "description": "Such user does not exist.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2328,7 +2362,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is a processing problem in the internal logic, or some system's component does not behave (e.g. database is unavailable).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2350,22 +2384,22 @@
         },
         "/users/{userID}/options": {
             "patch": {
-                "description": "update user's data",
+                "description": "This function call enables the caller to modify some of their properties (options) saved in the database.\n\nNote: the duality in the options' configuration (map vs. separated booleans) reflects the attempt for backward compatibility with older clients (v0.45.18 and older).\nThe preferred one is the map configuration.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user's data",
+                "summary": "Update user's option properties",
                 "parameters": [
                     {
-                        "description": "data to update",
+                        "description": "A JSON object containing at least one option with a desired value.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserUpdateOptionsRequest"
                         }
                     },
                     {
@@ -2378,7 +2412,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User's options were updated successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2396,7 +2430,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2414,7 +2448,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Unauthorized attempt to modify a foreign option set.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2432,25 +2466,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2468,7 +2484,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem (e.g. data could not be saved in database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2490,22 +2506,22 @@
         },
         "/users/{userID}/passphrase": {
             "patch": {
-                "description": "update user's data",
+                "description": "This function call enables the caller to modify their current passphrase. The current and a new passphrase are to be sent (hashed using sha512 algorithm).\n\nThe problem there is on how to fetch the current passphrase. This can be achieved using a web browser in dev tools (F12), where the hash is to be found on the Network card.\nAnother problem is that the server uses a secret (pepper), that is appended to a passphrase before loading it into the has algorithm. This secret cannot be fetched via API, as it is a sensitive variable saved as the environmental variable where the server is run.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user's data",
+                "summary": "Update user's passphrase",
                 "parameters": [
                     {
-                        "description": "data to update",
+                        "description": "Hexadecimal representation of the sha512-hashed passphrases.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserUpdateRequest"
+                            "$ref": "#/definitions/users.UserUpdatePassphraseRequest"
                         }
                     },
                     {
@@ -2518,7 +2534,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User has been updated.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2536,7 +2552,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data received.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2554,7 +2570,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Unauthorized attempt to modify a forigner's passphrase.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2572,25 +2588,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
+                        "description": "Such user does not exist in the system.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2608,7 +2606,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "There is an internal processing problem present (e.g. data could not be saved to the database).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2764,10 +2762,12 @@
                 },
                 "message": {
                     "description": "Common fields for all responses",
-                    "type": "string"
+                    "type": "string",
+                    "example": "a generic success info, or a processing problem/error description"
                 },
                 "timestamp": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1734778064068087800
                 }
             }
         },
@@ -2982,7 +2982,8 @@
                 },
                 "app_bg_mode": {
                     "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "boolean"
+                    "type": "string",
+                    "default": "dark"
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
@@ -3038,7 +3039,8 @@
                 },
                 "nickname": {
                     "description": "Nickname is a login name of such user.",
-                    "type": "string"
+                    "type": "string",
+                    "example": "alice"
                 },
                 "options": {
                     "description": "Options is an umbrella struct/map for the booleans.",
@@ -3047,14 +3049,6 @@
                             "$ref": "#/definitions/models.UserOptionsMap"
                         }
                     ]
-                },
-                "passphrase": {
-                    "description": "Passphrase is a hashed pass phrase string (binary form).",
-                    "type": "string"
-                },
-                "passphrase_hex": {
-                    "description": "PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).",
-                    "type": "string"
                 },
                 "private": {
                     "description": "Private boolean indicates a private user's account.",
@@ -3328,38 +3322,79 @@
                 }
             }
         },
-        "users.UserUpdateRequest": {
+        "users.UserCreateRequest": {
             "type": "object",
             "properties": {
-                "about_you": {
-                    "type": "string"
-                },
-                "current_passphrase_hex": {
-                    "type": "string"
-                },
-                "dark_mode": {
-                    "description": "Options updata request payload (legacy fields).",
-                    "type": "boolean"
-                },
-                "data": {
-                    "description": "New avatar upload/update request payload.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "alice@example.com"
                 },
-                "figure": {
-                    "type": "string"
+                "nickname": {
+                    "type": "string",
+                    "example": "alice"
                 },
+                "passphrase_hex": {
+                    "type": "string",
+                    "example": "fb43b35a752b0e8045e2dd1b1e292983b9cbf4672a51e30caaa3f9b06c5a3b74d5096bc8092c9e90a2e047c1eab29eceb50c09d6c51e6995c1674beb3b06535e"
+                }
+            }
+        },
+        "users.UserPassphraseResetRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "alice@example.com"
+                },
+                "uuid": {
+                    "description": "Passphrase reset request",
+                    "type": "string"
+                }
+            }
+        },
+        "users.UserUpdateListsRequest": {
+            "type": "object",
+            "properties": {
                 "flow_list": {
                     "description": "Lists update request payload.",
                     "type": "object",
                     "additionalProperties": {
                         "type": "boolean"
+                    },
+                    "example": {
+                        "bob": false
                     }
+                },
+                "request_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "example": {
+                        "cody": true
+                    }
+                },
+                "shade_list": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "example": {
+                        "dave": true
+                    }
+                }
+            }
+        },
+        "users.UserUpdateOptionsRequest": {
+            "type": "object",
+            "properties": {
+                "about_you": {
+                    "type": "string",
+                    "example": "let's gooo"
+                },
+                "dark_mode": {
+                    "description": "Options updata request payload (legacy fields).",
+                    "type": "boolean"
                 },
                 "live_mode": {
                     "type": "boolean"
@@ -3367,34 +3402,51 @@
                 "local_time_mode": {
                     "type": "boolean"
                 },
-                "new_passphrase_hex": {
-                    "description": "New passphrase request payload.",
-                    "type": "string"
-                },
                 "options_map": {
-                    "$ref": "#/definitions/models.UserOptionsMap"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserOptionsMap"
+                        }
+                    ],
+                    "example": {
+                        "private": true
+                    }
                 },
                 "private": {
                     "type": "boolean"
                 },
-                "request_list": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "shade_list": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "uuid": {
-                    "description": "Passphrase reset request",
-                    "type": "string"
-                },
                 "website_link": {
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "users.UserUpdatePassphraseRequest": {
+            "type": "object",
+            "properties": {
+                "current_passphrase_hex": {
                     "type": "string"
+                },
+                "new_passphrase_hex": {
+                    "description": "New passphrase request payload.",
+                    "type": "string"
+                }
+            }
+        },
+        "users.UserUploadAvatarRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "New avatar upload/update request payload.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "format": "base64"
+                    }
+                },
+                "figure": {
+                    "type": "string",
+                    "example": "avatar.jpeg"
                 }
             }
         }
