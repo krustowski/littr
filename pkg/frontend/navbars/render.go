@@ -88,10 +88,10 @@ func (h *Header) Render() app.UI {
 							app.H5().Text("logout"),
 						),
 
-						app.Article().Class("row surface-container-highest").Body(
+						app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 							app.I().Text("warning").Class("amber-text"),
 							app.P().Class("max").Body(
-								app.Span().Text("are you sure you want to end this session and log out?"),
+								app.Span().Text("Are you sure you want to end this session and log out?"),
 							),
 						),
 						app.Div().Class("space"),
@@ -166,7 +166,7 @@ func (h *Header) Render() app.UI {
 						),
 
 						app.Article().Class("center-align").Style("border-radius", "8px").Body(
-							app.Text("version: "),
+							app.Text("Version: "),
 							app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
 							app.P().Body(
 								app.Text("SSE status: "),
@@ -180,12 +180,10 @@ func (h *Header) Render() app.UI {
 
 						app.Nav().Class("center-align").Body(
 							app.P().Body(
-								app.Text("powered by "),
+								app.Text("Powered by "),
 								app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
-								app.Text(", "),
-								app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
 								app.Text(" & "),
-								app.A().Href("https://github.com/thevxn/swis-api").Text("swapi").Style("font-weight", "bolder"),
+								app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
 							),
 						),
 

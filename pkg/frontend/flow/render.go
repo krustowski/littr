@@ -140,10 +140,11 @@ func (c *Content) Render() app.UI {
 				),
 
 				app.Div().Class("space"),
-				app.Article().Class("row").Body(
+
+				app.Article().Class("row").Style("border-radius", "8px").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max").Body(
-						app.Span().Text("are you sure you want to delete your post?"),
+						app.Span().Text("Are you sure you want to delete your post?"),
 					),
 				),
 				app.Div().Class("space"),
