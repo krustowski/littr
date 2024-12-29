@@ -32,13 +32,11 @@ func (c *Content) Render() app.UI {
 
 		// passphrase request --- insert an e-mail
 		app.If(!c.showUUIDPage,
-
 			// pwd reset lightbulb
-			app.Article().Class("row surface-container-highest").Body(
+			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
-					//app.Span().Class("deep-orange-text").Text(" "),
-					app.Span().Text("to request a passphrase change, enter your registration e-mail address below, which is linked with your account; a confirmation mail will then be sent to your inbox"),
+					app.Span().Text("To request a passphrase change, enter your registration e-mail address below, which is linked with your account. A confirmation mail will then be sent into your inbox."),
 				),
 			),
 			app.Div().Class("space"),
@@ -60,13 +58,12 @@ func (c *Content) Render() app.UI {
 
 		// passphrase reset --- insert the UUID
 		).Else(
-
 			// pwd reset lightbulb
-			app.Article().Class("row surface-container-highest").Body(
+			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
 					//app.Span().Class("deep-orange-text").Text(" "),
-					app.Span().Text("enter the UUID code which has been sent to your inbox; if the code is correct, your passphrase will be automatically regenerated and another confirmation mail containing the passphrase will be sent to your e-mail address"),
+					app.Span().Text("Enter the UUID code which has been sent to your inbox. If the code is correct, your passphrase will be automatically regenerated and another confirmation mail containing the passphrase will be sent to your e-mail address."),
 				),
 			),
 			app.Div().Class("space"),
