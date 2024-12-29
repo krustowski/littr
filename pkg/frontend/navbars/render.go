@@ -143,7 +143,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.modalInfoShow,
 					app.Dialog().ID("info-modal").Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
 						app.Article().Class("row center-align").Style("border-radius", "8px").Body(
-							app.Img().Src("/web/android-chrome-192x192.png"),
+							app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
 							app.H4().Body(
 								app.Span().Body(
 									app.Text("littr"),
