@@ -21,16 +21,16 @@ type UserGenericMap map[string]bool
 
 type User struct {
 	// Nickname is a login name of such user.
-	Nickname string `json:"nickname" binding:"required"`
+	Nickname string `json:"nickname" binding:"required" example:"alice"`
 
 	// FullName is the "genuine" name of such user.
 	FullName string `json:"full_name"`
 
 	// Passphrase is a hashed pass phrase string (binary form).
-	Passphrase string `json:"passphrase,omitempty"`
+	Passphrase string `json:"passphrase,omitempty" swaggerignore:"true"`
 
 	// PassphraseHex is a hashed pass phrase string (hexadecimal alphanumberic form).
-	PassphraseHex string `json:"passphrase_hex,omitempty"`
+	PassphraseHex string `json:"passphrase_hex,omitempty" swaggerignore:"true"`
 
 	// Email is a primary user's e-mail address.
 	Email string `json:"email,omitempty"`
@@ -78,14 +78,14 @@ type User struct {
 	LastActiveTime time.Time `json:"last_active_time"`
 
 	// searched is a bool indicating a status for the search engine.
-	Searched bool `json:"-"`
+	Searched bool `json:"-" swaggerignore:"true"`
 
 	// GDPR consent, set to true because it is noted on the registration page so. No user data should
 	// be saved if the boolean is false.
 	GDPR bool `json:"gdpr"`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	UIDarkMode bool `json:"app_bg_mode"`
+	UIDarkMode bool `json:"app_bg_mode" swaggerignore:"true"`
 
 	// LiveMode is a feature allowing to show notifications about new posts
 	LiveMode bool `json:"live_mode"`

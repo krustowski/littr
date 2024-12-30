@@ -41,11 +41,11 @@ type TokenServiceInterface interface {
 }
 
 type UserServiceInterface interface {
-	Create(ctx context.Context, user *User) error
+	Create(ctx context.Context, createRequest interface{}) error
 	Activate(ctx context.Context, userID string) error
-	Update(ctx context.Context, request interface{}) error
-	UpdateAvatar(ctx context.Context, request interface{}) (*string, error)
-	ProcessPassphraseRequest(ctx context.Context, request interface{}) error
+	Update(ctx context.Context, updateRequest interface{}) error
+	UpdateAvatar(ctx context.Context, updateRequest interface{}) (*string, error)
+	ProcessPassphraseRequest(ctx context.Context, updateRequest interface{}) error
 	Delete(ctx context.Context, userID string) error
 	FindAll(ctx context.Context) (*map[string]User, error)
 	FindByID(ctx context.Context, userID string) (*User, error)

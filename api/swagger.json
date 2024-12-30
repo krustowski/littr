@@ -1397,7 +1397,7 @@
         },
         "/users": {
             "get": {
-                "description": "This function call retrieves a paginated list of user accounts.",
+                "description": "This function call retrieves a paginated list of user accounts. The page number starts at 0 (and is the default value if not provided in a request).",
                 "produces": [
                     "application/json"
                 ],
@@ -1684,7 +1684,7 @@
         },
         "/users/caller": {
             "get": {
-                "description": "get the user's details",
+                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1697,7 +1697,7 @@
                 "summary": "Get the user's details",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Requested user's data (may be limited according to the caller).",
                         "schema": {
                             "allOf": [
                                 {
@@ -1715,7 +1715,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1733,7 +1733,25 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found in the database.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1955,7 +1973,7 @@
         },
         "/users/{userID}": {
             "get": {
-                "description": "get the user's details",
+                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1966,9 +1984,18 @@
                     "users"
                 ],
                 "summary": "Get the user's details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ID to be shown",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Requested user's data (may be limited according to the caller).",
                         "schema": {
                             "allOf": [
                                 {
@@ -1986,7 +2013,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2004,7 +2031,25 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found in the database.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2628,7 +2673,7 @@
         },
         "/users/{userID}/posts": {
             "get": {
-                "description": "get user posts",
+                "description": "This function call is a very specific combination of the users' and posts' services. It retrieves a paginated list of posts made by such user. Special restrictions are applied, such as the privacy (private account, which is not followed by the caller is shown blank). If the list is empty, ensure you are following such user/account.",
                 "produces": [
                     "application/json"
                 ],
@@ -2639,20 +2684,19 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "hide replies",
+                        "description": "Optional boolean specifying the request of so-called root posts (those not being a reply). Default is false.",
                         "name": "X-Hide-Replies",
                         "in": "header"
                     },
                     {
                         "type": "string",
-                        "description": "page number",
+                        "description": "Page number (default is 0).",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     },
                     {
                         "type": "string",
-                        "description": "user's ID for their posts",
+                        "description": "User's ID (usually the nickname).",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -2660,7 +2704,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "A paginated list of the user's posts (special restriction may apply).",
                         "schema": {
                             "allOf": [
                                 {
@@ -2678,7 +2722,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2696,7 +2740,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "A very internal service's logic problem. See the `message` field to gain more information.",
                         "schema": {
                             "allOf": [
                                 {
