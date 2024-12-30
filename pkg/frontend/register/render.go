@@ -93,8 +93,13 @@ func (c *Content) Render() app.UI {
 		// register button
 		app.Div().Class("row center-align").Body(
 			app.If(config.IsRegistrationEnabled,
-				app.Button().ID("register-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
-					app.Text("register"),
+				app.Div().Class("row").Body(
+					app.Button().ID("register-button").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
+						app.If(c.registerButtonDisabled,
+							app.Progress().Class("circle white-border small"),
+						),
+						app.Text("register"),
+					),
 				),
 			).Else(
 				app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(nil).Disabled(true).Body(
