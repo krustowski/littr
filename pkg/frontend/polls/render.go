@@ -171,8 +171,8 @@ func (c *Content) Render() app.UI {
 							).ElseIf(userVoted || poll.Author == c.user.Nickname,
 
 								// voted option I
-								app.Div().Class("medium-space border").Body(
-									app.Div().Class("bold progress left deep-orange3 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 0%);"),
+								app.Div().Class("medium-space border").Style("border-radius", "8px").Body(
+									app.Div().Class("bold progress left deep-orange3 medium padding").Style("border-radius", "8px").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 100%, "+strconv.FormatInt(optionOneShare, 10)+"% 0%);"),
 									//app.Progress().Value(strconv.Itoa(optionOneShare)).Max(100).Class("deep-orange-text padding medium bold left"),
 									//app.Div().Class("progress left light-green"),
 									app.Div().Class("middle right-align bold").Body(
@@ -183,8 +183,8 @@ func (c *Content) Render() app.UI {
 								app.Div().Class("medium-space"),
 
 								// voted option II
-								app.Div().Class("medium-space border").Body(
-									app.Div().Class("bold progress left deep-orange5 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 0%);").Body(),
+								app.Div().Class("medium-space border").Style("border-radius", "8px").Body(
+									app.Div().Class("bold progress left deep-orange5 medium padding").Style("border-radius", "8px").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 100%, "+strconv.FormatInt(optionTwoShare, 10)+"% 0%);").Body(),
 									//app.Progress().Value(strconv.Itoa(optionTwoShare)).Max(100).Class("deep-orange-text padding medium bold left"),
 									app.Div().Class("middle right-align bold").Body(
 										app.Span().Text(poll.OptionTwo.Content+" ("+strconv.FormatInt(optionTwoShare, 10)+"%)"),
@@ -196,8 +196,8 @@ func (c *Content) Render() app.UI {
 								// voted option III
 								app.If(poll.OptionThree.Content != "",
 									app.Div().Class("space"),
-									app.Div().Class("medium-space border").Body(
-										app.Div().Class("bold progress left deep-orange9 medium padding").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 0%);"),
+									app.Div().Class("medium-space border").Style("border-radius", "8px").Body(
+										app.Div().Class("bold progress left deep-orange9 medium padding").Style("border-radius", "8px").Style("clip-path", "polygon(0% 0%, 0% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 100%, "+strconv.FormatInt(optionThreeShare, 10)+"% 0%);"),
 										//app.Progress().Value(strconv.Itoa(optionThreeShare)).Max(100).Class("deep-orange-text deep-orange padding medium bold left"),
 										app.Div().Class("middle bold right-align").Body(
 											app.Span().Text(poll.OptionThree.Content+" ("+strconv.FormatInt(optionThreeShare, 10)+"%)"),
