@@ -137,10 +137,23 @@ func (s *UserService) Create(ctx context.Context, createRequestI interface{}) er
 	user.PassphraseHex = createRequest.PassphraseHex
 	user.Email = createRequest.Email
 
+	user.FlowList = make(models.UserGenericMap)
+	user.FlowList[createRequest.Nickname] = true
+	user.FlowList["system"] = true
+
 	// Set the defaults and a timestamp.
 	user.RegisteredTime = time.Now()
 	user.LastActiveTime = time.Now()
 	user.About = "newbie"
+
+	// Set the default avatar.
+	user.AvatarURL = func() string {
+		if os.Getenv("APP_URL_MAIN") != "" {
+			return "https://" + os.Getenv("APP_URL_MAIN") + "/web/apple-touch-icon.png"
+		}
+
+		return "https://www.littr.eu/web/apple-touch-icon.png"
+	}()
 
 	// New user's umbrella option map.
 	options := map[string]bool{
