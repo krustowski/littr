@@ -472,7 +472,7 @@ func (c *Content) Render() app.UI {
 
 		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("warning").Class("red-text"),
-			app.P().Class("max").Text("please note that this action is irreversible!"),
+			app.P().Class("max").Text("Please note that this action is irreversible!"),
 		),
 		app.Div().Class("space"),
 
