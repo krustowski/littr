@@ -49,7 +49,7 @@ func (c *Content) Render() app.UI {
 
 		// login button
 		app.Div().Class("row center-align").Body(
-			app.Button().ID("login-button").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.loginButtonDisabled).TabIndex(3).Body(
+			app.Button().ID("login-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.loginButtonDisabled).TabIndex(3).Body(
 				app.If(c.loginButtonDisabled,
 					app.Progress().Class("circle white-border small"),
 				),

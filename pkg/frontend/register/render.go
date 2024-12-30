@@ -93,7 +93,7 @@ func (c *Content) Render() app.UI {
 		// register button
 		app.Div().Class("row center-align").Body(
 			app.If(config.IsRegistrationEnabled,
-				app.Div().Class("row").Body(
+				app.Div().Class("row max").Body(
 					app.Button().ID("register-button").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 						app.If(c.registerButtonDisabled,
 							app.Progress().Class("circle white-border small"),
