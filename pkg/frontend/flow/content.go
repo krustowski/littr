@@ -146,14 +146,14 @@ func (c *Content) OnNav(ctx app.Context) {
 		// The content to render is to show the singlePost view.
 		if parts.SinglePostID != "" && parts.SinglePost && posts != nil {
 			if _, found := (*posts)[parts.SinglePostID]; !found {
-				toast.Text(common.ERR_POST_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_POST_NOT_FOUND).Type(common.TTYPE_ERR).Link("/flow").Dispatch(c, dispatch)
 			}
 		}
 
 		// The content to render is to show the userFlow view.
 		if parts.UserFlowNick != "" && parts.UserFlow && users != nil {
 			if _, found := (*users)[parts.UserFlowNick]; !found {
-				toast.Text(common.ERR_USER_NOT_FOUND).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_USER_NOT_FOUND).Type(common.TTYPE_ERR).Link("/flow").Dispatch(c, dispatch)
 			}
 
 			// TODO reevaluate this as it is buggy at the moment...
