@@ -31,10 +31,9 @@ func NewUserRouter(userController *UserController) chi.Router {
 	r.Post("/{userID}/avatar", userController.UploadAvatar)
 	r.Get("/{userID}/posts", userController.GetPosts)
 
-	r.Patch("/{userID}/{updateType}", userController.Update)
-	//r.Patch("/{userID}/lists", userController.UpdateLists)
-	//r.Patch("/{userID}/options", userController.UpdateOptions)
-	//r.Patch("/{userID}/passphrase", userController.UpdatePassphrase)
+	r.Patch("/{userID}/lists", userController.UpdateLists)
+	r.Patch("/{userID}/options", userController.UpdateOptions)
+	r.Patch("/{userID}/passphrase", userController.UpdatePassphrase)
 
 	return r
 }

@@ -118,7 +118,7 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	l.Msg("the user has been activated successfully").Status(http.StatusOK).Log().Payload(nil).Write(w)
 }
 
-// Update is the users handler that allows the user to change their lists/options/passphrase.
+// UpdateLists is the users handler that allows the user to change their lists.
 //
 //	@Summary		Update user's list properties
 //	@Description		This function call enables the caller to modify lists saved with other user's data in the database.
@@ -174,7 +174,7 @@ func (c *UserController) UpdateLists(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Update is the users handler that allows the user to change their lists/options/passphrase.
+// UpdateOptions is the users handler that allows the user to change their options.
 //
 //	@Summary		Update user's option properties
 //	@Description		This function call enables the caller to modify some of their properties (options) saved in the database.
@@ -230,20 +230,22 @@ func (c *UserController) UpdateOptions(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Update is the users handler that allows the user to change their lists/options/passphrase.
+// UpdatePassphrase is the users handler that allows the user to change their passphrase.
 //
 //	@Summary		Update user's passphrase
-//	@Description		This function call enables the caller to modify some of their properties saved in the database.
+//	@Description		This function call enables the caller to modify their current passphrase. The current and a new passphrase are to be sent (hashed using sha512 algorithm).
+//	@Description
+//	@Description		The problem there is on how to fetch the current passphrase. This can be achieved using a web browser in dev tools (F12), where the hash is to be found on the Network card.
+//	@Description		Another problem is that the server uses a secret (pepper), that is appended to a passphrase before loading it into the has algorithm. This secret cannot be fetched via API, as it is a sensitive variable saved as the environmental variable where the server is run.
 //	@Tags			users
 //	@Produce		json
 //	@Param			request	body		users.UserUpdatePassphraseRequest	true	"Hexadecimal representation of the sha512-hashed passphrases."
 //	@Param			userID	path		string					true	"ID of the user to update"
-//	@Success		200		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		409		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"User has been updated."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Unauthorized attempt to modify a forigner's passphrase."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/{userID}/passphrase [patch]
 func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
@@ -287,17 +289,17 @@ func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request
 // UploadAvatar is a handler function to update user's avatar directly in the app.
 //
 //	@Summary		Post user's avatar
-//	@Description	post user's avatar
+//	@Description		This function call presents a method to change one's avatar URL property while also uploading a new picture as a profile photo. Binary data and a figure's extension (JPG, JPEG, PNG) has to be encapsulated into the JSON object as base64 formatted text.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		users.UserUploadAvatarRequest	true	"The data object containing the new avatar's data."
-//	@Param			userID	path		string					true	"user's ID for avatar update"
-//	@Success		200		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Param			userID	path		string					true	"User's ID for avatar update."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The avatar was uploaded and updated successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Unauthorized attempt to modify a forigner's avatar."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/{userID}/avatar [post]
 func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
@@ -345,15 +347,18 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 // PassphraseReset handles a new passphrase regeneration.
 //
 //	@Summary		Reset the passphrase
-//	@Description	reset the passphrase
+//	@Description		This function call is to be called when an user forgets their passphrase and wants a new one.
+//	@Description
+//	@Description		Internally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.
+//	@Description		As far as the payload (request body) is concerned,
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		users.UserPassphraseResetRequest	true	"fill the e-mail address, or UUID fields"
-//	@Success		200		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Param			request	body		users.UserPassphraseResetRequest	true	"A common passphrase reset payload."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"The passphrase was changed successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/passphrase/reset [post]
 //	@Router			/users/passphrase/request [post]
 func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request) {
@@ -393,15 +398,15 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 // Delete is the users handler that processes and deletes given user (oneself) form the database.
 //
 //	@Summary		Delete user
-//	@Description	delete user
+//	@Description		This function call ensures a caller's user account is deleted while all posted items (posts and polls) are purged too. Additionally, all associated requests and tokens are deleted as well.
 //	@Tags			users
 //	@Produce		json
-//	@Param			userID	path		string	true	"ID of the user to delete"
-//	@Success		200		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		400		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		403		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404		{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}
+//	@Param			userID	path		string	true	"ID of the user to be purged"
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The submitted user account has been deleted."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid input data."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Blocked attemt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/{userID} [delete]
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -438,14 +443,13 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 // GetAll is the users handler that processes and returns existing users list.
 //
 //	@Summary		Get a list of users
-//	@Description	get a list of users
+//	@Description		This function call retrieves a paginated list of user accounts. The page number starts at 0 (and is the default value if not provided in a request).
 //	@Tags			users
 //	@Produce		json
-//	@Param			X-Page-No	header		string	true	"page number"
-//	@Success		200			{object}	common.APIResponse{data=users.GetAll.responseData}
-//	@Failure		400			{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404			{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500			{object}	common.APIResponse{data=models.Stub}
+//	@Param			X-Page-No	header		string	false	"Page number (default is 0)"
+//	@Success		200			{object}	common.APIResponse{data=users.GetAll.responseData} 	"Requested page of user accounts returned."
+//	@Failure		400			{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
+//	@Failure		500			{object}	common.APIResponse{data=models.Stub}			"A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information."
 //	@Router			/users [get]
 func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -460,9 +464,10 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Payload(nil).Write(w)
-		return
+		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log()
+		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Payload(nil).Write(w)
+		//return
+		pageNo = 0
 	}
 
 	type responseData struct {
@@ -474,16 +479,16 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 	// Compose the DTO-out from userService.
 	users, err := c.userService.FindAll(context.WithValue(r.Context(), "pageNo", pageNo))
 	if err != nil {
-		l.Msg("could not fetch all users").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not fetch all users").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
 	// Omit flowStats and exported users map.
 	_, userStats, _, err := c.statService.Calculate(r.Context())
 	if err != nil {
-		l.Msg("could not fetch user stats").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not fetch user stats").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log()
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
 		return
 	}
 
@@ -500,13 +505,15 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 // GetByID is the users handler that processes and returns existing user's details according to callerID.
 //
 //	@Summary		Get the user's details
-//	@Description	get the user's details
+//	@Description		This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	common.APIResponse{data=users.GetByID.responseData}
-//	@Failure		400	{object}	common.APIResponse{data=models.Stub}
-//	@Failure		404	{object}	common.APIResponse{data=models.Stub}
+//	@Param			userID			path		string	true	"user's ID to be shown"
+//	@Success		200			{object}	common.APIResponse{data=users.GetByID.responseData}	"Requested user's data (may be limited according to the caller)."
+//	@Failure		400			{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
+//	@Failure		404			{object}	common.APIResponse{data=models.Stub}			"User not found in the database."
+//	@Failure		500			{object}	common.APIResponse{data=models.Stub}			"A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information."
 //	@Router			/users/caller [get]
 //	@Router			/users/{userID} [get]
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -562,15 +569,15 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetPosts fetches posts only from specified user.
 //
 //	@Summary		Get user posts
-//	@Description	get user posts
+//	@Description		This function call is a very specific combination of the users' and posts' services. It retrieves a paginated list of posts made by such user. Special restrictions are applied, such as the privacy (private account, which is not followed by the caller is shown blank). If the list is empty, ensure you are following such user/account.
 //	@Tags			users
 //	@Produce		json
-//	@Param			X-Hide-Replies	header		string	false	"hide replies"
-//	@Param			X-Page-No		header		string	true	"page number"
-//	@Param			userID			path		string	true	"user's ID for their posts"
-//	@Success		200				{object}	common.APIResponse{data=users.GetPosts.responseData}
-//	@Failure		400				{object}	common.APIResponse{data=models.Stub}
-//	@Failure		500				{object}	common.APIResponse{data=models.Stub}
+//	@Param			X-Hide-Replies	header		string	false	"Optional boolean specifying the request of so-called root posts (those not being a reply). Default is false."
+//	@Param			X-Page-No	header		string	false	"Page number (default is 0)."
+//	@Param			userID		path		string	true	"User's ID (usually the nickname)."
+//	@Success		200				{object}	common.APIResponse{data=users.GetPosts.responseData}	"A paginated list of the user's posts (special restriction may apply)."
+//	@Failure		400				{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
+//	@Failure		500				{object}	common.APIResponse{data=models.Stub}			"A very internal service's logic problem. See the `message` field to gain more information."
 //	@Router			/users/{userID}/posts [get]
 func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "userController")
@@ -592,9 +599,9 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
 	pageNo, err := strconv.Atoi(pageNoString)
 	if err != nil {
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Payload(nil).Write(w)
-		return
+		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		//return
+		pageNo = 0
 	}
 
 	ctx := context.WithValue(r.Context(), "pageNo", pageNo)
@@ -612,8 +619,7 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	// Fetch posts and associated users.
 	posts, users, err := c.userService.FindPostsByID(ctx, userID)
 	if err != nil {
-		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Error(err).Log()
-		l.Msg("could not fetch user's posts").Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
@@ -630,5 +636,5 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		Key:   l.CallerID(),
 	}
 
-	l.Msg("listing user's posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	l.Msg("ok, listing user's posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
 }

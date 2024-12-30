@@ -25,34 +25,6 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-type UserUpdateRequest struct {
-	// Lists update request payload.
-	FlowList    map[string]bool `json:"flow_list"`
-	RequestList map[string]bool `json:"request_list"`
-	ShadeList   map[string]bool `json:"shade_list"`
-
-	// Options updata request payload (legacy fields).
-	UIDarkMode    bool                  `json:"dark_mode"`
-	LiveMode      bool                  `json:"live_mode"`
-	LocalTimeMode bool                  `json:"local_time_mode"`
-	Private       bool                  `json:"private"`
-	AboutText     string                `json:"about_you"`
-	WebsiteLink   string                `json:"website_link"`
-	OptionsMap    models.UserOptionsMap `json:"options_map"`
-
-	// New passphrase request payload.
-	NewPassphraseHex     string `json:"new_passphrase_hex"`
-	CurrentPassphraseHex string `json:"current_passphrase_hex"`
-
-	// New avatar upload/update request payload.
-	AvatarByteData []byte `json:"data"`
-	AvatarFileName string `json:"figure"`
-
-	// Passphrase reset request
-	UUID  string `json:"uuid"`
-	Email string `json:"email"`
-}
-
 //
 // models.UserServiceInterface implementation
 //
@@ -95,35 +67,40 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) Create(ctx context.Context, user *models.User) error {
+func (s *UserService) Create(ctx context.Context, createRequestI interface{}) error {
 	// Check if the registration is allowed.
 	if !config.IsRegistrationEnabled {
 		return fmt.Errorf(common.ERR_REGISTRATION_DISABLED)
 	}
 
+	createRequest, ok := createRequestI.(*UserCreateRequest)
+	if !ok {
+		return fmt.Errorf("invalid data inserted, cannot continue processing the request")
+	}
+
 	// Block restricted nicknames, use lowercase for comparison.
-	if helpers.Contains(config.UserDeletionList, strings.ToLower(user.Nickname)) {
+	if helpers.Contains(config.UserDeletionList, strings.ToLower(createRequest.Nickname)) {
 		return fmt.Errorf(common.ERR_RESTRICTED_NICKNAME)
 	}
 
 	// Restrict the nickname to contains only some characters explicitly "listed".
 	// https://stackoverflow.com/a/38554480
-	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(user.Nickname) {
+	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(createRequest.Nickname) {
 		return fmt.Errorf(common.ERR_NICKNAME_CHARSET_MISMATCH)
 	}
 
 	// Check the nick's length contraints.
-	if len(user.Nickname) > 12 || len(user.Nickname) < 3 {
+	if len(createRequest.Nickname) > 12 || len(createRequest.Nickname) < 3 {
 		return fmt.Errorf(common.ERR_NICKNAME_TOO_LONG_SHORT)
 	}
 
 	// Preprocess the e-mail address: set to lowercase.
-	email := strings.ToLower(user.Email)
-	user.Email = email
+	email := strings.ToLower(createRequest.Email)
+	createRequest.Email = email
 
 	// Validate the e-mail format.
 	// https://stackoverflow.com/a/66624104
-	if _, err := netmail.ParseAddress(email); err != nil {
+	if _, err := netmail.ParseAddress(createRequest.Email); err != nil {
 		return fmt.Errorf(common.ERR_WRONG_EMAIL_FORMAT)
 	}
 
@@ -135,12 +112,12 @@ func (s *UserService) Create(ctx context.Context, user *models.User) error {
 
 	for key, dbUser := range *users {
 		// Check if the nickname has been already used/taken.
-		if key == user.Nickname {
+		if key == createRequest.Nickname {
 			return fmt.Errorf(common.ERR_USER_NICKNAME_TAKEN)
 		}
 
 		// E-mail address match found.
-		if strings.ToLower(dbUser.Email) == user.Email {
+		if strings.ToLower(dbUser.Email) == createRequest.Email {
 			return fmt.Errorf(common.ERR_EMAIL_ALREADY_USED)
 		}
 	}
@@ -152,6 +129,13 @@ func (s *UserService) Create(ctx context.Context, user *models.User) error {
 	//
 	//  Set user defaults, save the user struct to database and create a new system post
 	//
+
+	user := new(models.User)
+
+	// Transfer fields from the request to a new User object.
+	user.Nickname = createRequest.Nickname
+	user.PassphraseHex = createRequest.PassphraseHex
+	user.Email = createRequest.Email
 
 	// Set the defaults and a timestamp.
 	user.RegisteredTime = time.Now()
@@ -315,12 +299,6 @@ func (s *UserService) Activate(ctx context.Context, UUID string) error {
 }
 
 func (s *UserService) Update(ctx context.Context, userRequest interface{}) error {
-	// Assert the type for the user update request.
-	data, ok := userRequest.(*UserUpdateRequest)
-	if !ok {
-		return fmt.Errorf("could not decode the user request")
-	}
-
 	// Fetch the callerID from the given context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -341,6 +319,12 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 
 	switch reqType {
 	case "lists":
+		// Assert the type for the user update request.
+		data, ok := userRequest.(*UserUpdateListsRequest)
+		if !ok {
+			return fmt.Errorf("could not decode the user request")
+		}
+
 		// Fetch the caller from repository.
 		caller, err := s.userRepository.GetByID(callerID)
 		if err != nil {
@@ -385,6 +369,12 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		}
 
 	case "options":
+		// Assert the type for the user update request.
+		data, ok := userRequest.(*UserUpdateOptionsRequest)
+		if !ok {
+			return fmt.Errorf("could not decode the user request")
+		}
+
 		if callerID != userID {
 			return fmt.Errorf(common.ERR_USER_UPDATE_FOREIGN)
 		}
@@ -438,6 +428,12 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		}
 
 	case "passphrase":
+		// Assert the type for the user update request.
+		data, ok := userRequest.(*UserUpdatePassphraseRequest)
+		if !ok {
+			return fmt.Errorf("could not decode the user request")
+		}
+
 		if callerID != userID {
 			return fmt.Errorf(common.ERR_USER_PASSPHRASE_FOREIGN)
 		}
@@ -474,7 +470,7 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 
 func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{}) (*string, error) {
 	// Assert the type for the user update request.
-	data, ok := userRequest.(*UserUpdateRequest)
+	data, ok := userRequest.(*UserUploadAvatarRequest)
 	if !ok {
 		return nil, fmt.Errorf("could not decode the user request")
 	}
@@ -535,7 +531,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 
 func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
 	// Assert the type for the user update request.
-	data, ok := userRequest.(*UserUpdateRequest)
+	data, ok := userRequest.(*UserPassphraseResetRequest)
 	if !ok {
 		return fmt.Errorf("could not decode the user request")
 	}
@@ -933,7 +929,7 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[st
 //  Helpers
 //
 
-func processFlowList(data *UserUpdateRequest, user *models.User, caller *models.User, r models.UserRepositoryInterface) *models.User {
+func processFlowList(data *UserUpdateListsRequest, user *models.User, caller *models.User, r models.UserRepositoryInterface) *models.User {
 	// Process the FlowList if not empty.
 	if user.FlowList == nil {
 		user.FlowList = make(map[string]bool)
@@ -998,7 +994,7 @@ func processFlowList(data *UserUpdateRequest, user *models.User, caller *models.
 
 // Simple args legend: <data> coming from the <caller>'s side, <user> is to be updated as the primary counterpart.
 // The <user> counterpart is barely equal to the <caller> part. Therefore the logic is reversed in comparison to the FlowList logic.
-func processRequestList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
+func processRequestList(data *UserUpdateListsRequest, user *models.User, caller *models.User) *models.User {
 	if user.RequestList == nil {
 		user.RequestList = make(map[string]bool)
 	}
@@ -1037,7 +1033,7 @@ func processRequestList(data *UserUpdateRequest, user *models.User, caller *mode
 	return user
 }
 
-func processShadeList(data *UserUpdateRequest, user *models.User, caller *models.User) *models.User {
+func processShadeList(data *UserUpdateListsRequest, user *models.User, caller *models.User) *models.User {
 	if user.ShadeList == nil {
 		user.ShadeList = make(map[string]bool)
 	}
