@@ -1,5 +1,5 @@
 //	@title			littr
-//	@version		0.45.19
+//	@version		0.45.20
 //	@description		A simple nanoblogging platform.
 //	@termsOfService		https://www.littr.eu/tos
 
