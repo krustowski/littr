@@ -354,11 +354,11 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		if data.FlowList != nil {
 			dbUser = processFlowList(data, dbUser, caller, s.userRepository)
 
-			for key, value := range data.FlowList {
+			/*for key, value := range data.FlowList {
 				if value && dbUser.FlowList[key] != data.FlowList[key] {
 					return fmt.Errorf(common.ERR_USER_SHADED)
 				}
-			}
+			}*/
 		}
 
 		// Process the requestList request.
