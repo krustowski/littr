@@ -962,7 +962,11 @@ func processFlowList(data *UserUpdateListsRequest, user *models.User, caller *mo
 		}
 
 		// Set such flowList record according to the request data.
-		if _, found := user.FlowList[key]; found {
+		if current, found := user.FlowList[key]; found {
+			if current == value {
+				continue
+			}
+
 			user.FlowList[key] = value
 		}
 
