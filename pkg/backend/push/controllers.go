@@ -18,15 +18,15 @@ import (
 
 // fetchVAPIDKey is a helper function to fetch new server VAPID key pair.
 //
-// @Summary      Get a VAPID key pair
-// @Description  get a VAPID key pair
-// @Tags         push
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}   common.APIResponse{data=push.fetchVAPIDKey.responseData}
-// @Failure 	 400  {object}   common.APIResponse
-// @Failure 	 401  {object}   common.APIResponse{data=auth.Auth.responseData}
-// @Router       /push/vapid [get]
+//	@Summary		Get a VAPID key pair
+//	@Description	get a VAPID key pair
+//	@Tags			push
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	common.APIResponse{data=push.fetchVAPIDKey.responseData}
+//	@Failure		400	{object}	common.APIResponse
+//	@Failure		401	{object}	common.APIResponse{data=auth.Auth.responseData}
+//	@Router			/push/vapid [get]
 func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
@@ -51,17 +51,17 @@ func fetchVAPIDKey(w http.ResponseWriter, r *http.Request) {
 
 // updateSubscription is the push pkg's handler function used to update an existing subscription.
 //
-// @Summary      Update the notification subscription tag
-// @Description  Update the notification subscription tag
-// @Tags         push
-// @Accept       json
-// @Produce      json
-// @Param        uuid path string true "UUID of a device to update"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
-// @Router       /push/subscription/{uuid}/mention [put]
-// @Router       /push/subscription/{uuid}/reply [put]
+//	@Summary		Update the notification subscription tag
+//	@Description	Update the notification subscription tag
+//	@Tags			push
+//	@Accept			json
+//	@Produce		json
+//	@Param			uuid	path		string	true	"UUID of a device to update"
+//	@Success		200		{object}	common.APIResponse
+//	@Failure		400		{object}	common.APIResponse
+//	@Failure		500		{object}	common.APIResponse
+//	@Router			/push/subscription/{uuid}/mention [put]
+//	@Router			/push/subscription/{uuid}/reply [put]
 func updateSubscription(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
@@ -157,17 +157,17 @@ func updateSubscription(w http.ResponseWriter, r *http.Request) {
 
 // subscribeToNotifications is the push pkg's handler function to ensure sent device has subscribed to notifications.
 //
-// @Summary      Add the notification subscription
-// @Description  add the notification subscription
-// @Tags         push
-// @Accept       json
-// @Produce      json
-// @Param    	 request body models.Device true "device to subscribe"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      409  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
-// @Router       /push/subscription [post]
+//	@Summary		Add the notification subscription
+//	@Description	add the notification subscription
+//	@Tags			push
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		models.Device	true	"device to subscribe"
+//	@Success		200		{object}	common.APIResponse
+//	@Failure		400		{object}	common.APIResponse
+//	@Failure		409		{object}	common.APIResponse
+//	@Failure		500		{object}	common.APIResponse
+//	@Router			/push/subscription [post]
 func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
@@ -192,11 +192,11 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 
 	// let us check this device
 	// we are about to loop through []models.Device fetched from SubscriptionCache
-	devs, ok := db.GetOne(db.SubscriptionCache, l.CallerID(), []models.Device{})
-	if !ok {
+	devs, _ := db.GetOne(db.SubscriptionCache, l.CallerID(), []models.Device{})
+	/*if !ok {
 		l.Msg(common.ERR_DEVICE_NOT_FOUND).Status(http.StatusNotFound).Log().Payload(nil).Write(w)
 		return
-	}
+	}*/
 
 	// loop through the devices and check its presence (present = already subscribed)
 	for _, dev := range devs {
@@ -222,15 +222,15 @@ func subscribeToNotifications(w http.ResponseWriter, r *http.Request) {
 
 // sendNotification is the push pkg handler function for sending new notification(s).
 //
-// @Summary      Send a notification
-// @Description  Send a notification
-// @Tags         push
-// @Produce      json
-// @Param        postID path string true "original post's ID"
-// @Success      200  {object}   common.APIResponse
-// @Success      400  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
-// @Router       /push/notification/{postID} [post]
+//	@Summary		Send a notification
+//	@Description	Send a notification
+//	@Tags			push
+//	@Produce		json
+//	@Param			postID	path		string	true	"original post's ID"
+//	@Success		200		{object}	common.APIResponse
+//	@Success		400		{object}	common.APIResponse
+//	@Failure		404		{object}	common.APIResponse
+//	@Router			/push/notification/{postID} [post]
 func sendNotification(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 
@@ -298,16 +298,16 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 
 // deleteSubscription is the push pkg handler function to ensure a given subscription deleted from the database.
 //
-// @Summary      Delete a subscription
-// @Description  delete a subscription
-// @Tags         push
-// @Produce      json
-// @Param        uuid path string true "UUID of a device to delete"
-// @Success      200  {object}   common.APIResponse
-// @Failure      400  {object}   common.APIResponse
-// @Failure      404  {object}   common.APIResponse
-// @Failure      500  {object}   common.APIResponse
-// @Router       /push/subscription/{uuid} [delete]
+//	@Summary		Delete a subscription
+//	@Description	delete a subscription
+//	@Tags			push
+//	@Produce		json
+//	@Param			uuid	path		string	true	"UUID of a device to delete"
+//	@Success		200		{object}	common.APIResponse
+//	@Failure		400		{object}	common.APIResponse
+//	@Failure		404		{object}	common.APIResponse
+//	@Failure		500		{object}	common.APIResponse
+//	@Router			/push/subscription/{uuid} [delete]
 func deleteSubscription(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "push")
 

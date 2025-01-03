@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
@@ -105,7 +106,6 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 			}
 
 			l.Msg(common.MSG_WEBPUSH_GW_RESPONSE + bodyString).Status(res.StatusCode).Log()
-			return
 		}(dev, opts.Body)
 	}
 
@@ -126,6 +126,8 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 			if helpers.Contains(oldUUIDs, dev.UUID) {
 				continue
 			}
+
+			dev.TimeLastUsed = time.Now()
 			newDeviceList = append(newDeviceList, dev)
 		}
 
@@ -136,8 +138,5 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 		}
 
 		l.Msg("ok, device list updated").Status(http.StatusOK).Log()
-		return
 	}(opts.Devices, devicesToDelete)
-
-	return
 }
