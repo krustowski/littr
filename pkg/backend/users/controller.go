@@ -505,7 +505,7 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 // GetByID is the users handler that processes and returns existing user's details according to callerID.
 //
 //	@Summary		Get the user's details
-//	@Description		This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.
+//	@Description		This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `caller` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
