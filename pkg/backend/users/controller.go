@@ -404,7 +404,7 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 //	@Param			userID	path		string	true	"ID of the user to be purged"
 //	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The submitted user account has been deleted."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid input data."
-//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Blocked attemt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Blocked attempt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/{userID} [delete]
