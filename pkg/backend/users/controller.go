@@ -83,15 +83,15 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 // Activate is a handler function to complete the user's activation procedure.
 //
 //	@Summary		Activate an user via an UUID string
-//	@Description		This function call provides a method for the new user's activation using a received UUID string.
+//	@Description		This function call provides a method for the new user's activation using a received UUID string in payload.
 //	@Tags			users
 //	@Produce		json
-//	@Param			uuid	path		string	true	"The UUID string from the activation e-mail, that is sent to the new user after a successful registration."
+//	@Param			request	body		users.UserActivationRequest	true	"A received UUID string to activate the user after the registration."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub} "The user was activated successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub} "The request body contains invalid data, or data types."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub} "The UUID string does not match any user in the system."
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub} "There is a problem processing the request (e.g. a problem accessing the database)."
-//	@Router			/users/activation/{uuid} [post]
+//	@Router			/users/activation [post]
 func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
@@ -101,15 +101,16 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch the param value from URL's path.
-	uuid := chi.URLParam(r, "uuid")
-	if uuid == "" {
-		l.Msg(common.ERR_REQUEST_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	var dtoIn UserActivationRequest
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Activate the user at the userService.
-	err := c.userService.Activate(context.WithValue(r.Context(), "uuid", uuid), uuid)
+	err := c.userService.Activate(context.WithValue(r.Context(), "uuid", dtoIn.UUID), dtoIn.UUID)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 		return
@@ -344,23 +345,62 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	l.Msg("user's avatar uploaded and updated").Status(http.StatusOK).Log().Payload(DTOOut).Write(w)
 }
 
-// PassphraseReset handles a new passphrase regeneration.
+// PassphraseResetRequest handles a new passphrase generation request creation.
 //
-//	@Summary		Reset the passphrase
-//	@Description		This function call is to be called when an user forgets their passphrase and wants a new one.
+//	@Summary		Request the passphrase reset
+//	@Description		This function call is to be used when an user forgets their passphrase and wants a new one. This very call generates a request for such reset only.
 //	@Description
-//	@Description		Internally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.
-//	@Description		As far as the payload (request body) is concerned,
+//	@Description		Internally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase. This call generates the first mail.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		users.UserPassphraseResetRequest	true	"A common passphrase reset payload."
+//	@Param			request	body		users.UserPassphraseRequest	true	"An user's  e-mail address."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"The passphrase reset request was created successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
+//	@Router			/users/passphrase/request [post]
+func (c *UserController) PassphraseResetRequest(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	// Skip the blank caller's ID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	var DTOIn UserPassphraseRequest
+
+	// decode the incoming data
+	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", "request"), &DTOIn)
+	if err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("passphrase request processed successfully, check your mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
+}
+
+// PassphraseReset handles a new passphrase regeneration.
+//
+//	@Summary		Reset the passphrase
+//	@Description		This function call is to be called when an user forgets their passphrase and wants a new one. This very call does the passphrase regeneration under the hood specifically.
+//	@Description
+//	@Description		Internally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase. This call generates the second mail.
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		users.UserPassphraseReset	true	"A received UUID string to confirm the reset."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"The passphrase was changed successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"There is an internal processing problem present (e.g. data could not be saved to the database)."
 //	@Router			/users/passphrase/reset [post]
-//	@Router			/users/passphrase/request [post]
 func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
@@ -370,14 +410,7 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Fetch the userID/nickname from the URI.
-	requestType := chi.URLParam(r, "requestType")
-	if requestType == "" {
-		l.Msg(common.ERR_REQUEST_TYPE_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var DTOIn UserPassphraseResetRequest
+	var DTOIn UserPassphraseReset
 
 	// decode the incoming data
 	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
@@ -385,10 +418,9 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", requestType), &DTOIn)
+	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", "reset"), &DTOIn)
 	if err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
 

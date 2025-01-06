@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.20"
+        "version": "0.45.23"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1587,9 +1587,9 @@
                 }
             }
         },
-        "/users/activation/{uuid}": {
+        "/users/activation": {
             "post": {
-                "description": "This function call provides a method for the new user's activation using a received UUID string.",
+                "description": "This function call provides a method for the new user's activation using a received UUID string in payload.",
                 "produces": [
                     "application/json"
                 ],
@@ -1599,11 +1599,13 @@
                 "summary": "Activate an user via an UUID string",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "The UUID string from the activation e-mail, that is sent to the new user after a successful registration.",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
+                        "description": "A received UUID string to activate the user after the registration.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.UserActivationRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -1684,7 +1686,7 @@
         },
         "/users/caller": {
             "get": {
-                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
+                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `caller` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1773,7 +1775,7 @@
         },
         "/users/passphrase/request": {
             "post": {
-                "description": "This function call is to be called when an user forgets their passphrase and wants a new one.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.\nAs far as the payload (request body) is concerned,",
+                "description": "This function call is to be used when an user forgets their passphrase and wants a new one. This very call generates a request for such reset only.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase. This call generates the first mail.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1783,21 +1785,21 @@
                 "tags": [
                     "users"
                 ],
-                "summary": "Reset the passphrase",
+                "summary": "Request the passphrase reset",
                 "parameters": [
                     {
-                        "description": "A common passphrase reset payload.",
+                        "description": "An user's  e-mail address.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserPassphraseResetRequest"
+                            "$ref": "#/definitions/users.UserPassphraseRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The passphrase was changed successfully.",
+                        "description": "The passphrase reset request was created successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1873,7 +1875,7 @@
         },
         "/users/passphrase/reset": {
             "post": {
-                "description": "This function call is to be called when an user forgets their passphrase and wants a new one.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase.\nAs far as the payload (request body) is concerned,",
+                "description": "This function call is to be called when an user forgets their passphrase and wants a new one. This very call does the passphrase regeneration under the hood specifically.\n\nInternally, this is a mailing procedure as two mails has to be delivered and the content used with the API/client to successfully reset the passphrase. This call generates the second mail.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1886,12 +1888,12 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "A common passphrase reset payload.",
+                        "description": "A received UUID string to confirm the reset.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserPassphraseResetRequest"
+                            "$ref": "#/definitions/users.UserPassphraseReset"
                         }
                     }
                 ],
@@ -1973,7 +1975,7 @@
         },
         "/users/{userID}": {
             "get": {
-                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `called` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
+                "description": "This function call retrieves an user's data that is to be specified in the URI path (as `userID` param below in the request section). A special keyword `caller` can be used to retrieve all reasonable data for the user calling the API. The identity is assured using the refresh token, which is encoded into the refresh HTTP cookie.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2124,7 +2126,7 @@
                         }
                     },
                     "403": {
-                        "description": "Blocked attemt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname.",
+                        "description": "Blocked attempt to cross-delete other (foreign) user account. The userID param has to be equal to the caller's nickname.",
                         "schema": {
                             "allOf": [
                                 {
@@ -3366,6 +3368,15 @@
                 }
             }
         },
+        "users.UserActivationRequest": {
+            "type": "object",
+            "properties": {
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
         "users.UserCreateRequest": {
             "type": "object",
             "properties": {
@@ -3383,16 +3394,23 @@
                 }
             }
         },
-        "users.UserPassphraseResetRequest": {
+        "users.UserPassphraseRequest": {
             "type": "object",
             "properties": {
                 "email": {
+                    "description": "Passphrase reset pre-request",
                     "type": "string",
                     "example": "alice@example.com"
-                },
+                }
+            }
+        },
+        "users.UserPassphraseReset": {
+            "type": "object",
+            "properties": {
                 "uuid": {
                     "description": "Passphrase reset request",
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },

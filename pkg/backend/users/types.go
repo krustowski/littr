@@ -4,16 +4,24 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
+type UserActivationRequest struct {
+	UUID string `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
+}
+
 type UserCreateRequest struct {
 	Nickname      string `json:"nickname" example:"alice"`
 	PassphraseHex string `json:"passphrase_hex" example:"fb43b35a752b0e8045e2dd1b1e292983b9cbf4672a51e30caaa3f9b06c5a3b74d5096bc8092c9e90a2e047c1eab29eceb50c09d6c51e6995c1674beb3b06535e"`
 	Email         string `json:"email" example:"alice@example.com"`
 }
 
-type UserPassphraseResetRequest struct {
-	// Passphrase reset request
-	UUID  string `json:"uuid"`
+type UserPassphraseRequest struct {
+	// Passphrase reset pre-request
 	Email string `json:"email" example:"alice@example.com"`
+}
+
+type UserPassphraseReset struct {
+	// Passphrase reset request
+	UUID string `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 type UserUpdateListsRequest struct {

@@ -54,11 +54,17 @@ func (c *Content) OnNav(ctx app.Context) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		payload := struct {
+			UUID string `json:"uuid"`
+		}{
+			UUID: activationUUID,
+		}
+
 		// Compose the API call input.
 		input := &common.CallInput{
 			Method:      "POST",
-			Url:         "/api/v1/users/activation/" + activationUUID,
-			Data:        nil,
+			Url:         "/api/v1/users/activation",
+			Data:        payload,
 			CallerID:    "",
 			PageNo:      0,
 			HideReplies: false,

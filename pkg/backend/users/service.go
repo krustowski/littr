@@ -543,12 +543,6 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 }
 
 func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
-	// Assert the type for the user update request.
-	data, ok := userRequest.(*UserPassphraseResetRequest)
-	if !ok {
-		return fmt.Errorf("could not decode the user request")
-	}
-
 	// Fetch the pageNo from the context.
 	requestType, ok := ctx.Value("requestType").(string)
 	if !ok {
@@ -563,6 +557,12 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 
 	switch requestType {
 	case "request":
+		// Assert the type for the user update request.
+		data, ok := userRequest.(*UserPassphraseRequest)
+		if !ok {
+			return fmt.Errorf("could not decode the user request")
+		}
+
 		if data.Email == "" {
 			return fmt.Errorf(common.ERR_REQUEST_EMAIL_BLANK)
 		}
@@ -608,6 +608,12 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		randomUUID = randomID
 
 	case "reset":
+		// Assert the type for the user update request.
+		data, ok := userRequest.(*UserPassphraseReset)
+		if !ok {
+			return fmt.Errorf("could not decode the user request")
+		}
+
 		if data.UUID == "" {
 			return fmt.Errorf(common.ERR_REQUEST_UUID_BLANK)
 		}
