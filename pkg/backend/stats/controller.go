@@ -23,14 +23,14 @@ func NewStatController(statService models.StatServiceInterface) *StatController 
 
 // GetAll acts like a handler for stats page.
 //
-// @Summary      Get stats
-// @Description  get stats
-// @Tags         stats
-// @Produce      json
-// @Success      200  {object}   common.APIResponse{data=stats.GetAll.responseData}
-// @Failure      400  {object}   common.APIResponse
-// @Failure 	 401  {object}   common.APIResponse{data=auth.Auth.responseData}
-// @Router       /stats [get]
+//	@Summary		Get stats
+//	@Description		This function call retrieves the system and users' statistics.
+//	@Tags			stats
+//	@Produce		json
+//	@Success		200	{object}	common.APIResponse{data=stats.GetAll.responseData}	"Stats were calculated and are returned."
+//	@Failure		400	{object}	common.APIResponse{data=models.Stub}			"Invalid called ID."
+//	@Failure		500	{object}	common.APIResponse{data=models.Stub}			"A serious problem occured while stats were being calculated."
+//	@Router			/stats [get]
 func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
@@ -40,7 +40,7 @@ func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 		Users     map[string]models.User     `json:"users"`
 	}
 
-	// skip blank callerID
+	// Skip blank callerID.
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
@@ -48,8 +48,7 @@ func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	flowStats, userStats, users, err := c.statService.Calculate(r.Context())
 	if err != nil {
-		l.Msg("stats calculation error").Status(http.StatusInternalServerError).Error(err).Log()
-		l.Msg("stats calculation error").Status(http.StatusInternalServerError).Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
