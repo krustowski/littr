@@ -13,7 +13,7 @@ A simple nanoblogging platform for a raw mind _flow_.
 ## features
 
 + embedded in-memory cache system
-+ data persistence on container's restart (on `SIGINT`) in Docker volume(s)
++ data persistence on container's restart/shutdown (on `SIGINT`) in Docker volume(s)
 + flow posts filtering using the FlowList --- simply choose who to follow
 + shade function to block other accounts from following you and reading your posts
 + webpush notification management --- choose which notifications (reply/mention) is your device willing to accept
@@ -27,9 +27,11 @@ A simple nanoblogging platform for a raw mind _flow_.
 
 ## REST API service
 
-+ API documentation is stored in the `api/` root directory as Swagger JSON-formatted file
-+ the service is reachable via (`/api/v1`) route
-+ [swagger live docs](https://www.littr.eu/docs/)
++ an universal interface above the whole backend, indirect data manipulation
++ tha main and secure data source for the frontend Go/JS/Wasm client
++ API documentation is stored in the `api/` root repo directory as Swagger JSON-formatted file
++ the service is reachable via the `/api/v1` route
++ [Swagger live docs](https://www.littr.eu/docs/)
 
 
 ## how it should work
@@ -111,7 +113,7 @@ make flush kill run
 
 ## development
 
-`littr-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime)
+The `littr-backend` container can be run locally on any dev machine (using Docker engine or using the required tag-locked Go runtime; the latter option is not documented though).
 
 ```
 make dev
@@ -121,9 +123,17 @@ http://localhost:8080/flow
 
 ### profiling
 
-Debug `pprof`'s index: [http://localhost:8080/debug/pprof/](http://localhost:8080/debug/pprof/)
+To debug memory allocations, or possible blocking goroutine(s), one may utilize the `pprof` package. (One may need the `graphviz` system package installed).
+
+```
+make run_pprof
+```
+
+The default debug `pprof`'s index: [http://localhost:8080/debug/pprof/](http://localhost:8080/debug/pprof/)
 
 ### investigating the runtime data
+
+Enter the container's shell:
 
 ```
 make sh

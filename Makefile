@@ -323,7 +323,7 @@ NOL  			:= $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | wc -l | cut -d' ' -f1)
 LIST 			:= $(shell ps auxf | grep -w '${GO_TOOL_PPROF}' | tail -n $$(( $(NOL) - 2 )) | awk '{ print $$2 }')
 PPROF_SOURCE 		?= http://localhost:${DOCKER_INTERNAL_PORT}/debug/pprof
 
-.PHONY: kill_proff run_proff
+.PHONY: kill_pprof run_pprof
 
 kill_pprof:
 	$(call print_info, Killing all profiling instances...)
