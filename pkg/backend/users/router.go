@@ -13,7 +13,7 @@ func NewUserRouter(userController *UserController) chi.Router {
 	r.Post("/", userController.Create)
 
 	// Handler for the user activation.
-	r.Post("/activation/{uuid}", userController.Activate)
+	r.Post("/activation", userController.Activate)
 
 	// Passphrase-related routes handlers.
 	r.Post("/passphrase/request", userController.PassphraseResetRequest)
