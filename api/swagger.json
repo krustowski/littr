@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.25"
+        "version": "0.45.26"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1341,7 +1341,7 @@
         },
         "/stats": {
             "get": {
-                "description": "get stats",
+                "description": "This function call retrieves the system and users' statistics.",
                 "produces": [
                     "application/json"
                 ],
@@ -1351,7 +1351,7 @@
                 "summary": "Get stats",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Stats were calculated and are returned.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1369,13 +1369,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid called ID.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1385,7 +1379,25 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.Auth.responseData"
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "A serious problem occured while stats were being calculated.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
                                         }
                                     }
                                 }
