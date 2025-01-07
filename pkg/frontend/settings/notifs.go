@@ -83,7 +83,7 @@ func (c *Content) deleteSubscription(ctx app.Context, tag string) {
 	ctx.Async(func() {
 		input := &common.CallInput{
 			Method:      "DELETE",
-			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
+			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
 			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
@@ -144,15 +144,19 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 		newDevs = append(newDevs, dev)
 	}
 
-	deviceSub := c.thisDevice
+	payload := struct {
+		Tags []string `json:"tags"`
+	}{
+		Tags: append(c.thisDevice.Tags, tag),
+	}
 
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		input := &common.CallInput{
 			Method:      "PUT",
-			Url:         "/api/v1/push/subscription/" + ctx.DeviceID() + "/" + tag,
-			Data:        deviceSub,
+			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
+			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
 			HideReplies: false,
@@ -175,6 +179,7 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 			return
 		}
 
+		deviceSub := c.thisDevice
 		deviceSub.Tags = c.checkTags(c.thisDevice.Tags, tag)
 
 		toast.Text(common.MSG_SUBSCRIPTION_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)

@@ -255,7 +255,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 
 		input := &common.CallInput{
 			Method:      "DELETE",
-			Url:         "/api/v1/push/subscription/" + ctx.DeviceID(),
+			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
 			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
@@ -436,7 +436,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		// send the registration to backend
 		input := &common.CallInput{
 			Method:      "POST",
-			Url:         "/api/v1/push/subscription",
+			Url:         "/api/v1/push/subscriptions",
 			Data:        deviceSub,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,

@@ -199,14 +199,14 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		payloadNotif := struct {
-			OriginalPost string `json:"original_post"`
+			OriginalPost string `json:"post_id"`
 		}{
 			OriginalPost: c.interactedPostKey,
 		}
 
 		input = &common.CallInput{
 			Method:      "POST",
-			Url:         "/api/v1/push/notification/" + c.interactedPostKey,
+			Url:         "/api/v1/push",
 			Data:        payloadNotif,
 			CallerID:    c.user.Nickname,
 			PageNo:      c.pageNo,
