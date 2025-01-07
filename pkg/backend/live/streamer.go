@@ -64,13 +64,13 @@ var Streamer = &sse.Server{
 
 // The very keepalive pacemaker.
 //
-// @Summary      Get real-time posts event stream (SSE stream)
-// @Description  get real-time posts event stream
-// @Tags         live
-// @Produce      text/event-stream
-// @Success      200  {object}  string
-// @Failure      500  {object}  nil
-// @Router       /live [get]
+//	@Summary		Get real-time server-sent event stream (SSE stream)
+//	@Description		Calling this endpoint creates a SSE subscription to receive the server-sent event stream. The connection type is set to keep-alive, so the common request will appear as "timing-out".
+//	@Tags			live
+//	@Produce		text/event-stream
+//	@Success		200	{object} 	string		"The connection success. Typically appears when the stream ends gratefully."
+//	@Failure		500	{object}	nil		"A generic network problem when connecting to the stream."
+//	@Router			/live [get]
 func beat() {
 	l := common.NewLogger(nil, "pacemaker")
 
