@@ -21,17 +21,17 @@ func NewAuthController(authService models.AuthServiceInterface) *AuthController 
 
 // Auth handles the nickname-hashed-passphrase common dual input and tries to authenticate the user.
 //
-// @Summary 		Auth an user
-// @Description		auth an user
-// @Tags		auth
-// @Accept		json
-// @Produce		json
-// @Param    	 	request body auth.AuthUser true "user struct to auth"
-// @Success		200	{object}	common.APIResponse{data=auth.Auth.responseData}
-// @Failure		400	{object}	common.APIResponse{data=auth.Auth.responseData}
-// @Failure		404	{object}	common.APIResponse{data=auth.Auth.responseData}
-// @Failure		500	{object}	common.APIResponse{data=auth.Auth.responseData}
-// @Router		/auth [post]
+//	@Summary		Auth an user
+//	@Description		This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		auth.AuthUser	true	"An user's credentials to authenticate."
+//	@Success		200		{object}	common.APIResponse{data=auth.Auth.responseData}
+//	@Failure		400		{object}	common.APIResponse{data=auth.Logout.responseData}
+//	@Failure		404		{object}	common.APIResponse{data=auth.Logout.responseData}
+//	@Failure		500		{object}	common.APIResponse{data=auth.Logout.responseData}
+//	@Router			/auth [post]
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "authController")
 
@@ -99,19 +99,19 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 // Logout send a client invalidated cookies to cease the session created before.
 //
-// @Summary 		Log-out an user
-// @Description		log-out an user
-// @Tags		auth
-// @Accept		json
-// @Produce		json
-// @Success		200	{object}	common.APIResponse{data=auth.Logout.responseData}
-// @Router		/auth/logout [post]
+//	@Summary		Log-out an user
+//	@Description		This function call's purpose is to sent void HTTP cookies to the caller. If the `refresh-token` sent with the request is valid, it is set to be purged from database and therefore cannot be used anymore.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	common.APIResponse{data=auth.Logout.responseData}
+//	@Router			/auth/logout [post]
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "authController")
 
 	// Response body structure.
 	type responseData struct {
-		AuthGranted bool
+		AuthGranted bool `json:"auth_granted" example:"false"`
 	}
 
 	// Prepare the response payload.

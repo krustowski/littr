@@ -68,7 +68,7 @@ var Streamer = &sse.Server{
 //	@Description		Calling this endpoint creates a SSE subscription to receive the server-sent event stream. The connection type is set to keep-alive, so the common request will appear as "timing-out".
 //	@Tags			live
 //	@Produce		text/event-stream
-//	@Success		200	{object} 	string		"The connection success. Typically appears when the stream ends gratefully."
+//	@Success		200	{object} 	string		"The connection success. Typically appears when the stream ends gracefully."
 //	@Failure		500	{object}	nil		"A generic network problem when connecting to the stream."
 //	@Router			/live [get]
 func beat() {

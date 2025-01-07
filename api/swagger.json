@@ -26,7 +26,7 @@
     "paths": {
         "/auth": {
             "post": {
-                "description": "auth an user",
+                "description": "This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).",
                 "consumes": [
                     "application/json"
                 ],
@@ -39,7 +39,7 @@
                 "summary": "Auth an user",
                 "parameters": [
                     {
-                        "description": "user struct to auth",
+                        "description": "An user's credentials to authenticate.",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -78,7 +78,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.Auth.responseData"
+                                            "$ref": "#/definitions/auth.Logout.responseData"
                                         }
                                     }
                                 }
@@ -96,7 +96,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.Auth.responseData"
+                                            "$ref": "#/definitions/auth.Logout.responseData"
                                         }
                                     }
                                 }
@@ -114,7 +114,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/auth.Auth.responseData"
+                                            "$ref": "#/definitions/auth.Logout.responseData"
                                         }
                                     }
                                 }
@@ -126,7 +126,7 @@
         },
         "/auth/logout": {
             "post": {
-                "description": "log-out an user",
+                "description": "This function call's purpose is to sent void HTTP cookies to the caller. If the `refresh-token` sent with the request is valid, it is set to be purged from database and therefore cannot be used anymore.",
                 "consumes": [
                     "application/json"
                 ],
@@ -161,7 +161,7 @@
         },
         "/dump": {
             "get": {
-                "description": "perform system data dump",
+                "description": "This function call is used primarily by the healthcheck function inside the Docker compose stack to periodically dump running data into the JSON files.",
                 "produces": [
                     "application/json"
                 ],
@@ -172,7 +172,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "dump token",
+                        "description": "A special app's dump token.",
                         "name": "X-Dump-Token",
                         "in": "header",
                         "required": true
@@ -180,19 +180,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The dumping process was successful.",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data (e.g. a blank token).",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "User unauthorized (e.g. invalid token).",
                         "schema": {
                             "$ref": "#/definitions/common.APIResponse"
                         }
@@ -202,23 +202,23 @@
         },
         "/live": {
             "get": {
-                "description": "get real-time posts event stream",
+                "description": "Calling this endpoint creates a SSE subscription to receive the server-sent event stream. The connection type is set to keep-alive, so the common request will appear as \"timing-out\".",
                 "produces": [
                     "text/event-stream"
                 ],
                 "tags": [
                     "live"
                 ],
-                "summary": "Get real-time posts event stream (SSE stream)",
+                "summary": "Get real-time server-sent event stream (SSE stream)",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The connection success. Typically appears when the stream ends gratefully.",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "A generic network problem when connecting to the stream."
                     }
                 }
             }
@@ -3261,23 +3261,22 @@
             "properties": {
                 "nickname": {
                     "description": "Nickname is the user's very username.",
-                    "type": "string"
-                },
-                "passphrase": {
-                    "description": "Passphrase is a legacy format converted to string from a raw byte stream\n(do not use anymore as this will be removed in future versions).",
-                    "type": "string"
+                    "type": "string",
+                    "example": "alice"
                 },
                 "passphrase_hex": {
                     "description": "PassphraseHex is a hexadecimal representation of a passphrase (a SHA-512 checksum).\nUse 'echo $PASS | sha512sum' for example to get the hex format.",
-                    "type": "string"
+                    "type": "string",
+                    "example": "fb43b35a752b0e8045e2dd1b1e292983b9cbf4672a51e30caaa3f9b06c5a3b74d5096bc8092c9e90a2e047c1eab29eceb50c09d6c51e6995c1674beb3b06535e"
                 }
             }
         },
         "auth.Logout.responseData": {
             "type": "object",
             "properties": {
-                "authGranted": {
-                    "type": "boolean"
+                "auth_granted": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
