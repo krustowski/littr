@@ -865,7 +865,7 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 
 	// Include subscription devices if the userID is the caller's one.
 	if userID == callerID {
-		devs, err := s.subscriptionRepository.GetByID(userID)
+		devs, err := s.subscriptionRepository.GetByUserID(userID)
 		if err != nil {
 			user.Devices = nil
 		} else {

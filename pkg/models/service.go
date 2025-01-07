@@ -34,6 +34,14 @@ type StatServiceInterface interface {
 	Calculate(ctx context.Context) (*map[string]int64, *map[string]UserStat, *map[string]User, error)
 }
 
+type SubscriptionServiceInterface interface {
+	Create(ctx context.Context, device *Device) error
+	Update(ctx context.Context, deviceUUID, tagName string) error
+	Delete(ctx context.Context, deviceUUID string) error
+	//FindByID(ctx context.Context, deviceUUID string) (*Subscription, error)
+	SendNotification(ctx context.Context, postID string) error
+}
+
 type TokenServiceInterface interface {
 	Create(ctx context.Context, user *User) ([]string, error)
 	Delete(ctx context.Context, tokenID string) error

@@ -81,11 +81,10 @@ var (
 // https://github.com/go-chi/httprate
 var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
 	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-		// Log the too-many-requests error.
-		common.NewLogger(r, "base").Status(http.StatusTooManyRequests).Log()
+		l := common.NewLogger(r, "root")
 
-		// Write simple response.
-		http.Error(w, `{"error": "too many requests, slow down"}`, http.StatusTooManyRequests)
+		// Do not log this, just write the response!
+		l.Msg("too many requests, slow down and try again later").Status(http.StatusTooManyRequests).Payload(nil).Write(w)
 	}),
 	httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 )
@@ -119,11 +118,13 @@ func NewAPIRouter() chi.Router {
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
 	postService := posts.NewPostService(postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
+	subsService := push.NewSubscriptionService(postRepository, subscriptionRepository)
 	userService := users.NewUserService(pollRepository, postRepository, subscriptionRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
 	pollController := polls.NewPollController(pollService)
+	pushController := push.NewPushController(subsService)
 	statController := stats.NewStatController(statService)
 	userController := users.NewUserController(postService, statService, userService)
 
@@ -142,8 +143,8 @@ func NewAPIRouter() chi.Router {
 	r.Mount("/polls", polls.NewPollRouter(pollController))
 
 	r.Mount("/posts", posts.Router())
-	r.Mount("/push", push.Router())
 
+	r.Mount("/push", push.NewPushRouter(pushController))
 	r.Mount("/stats", stats.NewStatRouter(statController))
 	r.Mount("/users", users.NewUserRouter(userController))
 

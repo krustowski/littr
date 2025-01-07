@@ -68,25 +68,24 @@ func (c *PushController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, the notifictions subscription has been created for given device").Status(http.StatusCreated).Log().Payload(nil).Write(w)
-	return
 }
 
 // Update is the handler function used to update an existing subscription.
 //
 //	@Summary		Update the notification subscription tag
-//	@Description		This function call handles a request to change an user's (caller's) notifications subscription. This call is used to toggle the subscription tag specified at the end of the route.
+//	@Description		This function call handles a request to change an user's (caller's) notifications subscription for a device specified by UUID param.
 //	@Tags			push
 //	@Accept			json
 //	@Produce		json
-//	@Param			uuid	path		string	true	"An UUID of a device to update."
+//	@Param			uuid	path	string					true	"An UUID of a device to update."
+//	@Param			request	body	push.SubscriptionUpdateRequest		true	"The request's body containing fields to modify."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The subscription has been updated successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to update not found."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occured while the update procedure was processing the data."
-//	@Router			/push/subscriptions/{uuid}/mention [patch]
-//	@Router			/push/subscriptions/{uuid}/reply [patch]
+//	@Router			/push/subscriptions/{uuid} [patch]
 func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
@@ -96,6 +95,13 @@ func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var dtoIn SubscriptionUpdateRequest
+
+	// Decode the incoming request's body.
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
 	// Fetch the UUID param from path.
 	uuid := chi.URLParam(r, "uuid")
 	if uuid == "" {
@@ -117,13 +123,12 @@ func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := c.subscriptionService.Update(r.Context(), tagName); err != nil {
+	if err := c.subscriptionService.Update(r.Context(), uuid, tagName); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
 
 	l.Msg("ok, device subscription updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // Delete is the handler function to ensure a given subscription deleted from the database.
@@ -163,7 +168,6 @@ func (c *PushController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, device subscription deleted").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // SendNotification is the handler function for sending new notification(s).
@@ -203,5 +207,4 @@ func (c *PushController) SendNotification(w http.ResponseWriter, r *http.Request
 	}
 
 	l.Msg("ok, notification(s) are being sent").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }

@@ -1,6 +1,7 @@
 package push
 
 import (
+	"errors"
 	"fmt"
 
 	//"go.vxn.dev/littr/pkg/backend/common"
@@ -46,6 +47,10 @@ func NewSubscriptionRepository(cache db.Cacher) models.SubscriptionRepositoryInt
 
 }*/
 
+var (
+	ErrSubscriptionNotFound error = errors.New("could not find requested Subscription")
+)
+
 // GetSubscriptionByID is a static function to export to other services.
 func GetSubscriptionByID(userID string, cache db.Cacher) (*[]models.Device, error) {
 	if userID == "" || cache == nil {
@@ -55,7 +60,7 @@ func GetSubscriptionByID(userID string, cache db.Cacher) (*[]models.Device, erro
 	// Fetch the subscription from the cache.
 	tokRaw, found := cache.Load(userID)
 	if !found {
-		return nil, fmt.Errorf("could not find requested subscription")
+		return nil, ErrSubscriptionNotFound
 	}
 
 	subscription, ok := tokRaw.([]models.Device)
@@ -66,7 +71,7 @@ func GetSubscriptionByID(userID string, cache db.Cacher) (*[]models.Device, erro
 	return &subscription, nil
 }
 
-func (r *SubscriptionRepository) GetByID(userID string) (*[]models.Device, error) {
+func (r *SubscriptionRepository) GetByUserID(userID string) (*[]models.Device, error) {
 	// Use the static function to get such subscription.
 	subscription, err := GetSubscriptionByID(userID, r.cache)
 	if err != nil {
