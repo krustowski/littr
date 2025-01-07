@@ -34,8 +34,8 @@ func (r *Response) WritePix(w http.ResponseWriter) error {
 // new generic API response schema idea
 type APIResponse struct {
 	// Common fields for all responses
-	Message   string `json:"message"`
-	Timestamp int64  `json:"timestamp"`
+	Message   string `json:"message" example:"a generic success info, or a processing problem/error description"`
+	Timestamp int64  `json:"timestamp" example:"1734778064068087800"`
 
 	// Data field for any payload
 	Data interface{} `json:"data"`
