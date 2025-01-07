@@ -140,7 +140,7 @@ type UserStat struct {
 	ShadeCount int64 `json:"shade_count" default:"0"`
 
 	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
-	Searched bool `json:"-" default:"true" swaggerignore:"true"`
+	Searched bool `json:"searched" default:"true" swaggerignore:"true"`
 }
 
 func (u User) Copy() *User {
