@@ -39,25 +39,40 @@ func NewPollService(
 	}
 }
 
-func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
+func (s *PollService) Create(ctx context.Context, pollI interface{}) error {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
 		return fmt.Errorf(common.ERR_CALLER_FAIL)
 	}
 
-	// To patch loaded invalid user data from LocalStorage = caller's the Author now.
-	if poll.Author == "" {
-		poll.Author = callerID
+	pollReq, ok := pollI.(*PollCreateRequest)
+	if !ok {
+		return fmt.Errorf("could not assert type for the poll creation request")
 	}
+
+	poll := new(models.Poll)
+
+	poll.Author = callerID
 
 	// The caller must be the author of such poll to be added.
 	if poll.Author != callerID {
 		return fmt.Errorf(common.ERR_POLL_AUTHOR_MISMATCH)
 	}
 
+	poll.Question = pollReq.Question
+	poll.OptionOne.Content = pollReq.OptionOne
+	poll.OptionTwo.Content = pollReq.OptionTwo
+	poll.OptionThree.Content = pollReq.OptionThree
+
 	// Patch the recurring option value (every option has to be unique).
-	if (poll.OptionOne == poll.OptionTwo) || (poll.OptionOne == poll.OptionThree) || (poll.OptionTwo == poll.OptionThree) || (poll.Question == poll.OptionOne.Content) || (poll.Question == poll.OptionTwo.Content) || (poll.Question == poll.OptionThree.Content) {
+	if (poll.OptionOne.Content == poll.OptionTwo.Content) ||
+		(poll.OptionOne.Content == poll.OptionThree.Content) ||
+		(poll.OptionTwo.Content == poll.OptionThree.Content) ||
+		(poll.Question == poll.OptionOne.Content) ||
+		(poll.Question == poll.OptionTwo.Content) ||
+		(poll.Question == poll.OptionThree.Content) {
+
 		return fmt.Errorf(common.ERR_POLL_DUPLICIT_OPTIONS)
 	}
 
@@ -65,8 +80,11 @@ func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 	//  Validation end --- dispatch the poll to repository.
 	//
 
+	poll.Timestamp = time.Now()
+	poll.ID = strconv.FormatInt(poll.Timestamp.UnixNano(), 10)
+
 	if err := s.pollRepository.Save(poll); err != nil {
-		return fmt.Errorf(common.ERR_POLL_SAVE_FAIL + ": " + err.Error())
+		return err
 	}
 
 	// Prepare timestamps for a new system post to flow.
@@ -84,7 +102,7 @@ func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 
 	// Dispatch the new post aboat a new poll to postRepository.
 	if err := s.postRepository.Save(post); err != nil {
-		return fmt.Errorf(common.ERR_POLL_POST_FAIL + ": " + err.Error())
+		return err
 	}
 
 	// Broadcast the new poll event.
@@ -93,15 +111,21 @@ func (s *PollService) Create(ctx context.Context, poll *models.Poll) error {
 	return nil
 }
 
-func (s *PollService) Update(ctx context.Context, poll *models.Poll) error {
+func (s *PollService) Update(ctx context.Context, pollI interface{}) error {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
 		return fmt.Errorf(common.ERR_CALLER_FAIL)
 	}
 
+	// Assert type for the request data.
+	pollReq, ok := pollI.(*PollUpdateRequest)
+	if !ok {
+		return fmt.Errorf("could not assert type for the poll update request")
+	}
+
 	// Fetch the actual poll to verify its content to be updated..
-	dbPoll, err := s.pollRepository.GetByID(poll.ID)
+	dbPoll, err := s.pollRepository.GetByID(pollReq.ID)
 	if err != nil {
 		return err
 	}
@@ -117,15 +141,15 @@ func (s *PollService) Update(ctx context.Context, poll *models.Poll) error {
 	}
 
 	// Verify that only one vote had been passed in; suppress vote count forgery.
-	if (poll.OptionOne.Counter + poll.OptionTwo.Counter + poll.OptionThree.Counter) != (dbPoll.OptionOne.Counter + dbPoll.OptionTwo.Counter + dbPoll.OptionThree.Counter + 1) {
+	if (pollReq.OptionOneCount + pollReq.OptionTwoCount + pollReq.OptionThreeCount) != (dbPoll.OptionOne.Counter + dbPoll.OptionTwo.Counter + dbPoll.OptionThree.Counter + 1) {
 		return fmt.Errorf(common.ERR_POLL_INVALID_VOTE_COUNT)
 	}
 
 	// Now, update the poll's data.
 	dbPoll.Voted = append(dbPoll.Voted, callerID)
-	dbPoll.OptionOne.Counter = poll.OptionOne.Counter
-	dbPoll.OptionTwo.Counter = poll.OptionTwo.Counter
-	dbPoll.OptionThree.Counter = poll.OptionThree.Counter
+	dbPoll.OptionOne.Counter = pollReq.OptionOneCount
+	dbPoll.OptionTwo.Counter = pollReq.OptionTwoCount
+	dbPoll.OptionThree.Counter = pollReq.OptionThreeCount
 
 	// Save the changes in repository.
 	return s.pollRepository.Save(dbPoll)

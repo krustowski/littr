@@ -14,8 +14,8 @@ type AuthServiceInterface interface {
 }
 
 type PollServiceInterface interface {
-	Create(ctx context.Context, poll *Poll) error
-	Update(ctx context.Context, poll *Poll) error
+	Create(ctx context.Context, createRequest interface{}) error
+	Update(ctx context.Context, updateRequest interface{}) error
 	Delete(ctx context.Context, pollID string) error
 	FindAll(ctx context.Context) (*map[string]Poll, *User, error)
 	FindByID(ctx context.Context, pollID string) (*Poll, *User, error)

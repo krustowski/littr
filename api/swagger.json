@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.29"
+        "version": "0.45.30"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -225,7 +225,7 @@
         },
         "/polls": {
             "get": {
-                "description": "get a list of polls",
+                "description": "This function call retrieves a single page of polls according to the optional `X-Page-No` header (default is 0).",
                 "produces": [
                     "application/json"
                 ],
@@ -236,15 +236,14 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "page number",
+                        "description": "A page number (default is 0).",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The requested page of polls is returned.",
                         "schema": {
                             "allOf": [
                                 {
@@ -262,7 +261,43 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
                         "schema": {
                             "allOf": [
                                 {
@@ -280,7 +315,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "A serious internal problem occurred while the request was being processed.",
                         "schema": {
                             "allOf": [
                                 {
@@ -300,7 +335,7 @@
                 }
             },
             "post": {
-                "description": "add new poll",
+                "description": "This function call handles a new poll request to the poll service, where new poll creation is ensured.",
                 "consumes": [
                     "application/json"
                 ],
@@ -313,18 +348,18 @@
                 "summary": "Add new poll",
                 "parameters": [
                     {
-                        "description": "new poll's body",
+                        "description": "A new poll's simplified body.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Poll"
+                            "$ref": "#/definitions/polls.PollCreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "success",
+                        "description": "A new poll has been created successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -342,7 +377,43 @@
                         }
                     },
                     "400": {
-                        "description": "bad/malformed input data, invalid cookies",
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
                         "schema": {
                             "allOf": [
                                 {
@@ -360,7 +431,7 @@
                         }
                     },
                     "500": {
-                        "description": "the poll saving process failed",
+                        "description": "A serious problem occurred while processing the create request.",
                         "schema": {
                             "allOf": [
                                 {
@@ -382,7 +453,7 @@
         },
         "/polls/{pollID}": {
             "get": {
-                "description": "get single poll",
+                "description": "This function call retrieves a single requested poll's data. Such poll's ID is to be provided as the URL parameter.",
                 "produces": [
                     "application/json"
                 ],
@@ -393,7 +464,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "poll ID",
+                        "description": "A poll's ID to retrieve.",
                         "name": "pollID",
                         "in": "path",
                         "required": true
@@ -401,7 +472,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The requested poll's data returned successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -419,7 +490,25 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
                         "schema": {
                             "allOf": [
                                 {
@@ -437,58 +526,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "update a poll",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "polls"
-                ],
-                "summary": "Update a poll",
-                "parameters": [
-                    {
-                        "description": "update poll's body",
-                        "name": "updatedPoll",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Poll"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "poll's ID",
-                        "name": "pollID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                        "description": "Poll not found in the database.",
                         "schema": {
                             "allOf": [
                                 {
@@ -505,8 +543,8 @@
                             ]
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "429": {
+                        "description": "Too many requests, try again later.",
                         "schema": {
                             "allOf": [
                                 {
@@ -524,7 +562,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "A serious internal problem occurred while the request was being processed.",
                         "schema": {
                             "allOf": [
                                 {
@@ -544,7 +582,7 @@
                 }
             },
             "delete": {
-                "description": "delete a poll by ID",
+                "description": "This function call takes in a `pollID` parameter, which is used to identify a poll to be purged.",
                 "produces": [
                     "application/json"
                 ],
@@ -555,7 +593,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "poll's ID to delete",
+                        "description": "A poll's ID to be deleted.",
                         "name": "pollID",
                         "in": "path",
                         "required": true
@@ -563,7 +601,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The poll has been deleted.",
                         "schema": {
                             "allOf": [
                                 {
@@ -581,7 +619,25 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
                         "schema": {
                             "allOf": [
                                 {
@@ -599,7 +655,43 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "User unauthorized. May occur when one tries to delete a foreign poll (the poll's author differs).",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Poll not found in the database.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
                         "schema": {
                             "allOf": [
                                 {
@@ -617,7 +709,130 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "A serious internal problem occurred while the request was being processed.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "This function call updates the poll specified using the `pollID` parameter. The fields to be updated are the counts of the poll's options. Only a single incrementation related to the current state stored in the database is allowed to be processed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Update a poll",
+                "parameters": [
+                    {
+                        "description": "A poll's body to update.",
+                        "name": "updatedPoll",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/polls.PollUpdateRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "A poll's unique ID.",
+                        "name": "pollID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The poll has been updated successfully.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "A serious internal problem occurred while the request was being processed.",
                         "schema": {
                             "allOf": [
                                 {
@@ -3471,6 +3686,49 @@
                 },
                 "user": {
                     "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "polls.PollCreateRequest": {
+            "type": "object",
+            "properties": {
+                "option_one": {
+                    "description": "OptionOne is the answer numero uno.",
+                    "type": "string",
+                    "example": "apple"
+                },
+                "option_three": {
+                    "description": "OptionThree is the answer numero tres.",
+                    "type": "string",
+                    "example": "cashew"
+                },
+                "option_two": {
+                    "description": "OptionTwo is the answer numero dos.",
+                    "type": "string",
+                    "example": "banana"
+                },
+                "question": {
+                    "description": "Question is to describe the main purpose of such poll.",
+                    "type": "string",
+                    "example": "which one is your favourite?"
+                }
+            }
+        },
+        "polls.PollUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "option_one_count": {
+                    "description": "These fields are to be filled in the request body data.",
+                    "type": "integer",
+                    "example": 3
+                },
+                "option_three_count": {
+                    "type": "integer",
+                    "example": 6
+                },
+                "option_two_count": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },
