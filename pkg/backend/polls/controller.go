@@ -256,7 +256,7 @@ func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Compose the DTO-out from pollService.
 	poll, user, err := c.pollService.FindByID(r.Context(), pollID)
 	if err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
 
