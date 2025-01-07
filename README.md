@@ -28,10 +28,10 @@ A simple nanoblogging platform for a raw mind _flow_.
 ## REST API service
 
 + an universal interface above the whole backend, indirect data manipulation
-+ tha main and secure data source for the frontend Go/JS/Wasm client
-+ API documentation is stored in the `api/` root repo directory as Swagger JSON-formatted file
++ layered architecture (controller - service - repository)
++ the main and secure data source for the frontend Go/JS/Wasm client
 + the service is reachable via the `/api/v1` route
-+ [Swagger live docs](https://www.littr.eu/docs/)
++ API documentation is stored in the `api/` root repo directory as Swagger JSON-formatted file: [Swagger live docs](https://www.littr.eu/docs/)
 
 
 ## how it should work
