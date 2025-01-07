@@ -121,11 +121,23 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 				Figure:   c.newFigFile,
 				Data:     c.newFigData,
 			}
+
 			// Compose a poll payload.
 		} else if postType == "poll" {
 			path = "/api/v1/polls"
 			poll.Author = user.Nickname
-			payload = poll
+
+			payload = struct {
+				Question    string `json:"question"`
+				OptionOne   string `json:"option_one"`
+				OptionTwo   string `json:"option_two"`
+				OptionThree string `json:"option_three"`
+			}{
+				Question:    poll.Question,
+				OptionOne:   poll.OptionOne.Content,
+				OptionTwo:   poll.OptionTwo.Content,
+				OptionThree: poll.OptionThree.Content,
+			}
 		}
 
 		// Compose the API input payload.

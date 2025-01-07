@@ -41,7 +41,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		input := &common.CallInput{
 			Method:      "DELETE",
 			Url:         "/api/v1/polls/" + interactedPoll.ID,
-			Data:        interactedPoll,
+			Data:        nil,
 			CallerID:    c.user.Nickname,
 			PageNo:      c.pageNo,
 			HideReplies: false,
@@ -153,7 +153,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 // handleVote()
 func (c *Content) handleVote(ctx app.Context, a app.Action) {
-	// fetch the action's value
+	// Fetch the action's value(s).
 	keys, ok := a.Value.([]string)
 	if !ok {
 		return
@@ -165,16 +165,16 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 	poll := c.polls[key]
 	toast := common.Toast{AppContext: &ctx}
 
-	poll.Voted = append(poll.Voted, c.user.Nickname)
-
-	// check where to vote
+	// Check where to vote.
 	options := []string{
 		poll.OptionOne.Content,
 		poll.OptionTwo.Content,
 		poll.OptionThree.Content,
 	}
 
-	// use the vote
+	poll.Voted = append(poll.Voted, c.user.Nickname)
+
+	// Use the vote.
 	if found := contains(options, option); found {
 		switch option {
 		case poll.OptionOne.Content:
@@ -193,11 +193,22 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		toast.Text(common.ERR_POLL_OPTION_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 	}
 
+	// Compose a payload for backend.
+	payload := struct {
+		OptionOneCount   int64 `json:"option_one_count"`
+		OptionTwoCount   int64 `json:"option_two_count"`
+		OptionThreeCount int64 `json:"option_three_count"`
+	}{
+		OptionOneCount:   poll.OptionOne.Counter,
+		OptionTwoCount:   poll.OptionTwo.Counter,
+		OptionThreeCount: poll.OptionThree.Counter,
+	}
+
 	ctx.Async(func() {
 		input := &common.CallInput{
-			Method:      "PUT",
+			Method:      "PATCH",
 			Url:         "/api/v1/polls/" + poll.ID,
-			Data:        poll,
+			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
 			HideReplies: false,
