@@ -50,8 +50,11 @@ func (c *Content) Render() app.UI {
 			//app.Div().Class("small-space"),
 
 			// request button
-			app.Div().Class("row center-align").Body(
+			app.Div().Class("row center-align max").Body(
 				app.Button().ID("request-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+					app.If(c.buttonsDisabled,
+						app.Progress().Class("circle white-border small"),
+					),
 					app.Text("request"),
 				),
 			),
@@ -77,8 +80,11 @@ func (c *Content) Render() app.UI {
 			//app.Div().Class("small-space"),
 
 			// pwd reset button
-			app.Div().Class("row center-align").Body(
+			app.Div().Class("row center-align max").Body(
 				app.Button().ID("reset-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(2).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).Body(
+					app.If(c.buttonsDisabled,
+						app.Progress().Class("circle white-border small"),
+					),
 					app.Text("reset"),
 				),
 			),
