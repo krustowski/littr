@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.30"
+        "version": "0.45.31"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -212,7 +212,7 @@
                 "summary": "Get real-time server-sent event stream (SSE stream)",
                 "responses": {
                     "200": {
-                        "description": "The connection success. Typically appears when the stream ends gratefully.",
+                        "description": "The connection success. Typically appears when the stream ends gracefully.",
                         "schema": {
                             "type": "string"
                         }
