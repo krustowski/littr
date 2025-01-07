@@ -33,40 +33,37 @@ type User struct {
 	PassphraseHex string `json:"passphrase_hex,omitempty" swaggerignore:"true"`
 
 	// Email is a primary user's e-mail address.
-	Email string `json:"email,omitempty"`
+	Email string `json:"email,omitempty" example:"alice@example.com"`
 
 	// Web is user's personal homepage.
-	Web string `json:"web"`
+	Web string `json:"web" example:"https://example.com"`
 
 	// AvatarURL is an URL to the user's custom profile picture.
-	AvatarURL string `json:"avatar_url,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty" example:"https://example.com/web/apple-touch-icon.png"`
 
 	// About is a description string of such user.
 	About string `json:"about" default:"newbie"`
 
 	// Options is an umbrella struct/map for the booleans.
-	Options UserOptionsMap `json:"options"`
+	Options UserOptionsMap `json:"options" example:"private:true"`
 
 	// Active boolean indicates an activated user's account.
-	Active bool `json:"active"`
+	Active bool `json:"active" example:"true"`
 
 	// Private boolean indicates a private user's account.
-	Private bool `json:"private"`
+	Private bool `json:"private" example:"true"`
 
 	// FlowList is a string map of users, which posts should be added to one's flow page.
-	FlowList UserGenericMap `json:"flow_list,omitempty"`
+	FlowList UserGenericMap `json:"flow_list,omitempty" example:"alice:true"`
 
 	// ShadeList is a map of account/users to be shaded (soft-blocked) from following.
-	ShadeList UserGenericMap `json:"shade_list,omitempty"`
+	ShadeList UserGenericMap `json:"shade_list,omitempty" example:"cody:true"`
 
 	// RequestList is a map of account requested to add this user to their flow --- used with the Private property.
-	RequestList UserGenericMap `json:"request_list,omitempty"`
+	RequestList UserGenericMap `json:"request_list,omitempty" example:"dave:true"`
 
 	// Color is the user's UI color scheme.
 	Color string `json:"color" default:"#000000"`
-
-	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	AppBgMode string `json:"app_bg_mode" default:"dark"`
 
 	// RegisteredTime is an UNIX timestamp of the user's registration.
 	RegisteredTime time.Time `json:"registered_time"`
@@ -85,7 +82,7 @@ type User struct {
 	GDPR bool `json:"gdpr"`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	UIDarkMode bool `json:"app_bg_mode" swaggerignore:"true"`
+	UIDarkMode bool `json:"app_bg_mode" default:"true"`
 
 	// LiveMode is a feature allowing to show notifications about new posts
 	LiveMode bool `json:"live_mode"`
@@ -94,10 +91,10 @@ type User struct {
 	LocalTimeMode bool `json:"local_time_mode"`
 
 	// Devices array holds the subscribed devices. Devices are not exported as the subscribed devices are stored separated.
-	Devices []Device `json"-"`
+	Devices []Device `json:"-" swaggerignore:"true"`
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags" example:"user"`
 }
 
 // Options is an umbrella struct to hold all the booleans in one place.
@@ -131,19 +128,19 @@ type Options struct {
 // UserStat is a helper struct to hold statistics about the whole app.
 type UserStat struct {
 	// PostCount is a number of posts of such user.
-	PostCount int64 `default:0`
+	PostCount int64 `json:"post_count" default:"0"`
 
 	// ReactionCount tells the number of interactions (stars given).
-	ReactionCount int64 `default:0`
+	ReactionCount int64 `json:"reaction_count" default:"0"`
 
 	// FlowerCount is basically a number of followers.
-	FlowerCount int64 `default:0`
+	FlowerCount int64 `json:"flower_count" default:"0"`
 
 	// ShadeCount is basically a number of blockers.
-	ShadeCount int64 `default:0`
+	ShadeCount int64 `json:"shade_count" default:"0"`
 
 	// Searched is a special boolean used by the search engine to mark who is to be shown in search results.
-	Searched bool `default:true`
+	Searched bool `json:"-" default:"true" swaggerignore:"true"`
 }
 
 func (u User) Copy() *User {

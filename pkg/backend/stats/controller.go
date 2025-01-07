@@ -35,7 +35,7 @@ func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")
 
 	type responseData struct {
-		FlowStats map[string]int64           `json:"flow_stats"`
+		FlowStats map[string]int64           `json:"flow_stats" example:"online:3,users:5"`
 		UserStats map[string]models.UserStat `json:"user_stats"`
 		Users     map[string]models.User     `json:"users"`
 	}

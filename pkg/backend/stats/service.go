@@ -19,6 +19,7 @@ func NewStatService(
 	postRepository models.PostRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.StatServiceInterface {
+
 	if pollRepository == nil || postRepository == nil || userRepository == nil {
 		return nil
 	}

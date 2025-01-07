@@ -3036,32 +3036,28 @@
                 },
                 "active": {
                     "description": "Active boolean indicates an activated user's account.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true
                 },
                 "app_bg_mode": {
                     "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "string",
-                    "default": "dark"
+                    "type": "boolean",
+                    "default": true
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://example.com/web/apple-touch-icon.png"
                 },
                 "color": {
                     "description": "Color is the user's UI color scheme.",
                     "type": "string",
                     "default": "#000000"
                 },
-                "devices": {
-                    "description": "Devices array holds the subscribed devices. Devices are not exported as the subscribed devices are stored separated.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Device"
-                    }
-                },
                 "email": {
                     "description": "Email is a primary user's e-mail address.",
-                    "type": "string"
+                    "type": "string",
+                    "example": "alice@example.com"
                 },
                 "flow_list": {
                     "description": "FlowList is a string map of users, which posts should be added to one's flow page.",
@@ -3069,7 +3065,10 @@
                         {
                             "$ref": "#/definitions/models.UserGenericMap"
                         }
-                    ]
+                    ],
+                    "example": {
+                        "alice": true
+                    }
                 },
                 "full_name": {
                     "description": "FullName is the \"genuine\" name of such user.",
@@ -3106,11 +3105,15 @@
                         {
                             "$ref": "#/definitions/models.UserOptionsMap"
                         }
-                    ]
+                    ],
+                    "example": {
+                        "private": true
+                    }
                 },
                 "private": {
                     "description": "Private boolean indicates a private user's account.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true
                 },
                 "registered_time": {
                     "description": "RegisteredTime is an UNIX timestamp of the user's registration.",
@@ -3122,7 +3125,10 @@
                         {
                             "$ref": "#/definitions/models.UserGenericMap"
                         }
-                    ]
+                    ],
+                    "example": {
+                        "dave": true
+                    }
                 },
                 "shade_list": {
                     "description": "ShadeList is a map of account/users to be shaded (soft-blocked) from following.",
@@ -3130,18 +3136,25 @@
                         {
                             "$ref": "#/definitions/models.UserGenericMap"
                         }
-                    ]
+                    ],
+                    "example": {
+                        "cody": true
+                    }
                 },
                 "tags": {
                     "description": "Tags is an array of possible roles and other various attributes assigned to such user.",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "user"
+                    ]
                 },
                 "web": {
                     "description": "Web is user's personal homepage.",
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://example.com"
                 }
             }
         },
@@ -3160,25 +3173,25 @@
         "models.UserStat": {
             "type": "object",
             "properties": {
-                "flowerCount": {
+                "flower_count": {
                     "description": "FlowerCount is basically a number of followers.",
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 },
-                "postCount": {
+                "post_count": {
                     "description": "PostCount is a number of posts of such user.",
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 },
-                "reactionCount": {
+                "reaction_count": {
                     "description": "ReactionCount tells the number of interactions (stars given).",
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 },
-                "searched": {
-                    "description": "Searched is a special boolean used by the search engine to mark who is to be shown in search results.",
-                    "type": "boolean"
-                },
-                "shadeCount": {
+                "shade_count": {
                     "description": "ShadeCount is basically a number of blockers.",
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 }
             }
         },
@@ -3307,6 +3320,10 @@
                     "type": "object",
                     "additionalProperties": {
                         "type": "integer"
+                    },
+                    "example": {
+                        "online": 3,
+                        "users": 5
                     }
                 },
                 "user_stats": {
