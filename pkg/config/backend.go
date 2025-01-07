@@ -99,6 +99,7 @@ var (
 	// UsersDeletionList holds the list of acounts to be ceased from the database including their posts/polls/assets.
 	// The server has to be restarted for changes to apply there. This list also prevents listed nicknames (case insensitive) to be registered.
 	UserDeletionList []string = []string{
+		"activation",
 		"admin",
 		"administrator",
 		"caller",
