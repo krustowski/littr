@@ -18,11 +18,11 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	// nasty
 	c.loginButtonDisabled = true
 
-	defer ctx.Dispatch(func(ctx app.Context) {
-		c.loginButtonDisabled = false
-	})
-
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.loginButtonDisabled = false
+		})
+
 		// Trim the padding spaces on the extremities.
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		nickname := strings.TrimSpace(c.nickname)
