@@ -147,14 +147,14 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 	payload := struct {
 		Tags []string `json:"tags"`
 	}{
-		Tags: append(c.thisDevice.Tags, tag),
+		Tags: []string{tag},
 	}
 
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		input := &common.CallInput{
-			Method:      "PUT",
+			Method:      "PATCH",
 			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
 			Data:        payload,
 			CallerID:    c.user.Nickname,

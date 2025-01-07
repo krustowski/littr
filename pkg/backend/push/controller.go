@@ -2,7 +2,6 @@ package push
 
 import (
 	"net/http"
-	"strings"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -109,21 +108,12 @@ func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tagName string
-
-	// Decide the tag to be changed.
-	if strings.Contains(r.URL.Path, "mention") {
-		tagName = "mention"
-	} else if strings.Contains(r.URL.Path, "reply") {
-		tagName = "reply"
-	}
-
-	if tagName == "" {
+	if len(dtoIn.Tags) == 0 {
 		l.Msg("tag to update not specified or is invalid").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if err := c.subscriptionService.Update(r.Context(), uuid, tagName); err != nil {
+	if err := c.subscriptionService.Update(r.Context(), uuid, dtoIn.Tags[0]); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}

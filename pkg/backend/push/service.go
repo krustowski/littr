@@ -52,15 +52,19 @@ func (s *SubscriptionService) Create(ctx context.Context, device *models.Device)
 	}
 
 	// Loop through the devices and check its presence (present = already subscribed).
-	for _, dev := range *dbSub {
-		if dev.UUID == device.UUID {
-			// Found a match, thus request was fired twice, or someone tickles the API.
-			return fmt.Errorf(common.ERR_DEVICE_SUBSCRIBED_ALREADY)
+	if dbSub != nil {
+		for _, dev := range *dbSub {
+			if dev.UUID == device.UUID {
+				// Found a match, thus request was fired twice, or someone tickles the API.
+				return fmt.Errorf(common.ERR_DEVICE_SUBSCRIBED_ALREADY)
+			}
 		}
-	}
 
-	// Append new device into the devices array for such user.
-	*dbSub = append(*dbSub, *device)
+		// Append new device into the devices array for such user.
+		*dbSub = append(*dbSub, *device)
+	} else {
+		dbSub = &[]models.Device{*device}
+	}
 
 	if err := s.subscriptionRepository.Save(callerID, dbSub); err != nil {
 		return err

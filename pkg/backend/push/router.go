@@ -13,8 +13,7 @@ func NewPushRouter(pushController *PushController) chi.Router {
 
 	// Subscription-related routes.
 	r.Post("/subscriptions", pushController.Create)
-	r.Patch("/subscriptions/{uuid}/mention", pushController.Update)
-	r.Patch("/subscriptions/{uuid}/reply", pushController.Update)
+	r.Patch("/subscriptions/{uuid}", pushController.Update)
 	r.Delete("/subscriptions/{uuid}", pushController.Delete)
 
 	return r
