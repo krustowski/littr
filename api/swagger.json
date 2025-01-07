@@ -19,7 +19,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.26"
+        "version": "0.45.27"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1450,11 +1450,9 @@
                         }
                     }
                 }
-            }
-        },
-        "/push/subscriptions/{uuid}/mention": {
+            },
             "patch": {
-                "description": "This function call handles a request to change an user's (caller's) notifications subscription. This call is used to toggle the subscription tag specified at the end of the route.",
+                "description": "This function call handles a request to change an user's (caller's) notifications subscription for a device specified by UUID param.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1472,140 +1470,15 @@
                         "name": "uuid",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The subscription has been updated successfully.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
                     },
-                    "400": {
-                        "description": "Invalid input data.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "User unauthorized.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "The requested device to update not found.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests, try again later.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "A serious internal problem occured while the update procedure was processing the data.",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Stub"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/push/subscriptions/{uuid}/reply": {
-            "patch": {
-                "description": "This function call handles a request to change an user's (caller's) notifications subscription. This call is used to toggle the subscription tag specified at the end of the route.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "push"
-                ],
-                "summary": "Update the notification subscription tag",
-                "parameters": [
                     {
-                        "type": "string",
-                        "description": "An UUID of a device to update.",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
+                        "description": "The request's body containing fields to modify.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/push.SubscriptionUpdateRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -3692,6 +3565,21 @@
                 "post_id": {
                     "type": "string",
                     "example": "123456789000"
+                }
+            }
+        },
+        "push.SubscriptionUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "reply",
+                        "mention"
+                    ]
                 }
             }
         },
