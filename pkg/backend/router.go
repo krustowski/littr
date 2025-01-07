@@ -136,9 +136,7 @@ func NewAPIRouter() chi.Router {
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.NewAuthRouter(authController))
-
-	r.Mount("/dump", db.Router())
-
+	r.Mount("/dump", db.NewDumpRouter())
 	r.Mount("/live", live.NewLiveRouter())
 	r.Mount("/polls", polls.NewPollRouter(pollController))
 

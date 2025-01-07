@@ -9,15 +9,15 @@ import (
 
 // dumpHandler is the dv package controller function to process system data dump request.
 //
-// @Summary      Perform system data dump
-// @Description  perform system data dump
-// @Tags         dump
-// @Produce      json
-// @Param    	 X-Dump-Token header string true "dump token"
-// @Success      200  {object}   common.APIResponse
-// @Failure 	 400  {object}   common.APIResponse
-// @Failure 	 403  {object}   common.APIResponse
-// @Router       /dump [get]
+//	@Summary		Perform system data dump
+//	@Description		This function call is used primarily by the healthcheck function inside the Docker compose stack to periodically dump running data into the JSON files.
+//	@Tags			dump
+//	@Produce		json
+//	@Param			X-Dump-Token	header		string	true	"A special app's dump token."
+//	@Success		200				{object}	common.APIResponse	"The dumping process was successful."
+//	@Failure		400				{object}	common.APIResponse	"Invalid input data (e.g. a blank token)."
+//	@Failure		403				{object}	common.APIResponse	"User unauthorized (e.g. invalid token)."
+//	@Router			/dump [get]
 func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "dump")
 
@@ -36,5 +36,4 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 
 	//go DumpAll()
 	l.Msg(DumpAll()).Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
