@@ -91,7 +91,7 @@ type User struct {
 	LocalTimeMode bool `json:"local_time_mode"`
 
 	// Devices array holds the subscribed devices. Devices are not exported as the subscribed devices are stored separated.
-	Devices []Device `json:"-" swaggerignore:"true"`
+	Devices []Device `json:"devices" swaggerignore:"true"`
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags" example:"user"`

@@ -64,6 +64,7 @@ func (c *PushController) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := c.subscriptionService.Create(r.Context(), &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
 	}
 
 	l.Msg("ok, the notifictions subscription has been created for given device").Status(http.StatusCreated).Log().Payload(nil).Write(w)
