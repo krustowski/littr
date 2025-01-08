@@ -1,6 +1,8 @@
 //	@title			littr
 //	@version		0.45.31
 //	@description		A simple nanoblogging platform.
+//	@description
+//	@description		HTTP cookies must be used for authentication on most routes. These can be obtained by calling the `/auth` route with the appropriate parameters.
 //	@termsOfService		https://www.littr.eu/tos
 
 //	@contact.name		API Support
@@ -14,16 +16,41 @@
 //	@BasePath		/api/v1
 //	@accept			json
 //	@produce		json
+//	@schemes		https http
 
 //	@supportedSubmitMethods		[]
 //	@security			[]
-//	@securityDefinitions.basic	BasicAuth
+//	@securityDefinitions.basic
 
 //	@externalDocs.description	OpenAPI
 //	@externalDocs.url		https://swagger.io/resources/open-api/
 
 //	@externalDocs.description	Documentation
 //	@externalDocs.url		https://krusty.space/projects/littr/
+
+//	@tag.name		auth
+//	@tag.description	Authentication and HTTP cookies managment
+
+//	@tag.name		dump
+//	@tag.description	Interventions in running data
+
+//	@tag.name		live
+//	@tag.description	Real-time event streaming
+
+//	@tag.name		polls
+//	@tag.description	Polls management procedures
+
+//	@tag.name		posts
+//	@tag.description	Operations with contributions
+
+//	@tag.name		push
+//	@tag.description	Real-time (web)push notifications suite
+
+//	@tag.name		stats
+//	@tag.description	System statistics
+
+//	@tag.name		users
+//	@tag.description	User manipulation operations
 
 // The umbrella package for the JSON REST API service.
 package backend

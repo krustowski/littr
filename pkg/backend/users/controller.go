@@ -354,7 +354,7 @@ func (c *UserController) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		users.UserPassphraseRequest	true	"An user's  e-mail address."
+//	@Param			request	body		users.UserPassphraseRequest	true	"User's  e-mail address."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"The passphrase reset request was created successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
@@ -395,7 +395,7 @@ func (c *UserController) PassphraseResetRequest(w http.ResponseWriter, r *http.R
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		users.UserPassphraseReset	true	"A received UUID string to confirm the reset."
+//	@Param			request	body		users.UserPassphraseReset	true	"Received UUID string to confirm the reset."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub} 	"The passphrase was changed successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data received."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"Such user does not exist in the system."
@@ -478,7 +478,7 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Description		This function call retrieves a paginated list of user accounts. The page number starts at 0 (and is the default value if not provided in a request).
 //	@Tags			users
 //	@Produce		json
-//	@Param			X-Page-No	header		string	false	"Page number (default is 0)"
+//	@Param			X-Page-No	header		integer	false	"Page number (default is 0)"
 //	@Success		200			{object}	common.APIResponse{data=users.GetAll.responseData} 	"Requested page of user accounts returned."
 //	@Failure		400			{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
 //	@Failure		500			{object}	common.APIResponse{data=models.Stub}			"A generic problem in the internal system's logic. See the `message` KV in JSON to gain more information."
@@ -541,7 +541,7 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID			path		string	true	"user's ID to be shown"
+//	@Param			userID			path		string	true	"User's ID to be shown"
 //	@Success		200			{object}	common.APIResponse{data=users.GetByID.responseData}	"Requested user's data (may be limited according to the caller)."
 //	@Failure		400			{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
 //	@Failure		404			{object}	common.APIResponse{data=models.Stub}			"User not found in the database."
