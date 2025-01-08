@@ -21,23 +21,44 @@ import (
 )
 
 const (
-	PKG_NAME = "posts"
+	LOGGER_WORKER_NAME = "postController"
 )
 
-// getPosts fetches posts, page spicified by a header.
+// Structure contents definition for the controller.
+type PostController struct {
+	postService models.PostServiceInterface
+}
+
+// NewPostController return a pointer to the new controller instance, that has to be populated with the Post service.
+func NewPostController(
+	postService models.PostServiceInterface,
+) *PostController {
+
+	if postService == nil {
+		return nil
+	}
+
+	return &PostController{
+		postService: postService,
+	}
+}
+
+// GetAll fetches a list of posts, a page number is specified by the X-Page-No header.
 //
-// @Summary      Get posts
-// @Description  get posts
-// @Tags         posts
-// @Produce      json
-// @Param    	 X-Page-No header string true "page number"
-// @Param    	 X-Hide-Replies header string false "hide replies bool"
-// @Success      200  {object}  common.APIResponse{data=posts.getPosts.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts [get]
-func getPosts(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Get posts
+//	@Description		This function call retrieves a page of posts. The page number is to be specified using the `X-Page-No` header (default is 0 = latest).
+//	@Tags			posts
+//	@Produce		json
+//	@Param			X-Page-No		header		integer	false		"A page number (default is 0)."
+//	@Param			X-Hide-Replies		header		bool	false		"An optional boolean to show only root posts without any reply (default is false)."
+//	@Success		200				{object}	common.APIResponse{data=posts.GetAll.responseData}	"Paginated list of posts."
+//	@Failure		400				{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
+//	@Failure		401				{object}	common.APIResponse{data=models.Stub}			"User unauthorized."
+//	@Failure		429				{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
+//	@Failure		500				{object}	common.APIResponse
+//	@Router			/posts [get]
+func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -46,7 +67,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		Count int                    `json:"count"`
 	}
 
-	// skip blank callerID
+	// Skip blank callerID.
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
@@ -54,14 +75,16 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	pageNo := 0
 
+	// Parse the X-Page-No header.
 	pageNoString := r.Header.Get(common.HDR_PAGE_NO)
-	if page, err := strconv.Atoi(pageNoString); err != nil {
+	pageNo, err := strconv.Atoi(pageNoString)
+	if err != nil {
 		//l.Msg(common.ERR_PAGENO_INCORRECT).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		//return
-	} else {
-		pageNo = page
+		pageNo = 0
 	}
 
+	// Parse the X-Hide-Replies header.
 	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
 		//l.Msg(common.ERR_HIDE_REPLIES_INVALID).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
@@ -107,21 +130,23 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// addNewPost adds new post
+// Create handles a new post creation request to the post service, which adds the post to the database.
 //
-// @Summary      Add new post
-// @Description  add new post
-// @Tags         posts
-// @Accept       json
-// @Produce      json
-// @Param    	 request body models.Post true "new post struct in request body"
-// @Success      201  {object}  common.APIResponse{data=posts.addNewPost.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts [post]
-func addNewPost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Add new post
+//	@Description		This function call is to be used to create a new post.
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	posts.PostCreateRequest			true				"Post body."
+//	@Success		201		{object}	common.APIResponse{data=posts.addNewPost.responseData}	"New post has been added to the database and published."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}			"User unauthorized."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}			"Forbidden action occurred."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}			"Internal server problem occurred while processing the request."
+//	@Router			/posts [post]
+func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -256,20 +281,22 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// updatePostStarCount increases the star count for the given post.
+// UpdateReactions increases the star count for the given post.
 //
-// @Summary      Update post's star count
-// @Description  update the star count
-// @Tags         posts
-// @Produce      json
-// @Param        postID path string true "post's ID to update"
-// @Success      200  {object}  common.APIResponse{data=posts.updatePostStarCount.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts/{postID}/star [patch]
-func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Update post's star count
+//	@Description		This function call is used to increase the post reactions counter value. It add one (1) reaction to the current state of a post.
+//	@Tags			posts
+//	@Produce		json
+//	@Param			postID	path			string		true						"Post ID to update."
+//	@Success		200		{object}	common.APIResponse{data=posts.UpdateReactions.responseData}	"Counter value has been increased successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}				"Invalid data input."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}				"Forbidden action happened (e.g. caller tried to increase the counter value of a post of theirs)."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}				"User unauthorized."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}				"Too many requests, try again later."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}				"Internal server problem occurred while processing the request."
+//	@Router			/posts/{postID}/star [patch]
+func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -321,74 +348,22 @@ func updatePostStarCount(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// updatePost updates the specified post.
+// Delete removes the specified post.
 //
-// @Summary      Update specified post
-// @Description  update specified post
-// @Deprecated
-// @Tags         posts
-// @Accept       json
-// @Produce      json
-// @Param    	 request body models.Post true "post to update in request body"
-// @Param        postID path string true "post's ID to update"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts/{postID} [put]
-func updatePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
-
-	if l.CallerID() == "" {
-		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	var post models.Post
-
-	// decode the request data
-	if err := common.UnmarshalRequestData(r, &post); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// check if suck post even exists
-	if _, found := db.GetOne(db.FlowCache, post.ID, models.Post{}); !found {
-		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// check for the post update forgery
-	if post.Nickname != l.CallerID() {
-		l.Msg(common.ERR_POST_UPDATE_FOREIGN).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// save the updated post back (whole decoded struct to override the existing one --- very dangerous and nasty)
-	// one could easily change post's author to oneself and mutilate the post afterwards
-	if saved := db.SetOne(db.FlowCache, post.ID, post); !saved {
-		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
-		return
-	}
-
-	l.Msg("ok, post updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
-}
-
-// deletePost removes specified post.
-//
-// @Summary      Delete specified post
-// @Description  delete specified post
-// @Tags         posts
-// @Produce      json
-// @Param        postID path string true "post's ID to update"
-// @Success      200  {object}  common.APIResponse
-// @Failure      400  {object}  common.APIResponse
-// @Failure      403  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts/{postID} [delete]
-func deletePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Delete specified post
+//	@Description		This function call ensures that the specified post is purged from the database. Associated items like figures are deleted as well.
+//	@Tags			posts
+//	@Produce		json
+//	@Param			postID		path		string		true			"Post ID to delete."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"Specified post has been deleted."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data input."
+//	@Failure		403		{object}	common.APIResponse{data=models.Stub}	"Forbidden action occurred (e.g. caller tried to delete a foreign post)."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"Internal server problem occurred while processing the request."
+//	@Router			/posts/{postID} [delete]
+func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	// skip blank callerID
 	if l.CallerID() == "" {
@@ -441,21 +416,23 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// getSinglePost fetch specified post and its interaction.
+// GetByID fetches specified post and its interaction.
 //
-// @Summary      Get single post
-// @Description  get single post
-// @Tags         posts
-// @Produce      json
-// @Param    	 X-Hide-Replies header string false "hide replies"
-// @Param    	 X-Page-No header string true "page number"
-// @Param        postID path string true "post's ID to update"
-// @Success      200  {object}  common.APIResponse{data=posts.getSinglePost.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts/{postID} [get]
-func getSinglePost(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Get single post
+//	@Description		This function call enables one to fetch a single post by its ID with all replies associated.
+//	@Tags			posts
+//	@Produce		json
+//	@Param			X-Hide-Replies		header		bool		false						"Optional parameter to hide all replies (default is false)."
+//	@Param			X-Page-No		header		integer		false						"Page number (default is 0)."
+//	@Param			postID			path		string		true						"Post ID to fetch."
+//	@Success		200			{object}	common.APIResponse{data=posts.GetByID.responseData}		"Data fetched successfully."
+//	@Failure		400			{object}	common.APIResponse{data=models.Stub}				"Invalid input data."
+//	@Failure		401			{object}	common.APIResponse{data=models.Stub}				"User unauthorized."
+//	@Failure		429			{object}	common.APIResponse{data=models.Stub}				"Too many requests, try again later."
+//	@Failure		500			{object}	common.APIResponse{data=models.Stub}				"Internal server problem occurred while processing the request."
+//	@Router			/posts/{postID} [get]
+func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -531,21 +508,23 @@ func getSinglePost(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// fetchHashtaggedPosts
+// GetByHashtag fetches all posts tagged with the specified hashtag.
 //
-// @Summary      Get hashtagged post list
-// @Description  get hashtagged post list
-// @Tags         posts
-// @Produce      json
-// @Param    	 X-Hide-Replies header string false "hide replies"
-// @Param    	 X-Page-No header string true "page number"
-// @Param        hashtag path string true "hashtag string"
-// @Success      200  {object}  common.APIResponse{data=posts.fetchHashtaggedPosts.responseData}
-// @Failure      400  {object}  common.APIResponse
-// @Failure      500  {object}  common.APIResponse
-// @Router       /posts/hashtags/{hashtag} [get]
-func fetchHashtaggedPosts(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, PKG_NAME)
+//	@Summary		Get hashtagged post list
+//	@Description		This function call fetches all posts tagged with specified hashtag phrase (`#phrase` => `phrase`).
+//	@Tags			posts
+//	@Produce		json
+//	@Param			X-Hide-Replies		header		bool		false							"hide replies"
+//	@Param			X-Page-No		header		integer		false							"page number"
+//	@Param			hashtag			path		string		true							"hashtag string"
+//	@Success		200			{object}	common.APIResponse{data=posts.GetByHashtag.responseData}		"Data fetched successfully."
+//	@Failure		400			{object}	common.APIResponse{data=models.Stub}					"Invalid input data."
+//	@Failure		401			{object}	common.APIResponse{data=models.Stub}					"User unauthorized."
+//	@Failure		429			{object}	common.APIResponse{data=models.Stub}					"Too many requests, try again later."
+//	@Failure		500			{object}	common.APIResponse{data=models.Stub}
+//	@Router			/posts/hashtags/{hashtag} [get]
+func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
