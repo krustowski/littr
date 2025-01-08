@@ -37,5 +37,5 @@ type Post struct {
 	ReplyCount int64 `json:"reply_count"`
 
 	// Data is a helper field for the actual figure upload.
-	Data []byte `json:"data"`
+	Data []byte `json:"data" swaggerignore:"true"`
 }
