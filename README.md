@@ -12,32 +12,35 @@ A simple nanoblogging platform for a raw mind _flow_.
 
 ## features
 
-+ embedded in-memory cache system
-+ data persistence on container's restart/shutdown (on `SIGINT`) in Docker volume(s)
-+ flow posts filtering using the FlowList --- simply choose who to follow
++ embedded **in-memory cache** system
++ **data persistence** on container's restart/shutdown (on `SIGINT`) in Docker volume(s)
++ swift client side (a **WebAssebmly** binary)
++ flow **posts filtering** using the FlowList --- simply choose who to follow
 + shade function to block other accounts from following you and reading your posts
-+ webpush notification management --- choose which notifications (reply/mention) is your device willing to accept
-+ private account --- others have to file a follow request to such account (and have to approved by the acc's owner)
-+ swift client side (a WebAssebmly binary)
-+ safe photo sharing --- EXIF metadata are removed while image file is uploading
-+ passphrase reset via e-mail
-+ dark/light mode switch
-+ live in-app event (SSE) notifications --- get alerted when a new post/poll is added to your flow --- to be toggable soon
++ **webpush notifications** management --- choose which notifications (reply/mention) is your device willing to accept
++ live in-app event (**server-sent events, SSE**) notifications --- get alerted when a new post/poll is added to your flow --- to be toggable soon
++ **private account** --- others have to file a follow request to such account (and have to approved by the acc's owner)
++ safe photo sharing --- **EXIF metadata removed** while an image file is uploading
++ user verification and passphrase reset via e-mail
++ **dark/light mode** switch
++ **keyboard shortcuts** to navigate throughout the site, or to toggle some features (e.g. hide replies using `X`)
++ Gravatar integration
 
 
 ## REST API service
 
-+ an universal interface above the whole backend, indirect data manipulation
-+ layered architecture (controller - service - repository)
-+ the main and secure data source for the frontend Go/JS/Wasm client
-+ the service is reachable via the `/api/v1` route
++ an universal interface above the whole backend for the indirect data retrieval and manipulation
++ layered architecture (controller + service + repository layers)
++ JSON response
++ the main and secure data source for the frontend Go/JS/WASM client
++ reachable via the `/api/v1` route prefix
 + API documentation is stored in the `api/` root repo directory as Swagger JSON-formatted file: [Swagger live docs](https://www.littr.eu/docs/)
 
 
 ## how it should work
 
-+ users must register (`/register`) or existed users must login (`/login`)
-+ users can navigate to the flow (`/flow`) and read other's mind _flows_
++ users must **register** (`/register`), or existed users must **login** (`/login`)
++ users can navigate to the **flow** (`/flow`) and read other's mind _flows_
 + users can modify their FlowList (list of followed accounts, `/users`)
 + users can change their passphrase, the _about_ (bio) description and many more (`/settings`)
 + polls/posts can be written and sent (`/post`) by any logged-in user
@@ -67,16 +70,16 @@ make flush kill run
 ## repo vademecum
 
 `api`
-+ swagger documentation
++ Swagger documentation
 
 `cmd`
-+ main app entrypoints for build
++ various (dev) tooling, and the build entrypoints for both BE and FE
 
 `cmd/littr/http_server.go`
-+ init app file for the app's backend side with REST API service
++ REST API server initialization procedure (BE)
 
 `cmd/littr/wasm_client.go`
-+ lightened version of HTTP server, includes basic app router, lacks REST API service
++ initialization procedure for the client binary (FE), cross-compiled into a WASM binary
 
 `configs`
 + configuration files
@@ -89,14 +92,14 @@ make flush kill run
 + environmental contants and vars for the app to run smoothly (in Docker via Makefile)
 
 `pkg`
-+ app libs 
++ shared repo packages 
 
 `pkg/backend`
-+ REST API backend service
++ REST API backend service source
 + service is used by WASM client for the app's running data fetch
 
 `pkg/frontend`
-+ frontend pages/views
++ frontend pages/views source
 + go-app framework usecase
 
 `pkg/models`
