@@ -175,7 +175,7 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Description		This function call retrieves a single page of polls according to the optional `X-Page-No` header (default is 0).
 //	@Tags			polls
 //	@Produce		json
-//	@Param			X-Page-No	header		string	false	"A page number (default is 0)."
+//	@Param			X-Page-No	header		integer		false					"A page number (default is 0)."
 //	@Success		200		{object}	common.APIResponse{data=polls.GetAll.responseData}	"The requested page of polls is returned."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}			"User unauthorized."
