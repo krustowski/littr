@@ -23,13 +23,17 @@ func NewAuthController(authService models.AuthServiceInterface) *AuthController 
 //
 //	@Summary		Auth an user
 //	@Description		This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).
+//	@Description
+//	@Description		The hashed string is a concatenation of user's passphrase and the server pepper/secret, which is then hashed using the SHA-512 algorithm.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.AuthUser	true	"User's credentials to authenticate."
 //	@Success		200		{object}	common.APIResponse{data=auth.Auth.responseData}		"Authentication process successful, HTTP cookies sent in response."
 //	@Failure		400		{object}	common.APIResponse{data=auth.Logout.responseData}	"Invalid input data."
+//	@Failure		401		{object}	common.APIResponse{data=auth.Logout.responseData}	"User not authenticated, wrong passphrase used, or such account does not exist at all."
 //	@Failure		404		{object}	common.APIResponse{data=auth.Logout.responseData}	"User not found."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
 //	@Failure		500		{object}	common.APIResponse{data=auth.Logout.responseData}	"Internal server problem while processing the request."
 //	@Router			/auth [post]
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
@@ -105,6 +109,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	common.APIResponse{data=auth.Logout.responseData}	"Void cookies sent in response."
+//	@Failure		429	{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
 //	@Router			/auth/logout [post]
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "authController")

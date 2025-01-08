@@ -14,9 +14,10 @@ import (
 //	@Tags			dump
 //	@Produce		json
 //	@Param			X-Dump-Token	header		string	true	"A special app's dump token."
-//	@Success		200				{object}	common.APIResponse	"The dumping process was successful."
-//	@Failure		400				{object}	common.APIResponse	"Invalid input data (e.g. a blank token)."
-//	@Failure		403				{object}	common.APIResponse	"User unauthorized (e.g. invalid token)."
+//	@Success		200				{object}	common.APIResponse{data=models.Stub}	"The dumping process was successful."
+//	@Failure		400				{object}	common.APIResponse{data=models.Stub}	"Invalid input data (e.g. a blank token)."
+//	@Failure		403				{object}	common.APIResponse{data=models.Stub}	"User unauthorized (e.g. invalid token)."
+//	@Failure		429				{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
 //	@Router			/dump [get]
 func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "dump")
