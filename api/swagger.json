@@ -5,9 +5,13 @@
     "produces": [
         "application/json"
     ],
+    "schemes": [
+        "https",
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
-        "description": "A simple nanoblogging platform.",
+        "description": "A simple nanoblogging platform.\n\nHTTP cookies must be used for authentication on most routes. These can be obtained by calling the `/auth` route with the appropriate parameters.",
         "title": "littr",
         "termsOfService": "https://www.littr.eu/tos",
         "contact": {
@@ -19,14 +23,14 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.31"
+        "version": "0.45.32"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
     "paths": {
         "/auth": {
             "post": {
-                "description": "This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).",
+                "description": "This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).\n\nThe hashed string is a concatenation of user's passphrase and the server pepper/secret, which is then hashed using the SHA-512 algorithm.",
                 "consumes": [
                     "application/json"
                 ],
@@ -39,7 +43,7 @@
                 "summary": "Auth an user",
                 "parameters": [
                     {
-                        "description": "An user's credentials to authenticate.",
+                        "description": "User's credentials to authenticate.",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -50,7 +54,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Authentication process successful, HTTP cookies sent in response.",
                         "schema": {
                             "allOf": [
                                 {
@@ -68,7 +72,25 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.Logout.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated, wrong passphrase used, or such account does not exist at all.",
                         "schema": {
                             "allOf": [
                                 {
@@ -86,7 +108,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found.",
                         "schema": {
                             "allOf": [
                                 {
@@ -103,8 +125,26 @@
                             ]
                         }
                     },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server problem while processing the request.",
                         "schema": {
                             "allOf": [
                                 {
@@ -139,7 +179,7 @@
                 "summary": "Log-out an user",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Void cookies sent in response.",
                         "schema": {
                             "allOf": [
                                 {
@@ -150,6 +190,24 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/auth.Logout.responseData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
                                         }
                                     }
                                 }
@@ -182,19 +240,73 @@
                     "200": {
                         "description": "The dumping process was successful.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Invalid input data (e.g. a blank token).",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
                         "description": "User unauthorized (e.g. invalid token).",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -235,7 +347,7 @@
                 "summary": "Get a list of polls",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "A page number (default is 0).",
                         "name": "X-Page-No",
                         "in": "header"
@@ -854,7 +966,7 @@
         },
         "/posts": {
             "get": {
-                "description": "get posts",
+                "description": "This function call retrieves a page of posts. The page number is to be specified using the `X-Page-No` header (default is 0 = latest).",
                 "produces": [
                     "application/json"
                 ],
@@ -864,22 +976,21 @@
                 "summary": "Get posts",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "page number",
+                        "type": "integer",
+                        "description": "A page number (default is 0).",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     },
                     {
-                        "type": "string",
-                        "description": "hide replies bool",
+                        "type": "boolean",
+                        "description": "An optional boolean to show only root posts without any reply (default is false).",
                         "name": "X-Hide-Replies",
                         "in": "header"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list of posts.",
                         "schema": {
                             "allOf": [
                                 {
@@ -889,7 +1000,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.getPosts.responseData"
+                                            "$ref": "#/definitions/posts.GetAll.responseData"
                                         }
                                     }
                                 }
@@ -897,9 +1008,57 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -911,7 +1070,7 @@
                 }
             },
             "post": {
-                "description": "add new post",
+                "description": "This function call is to be used to create a new post.",
                 "consumes": [
                     "application/json"
                 ],
@@ -924,18 +1083,18 @@
                 "summary": "Add new post",
                 "parameters": [
                     {
-                        "description": "new post struct in request body",
+                        "description": "Post body.",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Post"
+                            "$ref": "#/definitions/posts.PostCreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "New post has been added to the database and published.",
                         "schema": {
                             "allOf": [
                                 {
@@ -945,7 +1104,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.addNewPost.responseData"
+                                            "$ref": "#/definitions/posts.Create.responseData"
                                         }
                                     }
                                 }
@@ -953,21 +1112,93 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden action occurred.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server problem occurred while processing the request.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -975,7 +1206,7 @@
         },
         "/posts/hashtags/{hashtag}": {
             "get": {
-                "description": "get hashtagged post list",
+                "description": "This function call fetches all posts tagged with specified hashtag phrase (`#phrase` =\u003e `phrase`).",
                 "produces": [
                     "application/json"
                 ],
@@ -985,17 +1216,16 @@
                 "summary": "Get hashtagged post list",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "hide replies",
                         "name": "X-Hide-Replies",
                         "in": "header"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "page number",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     },
                     {
                         "type": "string",
@@ -1007,7 +1237,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Data fetched successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1017,7 +1247,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.fetchHashtaggedPosts.responseData"
+                                            "$ref": "#/definitions/posts.GetByHashtag.responseData"
                                         }
                                     }
                                 }
@@ -1025,15 +1255,75 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1041,7 +1331,7 @@
         },
         "/posts/{postID}": {
             "get": {
-                "description": "get single post",
+                "description": "This function call enables one to fetch a single post by its ID with all replies associated.",
                 "produces": [
                     "application/json"
                 ],
@@ -1051,21 +1341,20 @@
                 "summary": "Get single post",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "hide replies",
+                        "type": "boolean",
+                        "description": "Optional parameter to hide all replies (default is false).",
                         "name": "X-Hide-Replies",
                         "in": "header"
                     },
                     {
-                        "type": "string",
-                        "description": "page number",
+                        "type": "integer",
+                        "description": "Page number (default is 0).",
                         "name": "X-Page-No",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     },
                     {
                         "type": "string",
-                        "description": "post's ID to update",
+                        "description": "Post ID to fetch.",
                         "name": "postID",
                         "in": "path",
                         "required": true
@@ -1073,7 +1362,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Data fetched successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1083,7 +1372,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.getSinglePost.responseData"
+                                            "$ref": "#/definitions/posts.GetByID.responseData"
                                         }
                                     }
                                 }
@@ -1091,79 +1380,81 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server problem occurred while processing the request.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "update specified post",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "posts"
-                ],
-                "summary": "Update specified post",
-                "deprecated": true,
-                "parameters": [
-                    {
-                        "description": "post to update in request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Post"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "post's ID to update",
-                        "name": "postID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
-                "description": "delete specified post",
+                "description": "This function call ensures that the specified post is purged from the database. Associated items like figures are deleted as well.",
                 "produces": [
                     "application/json"
                 ],
@@ -1174,7 +1465,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "post's ID to update",
+                        "description": "Post ID to delete.",
                         "name": "postID",
                         "in": "path",
                         "required": true
@@ -1182,27 +1473,111 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Specified post has been deleted.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data input.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden action occurred (e.g. caller tried to delete a foreign post).",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server problem occurred while processing the request.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1210,7 +1585,7 @@
         },
         "/posts/{postID}/star": {
             "patch": {
-                "description": "update the star count",
+                "description": "This function call is used to increase the post reactions counter value. It add one (1) reaction to the current state of a post.",
                 "produces": [
                     "application/json"
                 ],
@@ -1221,7 +1596,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "post's ID to update",
+                        "description": "Post ID to update.",
                         "name": "postID",
                         "in": "path",
                         "required": true
@@ -1229,7 +1604,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Counter value has been increased successfully.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1239,7 +1614,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.updatePostStarCount.responseData"
+                                            "$ref": "#/definitions/posts.UpdateReactions.responseData"
                                         }
                                     }
                                 }
@@ -1247,21 +1622,93 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid data input.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User unauthorized.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden action happened (e.g. caller tried to increase the counter value of a post of theirs).",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server problem occurred while processing the request.",
                         "schema": {
-                            "$ref": "#/definitions/common.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1888,7 +2335,7 @@
                 "summary": "Get a list of users",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Page number (default is 0)",
                         "name": "X-Page-No",
                         "in": "header"
@@ -2269,7 +2716,7 @@
                 "summary": "Request the passphrase reset",
                 "parameters": [
                     {
-                        "description": "An user's  e-mail address.",
+                        "description": "User's  e-mail address.",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -2369,7 +2816,7 @@
                 "summary": "Reset the passphrase",
                 "parameters": [
                     {
-                        "description": "A received UUID string to confirm the reset.",
+                        "description": "Received UUID string to confirm the reset.",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -2470,7 +2917,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user's ID to be shown",
+                        "description": "User's ID to be shown",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -3731,7 +4178,7 @@
                 }
             }
         },
-        "posts.addNewPost.responseData": {
+        "posts.Create.responseData": {
             "type": "object",
             "properties": {
                 "posts": {
@@ -3742,27 +4189,7 @@
                 }
             }
         },
-        "posts.fetchHashtaggedPosts.responseData": {
-            "type": "object",
-            "properties": {
-                "key": {
-                    "type": "string"
-                },
-                "posts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.Post"
-                    }
-                },
-                "users": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                }
-            }
-        },
-        "posts.getPosts.responseData": {
+        "posts.GetAll.responseData": {
             "type": "object",
             "properties": {
                 "count": {
@@ -3785,7 +4212,7 @@
                 }
             }
         },
-        "posts.getSinglePost.responseData": {
+        "posts.GetByHashtag.responseData": {
             "type": "object",
             "properties": {
                 "key": {
@@ -3805,7 +4232,58 @@
                 }
             }
         },
-        "posts.updatePostStarCount.responseData": {
+        "posts.GetByID.responseData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.Post"
+                    }
+                },
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "posts.PostCreateRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "a very random post's content"
+                },
+                "figure_data": {
+                    "type": "string",
+                    "format": "base64",
+                    "example": "base64 encoded data"
+                },
+                "figure_name": {
+                    "type": "string",
+                    "example": "example.jpg"
+                },
+                "reply_to_id": {
+                    "type": "string",
+                    "example": "1234567890000"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "post",
+                        "poll",
+                        "img"
+                    ],
+                    "example": "post"
+                }
+            }
+        },
+        "posts.UpdateReactions.responseData": {
             "type": "object",
             "properties": {
                 "posts": {
@@ -4070,7 +4548,7 @@
         }
     },
     "securityDefinitions": {
-        "BasicAuth": {
+        "": {
             "type": "basic"
         }
     },
@@ -4079,6 +4557,40 @@
             "": [
                 ""
             ]
+        }
+    ],
+    "tags": [
+        {
+            "description": "Authentication and HTTP cookies managment",
+            "name": "auth"
+        },
+        {
+            "description": "Interventions in running data",
+            "name": "dump"
+        },
+        {
+            "description": "Real-time event streaming",
+            "name": "live"
+        },
+        {
+            "description": "Polls management procedures",
+            "name": "polls"
+        },
+        {
+            "description": "Operations with contributions",
+            "name": "posts"
+        },
+        {
+            "description": "Real-time (web)push notifications suite",
+            "name": "push"
+        },
+        {
+            "description": "System statistics",
+            "name": "stats"
+        },
+        {
+            "description": "User manipulation operations",
+            "name": "users"
         }
     ],
     "externalDocs": {

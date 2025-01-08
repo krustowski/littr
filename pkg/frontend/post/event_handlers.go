@@ -33,11 +33,11 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 	// Nasty way on how to disable the buttons. (Use action handler and Dispatch function instead.)
 	c.postButtonsDisabled = true
 
-	defer ctx.Dispatch(func(ctx app.Context) {
-		c.postButtonsDisabled = false
-	})
-
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.postButtonsDisabled = false
+		})
+
 		var leave bool
 
 		// Determine the post Type.

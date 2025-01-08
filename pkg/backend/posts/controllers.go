@@ -138,7 +138,7 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body	posts.PostCreateRequest			true				"Post body."
-//	@Success		201		{object}	common.APIResponse{data=posts.addNewPost.responseData}	"New post has been added to the database and published."
+//	@Success		201		{object}	common.APIResponse{data=posts.Create.responseData}	"New post has been added to the database and published."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}			"User unauthorized."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
