@@ -7,7 +7,7 @@
 
 A simple nanoblogging platform for a raw mind _flow_.
 
-[read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post)
+[Read more](https://krusty.space/projects/littr/) (a bit more verbose documentation post).
 
 
 ## features
