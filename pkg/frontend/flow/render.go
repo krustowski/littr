@@ -177,7 +177,7 @@ func (c *Content) Render() app.UI {
 
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().ID("reply-modal").Class("border grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
+			app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),

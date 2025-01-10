@@ -175,7 +175,8 @@ func (h *Header) Render() app.UI {
 								),
 							),
 						),
-						app.Article().Class("center-align large-text border thick").Body(
+
+						app.Article().Class("center-align large-text border thicc").Body(
 							app.P().Body(
 								app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 							),
