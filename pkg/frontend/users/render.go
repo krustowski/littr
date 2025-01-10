@@ -138,13 +138,13 @@ func (c *Content) Render() app.UI {
 								app.Div().Class("row medium top-padding").Body(
 									app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
-									app.Button().Class("max responsive no-padding transparent circular black white-text border thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
+									app.Button().Class("max responsive no-padding transparent circular black white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
 										app.Span().Body(
 											app.I().Style("padding-right", "5px").Text("close"),
 											app.Text("Cancel"),
 										),
 									),
-									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text border thicc").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
+									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text thicc").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
 										app.Span().Body(
 											app.I().Style("padding-right", "5px").Text("check"),
 											app.Text("Allow"),
@@ -201,7 +201,7 @@ func (c *Content) Render() app.UI {
 
 				//app.Div().Class("large-space"),
 				app.Div().Class("row center-align").Body(
-					app.Button().Class("max border black white-text thicc").OnClick(c.onDismissToast).Body(
+					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Close"),
@@ -312,7 +312,7 @@ func (c *Content) Render() app.UI {
 							// cell's body
 							app.Div().Class("row middle-align").Body(
 
-								app.Article().Class("max border post thicc").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+								app.Article().Class("max border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 									app.Span().Text(user.About),
 								),
 							),
@@ -346,7 +346,7 @@ func (c *Content) Render() app.UI {
 										),
 									// private mode, requested already
 									).ElseIf(user.Private && requested && !inFlow,
-										app.Button().Class("max shrink border grey9 white-text bold thicc").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).ID(user.Nickname).Body(
+										app.Button().Class("max shrink grey9 white-text bold thicc").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).ID(user.Nickname).Body(
 											app.Span().Body(
 												app.I().Style("padding-right", "5px").Text("close"),
 												app.Text("Cancel the follow request"),
@@ -362,7 +362,7 @@ func (c *Content) Render() app.UI {
 										),
 									// flow toggle on
 									).Else(
-										app.Button().Class("max border shrink deep-orange7 white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
+										app.Button().Class("max shrink deep-orange7 white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
 											app.Span().Body(
 												app.I().Style("padding-right", "5px").Text("add"),
 												app.Text("Follow"),
@@ -373,7 +373,7 @@ func (c *Content) Render() app.UI {
 
 								// shading button
 								app.If(shaded,
-									app.Button().Class("no-padding transparent circular white-text border thicc").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Title("unshade").Body(
+									app.Button().Class("no-padding transparent circular white-text thicc").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Title("unshade").Body(
 										app.I().Text("block"),
 									),
 								).ElseIf(user.Nickname == c.user.Nickname,

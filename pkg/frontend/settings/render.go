@@ -219,20 +219,20 @@ func (c *Content) Render() app.UI {
 
 				app.Article().Class("row border amber-border thicc warn").Body(
 					app.I().Text("warning").Class("amber-text"),
-					app.P().Class("max").Body(
+					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete this subscription?"),
 					),
 				),
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border black white-text thicc").OnClick(c.onDismissToast).Body(
+					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max border red10 white-text thicc").OnClick(c.onClickDeleteSubscription).Body(
+					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDeleteSubscription).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("delete"),
 							app.Text("Delete"),
@@ -464,20 +464,20 @@ func (c *Content) Render() app.UI {
 
 				app.Article().Class("row border red-border thicc danger").Body(
 					app.I().Text("warning").Class("red-text"),
-					app.P().Class("max").Body(
+					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your account and all posted items?"),
 					),
 				),
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border black white-text thicc").OnClick(c.onDismissToast).Body(
+					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max border red10 white-text thicc").OnClick(c.onClickDeleteAccount).Body(
+					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDeleteAccount).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("delete"),
 							app.Text("Delete"),

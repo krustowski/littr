@@ -84,22 +84,22 @@ func (c *Content) Render() app.UI {
 
 				app.Div().Class("space"),
 
-				app.Article().Class("row").Style("border-radius", "8px").Body(
+				app.Article().Class("row border amber-border warn thicc").Body(
 					app.I().Text("warning").Class("amber-text"),
-					app.P().Class("max").Body(
+					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your poll?"),
 					),
 				),
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max black white-text thicc").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),

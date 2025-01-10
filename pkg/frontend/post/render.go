@@ -41,7 +41,7 @@ func (c *Content) Render() app.UI {
 
 		// New post button.
 		app.Div().Class("row").Body(
-			app.Button().ID("post").Class("max border shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
+			app.Button().ID("post").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
 				app.If(c.postButtonsDisabled,
 					app.Progress().Class("circle white-border small"),
 				),
@@ -85,7 +85,7 @@ func (c *Content) Render() app.UI {
 			app.Label().Text("Option three (optional)").Class("active deep-orange-text"),
 		),
 		app.Div().Class("row").Body(
-			app.Button().ID("poll").Class("max border shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
+			app.Button().ID("poll").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
 				app.If(c.postButtonsDisabled,
 					app.Progress().Class("circle white-border small"),
 				),

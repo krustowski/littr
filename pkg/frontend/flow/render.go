@@ -85,7 +85,7 @@ func (c *Content) Render() app.UI {
 			),
 
 			app.Div().Class("small-padding").Body(
-				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("border black white-text bold thicc").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 					app.If(c.refreshClicked,
 						app.Progress().Class("circle deep-orange-border small"),
 					),
@@ -110,21 +110,21 @@ func (c *Content) Render() app.UI {
 				app.Article().Class("max border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 				//),
 				app.If(c.user.FlowList[c.userFlowNick],
-					app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+					app.Button().ID(c.userFlowNick).Class("black border white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Unfollow"),
 						),
 					),
 				).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"],
-					app.Button().ID(c.userFlowNick).Class("yellow10 border white-text").Style("border-radius", "8px").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+					app.Button().ID(c.userFlowNick).Class("yellow10 white-text thicc").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("drafts"),
 							app.Text("Ask"),
 						),
 					),
 				).Else(
-					app.Button().ID(c.userFlowNick).Class("deep-orange7 border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+					app.Button().ID(c.userFlowNick).Class("deep-orange7 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("add"),
 							app.Text("Follow"),
@@ -147,20 +147,20 @@ func (c *Content) Render() app.UI {
 
 				app.Article().Class("row amber-border border warn thicc").Body(
 					app.I().Text("warning").Class("amber-text"),
-					app.P().Class("max").Body(
+					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your post?"),
 					),
 				),
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max black white-text thicc").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
@@ -214,13 +214,13 @@ func (c *Content) Render() app.UI {
 
 				// Reply buttons.
 				app.Div().Class("row").Body(
-					app.Button().Class("max border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
+					app.Button().Class("max black white-text bold thicc").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().ID("reply").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+					app.Button().ID("reply").Class("max deep-orange7 white-text bold thicc").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
 						app.If(c.postButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
@@ -392,7 +392,7 @@ func (c *Content) Render() app.UI {
 						// special system post
 						app.If(post.Nickname == "system",
 							app.Td().Class("align-left").Attr("touch-action", "none").Body(
-								app.Article().Class("responsive border thicc margin-top center-align").Body(
+								app.Article().Class("responsive border blue-border info thicc margin-top center-align").Body(
 									app.A().Href(systemLink).Body(
 										app.Span().Class("bold").Text(post.Content),
 									),

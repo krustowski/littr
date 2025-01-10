@@ -89,20 +89,20 @@ func (h *Header) Render() app.UI {
 
 						app.Article().Class("row warn amber-border border thicc").Style("border-radius", "8px").Body(
 							app.I().Text("warning").Class("amber-text"),
-							app.P().Class("max").Body(
+							app.P().Class("max bold").Body(
 								app.Span().Text("Are you sure you want to end this session and log out?"),
 							),
 						),
 						app.Div().Class("space"),
 
 						app.Div().Class("row").Body(
-							app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(h.onClickModalDismiss).Body(
+							app.Button().Class("max black white-text thicc").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
 									app.Text("Cancel"),
 								),
 							),
-							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(h.onClickLogout).Body(
+							app.Button().Class("max deep-orange7 white-text thicc").OnClick(h.onClickLogout).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("logout"),
 									app.Text("Log out"),
@@ -207,13 +207,13 @@ func (h *Header) Render() app.UI {
 						),
 
 						app.Div().Class("row").Body(
-							app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(h.onClickModalDismiss).Body(
+							app.Button().Class("max black white-text thicc").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
 									app.Text("Close"),
 								),
 							),
-							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(h.onClickReload).Body(
+							app.Button().Class("max deep-orange7 white-text thicc").OnClick(h.onClickReload).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("refresh"),
 									app.Text("Reload"),
