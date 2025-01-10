@@ -77,14 +77,14 @@ func (c *Content) Render() app.UI {
 
 		// poll deletion modal
 		app.If(c.deletePollModalShow,
-			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("poll deletion"),
 				),
 
 				app.Div().Class("space"),
 
-				app.Article().Class("row border amber-border warn thicc").Body(
+				app.Article().Class("row border amber-border white-text warn thicc").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your poll?"),

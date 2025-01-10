@@ -85,7 +85,7 @@ func (c *Content) Render() app.UI {
 			),
 
 			app.Div().Class("small-padding").Body(
-				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("border black white-text bold thicc").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
+				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("grey10 white-text bold thicc").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
 					app.If(c.refreshClicked,
 						app.Progress().Class("circle deep-orange-border small"),
 					),
@@ -107,10 +107,10 @@ func (c *Content) Render() app.UI {
 				),*/
 
 				//app.If(c.users[c.userFlowNick].About != "",
-				app.Article().Class("max border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 				//),
 				app.If(c.user.FlowList[c.userFlowNick],
-					app.Button().ID(c.userFlowNick).Class("black border white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+					app.Button().ID(c.userFlowNick).Class("grey10 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Unfollow"),
@@ -138,14 +138,14 @@ func (c *Content) Render() app.UI {
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
-			app.Dialog().ID("delete-modal").Class("border grey9 white-text active thicc").Body(
+			app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
 
 				app.Div().Class("space"),
 
-				app.Article().Class("row amber-border border warn thicc").Body(
+				app.Article().Class("row amber-border white-text border warn thicc").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your post?"),
@@ -177,7 +177,7 @@ func (c *Content) Render() app.UI {
 
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().ID("reply-modal").Class("border grey9 center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
+			app.Dialog().ID("reply-modal").Class("border grey10 center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),

@@ -138,7 +138,7 @@ func (c *Content) Render() app.UI {
 								app.Div().Class("row medium top-padding").Body(
 									app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
-									app.Button().Class("max responsive no-padding transparent circular black white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
+									app.Button().Class("max responsive no-padding transparent circular grey10 white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
 										app.Span().Body(
 											app.I().Style("padding-right", "5px").Text("close"),
 											app.Text("Cancel"),
@@ -354,7 +354,7 @@ func (c *Content) Render() app.UI {
 										),
 									// flow toggle off
 									).ElseIf(inFlow,
-										app.Button().Class("max shrink border black white-border white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
+										app.Button().Class("max shrink grey10 white-border white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
 											app.Span().Body(
 												app.I().Style("padding-right", "5px").Text("close"),
 												app.Text("Unfollow"),

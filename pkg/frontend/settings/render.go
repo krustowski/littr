@@ -211,13 +211,13 @@ func (c *Content) Render() app.UI {
 
 		// Subscription deletion modal.
 		app.If(c.deleteSubscriptionModalShow,
-			app.Dialog().ID("delete-modal").Class("grey9 white-text active thicc").Body(
+			app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("subscription deletion"),
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("row border amber-border thicc warn").Body(
+				app.Article().Class("row border amber-border white-text thicc warn").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete this subscription?"),
@@ -456,13 +456,13 @@ func (c *Content) Render() app.UI {
 
 		// Account deletion modal.
 		app.If(c.deleteAccountModalShow,
-			app.Dialog().ID("delete-modal").Class("grey9 white-text thicc active").Body(
+			app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("account deletion"),
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("row border red-border thicc danger").Body(
+				app.Article().Class("row border white-text red-border thicc danger").Body(
 					app.I().Text("warning").Class("red-text"),
 					app.P().Class("max bold").Body(
 						app.Span().Text("Are you sure you want to delete your account and all posted items?"),

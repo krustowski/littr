@@ -82,12 +82,12 @@ func (h *Header) Render() app.UI {
 
 				// app logout modal
 				app.If(h.modalLogoutShow,
-					app.Dialog().ID("logout-modal").Class("border grey9 white-text active").Style("border-radius", "8px").Body(
+					app.Dialog().ID("logout-modal").Class("grey10 white-text active thicc").Body(
 						app.Nav().Class("center-align").Body(
 							app.H5().Text("logout"),
 						),
 
-						app.Article().Class("row warn amber-border border thicc").Style("border-radius", "8px").Body(
+						app.Article().Class("row warn amber-border white-text border thicc").Body(
 							app.I().Text("warning").Class("amber-text"),
 							app.P().Class("max bold").Body(
 								app.Span().Text("Are you sure you want to end this session and log out?"),
@@ -155,8 +155,8 @@ func (h *Header) Render() app.UI {
 
 				// app info modal
 				app.If(h.modalInfoShow,
-					app.Dialog().ID("info-modal").Class("border grey9 white-text center-align active").Style("border-radius", "8px").Body(
-						app.Article().Class("row center-align").Style("border-radius", "8px").Body(
+					app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc").Body(
+						app.Article().Class("row white-text center-align border thicc").Body(
 							app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
 							app.H4().Body(
 								app.Span().Body(
@@ -175,7 +175,7 @@ func (h *Header) Render() app.UI {
 								),
 							),
 						),
-						app.Article().Class("center-align large-text").Style("border-radius", "8px").Body(
+						app.Article().Class("center-align large-text border thick").Body(
 							app.P().Body(
 								app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
 							),
@@ -184,7 +184,7 @@ func (h *Header) Render() app.UI {
 							),
 						),
 
-						app.Article().Class("center-align").Style("border-radius", "8px").Body(
+						app.Article().Class("center-align white-text border thicc").Body(
 							app.Text("Version: "),
 							app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
 							app.P().Body(
