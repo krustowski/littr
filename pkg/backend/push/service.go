@@ -216,7 +216,7 @@ func (s *SubscriptionService) SendNotification(ctx context.Context, postID strin
 	}
 
 	// Do not notify such user --- notifications disabled --- OK condition.
-	if len(*dbSub) == 0 {
+	if dbSub == nil || len(*dbSub) == 0 {
 		return nil
 	}
 
