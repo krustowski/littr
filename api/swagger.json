@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.45.32"
+        "version": "0.45.33"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3875,13 +3875,6 @@
                 "content": {
                     "description": "Content contains the very post's data to be shown as a text typed in by the author when created.",
                     "type": "string"
-                },
-                "data": {
-                    "description": "Data is a helper field for the actual figure upload.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 },
                 "figure": {
                     "description": "Figure hold the filename of the uploaded figure to post with some provided text.",
