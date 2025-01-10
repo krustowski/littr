@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/url"
 
-	"go.vxn.dev/littr/pkg/frontend/common"
-
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -16,16 +14,6 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
 				app.H5().Text("settings"),
-			),
-		),
-
-		// Snackbar
-		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
-			app.If(c.toast.TText != "",
-				app.Div().ID("snackbar").Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Style("border-radius", "8px").Body(
-					app.I().Text("error"),
-					app.Span().Text(c.toast.TText),
-				),
 			),
 		),
 
@@ -40,7 +28,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Logged user's info.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("person").Class("deep-orange-text"),
 			app.If(c.user.Nickname != "",
 				app.P().Class("max").Body(
@@ -56,7 +44,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Gravatar linking info.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("One's avatar is linked to one's e-mail address, which should be registered with "),
@@ -77,7 +65,7 @@ func (c *Content) Render() app.UI {
 
 		// Infobox about Gravatar image's caching.
 		app.Div().Class("space"),
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("Note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached (e.g. your browser). You may need to wait for some time for the change to propagate through the network."),
@@ -97,7 +85,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Darkmode infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("The UI mode "),
@@ -109,7 +97,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("field middle-align").Body(
 			app.Div().Class("row").Body(
 				app.Div().Class("max").Body(
-					app.Span().Text("Dark/light mode switch"),
+					app.Span().Text("dark/light mode switch"),
 				),
 				app.Label().Class("switch icon").Body(
 					app.Input().Type("checkbox").ID("dark-mode-switch").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch).Disabled(c.settingsButtonDisabled),
@@ -121,7 +109,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Local time infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("The local time mode "),
@@ -145,7 +133,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Live mode infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("The live mode "),
@@ -169,7 +157,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Private account infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Private account "),
@@ -203,7 +191,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Notification infoboxes.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Reply "),
@@ -214,7 +202,7 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("You will be prompted for the notification permission, which is required if you want to subscribe to the notification service. Your device's UUID (unique identification string) will be saved in the database to be used by the notification service. You can delete any subscribed device any time (if listed below)."),
@@ -229,7 +217,7 @@ func (c *Content) Render() app.UI {
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+				app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("Are you sure you want to delete this subscription?"),
@@ -238,8 +226,18 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription),
-					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.onDismissToast),
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onDismissToast).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Cancel"),
+						),
+					),
+					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteSubscription).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("delete"),
+							app.Text("Delete"),
+						),
+					),
 				),
 			),
 		),
@@ -307,9 +305,9 @@ func (c *Content) Render() app.UI {
 						return nil
 					}
 
-					deviceText := "device"
+					deviceText := "Device"
 					if dev.UUID == c.thisDeviceUUID {
-						deviceText = "this device"
+						deviceText = "This device"
 					}
 
 					// Append the webpush endpoint in the heading.
@@ -321,7 +319,7 @@ func (c *Content) Render() app.UI {
 					deviceText += " (" + u.Host + ")"
 
 					// Compose the component to show (a device's infobox).
-					return app.Article().Class("surface-container-highest").Style("border-radius", "8px").Body(
+					return app.Article().Class("border surface-container-highest").Style("border-radius", "8px").Body(
 						app.Div().Class("row max").Body(
 							app.Div().Class("max").Body(
 								app.P().Class("bold").Body(
@@ -358,23 +356,28 @@ func (c *Content) Render() app.UI {
 		),
 		//app.Div().Class("medium-space"),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
 			app.Input().ID("passphrase-current").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
-			app.Label().Text("old passphrase").Class("active deep-orange-text"),
+			app.Label().Text("Old passphrase").Class("active deep-orange-text"),
 		),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
 			app.Input().ID("passphrase-new").Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("new passphrase").Class("active deep-orange-text"),
+			app.Label().Text("New passphrase").Class("active deep-orange-text"),
 		),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
 			app.Input().ID("passphrase-new-again").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("new passphrase again").Class("active deep-orange-text"),
+			app.Label().Text("New passphrase again").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change passphrase").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled).Body(
+				app.Span().Body(
+					app.I().Style("padding-right", "5px").Text("save"),
+					app.Text("Save"),
+				),
+			),
 		),
 
 		app.Div().Class("space"),
@@ -390,7 +393,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// About-you infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Text("This textarea is to hold your current status, a brief info about you, or just anything up to 100 characters."),
 		),
@@ -398,13 +401,18 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// About-you textarea
-		app.Div().Class("field textarea label border extra deep-orange-text").Body(
+		app.Div().Class("field textarea label border extra deep-orange-text").Style("border-radius", "8px").Body(
 			app.Textarea().ID("about-you-textarea").Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("about you").Class("active deep-orange-text"),
+			app.Label().Text("Content").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change about").Style("border-radius", "8px").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled).Body(
+				app.Span().Body(
+					app.I().Style("padding-right", "5px").Text("save"),
+					app.Text("Save"),
+				),
+			),
 		),
 
 		// website link
@@ -420,19 +428,24 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Text("Down below, you can enter a link to your personal homepage. The link will then be visible to others via the user modal on the users (flowers) page."),
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border deep-orange-text").Body(
+		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
 			app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
-			app.Label().Text("website URL").Class("active deep-orange-text"),
+			app.Label().Text("URL").Class("active deep-orange-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold").Text("change website").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled).Body(
+				app.Span().Body(
+					app.I().Style("padding-right", "5px").Text("save"),
+					app.Text("Save"),
+				),
+			),
 		),
 
 		app.Div().Class("space"),
@@ -449,7 +462,7 @@ func (c *Content) Render() app.UI {
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+				app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 					app.I().Text("warning").Class("red-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("Are you sure you want to delete your account and all posted items?"),
@@ -458,8 +471,18 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max border red10 white-text").Text("yeah").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount),
-					app.Button().Class("max border black white-text").Text("nope").Style("border-radius", "8px").OnClick(c.onDismissToast),
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onDismissToast).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Cancel"),
+						),
+					),
+					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDeleteAccount).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("delete"),
+							app.Text("Delete"),
+						),
+					),
 				),
 			),
 		),
@@ -470,14 +493,19 @@ func (c *Content) Render() app.UI {
 			),
 		),
 
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("warning").Class("red-text"),
 			app.P().Class("max").Text("Please note that this action is irreversible!"),
 		),
 		app.Div().Class("space"),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center red10 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled),
+			app.Button().Class("max shrink center red10 white-text bold").Text("delete account").Style("border-radius", "8px").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled).Body(
+				app.Span().Body(
+					app.I().Style("padding-right", "5px").Text("delete"),
+					app.Text("Delete"),
+				),
+			),
 		),
 
 		app.Div().Class("large-space"),
