@@ -117,7 +117,7 @@ func (h *Header) Render() app.UI {
 					// snackbar toast top
 					app.A().ID("snackbar-general-top-link").Href("").Body(
 						app.If(toastTopText != "",
-							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Body(
+							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Style("border-radius", "8px").Body(
 							//app.I().Text("info"),
 							//app.Span().Text(toastText),
 							),
@@ -141,7 +141,7 @@ func (h *Header) Render() app.UI {
 					// snackbar toast bottom
 					app.A().ID("snackbar-general-bottom-link").Href("").Body(
 						app.If(toastBottomText != "",
-							app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Body(
+							app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Style("border-radius", "8px").Body(
 							//app.I().Text("info"),
 							//app.Span().Text(toastText),
 							),

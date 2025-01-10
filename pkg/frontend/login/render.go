@@ -10,7 +10,7 @@ func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
-				app.H5().Text("littr login"),
+				app.H5().Text("login"),
 			),
 		),
 		app.Div().Class("space"),
@@ -27,7 +27,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Session duration infobox.
-		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("The login session lasts 30 days."),

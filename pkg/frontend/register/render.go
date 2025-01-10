@@ -10,14 +10,14 @@ func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
-				app.H5().Text("littr registration"),
+				app.H5().Text("registration"),
 			),
 		),
 		app.Div().Class("space"),
 
 		// Nickname field.
-		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
+		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Nickname "),
 				app.Span().Text("is your unique identifier on the site. Please double-check the input before registering (nickname is case-sensitive)."),
@@ -32,8 +32,8 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// Passphrase fields.
-		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
+		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Passphrase "),
 				app.Span().Text("is a secret key to your account. Keep it strong and private."),
@@ -52,8 +52,8 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// E-mail field.
-		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
-			app.I().Text("lightbulb").Class("amber-text"),
+		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("E-mail "),
 				app.Span().Text("address is used for the account verification. You will receive a link to activate your account easily. Also, if the address is registered with a Gravatar account, such avatar will be loaded from there. Please enter a valid e-mail address."),
@@ -68,8 +68,8 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// GDPR notice.
-		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Style("word-break", "break-word").Body(
-			app.I().Text("info").Class("blue-text"),
+		app.Article().Class("row border amber-border surface-container-highest").Style("border-radius", "8px").Style("word-break", "break-word").Body(
+			app.I().Text("warning").Class("amber-text"),
 			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(
 					app.Span().Text("By clicking on the register button you are giving us a GDPR consent (a permission to store your account information in the database)."),
