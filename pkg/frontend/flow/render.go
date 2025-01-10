@@ -1,14 +1,12 @@
 package flow
 
 import (
-	"fmt"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/config"
-	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -91,7 +89,10 @@ func (c *Content) Render() app.UI {
 					app.If(c.refreshClicked,
 						app.Progress().Class("circle deep-orange-border small"),
 					),
-					app.Text("refresh"),
+					app.Span().Body(
+						app.I().Style("padding-right", "5px").Text("refresh"),
+						app.Text("Refresh"),
+					),
 				),
 			),
 		),
@@ -122,16 +123,6 @@ func (c *Content) Render() app.UI {
 
 		app.Div().Class("space"),
 
-		// snackbar
-		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
-			app.If(c.toast.TText != "",
-				app.Div().ID(fmt.Sprintf("snackbar-%d", c.toast.TID)).Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
-					app.I().Text("error"),
-					app.Span().Text(c.toast.TText),
-				),
-			),
-		),
-
 		// post deletion modal
 		app.If(c.deletePostModalShow,
 			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
@@ -150,13 +141,21 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Cancel"),
+						),
+					),
 					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
-						app.Text("yeah"),
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("delete"),
+							app.Text("Delete"),
+						),
 					),
-					app.Button().Class("max border black white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
 				),
 			),
 		),
@@ -171,38 +170,51 @@ func (c *Content) Render() app.UI {
 				),
 				app.Div().Class("space"),
 
-				app.Article().Class("post").Style("max-width", "100%").Body(
-					app.If(replySummary != "",
-						app.Details().Body(
-							app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
-							app.Div().Class("space"),
+				// Original content (text).
+				app.If(c.posts[c.interactedPostKey].Content != "",
+					app.Article().Class("post").Style("max-width", "100%").Body(
+						app.If(replySummary != "",
+							app.Details().Body(
+								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+								app.Div().Class("space"),
+
+								app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+							),
+						).Else(
 							app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
 						),
-					).Else(
-						app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
 					),
 				),
 
-				app.Div().Class("field label textarea border extra deep-orange-text").Body(
+				app.Div().Class("field label textarea border extra deep-orange-text").Style("border-radius", "8px").Body(
 					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
 					app.Textarea().Class("active").Name("replyPost").Text(c.replyPostContent).OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea").OnBlur(c.onTextareaBlur),
-					app.Label().Text("reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
+					app.Label().Text("Reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
 					//app.Label().Text("text").Class("active"),
 				),
-				app.Div().Class("field label border extra deep-orange-text").Body(
+				app.Div().Class("field label border extra deep-orange-text").Style("border-radius", "8px").Body(
 					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/*"),
 					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-					app.Label().Text("image").Class("active deep-orange-text"),
+					app.Label().Text("Image").Class("active deep-orange-text"),
 					app.I().Text("image"),
 				),
 
+				// Reply buttons.
 				app.Div().Class("row").Body(
-					app.Button().Class("max border deep-orange7 white-text bold").Text("cancel").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled),
+					app.Button().Class("max border black white-text bold").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Cancel"),
+						),
+					),
 					app.Button().ID("reply").Class("max border deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
 						app.If(c.postButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
-						app.Text("reply"),
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("reply"),
+							app.Text("Reply"),
+						),
 					),
 				),
 				app.Div().Class("space"),
