@@ -93,13 +93,21 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Cancel"),
+						),
+					),
 					app.Button().Class("max border red10 white-text").Style("border-radius", "8px").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
-						app.Text("yeah"),
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("delete"),
+							app.Text("Delete"),
+						),
 					),
-					app.Button().Class("max border black white-text").Style("border-radius", "8px").Text("nope").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled),
 				),
 			),
 		),
