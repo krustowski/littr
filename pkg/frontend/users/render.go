@@ -4,7 +4,6 @@ import (
 	"sort"
 	"time"
 
-	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -139,16 +138,21 @@ func (c *Content) Render() app.UI {
 								app.Div().Class("row medium top-padding").Body(
 									app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
-									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text border").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
-										app.Text("allow"),
+									app.Button().Class("max responsive no-padding transparent circular black white-text border").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
+										app.Span().Body(
+											app.I().Style("padding-right", "5px").Text("close"),
+											app.Text("Cancel"),
+										),
 									),
-									app.Button().Class("max responsive no-padding transparent circular red10 white-text border").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
-										app.Text("cancel"),
+									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text border").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Style("border-radius", "8px").Body(
+										app.Span().Body(
+											app.I().Style("padding-right", "5px").Text("check"),
+											app.Text("Allow"),
+										),
 									),
 								),
 							),
 						)
-
 					}),
 				),
 			),
@@ -161,16 +165,6 @@ func (c *Content) Render() app.UI {
 			),
 		),
 		app.Div().Class("space"),
-
-		// snackbar
-		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
-			app.If(c.toast.TText != "",
-				app.Div().Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
-					app.I().Text("error"),
-					app.Span().Text(c.toast.TText),
-				),
-			),
-		),
 
 		// user info modal
 		app.If(c.showUserPreviewModal && userInModalInfo != nil,
@@ -198,16 +192,21 @@ func (c *Content) Render() app.UI {
 				),
 
 				app.Article().Class("left-align").Style("border-radius", "8px").Body(
-					app.P().Class("bold").Text("registered"),
+					app.P().Class("bold").Text("Registered"),
 					app.P().Class().Text(userRegisteredTime),
 
-					app.P().Class("bold").Text("last online"),
+					app.P().Class("bold").Text("Last online"),
 					app.P().Class().Text(userLastActiveTime),
 				),
 
 				//app.Div().Class("large-space"),
 				app.Div().Class("row center-align").Body(
-					app.Button().Class("max border deep-orange7 white-text").Text("close").Style("border-radius", "8px").OnClick(c.onDismissToast),
+					app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(c.onDismissToast).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Close"),
+						),
+					),
 				),
 			),
 		),
@@ -340,22 +339,34 @@ func (c *Content) Render() app.UI {
 									// private mode
 									).ElseIf(user.Private && !requested && !inFlow,
 										app.Button().Class("max shrink yellow10 white-text bold").OnClick(c.onClickPrivateOn).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
-											app.Text("ask to follow"),
+											app.Span().Body(
+												app.I().Style("padding-right", "5px").Text("drafts"),
+												app.Text("Ask to follow"),
+											),
 										),
 									// private mode, requested already
 									).ElseIf(user.Private && requested && !inFlow,
 										app.Button().Class("max shrink border grey9 white-text bold").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").ID(user.Nickname).Body(
-											app.Text("cancel the request"),
+											app.Span().Body(
+												app.I().Style("padding-right", "5px").Text("close"),
+												app.Text("Cancel request to follow"),
+											),
 										),
 									// flow toggle off
 									).ElseIf(inFlow,
 										app.Button().Class("max shrink border black white-border white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
-											app.Text("remove from flow"),
+											app.Span().Body(
+												app.I().Style("padding-right", "5px").Text("close"),
+												app.Text("Unfollow"),
+											),
 										),
 									// flow toggle on
 									).Else(
-										app.Button().Class("max shrink deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
-											app.Text("add to flow"),
+										app.Button().Class("max border shrink deep-orange7 white-text bold").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Style("border-radius", "8px").Body(
+											app.Span().Body(
+												app.I().Style("padding-right", "5px").Text("add"),
+												app.Text("Follow"),
+											),
 										),
 									),
 								),
