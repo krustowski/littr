@@ -138,14 +138,14 @@ func (c *Content) Render() app.UI {
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
-			app.Dialog().ID("delete-modal").Class("border grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("border grey9 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
 
 				app.Div().Class("space"),
 
-				app.Article().Class("row amber-border border").Style("border-radius", "8px").Body(
+				app.Article().Class("row amber-border border warn thicc").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("Are you sure you want to delete your post?"),
@@ -177,7 +177,7 @@ func (c *Content) Render() app.UI {
 
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().ID("reply-modal").Class("border grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Style("z-index", "75").Body(
+			app.Dialog().ID("reply-modal").Class("border grey9 center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),
@@ -185,7 +185,7 @@ func (c *Content) Render() app.UI {
 
 				// Original content (text).
 				app.If(c.posts[c.interactedPostKey].Content != "",
-					app.Article().Class("post border").Style("max-width", "100%").Body(
+					app.Article().Class("reply black-text border thicc").Style("max-width", "100%").Body(
 						app.If(replySummary != "",
 							app.Details().Body(
 								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
@@ -391,8 +391,8 @@ func (c *Content) Render() app.UI {
 					return app.Tr().Class().Class("bottom-padding").Body(
 						// special system post
 						app.If(post.Nickname == "system",
-							app.Td().Class("post align-left").Attr("touch-action", "none").Body(
-								app.Article().Class("responsive border grey-border margin-top center-align").Body(
+							app.Td().Class("align-left").Attr("touch-action", "none").Body(
+								app.Article().Class("responsive border thicc margin-top center-align").Body(
 									app.A().Href(systemLink).Body(
 										app.Span().Class("bold").Text(post.Content),
 									),
@@ -408,7 +408,7 @@ func (c *Content) Render() app.UI {
 						// other posts
 						).Else(
 							//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-							app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
+							app.Td().Class("align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
 
 								// post header (author avatar + name + link button)
 								app.Div().Class("row top-padding").Body(
@@ -426,7 +426,7 @@ func (c *Content) Render() app.UI {
 
 								// pic post
 								app.If(post.Type == "fig",
-									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent medium no-margin border grey-border").Body(
+									app.Article().Style("z-index", "5").Class("transparent medium no-margin thicc").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -438,7 +438,7 @@ func (c *Content) Render() app.UI {
 								// reply + post
 								).Else(
 									app.If(post.ReplyToID != "",
-										app.Article().Class("black-text yellow10 yellow-border border").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.Article().Class("black-text border reply thicc").Style("max-width", "100%").Body(
 											app.Div().Class("row max").Body(
 												app.If(previousDetailsSummary != "",
 													app.Details().Class("max").Body(
@@ -458,7 +458,7 @@ func (c *Content) Render() app.UI {
 									),
 
 									app.If(len(post.Content) > 0,
-										app.Article().Class("surface-container-highest border grey-border").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.Article().Class("border thicc").Style("max-width", "100%").Body(
 											app.If(postDetailsSummary != "",
 												app.Details().Body(
 													app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
@@ -472,7 +472,7 @@ func (c *Content) Render() app.UI {
 									),
 
 									app.If(post.Figure != "",
-										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("border grey-border transparent medium medium").Body(
+										app.Article().Style("z-index", "4").Class("transparent medium thicc").Body(
 											app.If(c.loaderShowImage,
 												app.Div().Class("small-space"),
 												app.Div().Class("loader center large deep-orange active"),
