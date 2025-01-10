@@ -87,7 +87,7 @@ func (h *Header) Render() app.UI {
 							app.H5().Text("logout"),
 						),
 
-						app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+						app.Article().Class("row warn amber-border border thicc").Style("border-radius", "8px").Body(
 							app.I().Text("warning").Class("amber-text"),
 							app.P().Class("max").Body(
 								app.Span().Text("Are you sure you want to end this session and log out?"),
