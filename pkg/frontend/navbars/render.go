@@ -206,7 +206,7 @@ func (h *Header) Render() app.UI {
 							app.Button().Class("max border black white-text").Style("border-radius", "8px").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
-									app.Text("Cancel"),
+									app.Text("Close"),
 								),
 							),
 							app.Button().Class("max border deep-orange7 white-text").Style("border-radius", "8px").OnClick(h.onClickReload).Body(
