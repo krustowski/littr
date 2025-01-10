@@ -1,8 +1,6 @@
 package reset
 
 import (
-	"go.vxn.dev/littr/pkg/frontend/common"
-
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -20,19 +18,11 @@ func (c *Content) Render() app.UI {
 
 		app.Div().Class("space"),
 
-		// snackbar
-		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
-			app.If(c.toast.TText != "",
-				app.Div().ID("snackbar").Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
-					app.I().Text("error"),
-					app.Span().Text(c.toast.TText),
-				),
-			),
-		),
-
-		// passphrase request --- insert an e-mail
+		//
+		// Passphrase request --- insert an e-mail
+		//
 		app.If(!c.showUUIDPage,
-			// pwd reset lightbulb
+			// Passphrase reset request lightbulb.
 			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
@@ -41,51 +31,54 @@ func (c *Content) Render() app.UI {
 			),
 			app.Div().Class("space"),
 
-			// pwd reset credentials fields
-			app.Div().Class("field border label deep-orange-text").Body(
+			// Passphrase reset credentials fields.
+			app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
 				app.Input().ID("email-input").Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true),
-				app.Label().Text("e-mail").Class("active deep-orange-text"),
+				app.Label().Text("E-mail").Class("active deep-orange-text"),
 			),
 
-			//app.Div().Class("small-space"),
-
-			// request button
+			// Request button.
 			app.Div().Class("row center-align max").Body(
 				app.Button().ID("request-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
 					app.If(c.buttonsDisabled,
 						app.Progress().Class("circle white-border small"),
 					),
-					app.Text("request"),
+					app.Span().Body(
+						app.I().Style("padding-right", "5px").Text("password"),
+						app.Text("Request"),
+					),
 				),
 			),
 
-		// passphrase reset --- insert the UUID
+		//
+		// Passphrase reset --- insert the UUID
+		//
 		).Else(
-			// pwd reset lightbulb
+			// Passphrase reset lightbulb.
 			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
-					//app.Span().Class("deep-orange-text").Text(" "),
 					app.Span().Text("Enter the UUID code which has been sent to your inbox. If the code is correct, your passphrase will be automatically regenerated and another confirmation mail containing the passphrase will be sent to your e-mail address."),
 				),
 			),
 			app.Div().Class("space"),
 
-			// pwd reset credentials fields
-			app.Div().Class("field border label deep-orange-text").Body(
+			// Passphrase reset credentials fields.
+			app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
 				app.Input().ID("uuid-input").Type("text").Required(true).TabIndex(1).Value("").OnChange(c.ValueTo(&c.uuid)).Class("active").AutoFocus(true),
 				app.Label().Text("UUID").Class("active deep-orange-text"),
 			),
 
-			//app.Div().Class("small-space"),
-
-			// pwd reset button
+			// Passphrase reset button.
 			app.Div().Class("row center-align max").Body(
 				app.Button().ID("reset-button").Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").TabIndex(2).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).Body(
 					app.If(c.buttonsDisabled,
 						app.Progress().Class("circle white-border small"),
 					),
-					app.Text("reset"),
+					app.Span().Body(
+						app.I().Style("padding-right", "5px").Text("password"),
+						app.Text("Reset"),
+					),
 				),
 			),
 		),
