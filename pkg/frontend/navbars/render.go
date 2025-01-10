@@ -131,7 +131,11 @@ func (h *Header) Render() app.UI {
 							app.If(app.Getenv("APP_ENVIRONMENT") != "prod",
 								app.Span().Class("col").Body(
 									app.Sup().Body(
-										app.Text(" (dev) "),
+										app.If(app.Getenv("APP_ENVIRONMENT") == "stage",
+											app.Text(" (stage) "),
+										).Else(
+											app.Text(" (dev) "),
+										),
 									),
 								),
 							),

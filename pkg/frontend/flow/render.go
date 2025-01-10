@@ -107,15 +107,28 @@ func (c *Content) Render() app.UI {
 				),*/
 
 				//app.If(c.users[c.userFlowNick].About != "",
-				app.Article().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+				app.Article().Class("max border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
 				//),
 				app.If(c.user.FlowList[c.userFlowNick],
 					app.Button().ID(c.userFlowNick).Class("black border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-						app.Span().Text("unfollow"),
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("close"),
+							app.Text("Unfollow"),
+						),
+					),
+				).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"],
+					app.Button().ID(c.userFlowNick).Class("yellow10 border white-text").Style("border-radius", "8px").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("drafts"),
+							app.Text("Ask"),
+						),
 					),
 				).Else(
 					app.Button().ID(c.userFlowNick).Class("deep-orange7 border white-text").Style("border-radius", "8px").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-						app.Span().Text("follow"),
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("add"),
+							app.Text("Follow"),
+						),
 					),
 				),
 			),
@@ -132,7 +145,7 @@ func (c *Content) Render() app.UI {
 
 				app.Div().Class("space"),
 
-				app.Article().Class("row").Style("border-radius", "8px").Body(
+				app.Article().Class("row amber-border border").Style("border-radius", "8px").Body(
 					app.I().Text("warning").Class("amber-text"),
 					app.P().Class("max").Body(
 						app.Span().Text("Are you sure you want to delete your post?"),
@@ -379,7 +392,7 @@ func (c *Content) Render() app.UI {
 						// special system post
 						app.If(post.Nickname == "system",
 							app.Td().Class("post align-left").Attr("touch-action", "none").Body(
-								app.Article().Class("responsive margin-top center-align").Body(
+								app.Article().Class("responsive border grey-border margin-top center-align").Body(
 									app.A().Href(systemLink).Body(
 										app.Span().Class("bold").Text(post.Content),
 									),
@@ -413,7 +426,7 @@ func (c *Content) Render() app.UI {
 
 								// pic post
 								app.If(post.Type == "fig",
-									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent medium no-margin").Body(
+									app.Article().Style("z-index", "5").Style("border-radius", "8px").Class("transparent medium no-margin border grey-border").Body(
 										app.If(c.loaderShowImage,
 											app.Div().Class("small-space"),
 											app.Div().Class("loader center large deep-orange active"),
@@ -425,7 +438,7 @@ func (c *Content) Render() app.UI {
 								// reply + post
 								).Else(
 									app.If(post.ReplyToID != "",
-										app.Article().Class("black-text yellow10").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.Article().Class("black-text yellow10 yellow-border border").Style("border-radius", "8px").Style("max-width", "100%").Body(
 											app.Div().Class("row max").Body(
 												app.If(previousDetailsSummary != "",
 													app.Details().Class("max").Body(
@@ -445,7 +458,7 @@ func (c *Content) Render() app.UI {
 									),
 
 									app.If(len(post.Content) > 0,
-										app.Article().Class("surface-container-highest").Style("border-radius", "8px").Style("max-width", "100%").Body(
+										app.Article().Class("surface-container-highest border grey-border").Style("border-radius", "8px").Style("max-width", "100%").Body(
 											app.If(postDetailsSummary != "",
 												app.Details().Body(
 													app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
@@ -459,7 +472,7 @@ func (c *Content) Render() app.UI {
 									),
 
 									app.If(post.Figure != "",
-										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("transparent medium medium").Body(
+										app.Article().Style("z-index", "4").Style("border-radius", "8px").Class("border grey-border transparent medium medium").Body(
 											app.If(c.loaderShowImage,
 												app.Div().Class("small-space"),
 												app.Div().Class("loader center large deep-orange active"),
