@@ -23,7 +23,7 @@ func (c *Content) Render() app.UI {
 		//
 		app.If(!c.showUUIDPage,
 			// Passphrase reset request lightbulb.
-			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+			app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
 					app.Span().Text("To request a passphrase change, enter your registration e-mail address below, which is linked with your account. A confirmation mail will then be sent into your inbox."),
@@ -55,7 +55,7 @@ func (c *Content) Render() app.UI {
 		//
 		).Else(
 			// Passphrase reset lightbulb.
-			app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+			app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 				app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class("max").Body(
 					app.Span().Text("Enter the UUID code which has been sent to your inbox. If the code is correct, your passphrase will be automatically regenerated and another confirmation mail containing the passphrase will be sent to your e-mail address."),

@@ -16,7 +16,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// Nickname field.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Nickname "),
@@ -32,7 +32,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// Passphrase fields.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Passphrase "),
@@ -52,7 +52,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// E-mail field.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("lightbulb").Class("amber-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("E-mail "),
@@ -68,7 +68,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// GDPR notice.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Style("word-break", "break-word").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Style("word-break", "break-word").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(

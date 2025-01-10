@@ -27,7 +27,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Session duration infobox.
-		app.Article().Class("row surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border surface-container-highest").Style("border-radius", "8px").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Text("The login session lasts 30 days."),
