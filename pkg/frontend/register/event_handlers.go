@@ -120,11 +120,8 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 
 		// If the toast text is empty, continue to the login page.
 		if toast.TText == "" {
-			//ctx.Navigate("/login")
+			ctx.Navigate("/success/registration")
 		}
-
-		toast.Text("registration was successful, check your mail inbox for the activation link").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
-		return
 	})
 }
 

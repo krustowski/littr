@@ -30,6 +30,19 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
+func (c *Content) handleSuccess(ctx *app.Context, t string) {
+	toast := common.Toast{AppContext: ctx}
+
+	switch t {
+	case "registration":
+		toast.Text("Registration was successful, check your mail inbox to get the activation link").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+	case "reset":
+		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+	default:
+		return
+	}
+}
+
 func (c *Content) OnNav(ctx app.Context) {
 	url := strings.Split(ctx.Page().URL().Path, "/")
 
@@ -40,6 +53,9 @@ func (c *Content) OnNav(ctx app.Context) {
 		switch url[1] {
 		case "activation":
 			activationUUID = url[2]
+		case "success":
+			c.handleSuccess(&ctx, url[2])
+			return
 		default:
 			return
 		}
@@ -47,13 +63,13 @@ func (c *Content) OnNav(ctx app.Context) {
 		return
 	}
 
-	ctx.Dispatch(func(ctx app.Context) {
-		c.activationUUID = activationUUID
-	})
-
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.activationUUID = activationUUID
+		})
+
 		payload := struct {
 			UUID string `json:"uuid"`
 		}{
@@ -86,6 +102,5 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// User successfully activated.
 		toast.Text(common.MSG_USER_ACTIVATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
-		return
 	})
 }

@@ -28,6 +28,7 @@ func initClientCommon() {
 	app.RouteWithRegexp("/reset/\\w+", &fe.ResetView{})
 	app.Route("/settings", &fe.SettingsView{})
 	app.Route("/stats", &fe.StatsView{})
+	app.RouteWithRegexp("/success/\\w+", &fe.LoginView{})
 	app.Route("/tos", &fe.ToSView{})
 	app.Route("/users", &fe.UsersView{})
 

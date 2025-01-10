@@ -4,6 +4,7 @@ package navbars
 import (
 	"context"
 	"fmt"
+
 	//"net/http"
 	//"os"
 	//"os/signal"
@@ -117,7 +118,7 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	// Redirect client to the unauthorized zone.
 	path := ctx.Page().URL().Path
-	if !authGranted && path != "/" && path != "/login" && path != "/register" && !strings.Contains(path, "/reset") && path != "/tos" {
+	if !authGranted && path != "/" && path != "/login" && path != "/register" && !strings.Contains(path, "/reset") && !strings.Contains(path, "/success") && path != "/tos" {
 		ctx.Navigate("/login")
 		return
 	}

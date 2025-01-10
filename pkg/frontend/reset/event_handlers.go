@@ -106,6 +106,10 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 	c.buttonsDisabled = true
 
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.buttonsDisabled = false
+		})
+
 		// trim the padding spaces on the extremities
 		// https://www.tutorialspoint.com/how-to-trim-a-string-in-golang
 		uuid := strings.TrimSpace(c.uuid)
@@ -116,27 +120,15 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 
 		if uuid == "" {
 			toast.Text(common.ERR_RESET_UUID_FIELD_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.buttonsDisabled = false
-			})
 			return
 		}
 
 		if err := c.handleResetRequest("", uuid); err != nil {
 			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.buttonsDisabled = false
-			})
 			return
 		}
 
-		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			c.buttonsDisabled = false
-		})
-		return
+		// Navigate to login page to show the success toast.
+		ctx.Navigate("/success/reset")
 	})
 }
