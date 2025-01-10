@@ -125,7 +125,7 @@ func (c *Content) Render() app.UI {
 
 		// post deletion modal
 		app.If(c.deletePostModalShow,
-			app.Dialog().ID("delete-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
+			app.Dialog().ID("delete-modal").Class("border grey9 white-text active").Style("border-radius", "8px").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
@@ -164,7 +164,7 @@ func (c *Content) Render() app.UI {
 
 		// sketchy reply modal
 		app.If(c.modalReplyActive,
-			app.Dialog().ID("reply-modal").Class("grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Style("z-index", "75").Body(
+			app.Dialog().ID("reply-modal").Class("border grey9 white-text center-align active").Style("max-width", "90%").Style("border-radius", "8px").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),
@@ -172,16 +172,16 @@ func (c *Content) Render() app.UI {
 
 				// Original content (text).
 				app.If(c.posts[c.interactedPostKey].Content != "",
-					app.Article().Class("post").Style("max-width", "100%").Body(
+					app.Article().Class("post border").Style("max-width", "100%").Body(
 						app.If(replySummary != "",
 							app.Details().Body(
 								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 								app.Div().Class("space"),
 
-								app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+								app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
 							),
 						).Else(
-							app.Span().Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
+							app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
 						),
 					),
 				),

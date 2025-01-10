@@ -82,7 +82,7 @@ func (h *Header) Render() app.UI {
 
 				// app logout modal
 				app.If(h.modalLogoutShow,
-					app.Dialog().ID("logout-modal").Class("grey9 white-text active").Style("border-radius", "8px").Body(
+					app.Dialog().ID("logout-modal").Class("border grey9 white-text active").Style("border-radius", "8px").Body(
 						app.Nav().Class("center-align").Body(
 							app.H5().Text("logout"),
 						),
@@ -141,7 +141,7 @@ func (h *Header) Render() app.UI {
 
 				// app info modal
 				app.If(h.modalInfoShow,
-					app.Dialog().ID("info-modal").Class("grey9 white-text center-align active").Style("border-radius", "8px").Body(
+					app.Dialog().ID("info-modal").Class("border grey9 white-text center-align active").Style("border-radius", "8px").Body(
 						app.Article().Class("row center-align").Style("border-radius", "8px").Body(
 							app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
 							app.H4().Body(
