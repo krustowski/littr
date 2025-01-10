@@ -226,13 +226,13 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
+					app.Button().Class("max bold black white-text thicc").OnClick(c.onDismissToast).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDeleteSubscription).Body(
+					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDeleteSubscription).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("delete"),
 							app.Text("Delete"),
@@ -471,13 +471,13 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
+					app.Button().Class("max bold black white-text thicc").OnClick(c.onDismissToast).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDeleteAccount).Body(
+					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDeleteAccount).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("delete"),
 							app.Text("Delete"),

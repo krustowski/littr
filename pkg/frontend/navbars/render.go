@@ -96,13 +96,13 @@ func (h *Header) Render() app.UI {
 						app.Div().Class("space"),
 
 						app.Div().Class("row").Body(
-							app.Button().Class("max black white-text thicc").OnClick(h.onClickModalDismiss).Body(
+							app.Button().Class("max bold black white-text thicc").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
 									app.Text("Cancel"),
 								),
 							),
-							app.Button().Class("max deep-orange7 white-text thicc").OnClick(h.onClickLogout).Body(
+							app.Button().Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickLogout).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("logout"),
 									app.Text("Log out"),
@@ -207,13 +207,13 @@ func (h *Header) Render() app.UI {
 						),
 
 						app.Div().Class("row").Body(
-							app.Button().Class("max black white-text thicc").OnClick(h.onClickModalDismiss).Body(
+							app.Button().Class("max bold black white-text thicc").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
 									app.Text("Close"),
 								),
 							),
-							app.Button().Class("max deep-orange7 white-text thicc").OnClick(h.onClickReload).Body(
+							app.Button().Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickReload).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("refresh"),
 									app.Text("Reload"),

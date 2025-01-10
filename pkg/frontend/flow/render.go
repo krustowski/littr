@@ -154,13 +154,13 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				app.Div().Class("row").Body(
-					app.Button().Class("max black white-text thicc").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max bold black white-text thicc").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().Class("max red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
+					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
 						app.If(c.deleteModalButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
@@ -214,13 +214,13 @@ func (c *Content) Render() app.UI {
 
 				// Reply buttons.
 				app.Div().Class("row").Body(
-					app.Button().Class("max black white-text bold thicc").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
+					app.Button().Class("max bold black white-text bold thicc").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("close"),
 							app.Text("Cancel"),
 						),
 					),
-					app.Button().ID("reply").Class("max deep-orange7 white-text bold thicc").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
+					app.Button().ID("reply").Class("max bold deep-orange7 white-text bold thicc").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
 						app.If(c.postButtonsDisabled,
 							app.Progress().Class("circle white-border small"),
 						),

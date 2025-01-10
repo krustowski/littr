@@ -138,13 +138,13 @@ func (c *Content) Render() app.UI {
 								app.Div().Class("row medium top-padding").Body(
 									app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
 									app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
-									app.Button().Class("max responsive no-padding transparent circular grey10 white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
+									app.Button().Class("max responsive no-padding grey10 bold white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
 										app.Span().Body(
 											app.I().Style("padding-right", "5px").Text("close"),
 											app.Text("Cancel"),
 										),
 									),
-									app.Button().Class("max responsive no-padding transparent circular deep-orange7 white-text thicc").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
+									app.Button().Class("max responsive no-padding bold deep-orange7 white-text thicc").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
 										app.Span().Body(
 											app.I().Style("padding-right", "5px").Text("check"),
 											app.Text("Allow"),
