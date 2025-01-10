@@ -16,7 +16,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// Nickname field.
-		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border blue-border info thicc").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Nickname "),
@@ -25,14 +25,14 @@ func (c *Content) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field label border deep-orange-text thicc").Body(
 			app.Input().ID("nickname-input").Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "username").TabIndex(1).Name("login"),
 			app.Label().Text("Nickname").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
 
 		// Passphrase fields.
-		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border blue-border info thicc").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("Passphrase "),
@@ -41,18 +41,18 @@ func (c *Content) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field label border deep-orange-text thicc").Body(
 			app.Input().ID("passphrase-input").Type("password").OnChange(c.ValueTo(&c.passphrase)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(2),
 			app.Label().Text("Passphrase").Class("active deep-orange-text"),
 		),
-		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field label border deep-orange-text thicc").Body(
 			app.Input().ID("passphrase-again-input").Type("password").OnChange(c.ValueTo(&c.passphraseAgain)).Required(true).Class("active").MaxLength(50).Attr("autocomplete", "new-password").TabIndex(3),
 			app.Label().Text("Passphrase again").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
 
 		// E-mail field.
-		app.Article().Class("row border blue-border surface-container-highest").Style("border-radius", "8px").Body(
+		app.Article().Class("row border blue-border info thicc").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
 				app.Span().Class("deep-orange-text").Text("E-mail "),
@@ -61,14 +61,14 @@ func (c *Content) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field label border deep-orange-text thicc").Body(
 			app.Input().ID("email-input").Type("email").OnChange(c.ValueTo(&c.email)).Required(true).Class("active").MaxLength(60).Attr("autocomplete", "email").TabIndex(4),
 			app.Label().Text("E-mail").Class("active deep-orange-text"),
 		),
 		app.Div().Class("space"),
 
 		// GDPR notice.
-		app.Article().Class("row border amber-border surface-container-highest").Style("border-radius", "8px").Style("word-break", "break-word").Body(
+		app.Article().Class("row border amber-border warn thicc").Style("word-break", "break-word").Body(
 			app.I().Text("warning").Class("amber-text"),
 			app.Div().Class("max").Style("word-break", "break-word").Style("hyphens", "auto").Body(
 				app.P().Style("word-break", "break-word").Style("hyphens", "auto").Body(
@@ -83,7 +83,7 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("row center-align").Body(
 			app.If(config.IsRegistrationEnabled,
 				app.Div().Class("row max").Body(
-					app.Button().ID("register-button").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
+					app.Button().ID("register-button").Class("max shrink center deep-orange7 white-text bold thicc").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
 						app.If(c.registerButtonDisabled,
 							app.Progress().Class("circle white-border small"),
 						),
@@ -95,7 +95,7 @@ func (c *Content) Render() app.UI {
 				),
 			).Else(
 				app.Div().Class("row max").Body(
-					app.Button().Class("max shrink deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(nil).Disabled(true).Body(
+					app.Button().Class("max shrink deep-orange7 white-text bold thicc").OnClick(nil).Disabled(true).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("app_registration"),
 							app.Text("Registration disabled"),
