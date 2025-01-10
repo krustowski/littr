@@ -199,6 +199,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.updateAvailable,
 					app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
+							app.Div().Class("badge border").Text("new"),
 							app.Text("update"),
 						),
 					),
