@@ -1,27 +1,27 @@
 .dot {
-  height: 15px;
-  width: 15px;
-  background-color: #f57f17;
-  border-radius: 50%;
-  display: inline-block;
-  display: none;
-  transition: opacity 1s;
+	height: 15px;
+	width: 15px;
+	background-color: #f57f17;
+	border-radius: 50%;
+	display: inline-block;
+	display: none;
+	transition: opacity 1s;
 }
 
 span.col {
-  flex-direction: column;
-  display: inline-flex;
-  justify-content: center;
-  text-align: center;
-  vertical-align: text-top;
+	flex-direction: column;
+	display: inline-flex;
+	justify-content: center;
+	text-align: center;
+	vertical-align: text-top;
 }
 
 sup,
 sub {
-  top: 0;
-  bottom: 0;
-  line-height: 1;
-  font-size: .5em;
+	top: 0;
+	bottom: 0;
+	line-height: 1;
+	font-size: .5em;
 }
 
 /*@media only screen and (min-width: 601px) and (max-width: 992px){
@@ -31,25 +31,64 @@ sub {
 }*/
 
 @media only screen and (min-width: 993px) {
-  main {
-    max-width: 50% !important;
-  }
-  button.shrink {
-    max-width: 50%;
-  }
-  div.shrink {
-    max-width: 50% !important;
-  }
+	main {
+		max-width: 50% !important;
+	}
+
+	button.shrink {
+		max-width: 50%;
+	}
+
+	div.shrink {
+		max-width: 50% !important;
+	}
 }
 
 .overlay {
-  display: inline-block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  background-color: transparent;
-  background-size: 100% 100%;
-  cursor: pointer;
+	display: inline-block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background-color: transparent;
+	background-size: 100% 100%;
+	cursor: pointer;
+}
+
+/*
+ *  
+ *  Custom backgrounds and rounds for all types of textboxes.
+ *
+ */
+
+.thicc {
+	border-width: 2px !important;
+	border-radius: 8px !important;
+}
+
+.common {
+	background: linear-gradient(to bottom, rgba(255, 87, 34, 0.3) 10%, rgba(255, 87, 34, 0.31)) !important;
+}
+
+.post {
+	background: linear-gradient(to bottom, rgba(158, 158, 158, 0.3) 10%, rgba(158, 158, 158, 0.31)) !important;
+}
+
+.reply {
+	border-color: rgb(245, 127, 23, 1) !important;
+	background: rgb(245, 127, 23, 1) !important;
+	/*background: linear-gradient(to bottom, rgba(245, 127, 23, 0.3) 10%, rgba(245, 127, 23, 0.31)) !important;*/
+}
+
+.info {
+	background: linear-gradient(to bottom, rgba(33, 150, 243, 0.3) 10%, rgba(33, 150, 243, 0.31)) !important;
+}
+
+.warn {
+	background: linear-gradient(to bottom, rgba(255, 193, 7, 0.3) 10%, rgba(255, 193, 7, 0.31)) !important;
+}
+
+.danger {
+	background: linear-gradient(to bottom, rgba(244, 67, 54, 0.3) 10%, rgba(244, 67, 54, 0.31)) !important;
 }
