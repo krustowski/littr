@@ -360,8 +360,12 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 		c.usersButtonDisabled = false
 	})
 
+	if key == "" {
+		return
+	}
+
 	// Check if the user is not block already.
-	if c.user.ShadeList[key] {
+	/*if c.user.ShadeList[key] {
 		c.usersButtonDisabled = false
 		return
 	}
@@ -376,7 +380,7 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 	if !c.user.FlowList[key] {
 		c.usersButtonDisabled = false
 		return
-	}
+	}*/
 
 	// Check for the post count of the requested user. Only redirect to the flow of 1 and more posts.
 	/*if c.userStats[key].PostCount == 0 {
