@@ -168,7 +168,7 @@ func (c *Content) Render() app.UI {
 
 		// user info modal
 		app.If(c.showUserPreviewModal && userInModalInfo != nil,
-			app.Dialog().ID("user-modal").Class("grey9 white-text center-align active border thicc").Style("max-width", "90%").Body(
+			app.Dialog().ID("user-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Body(
 
 				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
 				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
@@ -188,10 +188,10 @@ func (c *Content) Render() app.UI {
 				),
 
 				app.If(c.userInModal.About != "",
-					app.Article().Class("center-align border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About),
+					app.Article().Class("center-align white-text border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About),
 				),
 
-				app.Article().Class("left-align border thicc").Body(
+				app.Article().Class("white-text border left-align thicc").Body(
 					app.P().Class("bold").Text("Registered"),
 					app.P().Class().Text(userRegisteredTime),
 
