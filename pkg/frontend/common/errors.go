@@ -2,6 +2,14 @@
 package common
 
 const (
+	// Event-related (non-)error messages.
+	MSG_SERVER_START   = "The server has just (re)started."
+	MSG_SERVER_RESTART = "The server is restarting now..."
+	MSG_NEW_POLL       = "New poll has been just added."
+	MSG_NEW_POST       = "New post added by %s."
+	MSG_STATE_OFFLINE  = "You have gone offline. Check your Internet connection."
+	MSG_STATE_ONLINE   = "You are back online."
+
 	// Flow/Posts-related error messages.
 	ERR_INVALID_REPLY      = "No valid content was entered."
 	ERR_POST_UNAUTH_DELETE = "You can only delete your own posts."
@@ -76,5 +84,7 @@ const (
 	MSG_USER_UPDATED_SUCCESS   = "User updated, request deleted."
 	MSG_FOLLOW_REQUEST_REMOVED = "Follow request deleted."
 	MSG_REQ_TO_FOLLOW_SUCCESS  = "The follow request was sent successfully."
+	MSG_USER_FOLLOW_ADD_FMT    = "User %s followed now."
+	MSG_USER_FOLLOW_REMOVE_FMT = "User %s unfollowed."
 	MSG_SHADE_SUCCESSFUL       = "User was (un)shaded successfully."
 )

@@ -3,6 +3,7 @@ package users
 import (
 	//"fmt"
 	//"log"
+	"fmt"
 	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -265,9 +266,11 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 
 		// Tweak the text response for a info/success toast.
 		if followed := user.FlowList[key]; followed {
-			toast.Text("user "+key+" added to flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			text := fmt.Sprintf(common.MSG_USER_FOLLOW_ADD_FMT, key)
+			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		} else {
-			toast.Text("user "+key+" removed from flow").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			text := fmt.Sprintf(common.MSG_USER_FOLLOW_REMOVE_FMT, key)
+			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
 		}
 
 		return

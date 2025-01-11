@@ -112,7 +112,6 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	}*/
 
 	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
-	return
 }
 
 // onKeyDown is a callback to handle the key-down event: this allows one to control the app using their keyboard more effectively.

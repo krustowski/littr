@@ -60,7 +60,7 @@ func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 
 	var text string
 	var link string
-	var keep bool = false
+	var keep bool
 
 	if e.Data == "heartbeat" {
 		return "", "", keep
@@ -72,11 +72,11 @@ func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 	switch slice[0] {
 	// Server is stopping, being stopped, restarting etc.
 	case "server-stop":
-		text = "server is restarting..."
+		text = MSG_SERVER_RESTART
 
 	// Server is booting up (just started).
 	case "server-start":
-		text = "server has just (re)started"
+		text = MSG_SERVER_START
 		keep = true
 
 	// New post added.
@@ -96,19 +96,18 @@ func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 		keep = true
 
 		// Notify the user via toast.
-		text = "new post added by " + author
+		text = fmt.Sprintf(MSG_NEW_POST, author)
 
 	// New poll added.
 	case "poll":
 		pollID := slice[1]
 		if pollID == "" {
-			text = "new poll has been added"
 			link = "/polls"
 		} else {
 
-			text = "new poll has been added"
 			link = "/polls/" + pollID
 		}
+		text = MSG_NEW_POLL
 	}
 
 	return text, link, keep

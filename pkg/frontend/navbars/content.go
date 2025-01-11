@@ -193,7 +193,7 @@ func (h *Header) OnMount(ctx app.Context) {
 	var onlineHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
-			Text:  "You are back online",
+			Text:  common.MSG_STATE_ONLINE,
 			Link:  "",
 			Color: "blue10",
 			Keep:  false,
@@ -206,7 +206,7 @@ func (h *Header) OnMount(ctx app.Context) {
 	var offlineHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
-			Text:  "You have gone offline",
+			Text:  common.MSG_STATE_OFFLINE,
 			Link:  "",
 			Color: "blue10",
 			Keep:  true,
