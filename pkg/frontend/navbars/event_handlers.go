@@ -107,5 +107,23 @@ func (h *Header) onClickLogout(ctx app.Context, e app.Event) {
 func (h *Header) onClickUserFlow(ctx app.Context, e app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 
+	if key == "" {
+		return
+	}
+
+	if strings.Contains(ctx.Page().URL().Path, key) {
+		ctx.NewAction("dismiss-general")
+		return
+	}
+
+	/*if !strings.Contains(ctx.Page().URL().Path, key) && strings.Contains(ctx.Page().URL().Path, "flow") {
+		//ctx.NewAction("dismiss-general")
+		h.modalLogoutShow = false
+	}*/
+
+	/*ctx.Dispatch(func(ctx app.Context) {
+		h.modalLogoutShow = false
+	})*/
+
 	ctx.Navigate("/flow/users/" + key)
 }

@@ -61,6 +61,8 @@ type Header struct {
 	sseChan chan common.Event
 
 	processingKeydown bool
+
+	isUserFlow bool
 }
 
 type Footer struct {
