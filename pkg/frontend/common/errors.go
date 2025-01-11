@@ -3,7 +3,7 @@ package common
 
 const (
 	// Flow/Posts-related error messages.
-	ERR_INVALID_REPLY      = "No valid content was entered"
+	ERR_INVALID_REPLY      = "No valid content was entered."
 	ERR_POST_UNAUTH_DELETE = "You can only delete your own posts."
 	ERR_POST_NOT_FOUND     = "Post not found (may be deleted)."
 	ERR_USER_NOT_FOUND     = "User not found."
