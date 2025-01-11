@@ -188,11 +188,14 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 ### roadmap to v1.0.0
 + fix the code smells as scanned by `sonar-scanner`
 + resolve tikets in github and redmine (priv)
-+ [...]
+
+### roadmap to v0.46
++ add the user's flow link to logout modal and user info modal
++ ~~enhance the UI: consistency (volors, buttons, modals, textboxes)~~, fix texts in toasts
++ live switch implementation (to disable SSE)
 
 ### roadmap to v0.45
 + add controler+service+repository experiment for ~~polls~~, ~~users~~, posts (wip)
-+ live switch implementation (disable SSE)
 + ~~redesign the flow subviews (profile pages)~~
 + ~~reimplement JS fetch() function to omit `http.Client` from FE~~
 + ~~save new post/reply drafts to localStorage~~
@@ -333,7 +336,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + ~~fix register date (migration)~~
 
 ### roadmap to v0.15
-+ implement inf. scroll to stats (complex)???
++ implement inf. scroll to stats (too complex)???
 + ~~replies to any post in flow~~
 + ~~add simple ToS (terms of service)~~
 
