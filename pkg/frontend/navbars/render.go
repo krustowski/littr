@@ -245,7 +245,7 @@ func (h *Header) Render() app.UI {
 				// update button
 				app.If(h.updateAvailable,
 					app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
-						app.Div().Class("badge border").Text("new"),
+						app.Div().Class("badge blue-border blue-text border").Text("NEW"),
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("update"),
 						),
