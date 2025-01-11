@@ -91,7 +91,7 @@ func ShowGenericToast(pl *ToastPayload) {
 
 		// Update the snackbar's/toast's inner HTML content.
 		if pl.Keep {
-			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div>(close)</div>")
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div><i>close</i></div>")
 		} else {
 			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div>")
 		}
@@ -121,7 +121,7 @@ func ShowGenericToast(pl *ToastPayload) {
 
 		// Hold the toast on mouseover event.
 		app.Window().GetElementByID(pl.Name).Call("addEventListener", "mouseenter", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div>(close)</div>")
+			app.Window().GetElementByID(pl.Name).Set("innerHTML", "<div class=\"max\"><i>info</i>&nbsp;&nbsp;"+pl.Text+"</div><div><i>close</i></div>")
 			this.Set(DISMISS_LOCK, true)
 			return nil
 		}))
