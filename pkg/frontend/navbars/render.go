@@ -84,7 +84,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.modalLogoutShow,
 					app.Dialog().ID("logout-modal").Class("grey10 white-text active thicc").Body(
 						app.Nav().Class("center-align").Body(
-							app.H5().Text("logout"),
+							app.H5().Text("user"),
 						),
 
 						app.Div().Class("space"),
@@ -105,19 +105,20 @@ func (h *Header) Render() app.UI {
 
 						app.Div().Class("space"),
 
-						app.Article().Class("row warn amber-border white-text border thicc").Body(
+						/*app.Article().Class("row warn amber-border white-text border thicc").Body(
 							app.I().Text("warning").Class("amber-text"),
 							app.P().Class("max bold").Body(
 								app.Span().Text("Are you sure you want to end this session and log out?"),
 							),
 						),
-						app.Div().Class("space"),
+
+						app.Div().Class("space"),*/
 
 						app.Div().Class("row").Body(
 							app.Button().Class("max bold black white-text thicc").OnClick(h.onClickModalDismiss).Body(
 								app.Span().Body(
 									app.I().Style("padding-right", "5px").Text("close"),
-									app.Text("Cancel"),
+									app.Text("Close"),
 								),
 							),
 							app.Button().Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickLogout).Body(
@@ -257,9 +258,9 @@ func (h *Header) Render() app.UI {
 
 				// login/logout button
 				app.If(h.authGranted,
-					app.A().Class("button circle transparent").Text("logout").Class("").OnClick(h.onClickShowLogoutModal).Title("logout").Aria("label", "logout").Body(
+					app.A().Class("button circle transparent").Text("user").Class("").OnClick(h.onClickShowLogoutModal).Title("user").Aria("label", "user").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
-							app.Text("logout")),
+							app.Text("person")),
 					),
 				).Else(
 					app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
