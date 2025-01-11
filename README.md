@@ -190,6 +190,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + resolve tikets in github and redmine (priv)
 
 ### roadmap to v0.46
++ add new modal to show logged user and links to flow and to log out
 + ~~add the user's flow link to logout modal and user info modal~~
 + ~~enhance the UI: consistency (volors, buttons, modals, textboxes)~~, fix texts in toasts
 + live switch implementation (to disable SSE)
