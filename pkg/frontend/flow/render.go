@@ -412,7 +412,7 @@ func (c *Content) Render() app.UI {
 
 								// post header (author avatar + name + link button)
 								app.Div().Class("row top-padding").Body(
-									app.Img().Title("user's avatar").Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+									app.Img().ID(post.Nickname).Title("user's avatar").Class("responsive max left").Src(c.users[post.Nickname].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%").OnClick(c.onClickUserFlow),
 									app.P().Class("max").Body(
 										app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(c.onClickUserFlow).ID(post.Nickname).Body(
 											app.Span().ID("user-flow-link").Class("large-text bold deep-orange-text").Text(post.Nickname).OnMouseEnter(c.onMouseEnter).OnMouseLeave(c.onMouseLeave),

@@ -258,7 +258,7 @@ func (c *Content) Render() app.UI {
 
 							// cell's header
 							app.Div().Class("row medium top-padding").Body(
-								app.Img().Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
+								app.Img().ID(user.Nickname).Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%").OnClick(c.onClickUser),
 
 								app.If(user.Private,
 									// nasty hack to ensure the padding lock icon is next to nickname
