@@ -103,3 +103,9 @@ func (h *Header) onClickLogout(ctx app.Context, e app.Event) {
 		ctx.Navigate("/logout")
 	})
 }
+
+func (h *Header) onClickUserFlow(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+
+	ctx.Navigate("/flow/users/" + key)
+}

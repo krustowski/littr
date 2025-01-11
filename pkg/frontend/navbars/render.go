@@ -87,6 +87,24 @@ func (h *Header) Render() app.UI {
 							app.H5().Text("logout"),
 						),
 
+						app.Div().Class("space"),
+
+						// User's avatar and nickname.
+						app.Div().Class("row border thicc").Body(
+							app.Img().ID(h.user.Nickname).Title("user's avatar").Class("responsive padding max left").Src(h.user.AvatarURL).Style("max-width", "100px").Style("border-radius", "50%").OnClick(h.onClickUserFlow),
+							app.P().Class("max").Body(
+								app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(h.onClickUserFlow).ID(h.user.Nickname).Body(
+									app.Span().ID("user-flow-link").Class("large-text bold deep-orange-text").Text(h.user.Nickname),
+								),
+							),
+							app.Button().ID(h.user.Nickname).Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickUserFlow).Style("margin-right", "15px").Body(
+								app.I().Text("tsunami"),
+								app.Text("Flow"),
+							),
+						),
+
+						app.Div().Class("space"),
+
 						app.Article().Class("row warn amber-border white-text border thicc").Body(
 							app.I().Text("warning").Class("amber-text"),
 							app.P().Class("max bold").Body(

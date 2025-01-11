@@ -129,6 +129,8 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
+	common.LoadUser(&h.user, &ctx)
+
 	// Custom SSE client implementation.
 	if !app.Window().Get(common.JS_LITTR_SSE).Get("running").Bool() {
 		fmt.Println("Connecting to the SSE stream...")
@@ -189,7 +191,7 @@ func (h *Header) OnMount(ctx app.Context) {
 	var onlineHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
-			Text:  "you are back online",
+			Text:  "You are back online",
 			Link:  "",
 			Color: "blue10",
 			Keep:  false,
@@ -202,7 +204,7 @@ func (h *Header) OnMount(ctx app.Context) {
 	var offlineHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
-			Text:  "you have gone offline",
+			Text:  "You have gone offline",
 			Link:  "",
 			Color: "blue10",
 			Keep:  true,
