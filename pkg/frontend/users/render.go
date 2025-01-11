@@ -207,6 +207,12 @@ func (c *Content) Render() app.UI {
 							app.Text("Close"),
 						),
 					),
+					app.Button().Class("max deep-orange7 white-text thicc").ID(c.userInModal.Nickname).OnClick(c.onClickUserFlow).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("person"),
+							app.Text("Flow"),
+						),
+					),
 				),
 			),
 		),
