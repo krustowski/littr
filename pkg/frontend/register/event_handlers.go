@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -86,8 +85,8 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// Fetch the user's Gravatar according to their e-mail address.
-		avatarURL := db.GetGravatarURL(user, nil, nil, nil)
-		user.AvatarURL = avatarURL
+		//avatarURL := db.GetGravatarURL(user, nil, nil, nil)
+		//user.AvatarURL = avatarURL
 
 		// Set default flowList items.
 		user.FlowList[nickname] = true
