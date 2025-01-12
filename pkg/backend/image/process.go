@@ -101,10 +101,11 @@ func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {
 	}
 
 	// generate thumbnails --- keep aspect ratio in px
-	thumbImg := ResizeImage(img, 450)
+	//thumbImg := ResizeImage(img, 450)
+	thumbImg := CropToSquare(img)
 
 	// encode the thumbnail back to []byte
-	thumbImgData, err := EncodeImage(&thumbImg, format)
+	thumbImgData, err := EncodeImage(thumbImg, format)
 	if err != nil {
 		//l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
 		return nil, fmt.Errorf(common.ERR_IMG_THUMBNAIL_FAIL + err.Error())

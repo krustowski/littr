@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.2"
+        "version": "0.46.3"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1827,7 +1827,7 @@
                         }
                     },
                     "500": {
-                        "description": "A serious internal problem occured while preparing the notification for firing.",
+                        "description": "A serious internal problem occurred while preparing the notification for firing.",
                         "schema": {
                             "allOf": [
                                 {
@@ -1963,7 +1963,7 @@
                         }
                     },
                     "500": {
-                        "description": "A serious internal server problem occured.",
+                        "description": "A serious internal server problem occurred.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2094,7 +2094,7 @@
                         }
                     },
                     "500": {
-                        "description": "A serious internal problem occured while processing the delete request.",
+                        "description": "A serious internal problem occurred while processing the delete request.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2235,7 +2235,7 @@
                         }
                     },
                     "500": {
-                        "description": "A serious internal problem occured while the update procedure was processing the data.",
+                        "description": "A serious internal problem occurred while the update procedure was processing the data.",
                         "schema": {
                             "allOf": [
                                 {
@@ -2303,7 +2303,7 @@
                         }
                     },
                     "500": {
-                        "description": "A serious problem occured while stats were being calculated.",
+                        "description": "A serious problem occurred while stats were being calculated.",
                         "schema": {
                             "allOf": [
                                 {
@@ -4554,7 +4554,7 @@
     ],
     "tags": [
         {
-            "description": "Authentication and HTTP cookies managment",
+            "description": "Authentication and HTTP cookies management",
             "name": "auth"
         },
         {
