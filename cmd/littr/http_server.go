@@ -284,7 +284,7 @@ func initServer() {
 	}))
 
 	// Serve custom compressed client binary.
-	r.Method("GET", "/web/app.wasm", Handler(func(w http.ResponseWriter, r *http.Request) error {
+	/*r.Method("GET", "/web/app.wasm", Handler(func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Encoding", "gzip")
 		w.Header().Set("Content-Type", "application/wasm")
 
@@ -295,7 +295,7 @@ func initServer() {
 
 		w.Write(wasmBinary)
 		return nil
-	}))
+	}))*/
 
 	// Handle the rest using the appHandler defined earlier.
 	r.Handle("/*", appHandler)

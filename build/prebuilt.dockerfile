@@ -50,7 +50,7 @@ RUN --mount=type=cache,target="$GOMODCACHE" \
 		cmd/littr/
 
 #RUN xz web/app.wasm
-RUN gzip -9 web/app.wasm
+#RUN gzip -9 web/app.wasm
 
 RUN adduser \
   --disabled-password \
@@ -90,7 +90,7 @@ COPY --chown=1000:1000 --chmod=700 test/data/.gitkeep /opt/pix/
 COPY --chown=1000:1000 --chmod=700 pkg/backend/mail/templates/ /opt/templates/
 
 COPY --from=littr-build /go/src/littr/littr /opt/littr
-COPY --from=littr-build /go/src/littr/web/app.wasm.gz /opt/web/app.wasm.gz
+COPY --from=littr-build /go/src/littr/web/app.wasm /opt/web/app.wasm
 
 # workaround for pix
 RUN cd /opt/web && ln -s ../pix .
