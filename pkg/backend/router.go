@@ -29,7 +29,7 @@
 //	@externalDocs.url		https://krusty.space/projects/littr/
 
 //	@tag.name		auth
-//	@tag.description	Authentication and HTTP cookies managment
+//	@tag.description	Authentication and HTTP cookies management
 
 //	@tag.name		dump
 //	@tag.description	Interventions in running data

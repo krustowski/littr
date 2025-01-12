@@ -29,7 +29,7 @@ func NewStatController(statService models.StatServiceInterface) *StatController 
 //	@Produce		json
 //	@Success		200	{object}	common.APIResponse{data=stats.GetAll.responseData}	"Stats were calculated and are returned."
 //	@Failure		400	{object}	common.APIResponse{data=models.Stub}			"Invalid called ID."
-//	@Failure		500	{object}	common.APIResponse{data=models.Stub}			"A serious problem occured while stats were being calculated."
+//	@Failure		500	{object}	common.APIResponse{data=models.Stub}			"A serious problem occurred while stats were being calculated."
 //	@Router			/stats [get]
 func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, "stats")

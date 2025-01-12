@@ -43,7 +43,7 @@ func NewPushController(
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized.."
 //	@Failure		409		{object}	common.APIResponse{data=models.Stub}	"Conflict: a subscription for such device already exists."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal server problem occured."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal server problem occurred."
 //	@Router			/push/subscriptions [post]
 func (c *PushController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
@@ -84,7 +84,7 @@ func (c *PushController) Create(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to update not found."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occured while the update procedure was processing the data."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while the update procedure was processing the data."
 //	@Router			/push/subscriptions/{uuid} [patch]
 func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
@@ -134,7 +134,7 @@ func (c *PushController) Update(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to delete not found."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occured while processing the delete request."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while processing the delete request."
 //	@Router			/push/subscriptions/{uuid} [delete]
 func (c *PushController) Delete(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
@@ -173,7 +173,7 @@ func (c *PushController) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
 //	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to use not found."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
-//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occured while preparing the notification for firing."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while preparing the notification for firing."
 //	@Router			/push [post]
 func (c *PushController) SendNotification(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
