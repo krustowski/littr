@@ -208,6 +208,8 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		if imgReference != nil {
 			post.Figure = *imgReference
 		}
+
+		post.Data = make([]byte, 0)
 	}
 
 	// save the post by its key

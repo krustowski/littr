@@ -124,6 +124,11 @@ func RunMigrations() string {
 			F: migratePolls,
 			R: []interface{}{&users, &polls},
 		},*/
+		{
+			N: "migratePostData",
+			F: migratePostData,
+			R: []interface{}{&posts},
+		},
 	}
 
 	// Declare the migrations report variable.
@@ -1034,6 +1039,40 @@ func migratePolls(l common.Logger, rawElems []interface{}) bool {
 
 			// Delete the poll locally too within the migration procedures.
 			delete(*polls, key)
+		}
+	}
+
+	return true
+}
+
+func migratePostData(l common.Logger, rawElems []interface{}) bool {
+	var posts *map[string]models.Post
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		// Try the polls pointer.
+		elem, ok := raw.(*map[string]models.Post)
+		if ok {
+			posts = elem
+			continue
+		}
+	}
+
+	// Exit on the nil pointer(s).
+	if posts == nil {
+		l.Msg("posts are nil").Status(http.StatusInternalServerError).Log()
+		return false
+	}
+
+	for key, post := range *posts {
+		if post.Data != nil {
+			post.Data = make([]byte, 0)
+			if saved := SetOne(FlowCache, key, post); !saved {
+				l.Msg("cannot truncate post data to zero").Status(http.StatusInternalServerError).Log()
+				return false
+			}
+
+			(*posts)[key] = post
 		}
 	}
 
