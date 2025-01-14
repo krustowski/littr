@@ -126,4 +126,8 @@ func (h *Header) onClickUserFlow(ctx app.Context, e app.Event) {
 	})*/
 
 	ctx.Navigate("/flow/users/" + key)
+
+	ctx.Defer(func(app.Context) {
+		h.modalLogoutShow = false
+	})
 }
