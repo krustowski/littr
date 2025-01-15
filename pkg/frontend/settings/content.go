@@ -62,6 +62,11 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	// This function call is broken due to the slider not hitting the actual top of the page.
+	//ctx.ScrollTo("anchor-settings-top")
+	scrollObj := map[string]any{"top": 0}
+	app.Window().Call("scrollTo", app.ValueOf(scrollObj))
+
 	c.notificationPermission = ctx.Notifications().Permission()
 
 	ctx.Handle("dismiss", c.handleDismiss)

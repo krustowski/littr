@@ -10,9 +10,10 @@ import (
 func (c *Content) Render() app.UI {
 	devicesToShow := len(c.devices)
 
-	return app.Main().Class("responsive").Body(
+	return app.Main().Class("responsive").ID("anchor-settings-top").Body(
+		//app.Div().ID("anchor-settings-top"),
 		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
+			app.Div().ID("heading-settings").Class("max padding").Body(
 				app.H5().Text("settings"),
 			),
 		),
