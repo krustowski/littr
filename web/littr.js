@@ -9,7 +9,7 @@
   window.LIT.online = null
   window.LIT.scrolled = 0
   window.LIT.scrollpx = 0
-  window.LIT.version = 'LittrJS v0.6.5'
+  window.LIT.version = 'LittrJS v0.6.6'
 
   // feature detection: mobile device
   if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
@@ -287,16 +287,16 @@
     $('main').data('fixedUI', true)
 
     // offline button
-    $('body > div > main')
+    /*$('body > div > main')
       .prepend(
         '<span class="offline" style="visibility:hidden;background-color:#000;font-size:2.5rem;position:fixed;left:1px;bottom:5rem;z-index:999999">đź“µ</span>'
       )
-      .css('[offline="true"] #offline-message{visibility:visible}')
+      .css('[offline="true"] #offline-message{visibility:visible}')*/
     // fix tables bottom padding
     $('table').css('padding-bottom', '2rem')
 
     // check login password 4 autofill
-    LIT.checkPassword()
+    //LIT.checkPassword()
 
     // toggle dark/light UI mode button
     //if ($('main h5').html() === 'settings') {
