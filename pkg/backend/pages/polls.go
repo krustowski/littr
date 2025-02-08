@@ -7,13 +7,18 @@ import (
 )
 
 func onePagePolls(opts PageOptions, ptrMaps *PagePointers) PagePointers {
-	var allPolls *map[string]models.Poll = ptrMaps.Polls
-	//var allUsers *map[string]models.User = ptrMaps.Users
+	var (
+		polls = []models.Poll{}
+		part  []models.Poll
+	)
 
-	polls := []models.Poll{}
+	defer func() {
+		polls = []models.Poll{}
+		part = []models.Poll{}
+	}()
 
 	// filter out all posts for such callerID
-	for key, poll := range *allPolls {
+	for key, poll := range *ptrMaps.Polls {
 		// check and correct the corresponding item's key
 		if key != poll.ID {
 			poll.ID = key
@@ -37,8 +42,6 @@ func onePagePolls(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	})
 
 	// cut the PAGE_SIZE*2 number of posts only
-	var part []models.Poll
-
 	pageNo := opts.PageNo
 	//start := (PAGE_SIZE * 2) * pageNo
 	start := (PAGE_SIZE) * pageNo

@@ -62,7 +62,7 @@ func fillDataMaps(opts PageOptions) *PagePointers {
 		posts, _ := db.GetAll(db.FlowCache, models.Post{})
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &PagePointers{Posts: &posts, Users: &users}
+		return &PagePointers{Posts: posts, Users: users}
 	}
 
 	// prepare data map for a polls page
@@ -71,14 +71,14 @@ func fillDataMaps(opts PageOptions) *PagePointers {
 		// users are not needed necessarily there for now...
 		//users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &PagePointers{Polls: &polls}
+		return &PagePointers{Polls: polls}
 	}
 
 	// prepare data map for a users page
 	if opts.Users != (UserOptions{}) {
 		users, _ := db.GetAll(db.UserCache, models.User{})
 
-		return &PagePointers{Users: &users}
+		return &PagePointers{Users: users}
 	}
 
 	return nil

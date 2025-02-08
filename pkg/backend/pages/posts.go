@@ -9,16 +9,23 @@ import (
 
 func onePagePosts(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	// BTW those variables are both of type map[string]T
-	//var allPolls map[string]models.Poll
-	var allPosts *map[string]models.Post = ptrMaps.Posts
-	var allUsers *map[string]models.User = ptrMaps.Users
+	var (
+		allPosts = ptrMaps.Posts
+		allUsers = ptrMaps.Users
+		posts    = []models.Post{}
+	)
+
+	defer func() {
+		allPosts = nil
+		allUsers = nil
+		posts = []models.Post{}
+	}()
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
 	// + include previous posts to a reply
 	// + only include users mentioned
 
-	posts := []models.Post{}
 	num := 0
 
 	// overload flowList

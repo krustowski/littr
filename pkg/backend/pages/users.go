@@ -7,12 +7,18 @@ import (
 )
 
 func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
-	var allUsers *map[string]models.User = ptrMaps.Users
+	var (
+		users  = []models.User{}
+		caller = models.User{}
+		part   []models.User
+	)
 
-	users := []models.User{}
-	caller := models.User{}
+	defer func() {
+		users = []models.User{}
+		part = []models.User{}
+	}()
 
-	for key, user := range *allUsers {
+	for key, user := range *ptrMaps.Users {
 		// check and correct the corresponding item's key
 		if key != user.Nickname {
 			user.Nickname = key
@@ -31,9 +37,13 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	})
 
 	// cut the PAGE_SIZE number of posts only
-	var part []models.User
+	pageNo := func() int {
+		if opts.PageNo < -1 {
+			return 0
+		}
+		return opts.PageNo
+	}()
 
-	pageNo := opts.PageNo
 	start := (PAGE_SIZE) * pageNo
 	end := (PAGE_SIZE) * (pageNo + 1)
 
@@ -52,7 +62,11 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		// the very single page
 		//part = users[len(users)-PAGE_SIZE-1 : len(users)-1]
 		if len(users) > PAGE_SIZE*(pageNo-1) {
-			part = users[PAGE_SIZE*(pageNo-1):]
+			if pageNo < 1 {
+				part = users[0:]
+			} else {
+				part = users[PAGE_SIZE*(pageNo-1):]
+			}
 		}
 	}
 
@@ -63,7 +77,7 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	// Add all (for now) users from the requestList to render properly at the top of the users page.
 	for nick, requested := range *opts.Users.RequestList {
 		if requested {
-			part = append(part, (*allUsers)[nick])
+			part = append(part, (*ptrMaps.Users)[nick])
 		}
 	}
 
