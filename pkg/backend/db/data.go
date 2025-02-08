@@ -152,6 +152,10 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 		count++
 	}
 
+	matrix = struct {
+		Items map[string]T `json:"items"`
+	}{}
+
 	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	return count, total, nil
@@ -178,8 +182,8 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 
 	// check if the model is usable
 	if &model == nil {
-		l.Msg("nil pointer to model on input to!").Status(http.StatusBadRequest).Log()
-		return &dumpReport{Total: 0, Error: fmt.Errorf("nil pointer to model on input!")}
+		l.Msg("nil pointer to model on input to").Status(http.StatusBadRequest).Log()
+		return &dumpReport{Total: 0, Error: fmt.Errorf("nil pointer to model on input")}
 	}
 
 	// base struct to map the data to JSON
@@ -197,6 +201,10 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	if err != nil {
 		return &dumpReport{Error: err}
 	}
+
+	matrix = struct {
+		Items map[string]T `json:"items"`
+	}{}
 
 	// write dumped data to the file
 	if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
