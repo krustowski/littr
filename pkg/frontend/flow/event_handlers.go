@@ -268,30 +268,42 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		if data, err := common.ReadFile(file); err != nil {
-			toast.Text(err.Error()).Type("error").Dispatch(c, dispatch)
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.postButtonsDisabled = false
+		})
 
-			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = false
-			})
+		var (
+			data         []byte
+			err          error
+			processedImg *[]byte
+		)
+
+		// Read the figure/image data.
+		data, err = common.ReadFile(file)
+		if err != nil {
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
-
-		} else {
-			toast.Text("image is ready").Type("info").Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = false
-
-				c.newFigFile = file.Get("name").String()
-				c.newFigData = data
-
-				// Save the figure data in LS as a backup.
-				ctx.LocalStorage().Set("newReplyFigFile", file.Get("name").String())
-				ctx.LocalStorage().Set("newReplyFigData", data)
-			})
-			return
-
 		}
+
+		processedImg, err = common.ProcessImage(&data)
+		if err != nil {
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
+		}
+
+		// Cast the image ready message.
+		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
+
+		// Load the image data to the Content structure.
+		ctx.Dispatch(func(ctx app.Context) {
+			c.newFigFile = file.Get("name").String()
+			c.newFigData = *processedImg
+
+			// Save the figure data in LS as a backup.
+			ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
+			ctx.LocalStorage().Set("newPostFigData", *processedImg)
+		})
+		return
 	})
 }
 

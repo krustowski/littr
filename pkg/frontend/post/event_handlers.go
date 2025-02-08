@@ -1,10 +1,6 @@
 package post
 
 import (
-	"bytes"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +8,6 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/dsoprea/go-exif/v3"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
@@ -232,17 +227,22 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 	// Nasty way on how to disable buttons.
 	c.postButtonsDisabled = true
 
-	defer ctx.Dispatch(func(ctx app.Context) {
-		c.postButtonsDisabled = false
-	})
-
 	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.postButtonsDisabled = false
+		})
+
+		/*ctx.Defer(func(ctx app.Context) {
+			c.postButtonsDisabled = false
+		})*/
+
 		var (
-			data []byte
-			err  error
+			data         []byte
+			err          error
+			processedImg *[]byte
 		)
 
 		// Read the figure/image data.
@@ -252,38 +252,10 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// Inflate the image to memory.
-		img, format, err := image.Decode(bytes.NewReader(data))
+		processedImg, err = common.ProcessImage(&data)
 		if err != nil {
 			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
 			return
-		}
-
-		imgP := &img
-
-		// Fix the image orientation for decoded image.
-		imgP, err = FixOrientation(imgP, &data)
-		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-			return
-		}
-
-		var buf bytes.Buffer
-
-		// Encode depending on the format.
-		switch format {
-		case "jpeg":
-			err := jpeg.Encode(&buf, *imgP, nil)
-			if err != nil {
-				toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-				return
-			}
-		case "png":
-			err := png.Encode(&buf, *imgP)
-			if err != nil {
-				toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-				return
-			}
 		}
 
 		// Cast the image ready message.
@@ -292,93 +264,11 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 		// Load the image data to the Content structure.
 		ctx.Dispatch(func(ctx app.Context) {
 			c.newFigFile = file.Get("name").String()
-			c.newFigData = buf.Bytes()
+			c.newFigData = *processedImg
 
 			// Save the figure data in LS as a backup.
 			ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
-			ctx.LocalStorage().Set("newPostFigData", buf.Bytes())
+			ctx.LocalStorage().Set("newPostFigData", *processedImg)
 		})
 	})
-}
-
-// FixOrientation checks the EXIF orientation tag and corrects the image's orientation if necessary
-func FixOrientation(img *image.Image, imgBytes *[]byte) (*image.Image, error) {
-	rawExif, err := exif.SearchAndExtractExif(*imgBytes)
-	if err != nil {
-		if err == exif.ErrNoExif {
-			return img, nil // If there's no EXIF data, return the original image
-		}
-		return nil, err
-	}
-
-	// Parse the EXIF data
-	entries, _, err := exif.GetFlatExifData(rawExif, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find the Orientation tag
-	for _, entry := range entries {
-		if entry.TagName == "Orientation" {
-			//fmt.Printf("orientation: entry.Value: %v\n", entry.Value)
-			orientationRaw := entry.Value.([]uint16) // Orientation should be a uint16 value
-			orientation := orientationRaw[0]
-
-			//orientation := entry.Formatted
-			//fmt.Println("Orientation tag found:", orientation)
-
-			switch orientation {
-			case 3: // 180 degrees
-				*img = rotate180(img)
-			case 6: // 90 degrees clockwise
-				*img = rotate90(img)
-			case 8: // 90 degrees counterclockwise
-				*img = rotate270(img)
-			}
-		}
-	}
-
-	return img, nil
-}
-
-// Rotate image 90 degrees clockwise
-func rotate90(img *image.Image) image.Image {
-	bounds := (*img).Bounds()
-	rotated := image.NewRGBA(image.Rect(0, 0, bounds.Dy(), bounds.Dx()))
-
-	for x := 0; x < bounds.Dx(); x++ {
-		for y := 0; y < bounds.Dy(); y++ {
-			rotated.Set(bounds.Dy()-y-1, x, (*img).At(x, y))
-		}
-	}
-
-	return rotated
-}
-
-// Rotate image 180 degrees
-func rotate180(img *image.Image) image.Image {
-	bounds := (*img).Bounds()
-	rotated := image.NewRGBA(bounds)
-
-	for x := 0; x < bounds.Dx(); x++ {
-		for y := 0; y < bounds.Dy(); y++ {
-			rotated.Set(bounds.Dx()-x-1, bounds.Dy()-y-1, (*img).At(x, y))
-		}
-	}
-
-	return rotated
-}
-
-// Rotate image 270 degrees (90 degrees counter-clockwise)
-func rotate270(img *image.Image) image.Image {
-	bounds := (*img).Bounds()
-	rotated := image.NewRGBA(image.Rect(0, 0, bounds.Dy(), bounds.Dx()))
-
-	for x := 0; x < bounds.Dx(); x++ {
-		for y := 0; y < bounds.Dy(); y++ {
-			rotated.Set(y, bounds.Dx()-x-1, (*img).At(x, y))
-		}
-	}
-
-	return rotated
 }
