@@ -161,11 +161,15 @@ func (c *Content) onClickReply(ctx app.Context, e app.Event) {
 		c.postButtonsDisabled = false
 		c.buttonDisabled = true
 	})
+
+	ctx.Defer(func(app.Context) {
+		app.Window().Get("document").Call("getElementById", "reply-textarea").Call("focus")
+	})
 }
 
 // onClickPostReply acts like a caller function evoked when user clicks on "reply" button in the reply modal
 func (c *Content) onClickPostReply(ctx app.Context, e app.Event) {
-	// prevent double-posting
+	// Prevent double-posting.
 	if c.postButtonsDisabled {
 		return
 	}

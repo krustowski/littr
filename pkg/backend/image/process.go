@@ -4,7 +4,6 @@ package image
 import (
 	"fmt"
 	"image"
-	"net/http"
 	"os"
 	"strings"
 
@@ -32,15 +31,14 @@ func ProcessPost(post *models.Post, postContent *string) (error, int) {
 
 	postContent = baseImageURL
 
-	return nil, http.StatusOK
+	return nil, 200
 }
 
 func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {
 	var (
-		newBytes *[]byte
-		err      error
-		img      *image.Image
-		format   string
+		err    error
+		img    *image.Image
+		format string
 	)
 
 	// Ensure the data presence.
@@ -56,11 +54,12 @@ func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {
 	img, format, err = DecodeImage(data.ImageByteData, extension)
 	if err != nil {
 		//l.Msg(common.ERR_IMG_DECODE_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
-		return nil, fmt.Errorf(common.ERR_IMG_DECODE_FAIL + err.Error())
+		return nil, err
+		//return nil, fmt.Errorf(fmt.Sprintf("%s: %s", common.ERR_IMG_DECODE_FAIL, err.Error()))
 	}
 
 	// Decide the action according to the extension.
-	switch extension {
+	/*switch extension {
 	case "png", "jpg", "jpeg":
 		// fix the image orientation for decoded image
 		img, err = FixOrientation(img, data.ImageByteData)
@@ -89,15 +88,16 @@ func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {
 	default:
 		//l.Msg(common.ERR_IMG_UNKNOWN_TYPE).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return nil, fmt.Errorf(common.ERR_IMG_UNKNOWN_TYPE)
-	}
+	}*/
 
 	// prepare the novel image's filename
 	imageBaseName := data.ImageBaseName + "." + format
 
 	// upload the novel image to local storage
-	if err := os.WriteFile("/opt/pix/"+imageBaseName, *newBytes, 0600); err != nil {
+	if err := os.WriteFile("/opt/pix/"+imageBaseName, *data.ImageByteData, 0600); err != nil {
 		//l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-		return nil, fmt.Errorf(common.ERR_IMG_SAVE_FILE_FAIL + err.Error())
+		//return nil, fmt.Errorf(common.ERR_IMG_SAVE_FILE_FAIL + err.Error())
+		return nil, err
 	}
 
 	// generate thumbnails --- keep aspect ratio in px
@@ -108,13 +108,15 @@ func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {
 	thumbImgData, err := EncodeImage(thumbImg, format)
 	if err != nil {
 		//l.Msg(common.ERR_IMG_THUMBNAIL_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-		return nil, fmt.Errorf(common.ERR_IMG_THUMBNAIL_FAIL + err.Error())
+		return nil, err
+		//return nil, fmt.Errorf(common.ERR_IMG_THUMBNAIL_FAIL + err.Error())
 	}
 
 	// write the thumbnail byte stream to a file
 	if err := os.WriteFile("/opt/pix/thumb_"+imageBaseName, *thumbImgData, 0600); err != nil {
 		//l.Msg(common.ERR_IMG_SAVE_FILE_FAIL).Status(http.StatusInternalServerError).Error(err).Log().Payload(nil).Write(w)
-		return nil, fmt.Errorf(common.ERR_IMG_SAVE_FILE_FAIL + err.Error())
+		//return nil, fmt.Errorf(common.ERR_IMG_SAVE_FILE_FAIL + err.Error())
+		return nil, err
 	}
 
 	return &imageBaseName, nil
