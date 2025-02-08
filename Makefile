@@ -349,7 +349,7 @@ run_pprof: kill_pprof
 
 BACKUP_PATH    		?= /mnt/backup/littr
 RUN_DATA_PATH  		?= ./.run_data
-DEMO_DATA_PATH 		?= ./test/data
+DEMO_DATA_PATH 		?= test/data
 
 .PHONY: backup fetch_running_dump flush kill logs sh sse_client stop
 
@@ -370,7 +370,7 @@ fetch_running_dump:
 	
 flush:
 	$(call print_info, Flushing the running app data...)
-	@[ ! -d ${DEMO_DATA_PATH} ] && exit 6
+	@[ -d ${DEMO_DATA_PATH} ] || exit 6
 	@docker cp ${DEMO_DATA_PATH}/polls.json ${DOCKER_CONTAINER_NAME}:/opt/data/polls.json
 	@docker cp ${DEMO_DATA_PATH}/posts.json ${DOCKER_CONTAINER_NAME}:/opt/data/posts.json
 	@docker cp ${DEMO_DATA_PATH}/subscriptions.json ${DOCKER_CONTAINER_NAME}:/opt/data/subscriptions.json
