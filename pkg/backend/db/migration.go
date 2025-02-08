@@ -52,72 +52,72 @@ func RunMigrations() string {
 		{
 			N: "migrateExpiredReuests",
 			F: migrateExpiredRequests,
-			R: []interface{}{&reqs},
+			R: []interface{}{reqs},
 		},
 		{
 			N: "migrateExpiredTokens",
 			F: migrateExpiredTokens,
-			R: []interface{}{&tokens},
+			R: []interface{}{tokens},
 		},
 		{
 			N: "migrateDeleteBlankDevices",
 			F: migrateDeleteBlankDevices,
-			R: []interface{}{&subs},
+			R: []interface{}{subs},
 		},
 		{
 			N: "migrateEmptyDeviceTags",
 			F: migrateEmptyDeviceTags,
-			R: []interface{}{&subs},
+			R: []interface{}{subs},
 		},
 		{
 			N: "migrateAvatarURL",
 			F: migrateAvatarURL,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateFlowPurge",
 			F: migrateFlowPurge,
-			R: []interface{}{&polls, &posts, &users},
+			R: []interface{}{polls, posts, users},
 		},
 		{
 			N: "migrateUserDeletion",
 			F: migrateUserDeletion,
-			R: []interface{}{&posts, &users},
+			R: []interface{}{posts, users},
 		},
 		{
 			N: "migrateUserRegisteredTime",
 			F: migrateUserRegisteredTime,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateUserShadeList",
 			F: migrateUserShadeList,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateUserUnshade",
 			F: migrateUserUnshade,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateBlankAboutText",
 			F: migrateBlankAboutText,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateSystemFlowOn",
 			F: migrateSystemFlowOn,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateUserActiveState",
 			F: migrateUserActiveState,
-			R: []interface{}{&users, &reqs},
+			R: []interface{}{users, reqs},
 		},
 		{
 			N: "migrateUserOptions",
 			F: migrateUserOptions,
-			R: []interface{}{&users},
+			R: []interface{}{users},
 		},
 		/*{
 			N: "migratePolls",
@@ -127,7 +127,7 @@ func RunMigrations() string {
 		{
 			N: "migratePostData",
 			F: migratePostData,
-			R: []interface{}{&posts},
+			R: []interface{}{posts},
 		},
 	}
 

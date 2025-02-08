@@ -8,10 +8,10 @@ import (
 )
 
 // GetAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
-func GetAll[T any](cache Cacher, model T) (map[string]T, int64) {
+func GetAll[T any](cache Cacher, model T) (*map[string]T, int64) {
 	// An initialization check.
 	if cache == nil || database.RLocked {
-		return map[string]T{}, 0
+		return nil, 0
 	}
 
 	// Fetch all items as the map[string]interface{} map.
@@ -39,11 +39,16 @@ func GetAll[T any](cache Cacher, model T) (map[string]T, int64) {
 	// Write the count to the associated metric.
 	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
+	/*defer func() {
+		items = map[string]T{}
+	}()*/
+
 	// Return the lower count, because it reflects the actual valid items count.
 	if control < count {
-		return items, control
+		return &items, control
 	}
-	return items, count
+
+	return &items, count
 }
 
 // GetOne fetches just one very item from the given cache instance. As long as the function is generic, the type is asserted automatically, so the type passing is required. Returns the requested item and the its retrieval result as boolean.

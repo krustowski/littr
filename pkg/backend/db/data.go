@@ -126,11 +126,11 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 		return count, total, errors.New("empty data on input")
 	}
 
-	matrix := struct {
+	matrix := &struct {
 		Items map[string]T `json:"items"`
 	}{}
 
-	err = json.Unmarshal(rawData, &matrix)
+	err = json.Unmarshal(rawData, matrix)
 	if err != nil {
 		l.Error(err).Status(http.StatusInternalServerError).Log()
 		return count, total, err
@@ -152,7 +152,7 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 		count++
 	}
 
-	matrix = struct {
+	matrix = &struct {
 		Items map[string]T `json:"items"`
 	}{}
 
@@ -188,8 +188,14 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 
 	// base struct to map the data to JSON
 	matrix := struct {
-		Items map[string]T `json:"items"`
+		Items *map[string]T `json:"items"`
 	}{}
+
+	defer func() {
+		matrix = struct {
+			Items *map[string]T `json:"items"`
+		}{}
+	}()
 
 	var total int64
 
@@ -201,10 +207,6 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	if err != nil {
 		return &dumpReport{Error: err}
 	}
-
-	matrix = struct {
-		Items map[string]T `json:"items"`
-	}{}
 
 	// write dumped data to the file
 	if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
