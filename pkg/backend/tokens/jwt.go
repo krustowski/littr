@@ -42,6 +42,10 @@ func ParseRefreshToken(refreshToken string, secret string) *jwt.StandardClaims {
 		return []byte(secret), nil
 	})
 
+	if parsedRefreshToken == nil {
+		return nil
+	}
+
 	// Assert type pointer to StandardClaims.
 	return parsedRefreshToken.Claims.(*jwt.StandardClaims)
 }
