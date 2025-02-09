@@ -191,10 +191,19 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 		Items *map[string]T `json:"items"`
 	}{}
 
+	var (
+		jsonData []byte
+		err      error
+	)
+
 	defer func() {
+		*matrix.Items = map[string]T{}
+
 		matrix = struct {
 			Items *map[string]T `json:"items"`
 		}{}
+
+		jsonData = []byte{}
 	}()
 
 	var total int64
@@ -203,7 +212,7 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	matrix.Items, total = GetAll(cache, model)
 
 	// prepare the JSON byte stream
-	jsonData, err := json.Marshal(&matrix)
+	jsonData, err = json.Marshal(&matrix)
 	if err != nil {
 		return &dumpReport{Error: err}
 	}
