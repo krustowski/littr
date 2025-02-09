@@ -82,7 +82,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		refreshClaims := tokens.ParseRefreshToken(refreshCookie.Value, secret)
 
 		// If the refresh token is expired => user should relogin.
-		if refreshClaims.Valid() != nil {
+		if refreshClaims == nil || refreshClaims.Valid() != nil {
 			l.Msg("invalid/expired refresh token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 			return
 		}
