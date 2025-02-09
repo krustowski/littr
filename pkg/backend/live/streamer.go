@@ -72,11 +72,11 @@ var Streamer = &sse.Server{
 //	@Failure		500	{object}	nil		"A generic network problem when connecting to the stream."
 //	@Router			/live [get]
 func beat() {
-	l := common.NewLogger(nil, "pacemaker")
-
 	for {
 		// Break the loop if Streamer is nil.
 		if Streamer == nil {
+			l := common.NewLogger(nil, "pacemaker")
+
 			l.Msg("the SSE streamer is nil, stopping the pacemaker...").Status(http.StatusInternalServerError).Log()
 			break
 		}
