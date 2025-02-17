@@ -265,6 +265,8 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 
 			dev.Tags = tags
 
+			dev.Nickname = userID
+
 			newDevs = append(newDevs, dev)
 		}
 
