@@ -1,9 +1,10 @@
 package db
 
 import (
-	"encoding/json"
-	"errors"
+	"bytes"
+	"encoding/gob"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -34,7 +35,7 @@ func LoadAll() string {
 		loadOne(RequestCache, requestsFile, models.Request{})))
 
 	subs := makeLoadReport("subscriptions", wrapLoadOutput(
-		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
+		loadOne(SubscriptionCache, subscriptionsFile, models.Devices{})))
 
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
 		loadOne(TokenCache, tokensFile, models.Token{})))
@@ -109,13 +110,41 @@ func wrapLoadOutput(count, total int64, err error) load {
 	}
 }
 
-func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error) {
-	l := common.NewLogger(nil, "data load")
+type item interface {
+}
+
+func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int64, error) {
+	//l := common.NewLogger(nil, "data load")
 
 	var count int64
 	var total int64
 
-	rawData, err := os.ReadFile(filepath)
+	rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
+	if err != nil {
+		log.Fatal("read: ", err)
+	}
+
+	rbuf := bytes.NewReader(rb)
+	dec := gob.NewDecoder(rbuf)
+
+	var items []T
+	if err := dec.Decode(&items); err != nil {
+		log.Fatalf("decode: %s, err: %s", cache.GetName(), err)
+	}
+
+	for _, item := range items {
+		count++
+		if stored := cache.Store(item.GetID(), item); !stored {
+			log.Fatal(cache.GetName())
+		}
+		total++
+	}
+
+	//
+	//
+	//
+
+	/*rawData, err := os.ReadFile(filepath)
 	if err != nil {
 		l.Error(err).Status(http.StatusInternalServerError).Log()
 		return count, total, err
@@ -154,7 +183,7 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 
 	matrix = &struct {
 		Items map[string]T `json:"items"`
-	}{}
+	}{}*/
 
 	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
@@ -166,8 +195,14 @@ func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error
 //
 
 func prepareDumpReport(cacheName string, rep *dumpReport) string {
-	if rep.Error == nil {
-		return fmt.Sprintf("[%s] dumped: %d, ", cacheName, rep.Total)
+	if rep == nil || rep.Error == nil {
+		var total int
+
+		if rep != nil {
+			total = int(rep.Total)
+		}
+
+		return fmt.Sprintf("[%s] dumped: %d, ", cacheName, total)
 	}
 	return fmt.Sprintf("[%s] dump failed: %d (%s), ", cacheName, rep.Total, rep.Error.Error())
 }
@@ -181,13 +216,47 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
 	// check if the model is usable
-	if &model == nil {
+	/*if &model == nil {
 		l.Msg("nil pointer to model on input to").Status(http.StatusBadRequest).Log()
 		return &dumpReport{Total: 0, Error: fmt.Errorf("nil pointer to model on input")}
+	}*/
+
+	//
+	//  Experimental feature (memory dump do binary)
+	//
+
+	var items []T
+
+	rawItems, count := cache.Range()
+
+	for _, rawItem := range *rawItems {
+		item, ok := rawItem.(T)
+		if ok {
+			items = append(items, item)
+		}
 	}
 
+	var buf bytes.Buffer
+
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(items); err != nil {
+		l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
+		fmt.Printf("encode: %s", err.Error())
+		return nil
+	}
+
+	os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600)
+
+	buf.Reset()
+
+	return &dumpReport{Total: count}
+
+	//
+	//
+	//
+
 	// base struct to map the data to JSON
-	matrix := struct {
+	/*matrix := struct {
 		Items *map[string]T `json:"items"`
 	}{}
 
@@ -234,5 +303,5 @@ func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
 	}
 
 	// OK condition
-	return &dumpReport{Total: total}
+	return &dumpReport{Total: total}*/
 }

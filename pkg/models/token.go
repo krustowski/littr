@@ -18,3 +18,7 @@ type Token struct {
 	// Time to live, period of validity since the token creation.
 	TTL time.Duration `json:"ttl"`
 }
+
+func (t Token) GetID() string {
+	return t.Hash
+}

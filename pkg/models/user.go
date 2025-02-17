@@ -146,3 +146,7 @@ type UserStat struct {
 func (u User) Copy() *User {
 	return &u
 }
+
+func (u User) GetID() string {
+	return u.Nickname
+}

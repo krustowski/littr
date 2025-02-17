@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.15"
+        "version": "0.46.16"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3747,6 +3747,10 @@
         "models.Device": {
             "type": "object",
             "properties": {
+                "nickname": {
+                    "description": "Nickname is the identificator of such device's possessor.",
+                    "type": "string"
+                },
                 "subscription": {
                     "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`\nSubscription webpush.Subscription `json:\"subscription\"`",
                     "allOf": [
@@ -3900,11 +3904,8 @@
                     "description": "ReplyCount hold the count of replies for such post.",
                     "type": "integer"
                 },
-                "reply_to": {
-                    "description": "ReplyTo is a reference key to another post, that is being replied to.",
-                    "type": "integer"
-                },
                 "reply_to_id": {
+                    "description": "ReplyTo is a reference key to another post, that is being replied to.\nReplyTo   int    `json:\"reply_to\"`",
                     "type": "string"
                 },
                 "timestamp": {

@@ -8,15 +8,20 @@ import (
 )
 
 // Helper struct to see how the data is stored in the database. The map key is an userID parameter.
-type Devices struct {
+/*type Devices struct {
 	Devices map[string][]Device `json:"items"`
-}
+}*/
+
+type Devices []Device
 
 // SubscriptionDevice
 type Device struct {
 	// Unique identification of the app on the current device.
 	// https://go-app.dev/reference#Context
 	UUID string `json:"uuid"`
+
+	// Nickname is the identificator of such device's possessor.
+	Nickname string `json:"nickname"`
 
 	// Timestamp of the subscription creation.
 	TimeCreated time.Time `json:"time_created"`
@@ -41,4 +46,13 @@ type Subscription struct {
 type Keys struct {
 	Auth   string `json:"auth"`
 	P256dh string `json:"p256dh"`
+}
+
+func (dd Devices) GetID() string {
+	for _, dev := range dd {
+		if dev.Nickname != "" {
+			return dev.Nickname
+		}
+	}
+	return ""
 }

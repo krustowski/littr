@@ -20,3 +20,7 @@ type Request struct {
 	// Type is a helper field to differentiate the request's processor target.
 	Type string `json:"type"`
 }
+
+func (r Request) GetID() string {
+	return r.ID
+}

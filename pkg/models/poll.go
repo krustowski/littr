@@ -45,3 +45,7 @@ type PollOption struct {
 	// Counter hold a number of votes being committed to such option.
 	Counter int64 `json:"counter"`
 }
+
+func (p Poll) GetID() string {
+	return p.ID
+}

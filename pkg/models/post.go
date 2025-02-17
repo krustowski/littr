@@ -1,6 +1,8 @@
 package models
 
 import (
+	"bytes"
+	"fmt"
 	"time"
 )
 
@@ -27,7 +29,7 @@ type Post struct {
 	PollID string `json:"poll_id"`
 
 	// ReplyTo is a reference key to another post, that is being replied to.
-	ReplyTo   int    `json:"reply_to"`
+	//ReplyTo   int    `json:"reply_to"`
 	ReplyToID string `json:"reply_to_id"`
 
 	// ReactionCount counts the number of item's reactions.
@@ -38,4 +40,24 @@ type Post struct {
 
 	// Data is a helper field for the actual figure upload.
 	Data []byte `json:"data" swaggerignore:"true"`
+}
+
+func (p Post) MarshalBinary() []byte {
+	var buf bytes.Buffer
+
+	fmt.Fprintln(&buf, p.ID, p.Type, p.Nickname, p.Content, p.Figure, p.Timestamp, p.PollID, p.ReplyToID, p.ReactionCount, p.ReplyCount, p.Data)
+
+	return buf.Bytes()
+}
+
+func (p *Post) UnmarshalBinary(data *[]byte) error {
+	buf := bytes.NewBuffer(*data)
+
+	_, err := fmt.Fscanln(buf, p.ID, p.Type, p.Nickname, p.Content, p.Figure, p.Timestamp, p.PollID, p.ReplyToID, p.ReactionCount, p.ReplyCount, p.Data)
+
+	return err
+}
+
+func (p Post) GetID() string {
+	return p.ID
 }
