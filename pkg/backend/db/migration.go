@@ -324,6 +324,12 @@ func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
 				changed = true
 				devs[idx] = dev
 			}
+
+			if dev.Nickname == "" {
+				dev.Nickname = key
+				changed = true
+				devs[idx] = dev
+			}
 		}
 
 		if changed {
