@@ -36,7 +36,7 @@ func LoadAll() string {
 		loadOne(RequestCache, requestsFile, models.Request{})))
 
 	subs := makeLoadReport("subscriptions", wrapLoadOutput(
-		loadOne(SubscriptionCache, subscriptionsFile, models.Devices{})))
+		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
 
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
 		loadOne(TokenCache, tokensFile, models.Token{})))
@@ -114,7 +114,7 @@ func wrapLoadOutput(count, total int64, err error) load {
 type item interface {
 }
 
-func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int64, error) {
+func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error) {
 	l := common.NewLogger(nil, "data load")
 
 	var count int64
