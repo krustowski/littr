@@ -3,8 +3,9 @@ package db
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -61,7 +62,7 @@ func DumpAll() string {
 		dumpOne(RequestCache, requestsFile, models.Request{}))
 
 	report += prepareDumpReport("subscriptions",
-		dumpOne(SubscriptionCache, subscriptionsFile, []models.Device{}))
+		dumpOne(SubscriptionCache, subscriptionsFile, models.Devices{}))
 
 	report += prepareDumpReport("tokens",
 		dumpOne(TokenCache, tokensFile, models.Token{}))
@@ -114,12 +115,12 @@ type item interface {
 }
 
 func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int64, error) {
-	//l := common.NewLogger(nil, "data load")
+	l := common.NewLogger(nil, "data load")
 
 	var count int64
 	var total int64
 
-	rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
+	/*rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
 	if err != nil {
 		log.Fatal("read: ", err)
 	}
@@ -138,13 +139,13 @@ func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int6
 			log.Fatal(cache.GetName())
 		}
 		total++
-	}
+	}*/
 
 	//
 	//
 	//
 
-	/*rawData, err := os.ReadFile(filepath)
+	rawData, err := os.ReadFile(filepath)
 	if err != nil {
 		l.Error(err).Status(http.StatusInternalServerError).Log()
 		return count, total, err
@@ -183,7 +184,7 @@ func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int6
 
 	matrix = &struct {
 		Items map[string]T `json:"items"`
-	}{}*/
+	}{}
 
 	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
@@ -212,7 +213,7 @@ type dumpReport struct {
 	Error error
 }
 
-func dumpOne[T any](cache Cacher, filepath string, model T) *dumpReport {
+func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
 	// check if the model is usable
