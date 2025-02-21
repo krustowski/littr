@@ -6,7 +6,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -24,12 +24,12 @@ func (c *Content) Render() app.UI {
 
 		// snackbar
 		app.A().Href(c.toast.TLink).OnClick(c.onDismissToast).Body(
-			app.If(c.toast.TText != "",
-				app.Div().Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
+			app.If(c.toast.TText != "", func() app.UI {
+				return app.Div().Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),
-				),
-			),
+				)
+			}),
 		),
 
 		app.Div().Class("field prefix round fill").Style("border-radius", "8px").Body(
@@ -134,10 +134,12 @@ func (c *Content) Render() app.UI {
 				}),
 			),
 		),
-		app.If(c.loaderShow,
-			app.Div().Class("small-space"),
-			app.Progress().Class("circle center large deep-orange-border active"),
-		),
+		app.If(c.loaderShow, func() app.UI {
+			return app.Div().Body(
+				app.Div().Class("small-space"),
+				app.Progress().Class("circle center large deep-orange-border active"),
+			)
+		}),
 
 		app.Div().Class("large-space"),
 
@@ -180,9 +182,11 @@ func (c *Content) Render() app.UI {
 			),
 		),
 		app.Div().ID("page-end-anchor"),
-		app.If(c.loaderShow,
-			app.Div().Class("small-space"),
-			app.Progress().Class("circle center large deep-orange-border active"),
-		),
+		app.If(c.loaderShow, func() app.UI {
+			return app.Div().Body(
+				app.Div().Class("small-space"),
+				app.Progress().Class("circle center large deep-orange-border active"),
+			)
+		}),
 	)
 }

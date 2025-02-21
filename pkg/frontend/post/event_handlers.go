@@ -8,7 +8,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 // onClick is a callback function to post generic input (post, or poll).

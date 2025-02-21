@@ -15,7 +15,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/users"
 	"go.vxn.dev/littr/pkg/frontend/welcome"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 /*func render[T any](component interface{}) app.UI {

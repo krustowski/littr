@@ -4,7 +4,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type pageOptions struct {
@@ -29,10 +29,10 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 
 	toast := common.Toast{AppContext: &ctx}
 
-	if opts.Context == nil {
+	/*if opts.Context == (app.Context{}) {
 		toast.Text("app context pointer cannot be nil").Type("error").Dispatch(c, dispatch)
 		return nil, nil
-	}
+	}*/
 
 	//pageNo := c.pageNoToFetch
 	if c.refreshClicked {

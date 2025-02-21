@@ -6,7 +6,7 @@ import (
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type Content struct {
@@ -58,7 +58,7 @@ type Content struct {
 	newFigData []byte
 	newFigFile string
 
-	keyDownEventListener func()
+	//keyDownEventListener func()
 }
 
 func (c *Content) OnMount(ctx app.Context) {
@@ -71,7 +71,7 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	ctx.Handle("dismiss", c.handleDismiss)
 
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }
 
 func (c *Content) OnNav(ctx app.Context) {

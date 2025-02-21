@@ -3,7 +3,7 @@ package users
 import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 // onClick prolly acts like a callback function for the generic user flow's state ((un)flowed toggling).

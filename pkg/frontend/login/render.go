@@ -3,7 +3,7 @@ package login
 import (
 	"go.vxn.dev/littr/pkg/config"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -38,9 +38,9 @@ func (c *Content) Render() app.UI {
 		// login button
 		app.Div().Class("row center-align").Body(
 			app.Button().ID("login-button").Class("max shrink deep-orange7 white-text bold thicc").OnClick(c.onClick).Disabled(c.loginButtonDisabled).TabIndex(3).Body(
-				app.If(c.loginButtonDisabled,
-					app.Progress().Class("circle white-border small"),
-				),
+				app.If(c.loginButtonDisabled, func() app.UI {
+					return app.Progress().Class("circle white-border small")
+				}),
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("login"),
 					app.Text("Login"),
@@ -63,21 +63,21 @@ func (c *Content) Render() app.UI {
 		// register button
 		app.Div().Class("row center-align").Body(
 			// register button
-			app.If(config.IsRegistrationEnabled,
-				app.Button().Class("max shrink deep-orange7 white-text bold thicc").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+			app.If(config.IsRegistrationEnabled, func() app.UI {
+				return app.Button().Class("max shrink deep-orange7 white-text bold thicc").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
 					app.Span().Body(
 						app.I().Style("padding-right", "5px").Text("app_registration"),
 						app.Text("Register"),
 					),
-				),
-			).Else(
-				app.Button().Class("max shrink deep-orange7 white-text bold thicc").TabIndex(5).OnClick(nil).Disabled(true).Body(
+				)
+			}).Else(func() app.UI {
+				return app.Button().Class("max shrink deep-orange7 white-text bold thicc").TabIndex(5).OnClick(nil).Disabled(true).Body(
 					app.Span().Body(
 						app.I().Style("padding-right", "5px").Text("app_registration"),
 						app.Text("Registration disabled"),
 					),
-				),
-			),
+				)
+			}),
 		),
 		app.Div().Class("medium-space"),
 	)

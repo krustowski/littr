@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -50,6 +50,9 @@ var appHandler = &app.Handler{
 	Title:                   "littr nanoblogger",
 	Description:             "A simple nanoblogging platform",
 	Author:                  "krusty",
+	Domain:                  config.ServerUrl,
+	BackgroundColor:         "#000000",
+	ThemeColor:              "#000000",
 	LoadingLabel:            "loading...",
 	WasmContentLengthHeader: "X-Uncompressed-Content-Length",
 	Lang:                    "en",
@@ -65,23 +68,19 @@ var appHandler = &app.Handler{
 		"platform",
 		"social network",
 	},
-	AutoUpdateInterval: time.Minute * 1,
 	Icon: app.Icon{
-		//Maskable:   "/web/android-chrome-192x192.png",
-		Default:    "/web/android-chrome-192x192.png",
-		SVG:        "/web/android-chrome-512x512.svg",
-		Large:      "/web/android-chrome-512x512.png",
-		AppleTouch: "/web/apple-touch-icon.png",
+		Maskable: "/web/android-chrome-192x192.png",
+		Default:  "/web/android-chrome-192x192.png",
+		SVG:      "/web/android-chrome-512x512.svg",
+		Large:    "/web/android-chrome-512x512.png",
+		//AppleTouch: "/web/apple-touch-icon.png",
 	},
 	Image: "/web/android-chrome-512x512.svg",
-	//Domain: "www.littr.eu",
 	// Ensure the default light theme is dark.
 	Body: func() app.HTMLBody {
 		return app.Body().Class("dark")
 	},
-	BackgroundColor: "#000000",
-	ThemeColor:      "#000000",
-	Version:         os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
+	Version: os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
 	// Environment constants to be transferred to the app context.
 	Env: map[string]string{
 		"APP_ENVIRONMENT":      os.Getenv("APP_ENVIRONMENT"),

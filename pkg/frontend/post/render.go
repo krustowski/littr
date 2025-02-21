@@ -1,7 +1,7 @@
 package post
 
 import (
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -42,9 +42,9 @@ func (c *Content) Render() app.UI {
 		// New post button.
 		app.Div().Class("row").Body(
 			app.Button().ID("post").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
-				app.If(c.postButtonsDisabled,
-					app.Progress().Class("circle white-border small"),
-				),
+				app.If(c.postButtonsDisabled, func() app.UI {
+					return app.Progress().Class("circle white-border small")
+				}),
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("send"),
 					app.Text("Send"),
@@ -86,9 +86,9 @@ func (c *Content) Render() app.UI {
 		),
 		app.Div().Class("row").Body(
 			app.Button().ID("poll").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
-				app.If(c.postButtonsDisabled,
-					app.Progress().Class("circle white-border small"),
-				),
+				app.If(c.postButtonsDisabled, func() app.UI {
+					return app.Progress().Class("circle white-border small")
+				}),
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("send"),
 					app.Text("Send"),

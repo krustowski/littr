@@ -8,7 +8,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type Content struct {
@@ -63,10 +63,10 @@ type Content struct {
 
 	hashtag string
 
-	eventListener        func()
-	eventListenerMsg     func()
-	keyDownEventListener func()
-	dismissEventListener func()
+	//eventListener        func()
+	//eventListenerMsg     func()
+	//keyDownEventListener func()
+	//dismissEventListener func()
 }
 
 func (c *Content) OnMount(ctx app.Context) {
@@ -89,7 +89,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.deletePostModalShow = false
 	c.deleteModalButtonsDisabled = false
 
-	c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	//c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
 	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
 	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)

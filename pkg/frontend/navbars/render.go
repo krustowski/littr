@@ -9,7 +9,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (h *Header) Render() app.UI {
@@ -59,30 +59,30 @@ func (h *Header) Render() app.UI {
 		//Style("background-color", navbarColor).
 		Body(
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
-				app.If(h.authGranted,
-					app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
+				app.If(h.authGranted, func() app.UI {
+					return app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("build")),
-					),
-				).Else(
-					app.A().Class("").OnClick(nil).Body(),
-				),
+					)
+				}).Else(func() app.UI {
+					return app.A().Class("").OnClick(nil).Body()
+				}),
 
 				// show intallation button if available
-				app.If(h.appInstallable,
-					app.A().Class("button circle transparent").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
+				app.If(h.appInstallable, func() app.UI {
+					return app.A().Class("button circle transparent").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("download"),
 						),
-					),
-				// hotfix to keep the nav items' distances
-				).Else(
-					app.A().Class("").OnClick(nil).Body(),
-				),
+					)
+					// hotfix to keep the nav items' distances
+				}).Else(func() app.UI {
+					return app.A().Class("").OnClick(nil).Body()
+				}),
 
 				// app logout modal
-				app.If(h.modalLogoutShow,
-					app.Dialog().ID("logout-modal").Class("grey10 white-text active thicc").Body(
+				app.If(h.modalLogoutShow, func() app.UI {
+					return app.Dialog().ID("logout-modal").Class("grey10 white-text active thicc").Body(
 						app.Nav().Class("center-align").Body(
 							app.H5().Text("user"),
 						),
@@ -128,69 +128,69 @@ func (h *Header) Render() app.UI {
 								),
 							),
 						),
-					),
-				),
+					)
+				}),
 
 				// littr header
 				app.Div().Class("row center-align").Body(
 					// snackbar toast top
 					app.A().ID("snackbar-general-top-link").Href("").Body(
-						app.If(toastTopText != "",
-							app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Style("border-radius", "8px").Body(
+						app.If(toastTopText != "", func() app.UI {
+							return app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Style("border-radius", "8px").Body(
 							//app.I().Text("info"),
 							//app.Span().Text(toastText),
-							),
-						),
+							)
+						}),
 					),
 
 					// littr header
 					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
 						app.Span().Body(
 							app.Text(headerString),
-							app.If(app.Getenv("APP_ENVIRONMENT") != "prod",
-								app.Span().Class("col").Body(
+							app.If(app.Getenv("APP_ENVIRONMENT") != "prod", func() app.UI {
+								return app.Span().Class("col").Body(
 									app.Sup().Body(
-										app.If(app.Getenv("APP_ENVIRONMENT") == "stage",
-											app.Text(" (stage) "),
-										).Else(
-											app.Text(" (dev) "),
-										),
+										app.If(app.Getenv("APP_ENVIRONMENT") == "stage", func() app.UI {
+											return app.Text(" (stage) ")
+										}).Else(func() app.UI {
+											return app.Text(" (dev) ")
+										}),
 									),
-								),
-							),
+								)
+							}),
 						),
 					),
 
 					// snackbar toast bottom
 					app.A().ID("snackbar-general-bottom-link").Href("").Body(
-						app.If(toastBottomText != "",
-							app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Style("border-radius", "8px").Body(
+						app.If(toastBottomText != "", func() app.UI {
+							return app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Style("border-radius", "8px").Body(
 							//app.I().Text("info"),
 							//app.Span().Text(toastText),
-							),
-						),
+							)
+						}),
 					),
 				),
 
 				// app info modal
-				app.If(h.modalInfoShow,
-					app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc").Body(
+				app.If(h.modalInfoShow, func() app.UI {
+					return app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc").Body(
 						app.Article().Class("row white-text center-align border thicc").Body(
 							app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
 							app.H4().Body(
 								app.Span().Body(
 									app.Text("littr"),
-									app.If(app.Getenv("APP_ENVIRONMENT") != "prod",
-										app.Span().Class("col").Body(
+									app.If(app.Getenv("APP_ENVIRONMENT") != "prod", func() app.UI {
+										return app.Span().Class("col").Body(
 											app.Sup().Body(
-												app.If(app.Getenv("APP_ENVIRONMENT") == "stage",
-													app.Text(" (stage) "),
-												).Else(
-													app.Text(" (dev) "),
-												),
+												app.If(app.Getenv("APP_ENVIRONMENT") == "stage", func() app.UI {
+													return app.Text(" (stage) ")
+												}).Else(func() app.UI {
+													return app.Text(" (dev) ")
+												}),
 											),
-										),
-									),
+										)
+									}),
 								),
 							),
 						),
@@ -209,11 +209,11 @@ func (h *Header) Render() app.UI {
 							app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
 							app.P().Body(
 								app.Text("SSE status: "),
-								app.If(sseConnStatus == "connected",
-									app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold"),
-								).Else(
-									app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold"),
-								),
+								app.If(sseConnStatus == "connected", func() app.UI {
+									return app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold")
+								}).Else(func() app.UI {
+									return app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold")
+								}),
 							),
 						),
 
@@ -240,34 +240,34 @@ func (h *Header) Render() app.UI {
 								),
 							),
 						),
-					),
-				),
+					)
+				}),
 
 				// update button
-				app.If(h.updateAvailable,
-					app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
+				app.If(h.updateAvailable, func() app.UI {
+					return app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
 						app.Div().Class("badge blue-border blue-text border").Text("NEW"),
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("update"),
 						),
-					),
-				// hotfix to keep the nav items' distances
-				).Else(
-					app.A().Class("").OnClick(nil).Body(),
-				),
+					)
+					// hotfix to keep the nav items' distances
+				}).Else(func() app.UI {
+					return app.A().Class("").OnClick(nil).Body()
+				}),
 
 				// login/logout button
-				app.If(h.authGranted,
-					app.A().Class("button circle transparent").Text("user").Class("").OnClick(h.onClickShowLogoutModal).Title("user").Aria("label", "user").Body(
+				app.If(h.authGranted, func() app.UI {
+					return app.A().Class("button circle transparent").Text("user").Class("").OnClick(h.onClickShowLogoutModal).Title("user").Aria("label", "user").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("person")),
-					),
-				).Else(
-					app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
+					)
+				}).Else(func() app.UI {
+					return app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
 							app.Text("login")),
-					),
-				),
+					)
+				}),
 			),
 		)
 }
@@ -315,9 +315,9 @@ func (f *Footer) Render() app.UI {
 				),
 
 				app.A().Class("button circle transparent").Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
-					app.If(reqCount > 0,
-						app.Div().Class("badge border").Text(fmt.Sprintf("%d", reqCount)),
-					),
+					app.If(reqCount > 0, func() app.UI {
+						return app.Div().Class("badge border").Text(fmt.Sprintf("%d", reqCount))
+					}),
 					app.I().Class("large deep-orange-text").Body(
 						app.Text("group")),
 				),

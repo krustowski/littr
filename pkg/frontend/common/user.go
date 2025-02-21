@@ -7,7 +7,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 // LoadUser uses the app.Context pointer to load the encoded user string from the LocalStorage to decode it back to the models.User struct.

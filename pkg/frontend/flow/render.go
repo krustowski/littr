@@ -9,7 +9,7 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) sortPosts() []models.Post {
@@ -62,33 +62,32 @@ func (c *Content) Render() app.UI {
 		// page heading
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(
-				app.If(c.userFlowNick != "" && !c.isPost,
-					app.H5().Body(
+				app.If(c.userFlowNick != "" && !c.isPost, func() app.UI {
+					return app.H5().Body(
 						app.Text(c.userFlowNick+"'s flow"),
 
-						app.If(c.users[c.userFlowNick].Private,
-							app.Span().Class("bold").Body(
+						app.If(c.users[c.userFlowNick].Private, func() app.UI {
+							return app.Span().Class("bold").Body(
 								app.I().Text("lock"),
-							),
-						),
-					),
-				).ElseIf(c.singlePostID != "" && c.isPost,
-					app.H5().Text("single post and replies"),
-				).ElseIf(c.hashtag != "" && len(c.hashtag) < 20,
-					app.H5().Text("hashtag #"+c.hashtag),
-				).ElseIf(c.hashtag != "" && len(c.hashtag) >= 20,
-					app.H5().Text("hashtag"),
-				).Else(
-					app.H5().Text("flow"),
-					//app.P().Text("exclusive content incoming frfr"),
-				),
+							)
+						}),
+					)
+				}).ElseIf(c.singlePostID != "" && c.isPost, func() app.UI {
+					return app.H5().Text("single post and replies")
+				}).ElseIf(c.hashtag != "" && len(c.hashtag) < 20, func() app.UI {
+					return app.H5().Text("hashtag #" + c.hashtag)
+				}).ElseIf(c.hashtag != "" && len(c.hashtag) >= 20, func() app.UI {
+					return app.H5().Text("hashtag")
+				}).Else(func() app.UI {
+					return app.H5().Text("flow")
+				}),
 			),
 
 			app.Div().Class("small-padding").Body(
 				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("grey10 white-text bold thicc").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
-					app.If(c.refreshClicked,
-						app.Progress().Class("circle deep-orange-border small"),
-					),
+					app.If(c.refreshClicked, func() app.UI {
+						return app.Progress().Class("circle deep-orange-border small")
+					}),
 					app.Span().Body(
 						app.I().Style("padding-right", "5px").Text("refresh"),
 						app.Text("Refresh"),
@@ -98,47 +97,49 @@ func (c *Content) Render() app.UI {
 		),
 
 		// SingleUser view (profile mode)
-		app.If(c.userFlowNick != "" && !c.isPost,
-			app.Img().Class("center").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "15rem").Style("border-radius", "50%"),
-			app.Div().Class("row top-padding").Body(
-				/*;app.P().Class("max").Body(
-					app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
-					//app.B().Text(post.Nickname).Class("deep-orange-text"),
-				),*/
+		app.If(c.userFlowNick != "" && !c.isPost, func() app.UI {
+			return app.Div().Body(
+				app.Img().Class("center").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "15rem").Style("border-radius", "50%"),
+				app.Div().Class("row top-padding").Body(
+					/*;app.P().Class("max").Body(
+						app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
+						//app.B().Text(post.Nickname).Class("deep-orange-text"),
+					),*/
 
-				//app.If(c.users[c.userFlowNick].About != "",
-				app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
-				//),
-				app.If(c.user.FlowList[c.userFlowNick],
-					app.Button().ID(c.userFlowNick).Class("grey10 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Unfollow"),
-						),
-					),
-				).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"],
-					app.Button().ID(c.userFlowNick).Class("yellow10 white-text thicc").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("drafts"),
-							app.Text("Ask"),
-						),
-					),
-				).Else(
-					app.Button().ID(c.userFlowNick).Class("deep-orange7 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("add"),
-							app.Text("Follow"),
-						),
-					),
+					//app.If(c.users[c.userFlowNick].About != "",
+					app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
+					//),
+					app.If(c.user.FlowList[c.userFlowNick], func() app.UI {
+						return app.Button().ID(c.userFlowNick).Class("grey10 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+							app.Span().Body(
+								app.I().Style("padding-right", "5px").Text("close"),
+								app.Text("Unfollow"),
+							),
+						)
+					}).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"], func() app.UI {
+						return app.Button().ID(c.userFlowNick).Class("yellow10 white-text thicc").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+							app.Span().Body(
+								app.I().Style("padding-right", "5px").Text("drafts"),
+								app.Text("Ask"),
+							),
+						)
+					}).Else(func() app.UI {
+						return app.Button().ID(c.userFlowNick).Class("deep-orange7 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
+							app.Span().Body(
+								app.I().Style("padding-right", "5px").Text("add"),
+								app.Text("Follow"),
+							),
+						)
+					}),
 				),
-			),
-		),
+			)
+		}),
 
 		app.Div().Class("space"),
 
 		// post deletion modal
-		app.If(c.deletePostModalShow,
-			app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
+		app.If(c.deletePostModalShow, func() app.UI {
+			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("post deletion"),
 				),
@@ -161,43 +162,43 @@ func (c *Content) Render() app.UI {
 						),
 					),
 					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
-						app.If(c.deleteModalButtonsDisabled,
-							app.Progress().Class("circle white-border small"),
-						),
+						app.If(c.deleteModalButtonsDisabled, func() app.UI {
+							return app.Progress().Class("circle white-border small")
+						}),
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("delete"),
 							app.Text("Delete"),
 						),
 					),
 				),
-			),
-		),
+			)
+		}),
 
 		//app.Div().ID("overlay").Class("overlay").OnClick(c.onClickDismiss).Style("z-index", "50"),
 
 		// sketchy reply modal
-		app.If(c.modalReplyActive,
-			app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
+		app.If(c.modalReplyActive, func() app.UI {
+			return app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),
 				app.Div().Class("space"),
 
 				// Original content (text).
-				app.If(c.posts[c.interactedPostKey].Content != "",
-					app.Article().Class("reply black-text border thicc").Style("max-width", "100%").Body(
-						app.If(replySummary != "",
-							app.Details().Body(
+				app.If(c.posts[c.interactedPostKey].Content != "", func() app.UI {
+					return app.Article().Class("reply black-text border thicc").Style("max-width", "100%").Body(
+						app.If(replySummary != "", func() app.UI {
+							return app.Details().Body(
 								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 								app.Div().Class("space"),
 
 								app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
-							),
-						).Else(
-							app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
-						),
-					),
-				),
+							)
+						}).Else(func() app.UI {
+							return app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic")
+						}),
+					)
+				}),
 
 				app.Div().Class("field label textarea border extra deep-orange-text").Style("border-radius", "8px").Body(
 					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
@@ -221,9 +222,9 @@ func (c *Content) Render() app.UI {
 						),
 					),
 					app.Button().ID("reply").Class("max bold deep-orange7 white-text bold thicc").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
-						app.If(c.postButtonsDisabled,
-							app.Progress().Class("circle white-border small"),
-						),
+						app.If(c.postButtonsDisabled, func() app.UI {
+							return app.Progress().Class("circle white-border small")
+						}),
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("reply"),
 							app.Text("Reply"),
@@ -231,8 +232,8 @@ func (c *Content) Render() app.UI {
 					),
 				),
 				app.Div().Class("space"),
-			),
-		),
+			)
+		}),
 
 		// flow posts/articles
 		app.Table().Class("left-aligni border").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
@@ -390,8 +391,8 @@ func (c *Content) Render() app.UI {
 
 					return app.Tr().Class().Class("bottom-padding").Body(
 						// special system post
-						app.If(post.Nickname == "system",
-							app.Td().Class("align-left").Attr("touch-action", "none").Body(
+						app.If(post.Nickname == "system", func() app.UI {
+							return app.Td().Class("align-left").Attr("touch-action", "none").Body(
 								app.Article().Class("responsive border blue-border info thicc margin-top center-align").Body(
 									app.A().Href(systemLink).Body(
 										app.Span().Class("bold").Text(post.Content),
@@ -403,12 +404,12 @@ func (c *Content) Render() app.UI {
 										app.Text(postTimestamp),
 									),
 								),
-							),
+							)
 
-						// other posts
-						).Else(
+							// other posts
+						}).Else(func() app.UI {
 							//app.Td().Class("post align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).On("scroll", c.onScroll).Body(
-							app.Td().Class("align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
+							return app.Td().Class("align-left").Attr("data-author", post.Nickname).Attr("data-timestamp", post.Timestamp.UnixNano()).Attr("touch-action", "none").Body(
 
 								// post header (author avatar + name + link button)
 								app.Div().Class("row top-padding").Body(
@@ -425,63 +426,69 @@ func (c *Content) Render() app.UI {
 								),
 
 								// pic post
-								app.If(post.Type == "fig",
-									app.Article().Style("z-index", "5").Class("transparent medium no-margin thicc").Body(
-										app.If(c.loaderShowImage,
-											app.Div().Class("small-space"),
-											app.Div().Class("loader center large deep-orange active"),
-										),
-										//app.Img().Class("no-padding center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
-										app.Img().Class("no-padding center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
-									),
-
-								// reply + post
-								).Else(
-									app.If(post.ReplyToID != "",
-										app.Article().Class("black-text border reply thicc").Style("max-width", "100%").Body(
-											app.Div().Class("row max").Body(
-												app.If(previousDetailsSummary != "",
-													app.Details().Class("max").Body(
-														app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
-														app.Div().Class("space"),
-														app.Span().Class("bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-													),
-												).Else(
-													app.Span().Class("max bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-												),
-
-												app.Button().Title("link to original post").ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
-													app.I().Text("history"),
-												),
-											),
-										),
-									),
-
-									app.If(len(post.Content) > 0,
-										app.Article().Class("border thicc").Style("max-width", "100%").Body(
-											app.If(postDetailsSummary != "",
-												app.Details().Body(
-													app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
-													app.Div().Class("space"),
-													app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-												),
-											).Else(
-												app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
-											),
-										),
-									),
-
-									app.If(post.Figure != "",
-										app.Article().Style("z-index", "4").Class("transparent medium thicc").Body(
-											app.If(c.loaderShowImage,
+								app.If(post.Type == "fig", func() app.UI {
+									return app.Article().Style("z-index", "5").Class("transparent medium no-margin thicc").Body(
+										app.If(c.loaderShowImage, func() app.UI {
+											return app.Div().Body(
 												app.Div().Class("small-space"),
 												app.Div().Class("loader center large deep-orange active"),
-											),
-											//app.Img().Class("no-padding center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
-											app.Img().Class("no-padding center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
-										),
-									),
-								),
+											)
+										}),
+										//app.Img().Class("no-padding center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+										app.Img().Class("no-padding center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
+									)
+
+									// reply + post
+								}).Else(func() app.UI {
+									return app.Div().Body(
+										app.If(post.ReplyToID != "", func() app.UI {
+											return app.Article().Class("black-text border reply thicc").Style("max-width", "100%").Body(
+												app.Div().Class("row max").Body(
+													app.If(previousDetailsSummary != "", func() app.UI {
+														return app.Details().Class("max").Body(
+															app.Summary().Text(previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+															app.Div().Class("space"),
+															app.Span().Class("bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+														)
+													}).Else(func() app.UI {
+														return app.Span().Class("max bold").Text(previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
+													}),
+
+													app.Button().Title("link to original post").ID(post.ReplyToID).Class("transparent circle").OnClick(c.onClickLink).Disabled(c.buttonDisabled).Body(
+														app.I().Text("history"),
+													),
+												),
+											)
+										}),
+
+										app.If(len(post.Content) > 0, func() app.UI {
+											return app.Article().Class("border thicc").Style("max-width", "100%").Body(
+												app.If(postDetailsSummary != "", func() app.UI {
+													return app.Details().Body(
+														app.Summary().Text(postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+														app.Div().Class("space"),
+														app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+													)
+												}).Else(func() app.UI {
+													return app.Span().Text(post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
+												}),
+											)
+										}),
+
+										app.If(post.Figure != "", func() app.UI {
+											return app.Article().Style("z-index", "4").Class("transparent medium thicc").Body(
+												app.If(c.loaderShowImage, func() app.UI {
+													return app.Div().Body(
+														app.Div().Class("small-space"),
+														app.Div().Class("loader center large deep-orange active"),
+													)
+												}),
+												//app.Img().Class("no-padding center middle lazy").Src(pixDestination).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy"),
+												app.Img().Class("no-padding center middle lazy").Src(imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(c.onClickImage).ID(post.ID),
+											)
+										}),
+									)
+								}),
 
 								// post footer (timestamp + reply buttom + star/delete button)
 								app.Div().Class("row").Body(
@@ -489,39 +496,47 @@ func (c *Content) Render() app.UI {
 										//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
 										app.Text(postTimestamp),
 									),
-									app.If(post.Nickname != "system",
-										app.If(post.ReplyCount > 0,
-											app.B().Title("reply count").Text(post.ReplyCount).Class("left-padding"),
-										),
-										app.Button().Title("reply").ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
-											app.I().Text("reply"),
-										),
-									),
-									app.If(c.user.Nickname == post.Nickname,
-										app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
-										//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
-										app.Button().Title("delete this post").ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
-											app.I().Text("delete"),
-										),
-									).Else(
-										app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
-										app.Button().Title("increase the reaction count").ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
-											//app.I().Text("bomb"),			// literal bomb
-											//app.I().Text("nest_eco_leaf"),	// leaf
-											app.I().Text("ac_unit"), // snowflake
-										),
-									),
+									app.If(post.Nickname != "system", func() app.UI {
+										return app.Div().Body(
+											app.If(post.ReplyCount > 0, func() app.UI {
+												return app.B().Title("reply count").Text(post.ReplyCount).Class("left-padding")
+											}),
+											app.Button().Title("reply").ID(key).Class("transparent circle").OnClick(c.onClickReply).Disabled(c.buttonDisabled).Body(
+												app.I().Text("reply"),
+											),
+										)
+									}),
+									app.If(c.user.Nickname == post.Nickname, func() app.UI {
+										return app.Div().Body(
+											app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
+											//app.Button().ID(key).Class("transparent circle").OnClick(c.onClickDelete).Disabled(c.buttonDisabled).Body(
+											app.Button().Title("delete this post").ID(key).Class("transparent circle").OnClick(c.onClickDeleteButton).Disabled(c.buttonDisabled).Body(
+												app.I().Text("delete"),
+											),
+										)
+									}).Else(func() app.UI {
+										return app.Div().Body(
+											app.B().Title("reaction count").Text(post.ReactionCount).Class("left-padding"),
+											app.Button().Title("increase the reaction count").ID(key).Class("transparent circle").OnClick(c.onClickStar).Disabled(c.buttonDisabled).Attr("touch-action", "none").Body(
+												//app.I().Text("bomb"),			// literal bomb
+												//app.I().Text("nest_eco_leaf"),	// leaf
+												app.I().Text("ac_unit"), // snowflake
+											),
+										)
+									}),
 								),
-							),
-						),
+							)
+						}),
 					)
 				}),
 			),
 		),
 		app.Div().ID("page-end-anchor"),
-		app.If(c.loaderShow,
-			app.Div().Class("small-space"),
-			app.Progress().Class("circle center large deep-orange-border active"),
-		),
+		app.If(c.loaderShow, func() app.UI {
+			return app.Div().Body(
+				app.Div().Class("small-space"),
+				app.Progress().Class("circle center large deep-orange-border active"),
+			)
+		}),
 	)
 }

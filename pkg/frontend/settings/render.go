@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -31,17 +31,17 @@ func (c *Content) Render() app.UI {
 		// Logged user's info.
 		app.Article().Class("row border thicc").Body(
 			app.I().Text("person").Class(""),
-			app.If(c.user.Nickname != "",
-				app.P().Class("max").Body(
+			app.If(c.user.Nickname != "", func() app.UI {
+				return app.P().Class("max").Body(
 					app.Span().Text("Logged as: "),
 					app.Span().Class("bold deep-orange-text").Text(c.user.Nickname),
 					app.Div().Class("small-space"),
 					app.Span().Text("E-mail: "),
 					app.Span().Class("bold deep-orange-text").Text(c.user.Email),
-				),
-			).Else(
-				app.Progress().Class("circle deep-orange-border active"),
-			),
+				)
+			}).Else(func() app.UI {
+				return app.Progress().Class("circle deep-orange-border active")
+			}),
 		),
 
 		// Gravatar linking info.
@@ -211,8 +211,8 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Subscription deletion modal.
-		app.If(c.deleteSubscriptionModalShow,
-			app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
+		app.If(c.deleteSubscriptionModalShow, func() app.UI {
+			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("subscription deletion"),
 				),
@@ -240,8 +240,8 @@ func (c *Content) Render() app.UI {
 						),
 					),
 				),
-			),
-		),
+			)
+		}),
 
 		// Reply notification switch.
 		app.Div().Class("field middle-align").Body(
@@ -251,17 +251,21 @@ func (c *Content) Render() app.UI {
 				),
 				app.Label().Class("switch icon").Body(
 					// A nasty workaround to ensure the switch to be updated "correctly".
-					app.If(c.subscription.Replies,
-						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-						app.Span().Body(
-							app.I().Text("notifications"),
-						),
-					).Else(
-						app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-						app.Span().Body(
-							app.I().Text("notifications"),
-						),
-					),
+					app.If(c.subscription.Replies, func() app.UI {
+						return app.Div().Body(
+							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+							app.Span().Body(
+								app.I().Text("notifications"),
+							),
+						)
+					}).Else(func() app.UI {
+						return app.Div().Body(
+							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+							app.Span().Body(
+								app.I().Text("notifications"),
+							),
+						)
+					}),
 				),
 			),
 		),
@@ -274,77 +278,83 @@ func (c *Content) Render() app.UI {
 				),
 				app.Label().Class("switch icon").Body(
 					// A nasty workaround to ensure the switch to be updated "correctly".
-					app.If(c.subscription.Mentions,
-						app.Input().Type("checkbox").ID("mention-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-						app.Span().Body(
-							app.I().Text("notifications"),
-						),
-					).Else(
-						app.Input().Type("checkbox").ID("mention-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-						app.Span().Body(
-							app.I().Text("notifications"),
-						),
-					),
+					app.If(c.subscription.Mentions, func() app.UI {
+						return app.Div().Body(
+							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+							app.Span().Body(
+								app.I().Text("notifications"),
+							),
+						)
+					}).Else(func() app.UI {
+						return app.Div().Body(
+							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
+							app.Span().Body(
+								app.I().Text("notifications"),
+							),
+						)
+					}),
 				),
 			),
 		),
 
 		// Print list of subscribed devices.
-		app.If(devicesToShow > 0,
-			app.Div().Class("row").Body(
-				app.Div().Class("max padding").Body(
-					app.H6().Text("registered devices"),
+		app.If(devicesToShow > 0, func() app.UI {
+			return app.Div().Body(
+				app.Div().Class("row").Body(
+					app.Div().Class("max padding").Body(
+						app.H6().Text("registered devices"),
+					),
 				),
-			),
 
-			// Loop over the array of subscribed devices.
-			app.Div().Class().Body(
-				app.Range(c.devices).Slice(func(i int) app.UI {
-					// Take the i-th device.
-					dev := c.devices[i]
-					if dev.UUID == "" {
-						return nil
-					}
+				// Loop over the array of subscribed devices.
+				app.Div().Class().Body(
+					app.Range(c.devices).Slice(func(i int) app.UI {
+						// Take the i-th device.
+						dev := c.devices[i]
+						if dev.UUID == "" {
+							return nil
+						}
 
-					deviceText := "Device"
-					if dev.UUID == c.thisDeviceUUID {
-						deviceText = "This device"
-					}
+						deviceText := "Device"
+						if dev.UUID == c.thisDeviceUUID {
+							deviceText = "This device"
+						}
 
-					// Append the webpush endpoint in the heading.
-					u, err := url.Parse(dev.Subscription.Endpoint)
-					if err != nil {
-						log.Println(err.Error())
-						return nil
-					}
-					deviceText += " (" + u.Host + ")"
+						// Append the webpush endpoint in the heading.
+						u, err := url.Parse(dev.Subscription.Endpoint)
+						if err != nil {
+							log.Println(err.Error())
+							return nil
+						}
+						deviceText += " (" + u.Host + ")"
 
-					// Compose the component to show (a device's infobox).
-					return app.Article().Class("border thicc").Body(
-						app.Div().Class("row max").Body(
-							app.Div().Class("max").Body(
-								app.P().Class("bold").Body(
-									app.Text(deviceText),
+						// Compose the component to show (a device's infobox).
+						return app.Article().Class("border thicc").Body(
+							app.Div().Class("row max").Body(
+								app.Div().Class("max").Body(
+									app.P().Class("bold").Body(
+										app.Text(deviceText),
+									),
+									app.P().Body(
+										app.Text("Subscribed to: "),
+										app.Span().Text(dev.Tags).Class("deep-orange-text"),
+									),
+									app.P().Body(
+										app.Text("Registered: "),
+										app.Text(dev.TimeCreated),
+									),
 								),
-								app.P().Body(
-									app.Text("Subscribed to: "),
-									app.Span().Text(dev.Tags).Class("deep-orange-text"),
-								),
-								app.P().Body(
-									app.Text("Registered: "),
-									app.Text(dev.TimeCreated),
+
+								app.Button().ID(dev.UUID).Class("transparent circle").OnClick(c.onClickDeleteSubscriptionModalShow).Disabled(c.settingsButtonDisabled).Body(
+									app.I().Text("delete"),
 								),
 							),
-
-							app.Button().ID(dev.UUID).Class("transparent circle").OnClick(c.onClickDeleteSubscriptionModalShow).Disabled(c.settingsButtonDisabled).Body(
-								app.I().Text("delete"),
-							),
-						),
-					)
-				}),
-			),
-			app.Div().Class("space"),
-		),
+						)
+					}),
+				),
+				app.Div().Class("space"),
+			)
+		}),
 
 		//
 		// Section passphrase change
@@ -456,8 +466,8 @@ func (c *Content) Render() app.UI {
 		//
 
 		// Account deletion modal.
-		app.If(c.deleteAccountModalShow,
-			app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
+		app.If(c.deleteAccountModalShow, func() app.UI {
+			return app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("account deletion"),
 				),
@@ -485,8 +495,8 @@ func (c *Content) Render() app.UI {
 						),
 					),
 				),
-			),
-		),
+			)
+		}),
 
 		app.Div().Class("row").Body(
 			app.Div().Class("max padding").Body(

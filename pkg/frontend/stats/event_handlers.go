@@ -1,7 +1,7 @@
 package stats
 
 import (
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {

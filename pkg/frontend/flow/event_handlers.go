@@ -6,7 +6,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) onClickFollow(ctx app.Context, e app.Event) {

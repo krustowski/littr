@@ -7,7 +7,7 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type Content struct {
@@ -37,7 +37,7 @@ type Content struct {
 
 	processingScroll bool
 
-	keyDownEventListener func()
+	//keyDownEventListener func()
 
 	singlePollID string
 }
@@ -165,6 +165,6 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.pageNo = 1
 
 	// Tweaked EventListeners (may cause memory leaks when not closed properly!)
-	c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 }

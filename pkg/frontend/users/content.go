@@ -5,14 +5,14 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type Content struct {
 	app.Compo
 
-	scrollEventListener  func()
-	keyDownEventListener func()
+	//scrollEventListener  func()
+	//keyDownEventListener func()
 
 	//polls map[string]models.Poll `json:"polls"`
 	//posts map[string]models.Post `json:"posts"`
@@ -124,8 +124,8 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.pagination = 0
 	c.pageNo = 1
 
-	c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 
 	// hotfix to catch panic
 	//c.polls = make(map[string]models.Poll)

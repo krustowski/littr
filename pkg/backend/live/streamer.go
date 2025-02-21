@@ -24,11 +24,11 @@ var Streamer = &sse.Server{
 	// Joe is the default pubsub service provider.
 	Provider: &sse.Joe{
 		// Replays only valid events, that expire after 5 minutes.
-		ReplayProvider: &sse.ValidReplayProvider{
+		/*ReplayProvider: &sse.ValidReplayProvider{
 			TTL:        time.Minute * 5,
 			GCInterval: time.Minute,
 			AutoIDs:    true,
-		},
+		},*/
 	},
 	// Custom callback function when a SSE session is started.
 	OnSession: func(s *sse.Session) (sse.Subscription, bool) {

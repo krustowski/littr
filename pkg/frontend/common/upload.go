@@ -3,7 +3,7 @@ package common
 import (
 	"fmt"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func ReadFile(file app.Value) (data []byte, err error) {

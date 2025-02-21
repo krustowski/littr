@@ -3,7 +3,7 @@ package tos
 import (
 	"go.vxn.dev/littr/pkg/frontend/common"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -17,12 +17,12 @@ func (c *Content) Render() app.UI {
 
 		// snackbar
 		app.A().Href(c.toast.TLink).OnClick(c.onClickDismiss).Body(
-			app.If(c.toast.TText != "",
-				app.Div().Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
+			app.If(c.toast.TText != "", func() app.UI {
+				return app.Div().Class("snackbar white-text top active "+common.ToastColor(c.toast.TType)).Body(
 					app.I().Text("error"),
 					app.Span().Text(c.toast.TText),
-				),
-			),
+				)
+			}),
 		),
 
 		app.Div().Class("padding responsive").Body(

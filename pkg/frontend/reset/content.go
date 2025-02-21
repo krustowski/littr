@@ -6,7 +6,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type Content struct {
@@ -26,7 +26,7 @@ type Content struct {
 
 func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("dismiss", c.handleDismiss)
-	c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 
 	url := strings.Split(ctx.Page().URL().Path, "/")
 

@@ -11,6 +11,8 @@ const (
 	// Default HTTP server port if not specified elsewhere.
 	DEFAULT_PORT = "8054"
 
+	DEFAULT_APP_URL = "https://www.littr.eu"
+
 	// Default HTTP port to run Go tests.
 	DEFAULT_TEST_PORT     = "8777"
 	DEFAULT_TEST_SSE_PORT = "8778"
@@ -25,6 +27,7 @@ const (
 	// The anti-duplication const(s).
 	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
 	APP_PORT             = "APP_PORT"
+	APP_URL_MAIN         = "APP_URL_MAIN"
 	DOCKER_INTERNAL_PORT = "DOCKER_INTERNAL_PORT"
 	LIMITER_DISABLED     = "LIMITER_DISABLED"
 	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
@@ -92,6 +95,14 @@ var (
 		}
 
 		return DEFAULT_PORT
+	}()
+
+	ServerUrl = func() string {
+		if os.Getenv(APP_URL_MAIN) != "" {
+			return os.Getenv(APP_URL_MAIN)
+		}
+
+		return DEFAULT_APP_URL
 	}()
 )
 

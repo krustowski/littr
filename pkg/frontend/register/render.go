@@ -3,7 +3,7 @@ package register
 import (
 	"go.vxn.dev/littr/pkg/config"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
@@ -81,28 +81,28 @@ func (c *Content) Render() app.UI {
 
 		// Register button.
 		app.Div().Class("row center-align").Body(
-			app.If(config.IsRegistrationEnabled,
-				app.Div().Class("row max").Body(
+			app.If(config.IsRegistrationEnabled, func() app.UI {
+				return app.Div().Class("row max").Body(
 					app.Button().ID("register-button").Class("max shrink center deep-orange7 white-text bold thicc").OnClick(c.onClickRegister).Disabled(c.registerButtonDisabled).TabIndex(5).Body(
-						app.If(c.registerButtonDisabled,
-							app.Progress().Class("circle white-border small"),
-						),
+						app.If(c.registerButtonDisabled, func() app.UI {
+							return app.Progress().Class("circle white-border small")
+						}),
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("app_registration"),
 							app.Text("Register"),
 						),
 					),
-				),
-			).Else(
-				app.Div().Class("row max").Body(
+				)
+			}).Else(func() app.UI {
+				return app.Div().Class("row max").Body(
 					app.Button().Class("max shrink deep-orange7 white-text bold thicc").OnClick(nil).Disabled(true).Body(
 						app.Span().Body(
 							app.I().Style("padding-right", "5px").Text("app_registration"),
 							app.Text("Registration disabled"),
 						),
 					),
-				),
-			),
+				)
+			}),
 		),
 
 		app.Div().Class("medium-space"),
