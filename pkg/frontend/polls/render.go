@@ -39,7 +39,7 @@ func (c *Content) Render() app.UI {
 
 		if pos > end {
 			// kill the eventListener (observers scrolling)
-			c.scrollEventListener()
+			//c.scrollEventListener()
 			c.paginationEnd = true
 
 			return (end)
