@@ -29,8 +29,7 @@ func (p *PostHeader) Render() app.UI {
 			Title:   "user's avatar",
 			Class:   "responsive max left",
 			Src:     p.PostAvatarURL,
-			Width:   "60px",
-			Radius:  "50%",
+			Styles:  map[string]string{"max-width": "60px", "border-radius": "50%"},
 			OnClick: p.OnClickUser,
 		},
 

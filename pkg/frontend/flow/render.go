@@ -381,7 +381,8 @@ func (c *Content) Render() app.UI {
 			),
 		),*/
 
-		&atoms.Anchor{
+		&atoms.Loader{
+			ID:         "page-end-anchor",
 			ShowLoader: c.loaderShow,
 		},
 	)

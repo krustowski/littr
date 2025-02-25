@@ -116,24 +116,18 @@ func (p *PostBody) Render() app.UI {
 
 		app.If(p.Post.Figure != "" && p.Post.Nickname != "system", func() app.UI {
 			return app.Article().Style("z-index", "4").Class("transparent medium thicc").Body(
-				app.If(p.LoaderShowImage, func() app.UI {
-					return app.Div().Body(
-						app.Div().Class("small-space"),
-						app.Div().Class("loader center large deep-orange active"),
-					)
-				}),
+				&atoms.Loader{
+					ShowLoader: p.LoaderShowImage,
+				},
 
-				app.Img().Class("no-padding center middle lazy").Src(p.imgSrc).Style("max-width", "100%").Style("max-height", "100%").Attr("loading", "lazy").OnClick(p.OnClickImage).ID(p.Post.ID),
-				/*&atoms.Image{
-					ID:    p.Post.ID,
-					Src:   p.imgSrc,
-					Class: "no-padding center middle lazy",
-					//Width:   "100%",
-					//Height:  "100%",
-					Radius:  "100%",
+				&atoms.Image{
+					ID:      p.Post.ID,
+					Src:     p.imgSrc,
+					Class:   "no-padding center middle lazy",
 					OnClick: p.OnClickImage,
+					Styles:  map[string]string{"max-height": "100%", "max-width": "100%"},
 					Attr:    map[string]string{"loading": "lazy"},
-				},*/
+				},
 			)
 		}),
 	)

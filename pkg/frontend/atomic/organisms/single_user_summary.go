@@ -25,8 +25,7 @@ func (s *SingleUserSummary) Render() app.UI {
 				&atoms.Image{
 					Class:  "center",
 					Src:    s.SingleUser.AvatarURL,
-					Width:  "15rem",
-					Radius: "50%",
+					Styles: map[string]string{"max-width": "15rem", "border-radius": "50%"},
 				},
 
 				app.Div().Class("row top-padding").Body(
