@@ -1,12 +1,10 @@
 package flow
 
 import (
-	"net/url"
 	"sort"
-	"strings"
-	"time"
 
-	"go.vxn.dev/littr/pkg/config"
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -35,14 +33,6 @@ func (c *Content) sortPosts() []models.Post {
 		sortedPosts = append(sortedPosts, sortedPost)
 	}
 
-	return sortedPosts
-}
-
-func (c *Content) Render() app.UI {
-	counter := 0
-
-	sortedPosts := c.sortPosts()
-
 	// order posts by timestamp DESC
 	sort.SliceStable(sortedPosts, func(i, j int) bool {
 		if c.singlePostID != "" {
@@ -52,11 +42,11 @@ func (c *Content) Render() app.UI {
 		return sortedPosts[i].Timestamp.After(sortedPosts[j].Timestamp)
 	})
 
-	// compose a summary of a long post to be replied to
-	replySummary := ""
-	if c.modalReplyActive && len(c.posts[c.interactedPostKey].Content) > config.MaxPostLength {
-		replySummary = c.posts[c.interactedPostKey].Content[:config.MaxPostLength/10] + "- [...]"
-	}
+	return sortedPosts
+}
+
+func (c *Content) Render() app.UI {
+	//counter := 0
 
 	return app.Main().Class("responsive").Body(
 		// page heading
@@ -99,37 +89,43 @@ func (c *Content) Render() app.UI {
 		// SingleUser view (profile mode)
 		app.If(c.userFlowNick != "" && !c.isPost, func() app.UI {
 			return app.Div().Body(
-				app.Img().Class("center").Src(c.users[c.userFlowNick].AvatarURL).Style("max-width", "15rem").Style("border-radius", "50%"),
-				app.Div().Class("row top-padding").Body(
-					/*;app.P().Class("max").Body(
-						app.A().Class("bold deep-orange-text").Text(c.singlePostID).ID(c.singlePostID),
-						//app.B().Text(post.Nickname).Class("deep-orange-text"),
-					),*/
+				&atoms.Image{
+					Class:  "center",
+					Src:    c.users[c.userFlowNick].AvatarURL,
+					Width:  "15rem",
+					Radius: "50%",
+				},
 
-					//app.If(c.users[c.userFlowNick].About != "",
+				app.Div().Class("row top-padding").Body(
 					app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
-					//),
+
 					app.If(c.user.FlowList[c.userFlowNick], func() app.UI {
-						return app.Button().ID(c.userFlowNick).Class("grey10 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-							app.Span().Body(
-								app.I().Style("padding-right", "5px").Text("close"),
-								app.Text("Unfollow"),
-							),
-						)
+						return &atoms.Button{
+							ID:       c.userFlowNick,
+							Class:    "grey10 white-text thicc",
+							Icon:     "close",
+							Text:     "Unfollow",
+							OnClick:  c.onClickFollow,
+							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
+						}
 					}).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"], func() app.UI {
-						return app.Button().ID(c.userFlowNick).Class("yellow10 white-text thicc").OnClick(nil).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-							app.Span().Body(
-								app.I().Style("padding-right", "5px").Text("drafts"),
-								app.Text("Ask"),
-							),
-						)
+						return &atoms.Button{
+							ID:       c.userFlowNick,
+							Class:    "yellow10 white-text thicc",
+							Icon:     "drafts",
+							Text:     "Ask",
+							OnClick:  nil,
+							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
+						}
 					}).Else(func() app.UI {
-						return app.Button().ID(c.userFlowNick).Class("deep-orange7 white-text thicc").OnClick(c.onClickFollow).Disabled(c.buttonDisabled || c.userFlowNick == c.user.Nickname).Body(
-							app.Span().Body(
-								app.I().Style("padding-right", "5px").Text("add"),
-								app.Text("Follow"),
-							),
-						)
+						return &atoms.Button{
+							ID:       c.userFlowNick,
+							Class:    "deep-orange7 white-text thicc",
+							Icon:     "add",
+							Text:     "Follow",
+							OnClick:  c.onClickFollow,
+							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
+						}
 					}),
 				),
 			)
@@ -137,106 +133,44 @@ func (c *Content) Render() app.UI {
 
 		app.Div().Class("space"),
 
-		// post deletion modal
-		app.If(c.deletePostModalShow, func() app.UI {
-			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("post deletion"),
-				),
+		// Post deletion modal.
+		&organisms.ModalPostDelete{
+			ModalShow:            c.deletePostModalShow,
+			ModalButtonsDisabled: c.deleteModalButtonsDisabled,
+			OnClickDismiss:       c.onClickDismiss,
+			OnClickDelete:        c.onClickDelete,
+		},
 
-				app.Div().Class("space"),
+		// Post reply modal.
+		&organisms.ModalPostReply{
+			PostOriginal:         c.posts[c.interactedPostKey],
+			ModalShow:            c.modalReplyActive,
+			ModalButtonsDisabled: c.postButtonsDisabled,
+			OnClickDismiss:       c.onClickDismiss,
+			OnClickReply:         c.onClickReply,
+			OnFigureUpload:       c.handleFigUpload,
+		},
 
-				app.Article().Class("row amber-border white-text border warn thicc").Body(
-					app.I().Text("warning").Class("amber-text"),
-					app.P().Class("max bold").Body(
-						app.Span().Text("Are you sure you want to delete your post?"),
-					),
-				),
-				app.Div().Class("space"),
-
-				app.Div().Class("row").Body(
-					app.Button().Class("max bold black white-text thicc").OnClick(c.onClickDismiss).Disabled(c.deleteModalButtonsDisabled).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Cancel"),
-						),
-					),
-					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDelete).Disabled(c.deleteModalButtonsDisabled).Body(
-						app.If(c.deleteModalButtonsDisabled, func() app.UI {
-							return app.Progress().Class("circle white-border small")
-						}),
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("delete"),
-							app.Text("Delete"),
-						),
-					),
-				),
-			)
-		}),
-
-		//app.Div().ID("overlay").Class("overlay").OnClick(c.onClickDismiss).Style("z-index", "50"),
-
-		// sketchy reply modal
-		app.If(c.modalReplyActive, func() app.UI {
-			return app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("reply"),
-				),
-				app.Div().Class("space"),
-
-				// Original content (text).
-				app.If(c.posts[c.interactedPostKey].Content != "", func() app.UI {
-					return app.Article().Class("reply black-text border thicc").Style("max-width", "100%").Body(
-						app.If(replySummary != "", func() app.UI {
-							return app.Details().Body(
-								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
-								app.Div().Class("space"),
-
-								app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic"),
-							)
-						}).Else(func() app.UI {
-							return app.Span().Class("bold").Text(c.posts[c.interactedPostKey].Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic")
-						}),
-					)
-				}),
-
-				app.Div().Class("field label textarea border extra deep-orange-text").Style("border-radius", "8px").Body(
-					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
-					app.Textarea().Class("active").Name("replyPost").Text(c.replyPostContent).OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).ID("reply-textarea").OnBlur(c.onTextareaBlur),
-					app.Label().Text("Reply to: "+c.posts[c.interactedPostKey].Nickname).Class("active deep-orange-text"),
-					//app.Label().Text("text").Class("active"),
-				),
-				app.Div().Class("field label border extra deep-orange-text").Style("border-radius", "8px").Body(
-					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/*"),
-					app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-					app.Label().Text("Image").Class("active deep-orange-text"),
-					app.I().Text("image"),
-				),
-
-				// Reply buttons.
-				app.Div().Class("row").Body(
-					app.Button().Class("max bold black white-text bold thicc").OnClick(c.onClickDismiss).Disabled(c.postButtonsDisabled).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Cancel"),
-						),
-					),
-					app.Button().ID("reply").Class("max bold deep-orange7 white-text bold thicc").OnClick(c.onClickPostReply).Disabled(c.postButtonsDisabled).Body(
-						app.If(c.postButtonsDisabled, func() app.UI {
-							return app.Progress().Class("circle white-border small")
-						}),
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("reply"),
-							app.Text("Reply"),
-						),
-					),
-				),
-				app.Div().Class("space"),
-			)
-		}),
+		// The very post feed.
+		&organisms.PostFeed{
+			Posts:               c.posts,
+			Users:               c.users,
+			LoaderShowImage:     c.loaderShowImage,
+			ButtonsDisabled:     c.buttonDisabled,
+			LoggedUserNickname:  c.user.Nickname,
+			SortedPosts:         c.sortPosts(),
+			OnClickImage:        c.onClickImage,
+			OnClickStar:         c.onClickStar,
+			OnClickReply:        c.onClickReply,
+			OnClickLink:         c.onClickLink,
+			OnClickDeleteButton: c.onClickDeleteButton,
+			OnClickUser:         c.onClickUserFlow,
+			OnMouseEnter:        c.onMouseEnter,
+			OnMouseLeave:        c.onMouseLeave,
+		},
 
 		// flow posts/articles
-		app.Table().Class("left-aligni border").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
+		/*app.Table().Class("left-aligni border").ID("table-flow").Style("padding", "0 0 2em 0").Style("border-spacing", "0.1em").Body(
 			// table body
 			app.TBody().Body(
 				//app.Range(c.posts).Map(func(key string) app.UI {
@@ -333,27 +267,6 @@ func (c *Content) Render() app.UI {
 							}
 						}
 					}
-
-					// fetch binary image data
-					/*if post.Type == "fig" && imgSrc == "" {
-						payload := struct {
-							PostID  string `json:"post_id"`
-							Content string `json:"content"`
-						}{
-							PostID:  post.ID,
-							Content: post.Content,
-						}
-
-						var resp *[]byte
-						var ok bool
-
-						if resp, ok = littrAPI("POST", "/api/pix", payload, c.user.Nickname); !ok {
-							log.Println("api failed")
-							imgSrc = "/web/android-chrome-512x512.png"
-						} else {
-							imgSrc = "data:image/*;base64," + b64.StdEncoding.EncodeToString(*resp)
-						}
-					}*/
 
 					var postTimestamp string
 
@@ -530,7 +443,8 @@ func (c *Content) Render() app.UI {
 					)
 				}),
 			),
-		),
+		),*/
+
 		app.Div().ID("page-end-anchor"),
 		app.If(c.loaderShow, func() app.UI {
 			return app.Div().Body(

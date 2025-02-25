@@ -10,9 +10,9 @@ import (
 type PostFeed struct {
 	app.Compo
 
-	SortedPosts []models.Post
-
 	LoggedUserNickname string
+
+	SortedPosts []models.Post
 
 	Posts map[string]models.Post
 	Users map[string]models.User
@@ -49,7 +49,6 @@ func (p *PostFeed) Render() app.UI {
 				&molecules.PostBody{
 					Post:            post,
 					PostOriginal:    p.Posts[post.ReplyToID],
-					ReplyToID:       post.ReplyToID,
 					ButtonDisabled:  p.ButtonsDisabled,
 					LoaderShowImage: p.LoaderShowImage,
 					OnClickImage:    p.OnClickImage,

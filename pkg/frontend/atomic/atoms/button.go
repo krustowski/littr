@@ -9,13 +9,14 @@ import (
 type Button struct {
 	app.Compo
 
-	Class     string
-	Color     string
-	ColorText string
-	Icon      string
-	ID        string
-	Text      string
-	Title     string
+	Class             string
+	Color             string
+	ColorText         string
+	Icon              string
+	ID                string
+	Text              string
+	Title             string
+	OnClickActionName string
 
 	Attr map[string]string
 
@@ -23,6 +24,15 @@ type Button struct {
 	ShowProgress bool
 
 	OnClick app.EventHandler
+}
+
+func (b *Button) onClick(ctx app.Context, e app.Event) {
+	if b.OnClick != nil {
+		b.OnClick(ctx, e)
+		return
+	}
+
+	ctx.NewActionWithValue(b.OnClickActionName, e.Get("id").String())
 }
 
 func (b *Button) composeClass() string {
@@ -40,7 +50,7 @@ func (b *Button) Render() app.UI {
 		bt.Attr(key, val)
 	}
 
-	return bt.ID(b.ID).Title(b.Title).Class(b.composeClass()).OnClick(b.OnClick).Disabled(b.Disabled).Body(
+	return bt.ID(b.ID).Title(b.Title).Class(b.composeClass()).OnClick(b.onClick).Disabled(b.Disabled).Body(
 		app.If(b.Disabled && b.ShowProgress, func() app.UI {
 			return app.Progress().Class("circle white-border small")
 		}),

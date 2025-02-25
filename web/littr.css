@@ -71,9 +71,9 @@ sub {
 	background: linear-gradient(to bottom, rgba(255, 87, 34, 0.3) 10%, rgba(255, 87, 34, 0.31)) !important;
 }
 
-.post {
+/*.post {
 	background: linear-gradient(to bottom, rgba(158, 158, 158, 0.3) 10%, rgba(158, 158, 158, 0.31)) !important;
-}
+}*/
 
 .reply {
 	border-color: rgb(245, 127, 23, 1) !important;
@@ -91,4 +91,25 @@ sub {
 
 .danger {
 	background: linear-gradient(to bottom, rgba(244, 67, 54, 0.3) 10%, rgba(244, 67, 54, 0.31)) !important;
+}
+
+/*
+ *
+ *  Flexbox
+ *
+ */
+
+.post {
+	text-align: left;
+	width: 100%;
+	border-bottom: 1px solid;
+	padding-bottom: 1rem;
+}
+
+.post-feed {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
 }

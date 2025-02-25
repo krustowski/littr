@@ -29,8 +29,6 @@ type PostBody struct {
 
 	ButtonDisabled  bool
 	LoaderShowImage bool
-
-	ReplyToID string
 }
 
 func (p *PostBody) OnMount(ctx app.Context) {
@@ -84,10 +82,10 @@ func (p *PostBody) Render() app.UI {
 						return app.Details().Class("max").Body(
 							app.Summary().Text(p.previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 							app.Div().Class("space"),
-							app.Span().Class("bold").Text(p.previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+							app.Span().Class("bold").Text(p.PostOriginal.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 						)
-					}).Else(func() app.UI {
-						return app.Span().Class("max bold").Text(p.previousContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
+					}).ElseIf(len(p.PostOriginal.Content) > 0, func() app.UI {
+						return app.Span().Class("max bold").Text(p.PostOriginal.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
 					}),
 
 					&atoms.Button{
