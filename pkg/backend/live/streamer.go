@@ -19,11 +19,21 @@ const (
 	topicRandomNumbers = "numbers"
 )
 
+var replayer = func() *sse.ValidReplayer {
+	rep, err := sse.NewValidReplayer(time.Minute*4, true)
+	if err != nil {
+		return nil
+	}
+
+	return rep
+}()
+
 // Core SSE server as the HTTP handler wrapper.
 var Streamer = &sse.Server{
 	// Joe is the default pubsub service provider.
 	Provider: &sse.Joe{
 		// Replays only valid events, that expire after 5 minutes.
+		Replayer: replayer,
 		/*ReplayProvider: &sse.ValidReplayProvider{
 			TTL:        time.Minute * 5,
 			GCInterval: time.Minute,
