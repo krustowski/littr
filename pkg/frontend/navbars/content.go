@@ -221,10 +221,15 @@ func (h *Header) OnMount(ctx app.Context) {
 		return nil
 	})
 
+	var scrollHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+		ctx.NewAction("scroll")
+		return nil
+	})
+
 	app.Window().Call("addTrackedEventListener", app.Window(), "online", onlineHandler)
 	app.Window().Call("addTrackedEventListener", app.Window(), "offline", offlineHandler)
 	app.Window().Call("addTrackedEventListener", app.Window(), "keydown", keydownHandler)
-	//app.Window().Call("addTrackedEventListener", app.Window(), "scroll", scrollHandler)
+	app.Window().Call("addTrackedEventListener", app.Window(), "scroll", scrollHandler)
 
 	//
 	//  Action handlers
