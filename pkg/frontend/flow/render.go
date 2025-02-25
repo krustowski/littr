@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -49,87 +50,22 @@ func (c *Content) Render() app.UI {
 	//counter := 0
 
 	return app.Main().Class("responsive").Body(
-		// page heading
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.If(c.userFlowNick != "" && !c.isPost, func() app.UI {
-					return app.H5().Body(
-						app.Text(c.userFlowNick+"'s flow"),
-
-						app.If(c.users[c.userFlowNick].Private, func() app.UI {
-							return app.Span().Class("bold").Body(
-								app.I().Text("lock"),
-							)
-						}),
-					)
-				}).ElseIf(c.singlePostID != "" && c.isPost, func() app.UI {
-					return app.H5().Text("single post and replies")
-				}).ElseIf(c.hashtag != "" && len(c.hashtag) < 20, func() app.UI {
-					return app.H5().Text("hashtag #" + c.hashtag)
-				}).ElseIf(c.hashtag != "" && len(c.hashtag) >= 20, func() app.UI {
-					return app.H5().Text("hashtag")
-				}).Else(func() app.UI {
-					return app.H5().Text("flow")
-				}),
-			),
-
-			app.Div().Class("small-padding").Body(
-				app.Button().ID("refresh-button").Title("refresh flow [R]").Class("grey10 white-text bold thicc").OnClick(c.onClickRefresh).Disabled(c.postButtonsDisabled).Body(
-					app.If(c.refreshClicked, func() app.UI {
-						return app.Progress().Class("circle deep-orange-border small")
-					}),
-					app.Span().Body(
-						app.I().Style("padding-right", "5px").Text("refresh"),
-						app.Text("Refresh"),
-					),
-				),
-			),
-		),
+		// Page heading
+		&molecules.FlowHeader{
+			SingleUser:      c.users[c.userFlowNick],
+			SinglePostID:    c.singlePostID,
+			Hashtag:         c.hashtag,
+			ButtonsDisabled: c.buttonDisabled,
+			RefreshClicked:  c.refreshClicked,
+		},
 
 		// SingleUser view (profile mode)
-		app.If(c.userFlowNick != "" && !c.isPost, func() app.UI {
-			return app.Div().Body(
-				&atoms.Image{
-					Class:  "center",
-					Src:    c.users[c.userFlowNick].AvatarURL,
-					Width:  "15rem",
-					Radius: "50%",
-				},
-
-				app.Div().Class("row top-padding").Body(
-					app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.users[c.userFlowNick].About),
-
-					app.If(c.user.FlowList[c.userFlowNick], func() app.UI {
-						return &atoms.Button{
-							ID:       c.userFlowNick,
-							Class:    "grey10 white-text thicc",
-							Icon:     "close",
-							Text:     "Unfollow",
-							OnClick:  c.onClickFollow,
-							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
-						}
-					}).ElseIf(c.users[c.userFlowNick].Private || c.users[c.userFlowNick].Options["private"], func() app.UI {
-						return &atoms.Button{
-							ID:       c.userFlowNick,
-							Class:    "yellow10 white-text thicc",
-							Icon:     "drafts",
-							Text:     "Ask",
-							OnClick:  nil,
-							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
-						}
-					}).Else(func() app.UI {
-						return &atoms.Button{
-							ID:       c.userFlowNick,
-							Class:    "deep-orange7 white-text thicc",
-							Icon:     "add",
-							Text:     "Follow",
-							OnClick:  c.onClickFollow,
-							Disabled: c.buttonDisabled || c.userFlowNick == c.user.Nickname,
-						}
-					}),
-				),
-			)
-		}),
+		&organisms.SingleUserSummary{
+			LoggedUser:              c.user,
+			SingleUser:              c.users[c.userFlowNick],
+			ButtonsDisabled:         c.buttonDisabled,
+			OnClickFollowActionName: "follow",
+		},
 
 		app.Div().Class("space"),
 
@@ -147,7 +83,7 @@ func (c *Content) Render() app.UI {
 			ModalShow:            c.modalReplyActive,
 			ModalButtonsDisabled: c.postButtonsDisabled,
 			OnClickDismiss:       c.onClickDismiss,
-			OnClickReply:         c.onClickReply,
+			OnClickReply:         c.onClickPostReply,
 			OnFigureUpload:       c.handleFigUpload,
 		},
 
@@ -445,12 +381,8 @@ func (c *Content) Render() app.UI {
 			),
 		),*/
 
-		app.Div().ID("page-end-anchor"),
-		app.If(c.loaderShow, func() app.UI {
-			return app.Div().Body(
-				app.Div().Class("small-space"),
-				app.Progress().Class("circle center large deep-orange-border active"),
-			)
-		}),
+		&atoms.Anchor{
+			ShowLoader: c.loaderShow,
+		},
 	)
 }

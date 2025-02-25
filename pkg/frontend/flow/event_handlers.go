@@ -326,13 +326,7 @@ func (c *Content) onClickDelete(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *Content) onScroll(ctx app.Context, e app.Event) {
-	ctx.NewAction("scroll")
-}
-
 func (c *Content) onClickRefresh(ctx app.Context, e app.Event) {
-	ctx.NewAction("dismiss")
-	ctx.NewAction("clear")
 	ctx.NewAction("refresh")
 }
 

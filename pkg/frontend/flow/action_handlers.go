@@ -366,6 +366,9 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
+	ctx.NewAction("dismiss")
+	ctx.NewAction("clear")
+
 	key, ok := a.Value.(string)
 	if !ok {
 		key = ""
