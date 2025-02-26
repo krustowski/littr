@@ -12,7 +12,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/maxence-charriere/go-app/v10 v10.0.10
-	github.com/maxence-charriere/go-app/v9 v9.8.0
 	github.com/prometheus/client_golang v1.21.0
 	github.com/sizeofint/webpanimation v0.0.0-20210809145948-1d2b32119882
 	github.com/tmaxmax/go-sse v0.10.0
