@@ -18,19 +18,6 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-/*func render[T any](component interface{}) app.UI {
-	compo, ok := component.(T)
-	if !ok {
-		return nil
-	}
-
-	return app.Div().Body(
-		&navbars.Header{},
-		&navbars.Footer{},
-		&compo,
-	)
-}*/
-
 //
 //  flow view
 //
@@ -57,19 +44,8 @@ func (v *FlowView) Render() app.UI {
 
 type LoginView struct {
 	app.Compo
+
 	userLogged bool
-}
-
-func (v *LoginView) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("login / littr")
-}
-
-func (v *LoginView) Render() app.UI {
-	return app.Div().Body(
-		&navbars.Header{},
-		&navbars.Footer{},
-		&login.Content{},
-	)
 }
 
 func (v *LoginView) OnMount(ctx app.Context) {
@@ -85,6 +61,18 @@ func (v *LoginView) OnMount(ctx app.Context) {
 
 		ctx.Navigate("/login")
 	}
+}
+
+func (v *LoginView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("login / littr")
+}
+
+func (v *LoginView) Render() app.UI {
+	return app.Div().Body(
+		&navbars.Header{},
+		&navbars.Footer{},
+		&login.Content{},
+	)
 }
 
 //
@@ -177,8 +165,10 @@ func (v *ResetView) Render() app.UI {
 
 type SettingsView struct {
 	app.Compo
+}
 
-	mode string
+func (v *SettingsView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("settings / littr")
 }
 
 func (v *SettingsView) Render() app.UI {
@@ -187,12 +177,6 @@ func (v *SettingsView) Render() app.UI {
 		&navbars.Footer{},
 		&settings.Content{},
 	)
-}
-
-func (v *SettingsView) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("settings / littr")
-
-	ctx.LocalStorage().Get("mode", &v.mode)
 }
 
 //
@@ -265,14 +249,14 @@ type WelcomeView struct {
 	mode string
 }
 
+func (v *WelcomeView) OnNav(ctx app.Context) {
+	ctx.Page().SetTitle("welcome / littr")
+}
+
 func (v *WelcomeView) Render() app.UI {
 	return app.Div().Body(
 		&navbars.Header{},
 		&navbars.Footer{},
 		&welcome.Content{},
 	)
-}
-
-func (v *WelcomeView) OnNav(ctx app.Context) {
-	ctx.Page().SetTitle("welcome / littr")
 }

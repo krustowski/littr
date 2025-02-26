@@ -45,12 +45,12 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // appHandler holds the pointer to the very main FE app handler.
 var appHandler = &app.Handler{
-	Name:                    "littr nanoblogger",
-	ShortName:               "littr",
-	Title:                   "littr nanoblogger",
-	Description:             "A simple nanoblogging platform",
-	Author:                  "krusty",
-	Domain:                  config.ServerUrl,
+	Name:        "littr nanoblogger",
+	ShortName:   "littr",
+	Title:       "littr nanoblogger",
+	Description: "A simple nanoblogging platform",
+	Author:      "krusty",
+	//Domain:                  config.ServerUrl,
 	BackgroundColor:         "#000000",
 	ThemeColor:              "#000000",
 	LoadingLabel:            "loading...",
@@ -296,7 +296,6 @@ func initServer() {
 		return nil
 	}))*/
 
-	// Handle the rest using the appHandler defined earlier.
 	r.Handle("/*", appHandler)
 
 	//

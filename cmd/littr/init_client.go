@@ -17,16 +17,7 @@ func initClientCommon() {
 	app.RouteWithRegexp("^/activation/[a-zA-Z]+$", func() app.Composer {
 		return &fe.LoginView{}
 	})
-	app.Route("/flow", func() app.Composer {
-		return &fe.FlowView{}
-	})
-	app.RouteWithRegexp("^/flow/posts/[0-9]+$", func() app.Composer {
-		return &fe.FlowView{}
-	})
-	app.RouteWithRegexp("^/flow/hashtags/[a-zA-Z]+$", func() app.Composer {
-		return &fe.FlowView{}
-	})
-	app.RouteWithRegexp("^/flow/users/[a-zA-Z]+$", func() app.Composer {
+	app.RouteWithRegexp("^/(flow|flow/posts/[0-9]+|flow/hashtags/[a-zA-Z]+|flow/users/[a-zA-Z]+)$", func() app.Composer {
 		return &fe.FlowView{}
 	})
 	app.Route("/login", func() app.Composer {
@@ -38,10 +29,7 @@ func initClientCommon() {
 	app.Route("/polls", func() app.Composer {
 		return &fe.PollsView{}
 	})
-	app.RouteWithRegexp("^/polls/[0-9]+$", func() app.Composer {
-		return &fe.PollsView{}
-	})
-	app.RouteWithRegexp("^/polls/[a-zA-Z]+$", func() app.Composer {
+	app.RouteWithRegexp("^/polls/[0-9a-zA-Z]+$", func() app.Composer {
 		return &fe.PollsView{}
 	})
 	app.Route("/post", func() app.Composer {
