@@ -20,8 +20,8 @@ type PostBody struct {
 
 	Post models.Post
 
-	OnClickImage app.EventHandler
-	OnClickLink  app.EventHandler
+	OnClickImageActionName string
+	OnClickLinkActionName  string
 
 	ButtonDisabled  bool
 	LoaderShowImage bool
@@ -45,12 +45,12 @@ func (p *PostBody) Render() app.UI {
 					}),
 
 					&atoms.Button{
-						ID:       p.Post.ReplyToID,
-						Title:    "link to original post",
-						Class:    "transparent circle",
-						Icon:     "history",
-						OnClick:  p.OnClickLink,
-						Disabled: p.ButtonDisabled,
+						ID:                p.Post.ReplyToID,
+						Title:             "link to original post",
+						Class:             "transparent circle",
+						Icon:              "history",
+						OnClickActionName: p.OnClickLinkActionName,
+						Disabled:          p.ButtonDisabled,
 					},
 				),
 			)
@@ -77,12 +77,12 @@ func (p *PostBody) Render() app.UI {
 				},
 
 				&atoms.Image{
-					ID:      p.Post.ID,
-					Src:     p.RenderProps.ImageSource,
-					Class:   "no-padding center middle lazy",
-					OnClick: p.OnClickImage,
-					Styles:  map[string]string{"max-height": "100%", "max-width": "100%"},
-					Attr:    map[string]string{"loading": "lazy"},
+					ID:                p.Post.ID,
+					Src:               p.RenderProps.ImageSource,
+					Class:             "no-padding center middle lazy",
+					OnClickActionName: p.OnClickImageActionName,
+					Styles:            map[string]string{"max-height": "100%", "max-width": "100%"},
+					Attr:              map[string]string{"loading": "lazy"},
 				},
 			)
 		}),

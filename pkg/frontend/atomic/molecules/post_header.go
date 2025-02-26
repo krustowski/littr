@@ -15,38 +15,41 @@ type PostHeader struct {
 
 	ButtonsDisabled bool
 
-	OnClickLink  app.EventHandler
-	OnClickUser  app.EventHandler
-	OnMouseEnter app.EventHandler
-	OnMouseLeave app.EventHandler
+	OnClickLinkActionName  string
+	OnClickUserActionName  string
+	OnMouseEnterActionName string
+	OnMouseLeaveActionName string
 }
 
 func (p *PostHeader) Render() app.UI {
 	// post header (author avatar + name + link button)
 	return app.Div().Class("row top-padding bottom-padding").Body(
 		&atoms.Image{
-			ID:      p.PostAuthor,
-			Title:   "user's avatar",
-			Class:   "responsive max left",
-			Src:     p.PostAvatarURL,
-			Styles:  map[string]string{"max-width": "60px", "border-radius": "50%"},
-			OnClick: p.OnClickUser,
+			ID:                p.PostAuthor,
+			Title:             "user's avatar",
+			Class:             "responsive max left",
+			Src:               p.PostAvatarURL,
+			Styles:            map[string]string{"max-width": "60px", "border-radius": "50%"},
+			OnClickActionName: p.OnClickUserActionName,
 		},
 
-		app.P().Class("max").Body(
-			app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(p.OnClickUser).ID(p.PostAuthor).Body(
-				app.Span().ID("user-flow-link").Class("large-text bold deep-orange-text").Text(p.PostAuthor).OnMouseEnter(p.OnMouseEnter).OnMouseLeave(p.OnMouseLeave),
-			),
-			//app.B().Text(post.Nickname).Class("deep-orange-text"),
-		),
+		&atoms.UserNickname{
+			SpanID:                 "user-flow-link",
+			Title:                  "user's flow link",
+			Class:                  "large-text bold deep-orange-text",
+			Nickname:               p.PostAuthor,
+			OnClickActionName:      p.OnClickLinkActionName,
+			OnMouseEnterActionName: p.OnMouseEnterActionName,
+			OnMouseLeaveActionName: p.OnMouseLeaveActionName,
+		},
 
 		&atoms.Button{
-			ID:       p.PostID,
-			Title:    "link to this post",
-			Class:    "transparent circle",
-			Icon:     "link",
-			OnClick:  p.OnClickLink,
-			Disabled: p.ButtonsDisabled,
+			ID:                p.PostID,
+			Title:             "link to this post",
+			Class:             "transparent circle",
+			Icon:              "link",
+			OnClickActionName: p.OnClickLinkActionName,
+			Disabled:          p.ButtonsDisabled,
 		},
 	)
 }

@@ -42,15 +42,6 @@ type PostFeed struct {
 	OnMouseEnterActionName  string
 	OnMouseLeaveActionName  string
 
-	OnClickDelete app.EventHandler
-	OnClickImage  app.EventHandler
-	OnClickLink   app.EventHandler
-	OnClickReply  app.EventHandler
-	OnClickStar   app.EventHandler
-	OnClickUser   app.EventHandler
-	OnMouseEnter  app.EventHandler
-	OnMouseLeave  app.EventHandler
-
 	imageSource     string
 	postSummary     string
 	originalContent string
@@ -194,11 +185,13 @@ func (p *PostFeed) Render() app.UI {
 					PostAvatarURL:   p.Users[post.Nickname].AvatarURL,
 					PostID:          post.ID,
 					ButtonsDisabled: p.ButtonsDisabled,
-					OnClickLink:     p.OnClickLink,
-					OnClickUser:     p.OnClickUser,
-					OnMouseEnter:    p.OnMouseEnter,
-					OnMouseLeave:    p.OnMouseLeave,
+					//
+					OnClickLinkActionName:  p.OnClickLinkActionName,
+					OnClickUserActionName:  p.OnClickUserActionName,
+					OnMouseEnterActionName: p.OnMouseEnterActionName,
+					OnMouseLeaveActionName: p.OnMouseLeaveActionName,
 				},
+
 				&molecules.PostBody{
 					Post: post,
 					RenderProps: struct {
@@ -216,16 +209,19 @@ func (p *PostFeed) Render() app.UI {
 					},
 					ButtonDisabled:  p.ButtonsDisabled,
 					LoaderShowImage: p.LoaderShowImage,
-					OnClickImage:    p.OnClickImage,
-					OnClickLink:     p.OnClickLink,
+					//
+					OnClickImageActionName: p.OnClickImageActionName,
+					OnClickLinkActionName:  p.OnClickLinkActionName,
 				},
+
 				&molecules.PostFooter{
-					Post:                post,
-					ButtonsDisabled:     p.ButtonsDisabled,
-					LoggedUserNickname:  p.LoggedUser.Nickname,
-					OnClickDeleteButton: p.OnClickDelete,
-					OnClickStar:         p.OnClickStar,
-					OnClickReply:        p.OnClickReply,
+					Post:               post,
+					ButtonsDisabled:    p.ButtonsDisabled,
+					LoggedUserNickname: p.LoggedUser.Nickname,
+					//
+					OnClickDeleteActionName: p.OnClickDeleteActionName,
+					OnClickStarActionName:   p.OnClickStarActionName,
+					OnClickReplyActionName:  p.OnClickReplyActionName,
 				},
 			)
 		}),

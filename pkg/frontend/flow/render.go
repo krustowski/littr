@@ -100,14 +100,15 @@ func (c *Content) Render() app.UI {
 			ButtonsDisabled: c.buttonDisabled,
 			LoggedUser:      c.user,
 			SortedPosts:     c.sortPosts(),
-			OnClickImage:    c.onClickImage,
-			OnClickStar:     c.onClickStar,
-			OnClickReply:    c.onClickReply,
-			OnClickLink:     c.onClickLink,
-			OnClickDelete:   c.onClickDeleteButton,
-			OnClickUser:     c.onClickUserFlow,
-			OnMouseEnter:    c.onMouseEnter,
-			OnMouseLeave:    c.onMouseLeave,
+			//
+			OnClickImageActionName:  "image",
+			OnClickStarActionName:   "star",
+			OnClickReplyActionName:  "reply",
+			OnClickLinkActionName:   "link",
+			OnClickDeleteActionName: "delete",
+			OnClickUserActionName:   "user",
+			OnMouseEnterActionName:  "mouse-enter",
+			OnMouseLeaveActionName:  "mouse-leave",
 		},
 
 		&atoms.Loader{

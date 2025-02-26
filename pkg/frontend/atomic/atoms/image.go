@@ -15,7 +15,17 @@ type Image struct {
 	Attr   map[string]string
 	Styles map[string]string
 
-	OnClick app.EventHandler
+	OnClick           app.EventHandler
+	OnClickActionName string
+}
+
+func (i *Image) onClick(ctx app.Context, e app.Event) {
+	if i.OnClick != nil {
+		i.OnClick(ctx, e)
+		return
+	}
+
+	ctx.NewActionWithValue(i.OnClickActionName, e.Get("id").String())
 }
 
 func (i *Image) Render() app.UI {
@@ -29,5 +39,5 @@ func (i *Image) Render() app.UI {
 		img.Style(key, val)
 	}
 
-	return img.ID(i.ID).Title(i.Title).Class(i.Class).Src(i.Src).OnClick(i.OnClick)
+	return img.ID(i.ID).Title(i.Title).Class(i.Class).Src(i.Src).OnClick(i.onClick)
 }

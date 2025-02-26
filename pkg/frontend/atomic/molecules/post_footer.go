@@ -16,9 +16,9 @@ type PostFooter struct {
 
 	ButtonsDisabled bool
 
-	OnClickDeleteButton app.EventHandler
-	OnClickStar         app.EventHandler
-	OnClickReply        app.EventHandler
+	OnClickDeleteActionName string
+	OnClickStarActionName   string
+	OnClickReplyActionName  string
 }
 
 func (p *PostFooter) Render() app.UI {
@@ -36,12 +36,12 @@ func (p *PostFooter) Render() app.UI {
 				}),
 
 				&atoms.Button{
-					ID:       p.Post.ID,
-					Title:    "reply",
-					Class:    "transparent circle",
-					Icon:     "reply",
-					OnClick:  p.OnClickReply,
-					Disabled: p.ButtonsDisabled,
+					ID:                p.Post.ID,
+					Title:             "reply",
+					Class:             "transparent circle",
+					Icon:              "reply",
+					OnClickActionName: p.OnClickReplyActionName,
+					Disabled:          p.ButtonsDisabled,
 				},
 			)
 		}),
@@ -51,12 +51,12 @@ func (p *PostFooter) Render() app.UI {
 				app.B().Title("reaction count").Text(p.Post.ReactionCount).Class("left-padding"),
 
 				&atoms.Button{
-					ID:       p.Post.ID,
-					Title:    "delete this post",
-					Class:    "transparent circle",
-					Icon:     "delete",
-					OnClick:  p.OnClickDeleteButton,
-					Disabled: p.ButtonsDisabled,
+					ID:                p.Post.ID,
+					Title:             "delete this post",
+					Class:             "transparent circle",
+					Icon:              "delete",
+					OnClickActionName: p.OnClickDeleteActionName,
+					Disabled:          p.ButtonsDisabled,
 				},
 			)
 		}).Else(func() app.UI {
@@ -64,13 +64,13 @@ func (p *PostFooter) Render() app.UI {
 				app.B().Title("reaction count").Text(p.Post.ReactionCount).Class("left-padding"),
 
 				&atoms.Button{
-					ID:       p.Post.ID,
-					Title:    "increase the reaction count",
-					Class:    "transparent circle",
-					Icon:     "ac_unit",
-					OnClick:  p.OnClickStar,
-					Disabled: p.ButtonsDisabled,
-					Attr:     map[string]string{"touch-action": "none"},
+					ID:                p.Post.ID,
+					Title:             "increase the reaction count",
+					Class:             "transparent circle",
+					Icon:              "ac_unit",
+					OnClickActionName: p.OnClickStarActionName,
+					Disabled:          p.ButtonsDisabled,
+					Attr:              map[string]string{"touch-action": "none"},
 				},
 			)
 		}),
