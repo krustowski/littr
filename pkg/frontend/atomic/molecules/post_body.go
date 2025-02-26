@@ -20,8 +20,8 @@ type PostBody struct {
 
 	Post models.Post
 
-	OnClickImageActionName string
-	OnClickLinkActionName  string
+	OnClickImageActionName   string
+	OnClickHistoryActionName string
 
 	ButtonDisabled  bool
 	LoaderShowImage bool
@@ -49,7 +49,7 @@ func (p *PostBody) Render() app.UI {
 						Title:             "link to original post",
 						Class:             "transparent circle",
 						Icon:              "history",
-						OnClickActionName: p.OnClickLinkActionName,
+						OnClickActionName: p.OnClickHistoryActionName,
 						Disabled:          p.ButtonDisabled,
 					},
 				),

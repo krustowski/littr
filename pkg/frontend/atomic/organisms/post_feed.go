@@ -33,14 +33,15 @@ type PostFeed struct {
 	SinglePostID string
 	SingleUserID string
 
-	OnClickDeleteActionName string
-	OnClickImageActionName  string
-	OnClickLinkActionName   string
-	OnClickReplyActionName  string
-	OnClickStarActionName   string
-	OnClickUserActionName   string
-	OnMouseEnterActionName  string
-	OnMouseLeaveActionName  string
+	OnClickDeleteActionName  string
+	OnClickHistoryActionName string
+	OnClickImageActionName   string
+	OnClickLinkActionName    string
+	OnClickReplyActionName   string
+	OnClickStarActionName    string
+	OnClickUserActionName    string
+	OnMouseEnterActionName   string
+	OnMouseLeaveActionName   string
 
 	imageSource     string
 	postSummary     string
@@ -210,8 +211,8 @@ func (p *PostFeed) Render() app.UI {
 					ButtonDisabled:  p.ButtonsDisabled,
 					LoaderShowImage: p.LoaderShowImage,
 					//
-					OnClickImageActionName: p.OnClickImageActionName,
-					OnClickLinkActionName:  p.OnClickLinkActionName,
+					OnClickImageActionName:   p.OnClickImageActionName,
+					OnClickHistoryActionName: p.OnClickHistoryActionName,
 				},
 
 				&molecules.PostFooter{

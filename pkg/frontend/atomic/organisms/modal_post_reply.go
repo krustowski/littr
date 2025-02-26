@@ -1,10 +1,13 @@
 package organisms
 
 import (
+	"fmt"
+
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -20,10 +23,11 @@ type ModalPostReply struct {
 	ModalButtonsDisabled bool
 	ModalShow            bool
 
-	OnClickDismiss app.EventHandler
-	OnClickReply   app.EventHandler
-	OnBlur         app.EventHandler
-	OnFigureUpload app.EventHandler
+	OnClickDismissActionName string
+	OnClickReplyActionName   string
+	OnBlurActionName         string
+	OnFigureUploadActionName string
+	//OnFigureUpload app.EventHandler
 }
 
 func (m *ModalPostReply) OnMount(ctx app.Context) {
@@ -60,36 +64,36 @@ func (m *ModalPostReply) Render() app.UI {
 					)
 				}),
 
-				app.Div().Class("field label textarea border extra deep-orange-text").Style("border-radius", "8px").Body(
-					//app.Textarea().Class("active").Name("replyPost").OnChange(c.ValueTo(&c.replyPostContent)).AutoFocus(true).Placeholder("reply to: "+c.posts[c.interactedPostKey].Nickname),
-					app.Textarea().Class("active").Name("replyPost").Text(m.replyPostContent).OnChange(m.ValueTo(&m.replyPostContent)).AutoFocus(true).ID("reply-textarea").OnBlur(m.OnBlur),
-					app.Label().Text("Reply to: "+m.PostOriginal.Nickname).Class("active deep-orange-text"),
-					//app.Label().Text("text").Class("active"),
-				),
-				app.Div().Class("field label border extra deep-orange-text").Style("border-radius", "8px").Body(
-					app.Input().ID("fig-upload").Class("active").Type("file").OnChange(m.ValueTo(&m.newFigLink)).OnInput(m.OnFigureUpload).Accept("image/*"),
-					app.Input().Class("active").Type("text").Value(m.newFigFile).Disabled(true),
-					app.Label().Text("Image").Class("active deep-orange-text"),
-					app.I().Text("image"),
-				),
+				&atoms.Textarea{
+					ID:               "reply-textarea",
+					Class:            "field label textarea border extra deep-orange-text thicc",
+					Content:          m.replyPostContent,
+					Name:             "replyPost",
+					LabelText:        fmt.Sprintf("Reply to: %s", m.PostOriginal.Nickname),
+					OnBlurActionName: "blur",
+				},
+
+				&molecules.ImageInput{
+					ButtonsDisabled: m.ModalButtonsDisabled,
+				},
 
 				// Reply buttons.
 				app.Div().Class("row").Body(
 					&atoms.Button{
-						Class:    "max bold black white-text thicc",
-						Icon:     "close",
-						Text:     "Cancel",
-						OnClick:  m.OnClickDismiss,
-						Disabled: m.ModalButtonsDisabled,
+						Class:             "max bold black white-text thicc",
+						Icon:              "close",
+						Text:              "Cancel",
+						OnClickActionName: m.OnClickDismissActionName,
+						Disabled:          m.ModalButtonsDisabled,
 					},
 
 					&atoms.Button{
-						ID:       "reply",
-						Class:    "max bold deep-orange7 white-text thicc",
-						Icon:     "reply",
-						Text:     "Reply",
-						OnClick:  m.OnClickReply,
-						Disabled: m.ModalButtonsDisabled,
+						ID:                "reply",
+						Class:             "max bold deep-orange7 white-text thicc",
+						Icon:              "reply",
+						Text:              "Reply",
+						OnClickActionName: m.OnClickReplyActionName,
+						Disabled:          m.ModalButtonsDisabled,
 					},
 				),
 				app.Div().Class("space"),

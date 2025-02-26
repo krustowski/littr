@@ -108,7 +108,132 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleImage(ctx app.Context, a app.Action) {
-	ctx.JSSrc().Set("src", "")
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	img := app.Window().GetElementByID(id)
+	if img.IsNull() {
+		return
+	}
+
+	src := img.Get("src").String()
+
+	split := strings.Split(src, ".")
+	ext := split[len(split)-1]
+
+	// image preview (thumbnail) to the actual image logic
+	if (ext != "gif" && strings.Contains(src, "thumb")) || (ext == "gif" && strings.Contains(src, "click")) {
+		ctx.JSSrc().Set("src", "/web/pix/"+id+"."+ext)
+		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
+		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position")
+	} else if ext == "gif" && !strings.Contains(src, "thumb") {
+		ctx.JSSrc().Set("src", "/web/click-to-see.gif")
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+	} else {
+		ctx.JSSrc().Set("src", "/web/pix/thumb_"+id+"."+ext)
+		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+	}
+}
+
+func (c *Content) handleLink(ctx app.Context, a app.Action) {}
+
+func (c *Content) handleModalPostDeleteShow(ctx app.Context, a app.Action) {
+	//key := ctx.JSSrc().Get("id").String()
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = id
+		c.deleteModalButtonsDisabled = false
+		c.deletePostModalShow = true
+	})
+}
+
+func (c *Content) handleMouseEnter(_ app.Context, a app.Action) {
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	elem := app.Window().GetElementByID(id)
+	if elem.IsNull() {
+		return
+	}
+
+	elem.Get("style").Call("setProperty", "font-size", "1.2rem")
+}
+
+func (c *Content) handleMouseLeave(_ app.Context, a app.Action) {
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	elem := app.Window().GetElementByID(id)
+	if elem.IsNull() {
+		return
+	}
+
+	elem.Get("style").Call("setProperty", "font-size", "1rem")
+}
+
+func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
+	ctx.NewAction("dismiss")
+	ctx.NewAction("clear")
+
+	key, ok := a.Value.(string)
+	if !ok {
+		key = ""
+		//return
+	}
+
+	if key == "x" || key == "X" {
+		c.hideReplies = !c.hideReplies
+	}
+
+	ctx.Async(func() {
+		opts := pageOptions{
+			//PageNo:   c.pageNoToFetch,
+			PageNo:   0,
+			Context:  ctx,
+			CallerID: c.user.Nickname,
+
+			//SinglePost:   parts.SinglePost,
+			SinglePost: c.singlePostID != "",
+			//SinglePostID: parts.SinglePostID,
+			SinglePostID: c.singlePostID,
+			//UserFlow:     parts.UserFlow,
+			UserFlow: c.userFlowNick != "",
+			//UserFlowNick: parts.UserFlowNick,
+			UserFlowNick: c.userFlowNick,
+			Hashtag:      c.hashtag,
+			HideReplies:  c.hideReplies,
+		}
+
+		posts, users := c.fetchFlowPage(opts)
+
+		ctx.Dispatch(func(ctx app.Context) {
+			if posts != nil {
+				c.posts = *posts
+			}
+			if users != nil {
+				c.users = *users
+				c.user = (*users)[c.key]
+			}
+
+			c.loaderShow = false
+			c.loaderShowImage = false
+			c.refreshClicked = false
+			c.postButtonsDisabled = false
+			c.contentLoadFinished = true
+
+			c.toast.TText = ""
+		})
+	})
 }
 
 func (c *Content) handleReply(ctx app.Context, a app.Action) {
@@ -365,60 +490,11 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
-	ctx.NewAction("dismiss")
-	ctx.NewAction("clear")
+/*func (c *Content) onClickStar(ctx app.Context, e app.Event) {
+	key := ctx.JSSrc().Get("id").String()
+	ctx.NewActionWithValue("star", key)
+}*/
 
-	key, ok := a.Value.(string)
-	if !ok {
-		key = ""
-		//return
-	}
-
-	if key == "x" || key == "X" {
-		c.hideReplies = !c.hideReplies
-	}
-
-	ctx.Async(func() {
-		opts := pageOptions{
-			//PageNo:   c.pageNoToFetch,
-			PageNo:   0,
-			Context:  ctx,
-			CallerID: c.user.Nickname,
-
-			//SinglePost:   parts.SinglePost,
-			SinglePost: c.singlePostID != "",
-			//SinglePostID: parts.SinglePostID,
-			SinglePostID: c.singlePostID,
-			//UserFlow:     parts.UserFlow,
-			UserFlow: c.userFlowNick != "",
-			//UserFlowNick: parts.UserFlowNick,
-			UserFlowNick: c.userFlowNick,
-			Hashtag:      c.hashtag,
-			HideReplies:  c.hideReplies,
-		}
-
-		posts, users := c.fetchFlowPage(opts)
-
-		ctx.Dispatch(func(ctx app.Context) {
-			if posts != nil {
-				c.posts = *posts
-			}
-			if users != nil {
-				c.users = *users
-				c.user = (*users)[c.key]
-			}
-
-			c.loaderShow = false
-			c.loaderShowImage = false
-			c.refreshClicked = false
-			c.postButtonsDisabled = false
-			c.contentLoadFinished = true
-
-			c.toast.TText = ""
-		})
-	})
-}
 func (c *Content) handleStar(ctx app.Context, a app.Action) {
 	key, ok := a.Value.(string)
 	if !ok {
@@ -482,3 +558,10 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 		})
 	})
 }
+
+func (c *Content) handleTextareaBlur(ctx app.Context, a app.Action) {
+	// Save a new post draft, if the focus on textarea is lost.
+	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
+}
+
+func (c *Content) handleUser(ctx app.Context, a app.Action) {}

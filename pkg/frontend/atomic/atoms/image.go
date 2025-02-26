@@ -25,7 +25,7 @@ func (i *Image) onClick(ctx app.Context, e app.Event) {
 		return
 	}
 
-	ctx.NewActionWithValue(i.OnClickActionName, e.Get("id").String())
+	ctx.NewActionWithValue(i.OnClickActionName, i.ID)
 }
 
 func (i *Image) Render() app.UI {

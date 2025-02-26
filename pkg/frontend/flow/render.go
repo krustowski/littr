@@ -60,7 +60,7 @@ func (c *Content) Render() app.UI {
 		},
 
 		// SingleUser view (profile mode)
-		&organisms.SingleUserSummary{
+		&organisms.SingleUserProfile{
 			LoggedUser:              c.user,
 			SingleUser:              c.users[c.userFlowNick],
 			ButtonsDisabled:         c.buttonDisabled,
@@ -71,20 +71,20 @@ func (c *Content) Render() app.UI {
 
 		// Post deletion modal.
 		&organisms.ModalPostDelete{
-			ModalShow:            c.deletePostModalShow,
-			ModalButtonsDisabled: c.deleteModalButtonsDisabled,
-			OnClickDismiss:       c.onClickDismiss,
-			OnClickDelete:        c.onClickDelete,
+			ModalShow:                c.deletePostModalShow,
+			ModalButtonsDisabled:     c.deleteModalButtonsDisabled,
+			OnClickDismissActionName: "dismiss",
+			OnClickDeleteActionName:  "delete",
 		},
 
 		// Post reply modal.
 		&organisms.ModalPostReply{
-			PostOriginal:         c.posts[c.interactedPostKey],
-			ModalShow:            c.modalReplyActive,
-			ModalButtonsDisabled: c.postButtonsDisabled,
-			OnClickDismiss:       c.onClickDismiss,
-			OnClickReply:         c.onClickPostReply,
-			OnFigureUpload:       c.handleFigUpload,
+			PostOriginal:             c.posts[c.interactedPostKey],
+			ModalShow:                c.modalReplyActive,
+			ModalButtonsDisabled:     c.postButtonsDisabled,
+			OnClickDismissActionName: "dismiss",
+			OnClickReplyActionName:   "reply",
+			OnFigureUploadActionName: "image-upload",
 		},
 
 		// The very post feed.
@@ -101,14 +101,15 @@ func (c *Content) Render() app.UI {
 			LoggedUser:      c.user,
 			SortedPosts:     c.sortPosts(),
 			//
-			OnClickImageActionName:  "image",
-			OnClickStarActionName:   "star",
-			OnClickReplyActionName:  "reply",
-			OnClickLinkActionName:   "link",
-			OnClickDeleteActionName: "delete",
-			OnClickUserActionName:   "user",
-			OnMouseEnterActionName:  "mouse-enter",
-			OnMouseLeaveActionName:  "mouse-leave",
+			OnClickImageActionName:   "image-click",
+			OnClickStarActionName:    "star",
+			OnClickReplyActionName:   "modal-post-reply",
+			OnClickLinkActionName:    "link",
+			OnClickHistoryActionName: "history",
+			OnClickDeleteActionName:  "modal-post-delete",
+			OnClickUserActionName:    "user",
+			OnMouseEnterActionName:   "mouse-enter",
+			OnMouseLeaveActionName:   "mouse-leave",
 		},
 
 		&atoms.Loader{

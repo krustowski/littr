@@ -2,7 +2,6 @@ package flow
 
 import (
 	"log"
-	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 
@@ -234,89 +233,7 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	}
 }
 
-func (c *Content) onClickImage(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	src := ctx.JSSrc().Get("src").String()
-
-	split := strings.Split(src, ".")
-	ext := split[len(split)-1]
-
-	// image preview (thumbnail) to the actual image logic
-	if (ext != "gif" && strings.Contains(src, "thumb")) || (ext == "gif" && strings.Contains(src, "click")) {
-		ctx.JSSrc().Set("src", "/web/pix/"+key+"."+ext)
-		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
-		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position")
-	} else if ext == "gif" && !strings.Contains(src, "thumb") {
-		ctx.JSSrc().Set("src", "/web/click-to-see.gif")
-		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
-	} else {
-		ctx.JSSrc().Set("src", "/web/pix/thumb_"+key+"."+ext)
-		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
-	}
-}
-
-// https://github.com/maxence-charriere/go-app/issues/882
-func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
-	file := e.Get("target").Get("files").Index(0)
-
-	//log.Println("name", file.Get("name").String())
-	//log.Println("size", file.Get("size").Int())
-	//log.Println("type", file.Get("type").String())
-
-	c.postButtonsDisabled = true
-
-	toast := common.Toast{AppContext: &ctx}
-
-	ctx.Async(func() {
-		defer ctx.Dispatch(func(ctx app.Context) {
-			c.postButtonsDisabled = false
-		})
-
-		var (
-			data         []byte
-			err          error
-			processedImg *[]byte
-		)
-
-		// Read the figure/image data.
-		data, err = common.ReadFile(file)
-		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-			return
-		}
-
-		processedImg, err = common.ProcessImage(&data)
-		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-			return
-		}
-
-		// Cast the image ready message.
-		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
-
-		// Load the image data to the Content structure.
-		ctx.Dispatch(func(ctx app.Context) {
-			c.newFigFile = file.Get("name").String()
-			c.newFigData = *processedImg
-
-			// Save the figure data in LS as a backup.
-			ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
-			ctx.LocalStorage().Set("newPostFigData", *processedImg)
-		})
-		return
-	})
-}
-
-func (c *Content) onClickDeleteButton(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.interactedPostKey = key
-		c.deleteModalButtonsDisabled = false
-		c.deletePostModalShow = true
-	})
-}
-
+// From ModalPostDelete modal...
 func (c *Content) onClickDelete(ctx app.Context, e app.Event) {
 	key := c.interactedPostKey
 	ctx.NewActionWithValue("delete", key)
@@ -326,11 +243,7 @@ func (c *Content) onClickDelete(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *Content) onClickRefresh(ctx app.Context, e app.Event) {
-	ctx.NewAction("refresh")
-}
-
-func (c *Content) onMessage(ctx app.Context, e app.Event) {
+/*func (c *Content) onMessage(ctx app.Context, e app.Event) {
 	data := e.JSValue().Get("data").String()
 	log.Println("msg event: data:" + data)
 
@@ -344,24 +257,4 @@ func (c *Content) onMessage(ctx app.Context, e app.Event) {
 
 	toast := common.Toast{AppContext: &ctx}
 	toast.Text("new post added above").Type(common.TTYPE_INFO).Dispatch(c, dispatch)
-}
-
-func (c *Content) onClickStar(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	ctx.NewActionWithValue("star", key)
-}
-
-func (c *Content) onMouseEnter(ctx app.Context, e app.Event) {
-	//ctx.JSSrc().Get("classList").Call("add", "underline")
-	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1.2rem")
-}
-
-func (c *Content) onMouseLeave(ctx app.Context, e app.Event) {
-	//ctx.JSSrc().Get("classList").Call("remove", "underline")
-	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1rem")
-}
-
-func (c *Content) onTextareaBlur(ctx app.Context, e app.Event) {
-	// Save a new post draft, if the focus on textarea is lost.
-	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
-}
+}*/

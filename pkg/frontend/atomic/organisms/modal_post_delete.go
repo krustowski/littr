@@ -12,8 +12,8 @@ type ModalPostDelete struct {
 	ModalButtonsDisabled bool
 	ModalShow            bool
 
-	OnClickDismiss app.EventHandler
-	OnClickDelete  app.EventHandler
+	OnClickDismissActionName string
+	OnClickDeleteActionName  string
 }
 
 func (m *ModalPostDelete) Render() app.UI {
@@ -35,18 +35,18 @@ func (m *ModalPostDelete) Render() app.UI {
 
 				app.Div().Class("row").Body(
 					&atoms.Button{
-						Class:    "max bold black white-text thicc",
-						Icon:     "close",
-						Text:     "Cancel",
-						OnClick:  m.OnClickDismiss,
-						Disabled: m.ModalButtonsDisabled,
+						Class:             "max bold black white-text thicc",
+						Icon:              "close",
+						Text:              "Cancel",
+						OnClickActionName: m.OnClickDismissActionName,
+						Disabled:          m.ModalButtonsDisabled,
 					},
 					&atoms.Button{
-						Class:    "max bold red10 white-text thicc",
-						Icon:     "delete",
-						Text:     "Delete",
-						OnClick:  m.OnClickDelete,
-						Disabled: m.ModalButtonsDisabled,
+						Class:             "max bold red10 white-text thicc",
+						Icon:              "delete",
+						Text:              "Delete",
+						OnClickActionName: m.OnClickDeleteActionName,
+						Disabled:          m.ModalButtonsDisabled,
 					},
 				),
 			)

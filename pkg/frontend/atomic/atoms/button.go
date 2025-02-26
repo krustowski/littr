@@ -32,7 +32,7 @@ func (b *Button) onClick(ctx app.Context, e app.Event) {
 		return
 	}
 
-	ctx.NewActionWithValue(b.OnClickActionName, e.Get("id").String())
+	ctx.NewActionWithValue(b.OnClickActionName, b.ID)
 }
 
 func (b *Button) composeClass() string {

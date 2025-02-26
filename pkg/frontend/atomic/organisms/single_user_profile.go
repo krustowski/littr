@@ -7,7 +7,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-type SingleUserSummary struct {
+type SingleUserProfile struct {
 	app.Compo
 
 	LoggedUser models.User
@@ -18,7 +18,7 @@ type SingleUserSummary struct {
 	ButtonsDisabled bool
 }
 
-func (s *SingleUserSummary) Render() app.UI {
+func (s *SingleUserProfile) Render() app.UI {
 	return app.Div().Body(
 		app.If(s.SingleUser.Nickname != "", func() app.UI {
 			return app.Div().Body(

@@ -70,14 +70,19 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)
+	ctx.Handle("dismiss", c.handleDismiss)
 	ctx.Handle("image", c.handleImage)
+	ctx.Handle("link", c.handleLink)
+	ctx.Handle("modal-post-delete", c.handleModalPostDeleteShow)
+	ctx.Handle("mouse-enter", c.handleMouseEnter)
+	ctx.Handle("mouse-leave", c.handleMouseLeave)
+	ctx.Handle("refresh", c.handleRefresh)
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("star", c.handleStar)
-	ctx.Handle("clear", c.handleClear)
-	ctx.Handle("dismiss", c.handleDismiss)
-	ctx.Handle("refresh", c.handleRefresh)
+	ctx.Handle("user", c.handleUser)
 	//ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
