@@ -26,7 +26,7 @@ func (c *Content) Render() app.UI {
 				),
 			),
 
-			app.Div().Class("row no-margin  large-padding").Body(
+			app.Div().Class("no-margin large-padding").Body(
 				//app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class().Body(
 					app.Span().Class("deep-orange-text").Text("Welcome to "),

@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.22"
+        "version": "0.46.23"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3752,7 +3752,7 @@
                     "type": "string"
                 },
                 "subscription": {
-                    "description": "The very subscription struct/details.\nSubscription app.NotificationSubscription `json:\"subscription\"`\nSubscription webpush.Subscription `json:\"subscription\"`",
+                    "description": "The very subscription struct/details.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/models.Subscription"
