@@ -3,14 +3,7 @@ package models
 
 import (
 	"time"
-	//"github.com/SherClockHolmes/webpush-go"
-	//"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
-
-// Helper struct to see how the data is stored in the database. The map key is an userID parameter.
-/*type Devices struct {
-	Devices map[string][]Device `json:"items"`
-}*/
 
 type Devices []Device
 
@@ -33,8 +26,6 @@ type Device struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// The very subscription struct/details.
-	//Subscription app.NotificationSubscription `json:"subscription"`
-	//Subscription webpush.Subscription `json:"subscription"`
 	Subscription Subscription `json:"subscription"`
 }
 

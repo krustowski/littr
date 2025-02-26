@@ -9,7 +9,7 @@ import (
 	"time"
 
 	chi "github.com/go-chi/chi/v5"
-	app "github.com/maxence-charriere/go-app/v9/pkg/app"
+	app "github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"

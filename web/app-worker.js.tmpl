@@ -1,49 +1,67 @@
-// https://github.com/maxence-charriere/go-app/blob/master/pkg/app/gen/app-worker.js
+// -----------------------------------------------------------------------------
+// PWA
+// -----------------------------------------------------------------------------
 const cacheName = "app-" + "{{.Version}}";
 const resourcesToCache = {{.ResourcesToCache}};
 
-self.addEventListener("install", (event) => {
-  console.log("installing app worker {{.Version}}");
-
-  event.waitUntil(
-    caches
-      .open(cacheName)
-      .then((cache) => {
-        return cache.addAll(resourcesToCache);
-      })
-      .then(() => {
-        self.skipWaiting();
-      })
-  );
+self.addEventListener("install", async (event) => {
+  try {
+    console.log("installing app worker {{.Version}}");
+    await installWorker();
+    await self.skipWaiting();
+  } catch (error) {
+    console.error("error during installation:", error);
+  }
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(
-        keyList.map((key) => {
-          if (key !== cacheName) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
-  );
-  console.log("app worker {{.Version}} is activated");
+async function installWorker() {
+  const cache = await caches.open(cacheName);
+  await cache.addAll(resourcesToCache);
+}
+
+self.addEventListener("activate", async (event) => {
+  try {
+    await deletePreviousCaches(); // Await cache cleanup
+    await self.clients.claim(); // Ensure the service worker takes control of the clients
+    console.log("app worker {{.Version}} is activated");
+  } catch (error) {
+    console.error("error during activation:", error);
+  }
 });
+
+async function deletePreviousCaches() {
+  keys = await caches.keys();
+  keys.forEach(async (key) => {
+    if (key != cacheName) {
+      try {
+        console.log("deleting", key, "cache");
+        await caches.delete(key);
+      } catch (err) {
+        console.error("deleting", key, "cache failed:", err);
+      }
+    }
+  });
+}
 
 self.addEventListener("fetch", (event) => {
   if (event.request.url.match("/api/v1/live")) {
     return
   }
 
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  event.respondWith(fetchWithCache(event.request));
 });
 
+async function fetchWithCache(request) {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  return await fetch(request);
+}
+
+// -----------------------------------------------------------------------------
+// Push Notifications
+// -----------------------------------------------------------------------------
 self.addEventListener("push", (event) => {
   if (!event.data || !event.data.text()) {
     return;
@@ -120,3 +138,4 @@ self.addEventListener("notificationclick", (event) => {
       })
   );
 });
+

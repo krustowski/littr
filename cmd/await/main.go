@@ -13,7 +13,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/live"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type MyApp struct {
@@ -27,9 +27,9 @@ func (m *MyApp) Render() app.UI {
 	return app.Div().Body(
 		app.H1().Text("HTTP Fetch Example in Go using WASM"),
 		app.Button().Text("Fetch Data").OnClick(m.onFetchData),
-		app.If(m.Data != "", app.P().Text(m.Data)),
+		app.If(m.Data != "", func() app.UI { return app.P().Text(m.Data) }),
 		app.Button().Text("SSE Listen").OnClick(m.onListenToSSE),
-		app.If(m.dataSSE != "", app.P().Text(m.dataSSE)),
+		app.If(m.dataSSE != "", func() app.UI { return app.P().Text(m.dataSSE) }),
 	)
 }
 
@@ -307,7 +307,7 @@ func init() {
 func main() {
 	defer catchError.Release()
 
-	app.Route("/", &MyApp{})
+	app.Route("/", func() app.Composer { return &MyApp{} })
 	app.RunWhenOnBrowser()
 
 	r := chi.NewRouter()
