@@ -18,15 +18,15 @@ type UserNickname struct {
 }
 
 func (u *UserNickname) onClick(ctx app.Context, e app.Event) {
-	ctx.NewActionWithValue(u.OnClickActionName, e.Get("id").String())
+	ctx.NewActionWithValue(u.OnClickActionName, u.Nickname)
 }
 
 func (u *UserNickname) onMouseEnter(ctx app.Context, e app.Event) {
-	ctx.NewActionWithValue(u.OnMouseEnterActionName, e.Get("id").String())
+	ctx.NewActionWithValue(u.OnMouseEnterActionName, u.SpanID)
 }
 
 func (u *UserNickname) onMouseLeave(ctx app.Context, e app.Event) {
-	ctx.NewActionWithValue(u.OnMouseLeaveActionName, e.Get("id").String())
+	ctx.NewActionWithValue(u.OnMouseLeaveActionName, u.SpanID)
 }
 
 func (u *UserNickname) Render() app.UI {

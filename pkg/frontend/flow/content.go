@@ -73,7 +73,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("dismiss", c.handleDismiss)
-	ctx.Handle("image", c.handleImage)
+	ctx.Handle("image-click", c.handleImage)
 	ctx.Handle("link", c.handleLink)
 	ctx.Handle("modal-post-delete", c.handleModalPostDeleteShow)
 	ctx.Handle("mouse-enter", c.handleMouseEnter)

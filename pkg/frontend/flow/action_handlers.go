@@ -113,6 +113,7 @@ func (c *Content) handleImage(ctx app.Context, a app.Action) {
 		return
 	}
 
+	// Fetch the very image element/node.
 	img := app.Window().GetElementByID(id)
 	if img.IsNull() {
 		return
@@ -123,17 +124,19 @@ func (c *Content) handleImage(ctx app.Context, a app.Action) {
 	split := strings.Split(src, ".")
 	ext := split[len(split)-1]
 
+	name := strings.TrimLeft(id, "img-")
+
 	// image preview (thumbnail) to the actual image logic
 	if (ext != "gif" && strings.Contains(src, "thumb")) || (ext == "gif" && strings.Contains(src, "click")) {
-		ctx.JSSrc().Set("src", "/web/pix/"+id+"."+ext)
+		img.Set("src", "/web/pix/"+name+"."+ext)
 		//ctx.JSSrc().Set("style", "max-height: 90vh; max-height: 100%; transition: max-height 0.1s; z-index: 1; max-width: 100%; background-position: center")
-		ctx.JSSrc().Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position")
+		img.Set("style", "max-height: 90vh; transition: max-height 0.1s; z-index: 5; max-width: 100%; background-position: center")
 	} else if ext == "gif" && !strings.Contains(src, "thumb") {
-		ctx.JSSrc().Set("src", "/web/click-to-see.gif")
-		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+		img.Set("src", "/web/click-to-see.gif")
+		img.Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
 	} else {
-		ctx.JSSrc().Set("src", "/web/pix/thumb_"+id+"."+ext)
-		ctx.JSSrc().Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
+		img.Set("src", "/web/pix/thumb_"+name+"."+ext)
+		img.Set("style", "z-index: 1; max-height: 100%; max-width: 100%")
 	}
 }
 

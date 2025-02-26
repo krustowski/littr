@@ -34,7 +34,7 @@ func (p *PostHeader) Render() app.UI {
 		},
 
 		&atoms.UserNickname{
-			SpanID:                 "user-flow-link",
+			SpanID:                 "user-flow-link-" + p.PostID,
 			Title:                  "user's flow link",
 			Class:                  "large-text bold deep-orange-text",
 			Nickname:               p.PostAuthor,

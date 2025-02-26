@@ -77,7 +77,7 @@ func (p *PostBody) Render() app.UI {
 				},
 
 				&atoms.Image{
-					ID:                p.Post.ID,
+					ID:                "img-" + p.Post.ID,
 					Src:               p.RenderProps.ImageSource,
 					Class:             "no-padding center middle lazy",
 					OnClickActionName: p.OnClickImageActionName,
