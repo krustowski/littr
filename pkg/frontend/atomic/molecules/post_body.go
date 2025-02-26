@@ -1,12 +1,8 @@
 package molecules
 
 import (
-	"net/url"
-	"strings"
-
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
-	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -14,15 +10,15 @@ import (
 type PostBody struct {
 	app.Compo
 
-	imgSrc                 string
-	hideReplies            bool
-	postDetailsSummary     string
-	previousDetailsSummary string
-	previousContent        string
+	RenderProps struct {
+		ImageSource     string
+		PostSummary     string
+		OriginalContent string
+		OriginalSummary string
+		PostTimestamp   string
+	}
 
-	Post         models.Post
-	PostOriginal models.Post
-	//Posts        map[string]models.Post
+	Post models.Post
 
 	OnClickImage app.EventHandler
 	OnClickLink  app.EventHandler
@@ -31,61 +27,21 @@ type PostBody struct {
 	LoaderShowImage bool
 }
 
-func (p *PostBody) OnMount(ctx app.Context) {
-	if len(p.Post.Content) > config.MaxPostLength {
-		p.postDetailsSummary = p.Post.Content[:config.MaxPostLength/10] + "- [...]"
-	}
-
-	if p.Post.ReplyToID != "" {
-		if !p.hideReplies {
-			/*if _, found := p.Posts[p.Post.ReplyToID]; found {
-			}*/
-		}
-	}
-
-	// Fetch the image source
-	// Check the URL/URI format
-	switch p.Post.Type {
-	case "fig":
-		if _, err := url.ParseRequestURI(p.Post.Content); err == nil {
-			p.imgSrc = p.Post.Content
-		} else {
-			fileExplode := strings.Split(p.Post.Content, ".")
-			extension := fileExplode[len(fileExplode)-1]
-
-			p.imgSrc = "/web/pix/thumb_" + p.Post.Content
-			if extension == "gif" {
-				p.imgSrc = "/web/click-to-see-gif.jpg"
-			}
-		}
-	case "post":
-		if _, err := url.ParseRequestURI(p.Post.Figure); err == nil {
-			p.imgSrc = p.Post.Figure
-		} else {
-			fileExplode := strings.Split(p.Post.Figure, ".")
-			extension := fileExplode[len(fileExplode)-1]
-
-			p.imgSrc = "/web/pix/thumb_" + p.Post.Figure
-			if extension == "gif" {
-				p.imgSrc = "/web/click-to-see.gif"
-			}
-		}
-	}
-}
+func (p *PostBody) OnMount(ctx app.Context) {}
 
 func (p *PostBody) Render() app.UI {
 	return app.Div().Body(
 		app.If(p.Post.ReplyToID != "", func() app.UI {
 			return app.Article().Class("black-text border reply thicc").Style("max-width", "100%").Body(
 				app.Div().Class("row max").Body(
-					app.If(p.previousDetailsSummary != "", func() app.UI {
+					app.If(p.RenderProps.OriginalSummary != "", func() app.UI {
 						return app.Details().Class("max").Body(
-							app.Summary().Text(p.previousDetailsSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
+							app.Summary().Text(p.RenderProps.OriginalSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 							app.Div().Class("space"),
-							app.Span().Class("bold").Text(p.PostOriginal.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+							app.Span().Class("bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 						)
-					}).ElseIf(len(p.PostOriginal.Content) > 0, func() app.UI {
-						return app.Span().Class("max bold").Text(p.PostOriginal.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
+					}).ElseIf(len(p.RenderProps.OriginalContent) > 0, func() app.UI {
+						return app.Span().Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
 					}),
 
 					&atoms.Button{
@@ -102,9 +58,9 @@ func (p *PostBody) Render() app.UI {
 
 		app.If(len(p.Post.Content) > 0, func() app.UI {
 			return app.Article().Class("border thicc").Style("max-width", "100%").Body(
-				app.If(p.postDetailsSummary != "", func() app.UI {
+				app.If(p.RenderProps.PostSummary != "", func() app.UI {
 					return app.Details().Body(
-						app.Summary().Text(p.postDetailsSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
+						app.Summary().Text(p.RenderProps.PostSummary).Style("hyphens", "auto").Style("word-break", "break-word"),
 						app.Div().Class("space"),
 						app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 					)
@@ -122,7 +78,7 @@ func (p *PostBody) Render() app.UI {
 
 				&atoms.Image{
 					ID:      p.Post.ID,
-					Src:     p.imgSrc,
+					Src:     p.RenderProps.ImageSource,
 					Class:   "no-padding center middle lazy",
 					OnClick: p.OnClickImage,
 					Styles:  map[string]string{"max-height": "100%", "max-width": "100%"},
