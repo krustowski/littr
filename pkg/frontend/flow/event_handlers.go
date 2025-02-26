@@ -105,25 +105,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *Content) onClickLink(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-
-	url := ctx.Page().URL()
-	scheme := url.Scheme
-	host := url.Host
-
-	// write the link to browsers's clipboard
-	navigator := app.Window().Get("navigator")
-	if !navigator.IsNull() {
-		clipboard := navigator.Get("clipboard")
-		if !clipboard.IsNull() && !clipboard.IsUndefined() {
-			clipboard.Call("writeText", scheme+"://"+host+"/flow/posts/"+key)
-		}
-	}
-	ctx.Navigate("/flow/posts/" + key)
-}
-
-func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {
+/*func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {
 	//ctx.NewActionWithValue("dismiss", key)
 	ctx.NewAction("dismiss")
 
@@ -142,45 +124,8 @@ func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {
 		c.postButtonsDisabled = false
 		c.deletePostModalShow = false
 		//})
-	}*/
-}
-
-func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	//c.buttonDisabled = true
-
-	ctx.Navigate("/flow/users/" + key)
-}
-
-// onClickReply acts like a caller function evoked when user click on the reply icon at one's post
-func (c *Content) onClickReply(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.interactedPostKey = ctx.JSSrc().Get("id").String()
-		c.modalReplyActive = true
-		c.postButtonsDisabled = false
-		c.buttonDisabled = true
-	})
-
-	ctx.Defer(func(app.Context) {
-		app.Window().Get("document").Call("getElementById", "reply-textarea").Call("focus")
-	})
-}
-
-// onClickPostReply acts like a caller function evoked when user clicks on "reply" button in the reply modal
-func (c *Content) onClickPostReply(ctx app.Context, e app.Event) {
-	// Prevent double-posting.
-	if c.postButtonsDisabled {
-		return
 	}
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.modalReplyActive = true
-		c.postButtonsDisabled = true
-		c.buttonDisabled = true
-	})
-
-	ctx.NewAction("reply")
-}
+}*/
 
 func (c *Content) onClickGeneric(ctx app.Context, e app.Event) {
 	if e.Get("target").String() == "overlay" || e.Get("srcElement").String() == "overlay" {

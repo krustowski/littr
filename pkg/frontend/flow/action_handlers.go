@@ -2,6 +2,7 @@ package flow
 
 import (
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -140,10 +141,33 @@ func (c *Content) handleImage(ctx app.Context, a app.Action) {
 	}
 }
 
-func (c *Content) handleLink(ctx app.Context, a app.Action) {}
+func (c *Content) handleLink(ctx app.Context, a app.Action) {
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	url := ctx.Page().URL()
+	scheme := url.Scheme
+	host := url.Host
+	path := "/flow/posts/"
+
+	if _, err := strconv.ParseFloat(id, 64); err != nil {
+		path = "/flow/users/"
+	}
+
+	// Write the link to browsers's clipboard.
+	navigator := app.Window().Get("navigator")
+	if !navigator.IsNull() {
+		clipboard := navigator.Get("clipboard")
+		if !clipboard.IsNull() && !clipboard.IsUndefined() {
+			clipboard.Call("writeText", scheme+"://"+host+path+id)
+		}
+	}
+	ctx.Navigate(path + id)
+}
 
 func (c *Content) handleModalPostDeleteShow(ctx app.Context, a app.Action) {
-	//key := ctx.JSSrc().Get("id").String()
 	id, ok := a.Value.(string)
 	if !ok {
 		return
@@ -153,6 +177,24 @@ func (c *Content) handleModalPostDeleteShow(ctx app.Context, a app.Action) {
 		c.interactedPostKey = id
 		c.deleteModalButtonsDisabled = false
 		c.deletePostModalShow = true
+	})
+}
+
+func (c *Content) handleModalPostReplyShow(ctx app.Context, a app.Action) {
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPostKey = id
+		c.modalReplyActive = true
+		c.postButtonsDisabled = false
+		c.buttonDisabled = true
+	})
+
+	ctx.Defer(func(app.Context) {
+		app.Window().Get("document").Call("getElementById", "reply-textarea").Call("focus")
 	})
 }
 
@@ -240,6 +282,17 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleReply(ctx app.Context, a app.Action) {
+	// Prevent double-posting.
+	if c.postButtonsDisabled {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.modalReplyActive = true
+		c.postButtonsDisabled = true
+		c.buttonDisabled = true
+	})
+
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
@@ -258,7 +311,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// allow picture-only posting
 		if replyPost == "" && c.newFigFile == "" {
-			toast.Text(common.ERR_INVALID_REPLY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_INVALID_REPLY).Type(common.TTYPE_ERR).Dispatch(c)
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.postButtonsDisabled = false
@@ -567,4 +620,11 @@ func (c *Content) handleTextareaBlur(ctx app.Context, a app.Action) {
 	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
 }
 
-func (c *Content) handleUser(ctx app.Context, a app.Action) {}
+func (c *Content) handleUser(ctx app.Context, a app.Action) {
+	id, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Navigate("/flow/users/" + id)
+}

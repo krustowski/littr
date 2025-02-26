@@ -14,13 +14,14 @@ import (
 type ModalPostReply struct {
 	app.Compo
 
-	replyPostContent string
-	newFigLink       string
-	newFigFile       string
+	ReplyPostContent *string
+	ImageData        *[]byte
+	ImageLink        *string
+	ImageFile        *string
 
 	PostOriginal models.Post
 
-	ModalButtonsDisabled bool
+	ModalButtonsDisabled *bool
 	ModalShow            bool
 
 	OnClickDismissActionName string
@@ -67,13 +68,16 @@ func (m *ModalPostReply) Render() app.UI {
 				&atoms.Textarea{
 					ID:               "reply-textarea",
 					Class:            "field label textarea border extra deep-orange-text thicc",
-					Content:          m.replyPostContent,
+					Content:          *m.ReplyPostContent,
 					Name:             "replyPost",
 					LabelText:        fmt.Sprintf("Reply to: %s", m.PostOriginal.Nickname),
 					OnBlurActionName: "blur",
 				},
 
 				&molecules.ImageInput{
+					ImageData:       m.ImageData,
+					ImageFile:       m.ImageFile,
+					ImageLink:       m.ImageLink,
 					ButtonsDisabled: m.ModalButtonsDisabled,
 				},
 
@@ -84,7 +88,7 @@ func (m *ModalPostReply) Render() app.UI {
 						Icon:              "close",
 						Text:              "Cancel",
 						OnClickActionName: m.OnClickDismissActionName,
-						Disabled:          m.ModalButtonsDisabled,
+						Disabled:          *m.ModalButtonsDisabled,
 					},
 
 					&atoms.Button{
@@ -93,7 +97,7 @@ func (m *ModalPostReply) Render() app.UI {
 						Icon:              "reply",
 						Text:              "Reply",
 						OnClickActionName: m.OnClickReplyActionName,
-						Disabled:          m.ModalButtonsDisabled,
+						Disabled:          *m.ModalButtonsDisabled,
 					},
 				),
 				app.Div().Class("space"),

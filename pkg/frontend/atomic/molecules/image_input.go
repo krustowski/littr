@@ -8,11 +8,11 @@ import (
 type ImageInput struct {
 	app.Compo
 
-	ImageData []byte
-	ImageFile string
-	ImageLink string
+	ImageData *[]byte
+	ImageFile *string
+	ImageLink *string
 
-	ButtonsDisabled bool
+	ButtonsDisabled *bool
 }
 
 // https://github.com/maxence-charriere/go-app/issues/882
@@ -23,13 +23,13 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 	//log.Println("size", file.Get("size").Int())
 	//log.Println("type", file.Get("type").String())
 
-	i.ButtonsDisabled = true
+	*i.ButtonsDisabled = true
 
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
 		defer ctx.Dispatch(func(ctx app.Context) {
-			i.ButtonsDisabled = false
+			*i.ButtonsDisabled = false
 		})
 
 		var (
@@ -53,8 +53,8 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 
 		// Load the image data to the Content structure.
 		ctx.Dispatch(func(ctx app.Context) {
-			i.ImageFile = file.Get("name").String()
-			i.ImageData = *processedImg
+			*i.ImageFile = file.Get("name").String()
+			*i.ImageData = *processedImg
 
 			// Save the figure data in LS as a backup.
 			ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
@@ -70,12 +70,23 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 	ctx.NewActionWithValue(i.OnImageUploadActionName, e.Get("id").String())
 }*/
 
+func (i *ImageInput) OnMount(ctx app.Context) {
+	if i.ImageLink == nil {
+		i.ImageLink = new(string)
+	}
+}
+
 func (i *ImageInput) Render() app.UI {
 	return app.Div().Class("field label border extra deep-orange-text thicc").Body(
-		app.Input().ID("fig-upload").Class("active").Type("file").OnChange(i.ValueTo(&i.ImageLink)).OnInput(i.onImageInput).Accept("image/*"),
-		app.Input().Class("active").Type("text").Value(i.ImageFile).Disabled(true),
+		//app.Input().ID("fig-upload").Class("active").Type("file").OnChange(i.ValueTo(&i.ImageLink)).OnInput(i.onImageInput).Accept("image/*"),
+		app.Input().ID("fig-upload").Class("active").Type("file").OnInput(i.onImageInput).Accept("image/*"),
+		app.Input().Class("active").Type("text").Value(*i.ImageFile).Disabled(true),
 		app.Label().Text("Image").Class("active deep-orange-text"),
-		app.I().Text("image"),
+		app.If(*i.ButtonsDisabled, func() app.UI {
+			return app.Progress().Class("circle deep-orange-border small")
+		}).Else(func() app.UI {
+			return app.I().Text("image")
+		}),
 	)
 
 }

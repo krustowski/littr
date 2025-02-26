@@ -79,9 +79,13 @@ func (c *Content) Render() app.UI {
 
 		// Post reply modal.
 		&organisms.ModalPostReply{
+			ReplyPostContent:         &c.replyPostContent,
+			ImageData:                &c.newFigData,
+			ImageLink:                &c.newFigLink,
+			ImageFile:                &c.newFigFile,
 			PostOriginal:             c.posts[c.interactedPostKey],
 			ModalShow:                c.modalReplyActive,
-			ModalButtonsDisabled:     c.postButtonsDisabled,
+			ModalButtonsDisabled:     &c.postButtonsDisabled,
 			OnClickDismissActionName: "dismiss",
 			OnClickReplyActionName:   "reply",
 			OnFigureUploadActionName: "image-upload",
