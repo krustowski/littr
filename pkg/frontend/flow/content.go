@@ -117,6 +117,10 @@ func (c *Content) OnDismount() {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	ctx.Dispatch(func(ctx app.Context) {
 		c.loaderShow = true
 		c.loaderShowImage = true

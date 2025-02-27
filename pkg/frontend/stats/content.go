@@ -32,6 +32,10 @@ func (c *Content) OnMount(ctx app.Context) {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {

@@ -43,6 +43,10 @@ type Content struct {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	// show loader
 	c.loaderShow = true
 	toast := common.Toast{AppContext: &ctx}
