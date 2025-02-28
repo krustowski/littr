@@ -177,6 +177,8 @@ func (c *Content) handleModalPostDeleteShow(ctx app.Context, a app.Action) {
 		c.interactedPostKey = id
 		c.deleteModalButtonsDisabled = false
 		c.deletePostModalShow = true
+		c.postButtonsDisabled = false
+		c.buttonDisabled = true
 	})
 }
 
@@ -227,10 +229,15 @@ func (c *Content) handleMouseLeave(_ app.Context, a app.Action) {
 }
 
 func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
-	ctx.NewAction("dismiss")
+	ctx.Dispatch(func(ctx app.Context) {
+		c.buttonDisabled = true
+		c.postButtonsDisabled = true
+		c.refreshClicked = true
+	})
+
 	ctx.NewAction("clear")
 
-	key, ok := a.Value.(string)
+	/*key, ok := a.Value.(string)
 	if !ok {
 		key = ""
 		//return
@@ -238,7 +245,7 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 
 	if key == "x" || key == "X" {
 		c.hideReplies = !c.hideReplies
-	}
+	}*/
 
 	ctx.Async(func() {
 		opts := pageOptions{
@@ -272,6 +279,7 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 
 			c.loaderShow = false
 			c.loaderShowImage = false
+			c.buttonDisabled = false
 			c.refreshClicked = false
 			c.postButtonsDisabled = false
 			c.contentLoadFinished = true

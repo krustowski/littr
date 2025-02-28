@@ -70,6 +70,10 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("dismiss", c.handleDismiss)

@@ -32,7 +32,14 @@ func (b *Button) onClick(ctx app.Context, e app.Event) {
 		return
 	}
 
-	ctx.NewActionWithValue(b.OnClickActionName, b.ID)
+	ctx.Dispatch(func(ctx app.Context) {
+		b.Disabled = true
+		b.ShowProgress = true
+	})
+
+	ctx.Defer(func(ctx app.Context) {
+		ctx.NewActionWithValue(b.OnClickActionName, b.ID)
+	})
 }
 
 func (b *Button) composeClass() string {
