@@ -217,6 +217,7 @@ func (p *PostFeed) Render() app.UI {
 
 				&molecules.PostFooter{
 					Post:               post,
+					PostTimestamp:      p.postTimestamp,
 					ButtonsDisabled:    p.ButtonsDisabled,
 					LoggedUserNickname: p.LoggedUser.Nickname,
 					//

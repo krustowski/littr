@@ -56,7 +56,13 @@ func (p *PostBody) Render() app.UI {
 			)
 		}),
 
-		app.If(len(p.Post.Content) > 0, func() app.UI {
+		app.If(p.Post.Nickname == "system", func() app.UI {
+			return app.Article().Class("border blue-border bold center-align thicc info").Style("max-width", "100%").Body(
+				app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+			)
+		}),
+
+		app.If(len(p.Post.Content) > 0 && p.Post.Nickname != "system", func() app.UI {
 			return app.Article().Class("border thicc").Style("max-width", "100%").Body(
 				app.If(p.RenderProps.PostSummary != "", func() app.UI {
 					return app.Details().Body(

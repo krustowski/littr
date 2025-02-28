@@ -22,6 +22,10 @@ type PostHeader struct {
 }
 
 func (p *PostHeader) Render() app.UI {
+	if p.PostAuthor == "system" {
+		return app.Div().Class("space")
+	}
+
 	// post header (author avatar + name + link button)
 	return app.Div().Class("row top-padding bottom-padding").Body(
 		&atoms.Image{

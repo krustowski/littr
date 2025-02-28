@@ -11,6 +11,7 @@ type PostFooter struct {
 	app.Compo
 
 	LoggedUserNickname string
+	PostTimestamp      string
 
 	Post models.Post
 
@@ -26,7 +27,7 @@ func (p *PostFooter) Render() app.UI {
 	return app.Div().Class("row").Body(
 		app.Div().Class("max").Body(
 			//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
-			app.Text(p.Post.Timestamp),
+			app.Text(p.PostTimestamp),
 		),
 
 		app.If(p.Post.Nickname != "system", func() app.UI {
@@ -59,6 +60,8 @@ func (p *PostFooter) Render() app.UI {
 					Disabled:          p.ButtonsDisabled,
 				},
 			)
+		}).ElseIf(p.Post.Nickname == "system", func() app.UI {
+			return app.Div()
 		}).Else(func() app.UI {
 			return app.Div().Body(
 				app.B().Title("reaction count").Text(p.Post.ReactionCount).Class("left-padding"),
