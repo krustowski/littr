@@ -56,7 +56,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		}
 
 		if opts.SinglePostID == "" && opts.UserFlowNick == "" && opts.Hashtag == "" {
-			toast.Text("page parameters (singlePost, userFlow, hashtag) cannot be blank").Type("error").Dispatch(c, dispatch)
+			toast.Text(common.ERR_INVALID_REQ_PARAMS).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.refreshClicked = false
@@ -85,7 +85,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 	output := &common.Response{Data: &dataModel{}}
 
 	if ok := common.FetchData(input, output); !ok {
-		toast.Text("API error: cannot fetch the flow page").Type("error").Dispatch(c, dispatch)
+		toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.refreshClicked = false
@@ -97,7 +97,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		ctx.LocalStorage().Set("user", "")
 		ctx.LocalStorage().Set("authGranted", false)
 
-		toast.Text("please log-in again").Type("info").Link("/logout").Dispatch(c, dispatch)
+		toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Keep().Dispatch()
 		return nil, nil
 	}
 
@@ -113,11 +113,11 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 	}
 
 	if len(data.Posts) < 1 && opts.UserFlowNick == "" {
-		toast.Text("it seems that this flow is very empty, try expanding it").Type("info").Link("/post").Dispatch(c, dispatch)
+		toast.Text(common.MSG_EMPTY_FLOW).Type(common.TTYPE_INFO).Link("/post").Dispatch()
 	}
 
 	if len(data.Posts) < 1 && opts.UserFlowNick != "" && c.user.FlowList[opts.UserFlowNick] {
-		toast.Text("this user has apparently not published any posts yet").Type("info").Link("/users").Dispatch(c, dispatch)
+		toast.Text(common.MSG_USER_HAS_NOT_POSTED).Type(common.TTYPE_INFO).Link("/users").Dispatch()
 		//return nil, nil
 	}
 

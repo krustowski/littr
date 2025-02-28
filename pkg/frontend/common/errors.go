@@ -11,13 +11,16 @@ const (
 	MSG_STATE_ONLINE   = "You are back online."
 
 	// Flow/Posts-related error messages.
-	MSG_DELETE_SUCCESS     = "Post deleted."
-	MSG_REPLY_ADDED        = "Reply added."
-	ERR_INVALID_REPLY      = "No valid content was entered."
-	ERR_POST_UNAUTH_DELETE = "You can only delete your own posts."
-	ERR_POST_NOT_FOUND     = "Post not found (may be deleted)."
-	ERR_USER_NOT_FOUND     = "User not found."
-	ERR_PRIVATE_ACC        = "This account is private."
+	MSG_DELETE_SUCCESS      = "Post deleted."
+	MSG_REPLY_ADDED         = "Reply added."
+	MSG_EMPTY_FLOW          = "This flow is very empty, you can try expanding it."
+	MSG_USER_HAS_NOT_POSTED = "This user has apparently not published any post yet."
+	ERR_INVALID_REPLY       = "No valid content was entered."
+	ERR_POST_UNAUTH_DELETE  = "You can only delete your own posts."
+	ERR_POST_NOT_FOUND      = "Post not found (may be deleted)."
+	ERR_USER_NOT_FOUND      = "User not found."
+	ERR_PRIVATE_ACC         = "This account is private."
+	ERR_INVALID_REQ_PARAMS  = "Invalid page request params."
 
 	// Generic error messages on the FE.
 	ERR_CANNOT_REACH_BE = "littr can't connect to the server."

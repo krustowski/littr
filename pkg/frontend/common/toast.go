@@ -7,46 +7,6 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-type ToastInterface interface {
-	// Context method sets the application context pointer reference.
-	Context(*app.Context) *Toast
-
-	// Text method write the input string to the TText field.
-	Text(string) *Toast
-
-	// Link method writes the input string to the TLink field.
-	Link(string) *Toast
-
-	// Type method writes the input string to the TType field.
-	Type(string) *Toast
-
-	// SetPrefix method enables to set the logging prefix. Can be removed afterwards.
-	SetPrefix(string) *Toast
-
-	// RemovePrefix method removes the previously added logging prefix.
-	RemovePrefix() *Toast
-
-	// Dispatch sends the instance itself to the Content type of a view. This method is the final one.
-	Dispatch(interface{}, func(*Toast, interface{}))
-}
-
-type Toast struct {
-	// AppContext is a pointer reference to the application context.
-	AppContext *app.Context
-
-	// TLink is a field to hold the hypertext link.
-	TLink string
-
-	// TText is a filed to hold the very text message to display.
-	TText string
-
-	// TType defines the message type (error, info, success).
-	TType string
-
-	// TID is a filed to hold the toast's UUID.
-	TID int64
-}
-
 const (
 	// Toast type error = red10.
 	TTYPE_ERR = "error"
@@ -57,6 +17,33 @@ const (
 	// Toast type success = green10.
 	TTYPE_SUCCESS = "success"
 )
+
+type ToastInterface interface {
+	// Context method sets the application context pointer reference.
+	Context(*app.Context) ToastInterface
+
+	// Text method write the input string to the TText field.
+	Text(string) ToastInterface
+
+	// Link method writes the input string to the TLink field.
+	Link(string) ToastInterface
+
+	// Type method writes the input string to the TType field.
+	Type(string) ToastInterface
+
+	// Keep tells the toast to stay pinned on the UI.
+	Keep() ToastInterface
+
+	// SetPrefix method enables to set the logging prefix. Can be removed afterwards.
+	SetPrefix(string) ToastInterface
+
+	// RemovePrefix method removes the previously added logging prefix.
+	RemovePrefix() ToastInterface
+
+	// Dispatch sends the instance itself to the Content type of a view. This method is the final one.
+	//Dispatch(interface{}, func(*Toast, interface{}))
+	Dispatch()
+}
 
 // ToastColor is a helper function reference to define the colour palette for such toast types.
 var ToastColor = func(ttype string) string {
@@ -77,6 +64,26 @@ var ToastColor = func(ttype string) string {
 
 	// Set the unknown option to the INFO color.
 	return "blue10"
+}
+
+type Toast struct {
+	// AppContext is a pointer reference to the application context.
+	AppContext *app.Context
+
+	// TLink is a field to hold the hypertext link.
+	TLink string
+
+	// TText is a filed to hold the very text message to display.
+	TText string
+
+	// TType defines the message type (error, info, success).
+	TType string
+
+	// TID is a filed to hold the toast's UUID.
+	TID int64
+
+	// TKeep makes the toast/snack pinned on the UI.
+	TKeep bool
 }
 
 // Context sets the application context pointer reference. Returns itself.
@@ -103,14 +110,20 @@ func (t *Toast) Type(typ string) *Toast {
 	return t
 }
 
+// Keep sets the toast/snack to be pinned on the UI.
+func (t *Toast) Keep() *Toast {
+	t.TKeep = true
+	return t
+}
+
 // Dispatch is a wrapper function that wraps the function ShowGenericToast() from pkg/frontend/common/snack.go.
-func (t *Toast) Dispatch(...interface{}) {
+func (t *Toast) Dispatch() {
 	tPl := &ToastPayload{
 		Name:  "snackbar-general-top",
 		Text:  t.TText,
 		Link:  t.TLink,
 		Color: ToastColor(t.TType),
-		Keep:  false,
+		Keep:  t.TKeep,
 	}
 
 	ShowGenericToast(tPl)
