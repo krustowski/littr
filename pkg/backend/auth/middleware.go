@@ -106,7 +106,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			refToken, err := fetchRefreshTokenRecord(refreshCookie, &w)
 			if refToken == nil && err != nil {
 				// Token has been invalidated due to its non-existence or invalidity.
-				l.Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
+				l.Error(err).Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 				return
 			}
 
