@@ -11,6 +11,8 @@ const (
 	MSG_STATE_ONLINE   = "You are back online."
 
 	// Flow/Posts-related error messages.
+	MSG_DELETE_SUCCESS     = "Post deleted."
+	MSG_REPLY_ADDED        = "Reply added."
 	ERR_INVALID_REPLY      = "No valid content was entered."
 	ERR_POST_UNAUTH_DELETE = "You can only delete your own posts."
 	ERR_POST_NOT_FOUND     = "Post not found (may be deleted)."

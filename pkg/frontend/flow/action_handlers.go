@@ -44,7 +44,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		interactedPost := c.posts[key]
 
 		if interactedPost.Nickname != c.user.Nickname {
-			toast.Text(common.ERR_POST_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_POST_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -60,17 +60,21 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		ctx.Dispatch(func(ctx app.Context) {
 			delete(c.posts, key)
+		})
+
+		ctx.Defer(func(ctx app.Context) {
+			toast.Text(common.MSG_DELETE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 		})
 	})
 }
@@ -296,6 +300,10 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.postButtonsDisabled = false
+		})
+
 		postType := "post"
 
 		// trim the spaces on the extremites
@@ -311,11 +319,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// allow picture-only posting
 		if replyPost == "" && c.newFigFile == "" {
-			toast.Text(common.ERR_INVALID_REPLY).Type(common.TTYPE_ERR).Dispatch(c)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = false
-			})
+			toast.Text(common.ERR_INVALID_REPLY).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -355,11 +359,9 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = false
-
 				c.interactedPostKey = ""
 				c.replyPostContent = ""
 				c.newFigData = []byte{}
@@ -369,13 +371,13 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		if output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -398,11 +400,9 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 
 		// create a notification
 		if ok := common.FetchData(input, output2); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
-				c.postButtonsDisabled = false
-
 				c.interactedPostKey = ""
 				c.replyPostContent = ""
 				c.newFigData = []byte{}
@@ -437,6 +437,10 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			c.replyPostContent = ""
 			c.newFigData = []byte{}
 			c.newFigFile = ""
+		})
+
+		ctx.Defer(func(ctx app.Context) {
+			toast.Text(common.MSG_REPLY_ADDED).Type(common.TTYPE_SUCCESS).Dispatch()
 		})
 	})
 }
