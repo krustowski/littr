@@ -9,6 +9,8 @@ import (
 type ModalPostDelete struct {
 	app.Compo
 
+	PostID string
+
 	ModalButtonsDisabled bool
 	ModalShow            bool
 
@@ -42,6 +44,7 @@ func (m *ModalPostDelete) Render() app.UI {
 						Disabled:          m.ModalButtonsDisabled,
 					},
 					&atoms.Button{
+						ID:                m.PostID,
 						Class:             "max bold red10 white-text thicc",
 						Icon:              "delete",
 						Text:              "Delete",

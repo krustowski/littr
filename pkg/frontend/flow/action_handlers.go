@@ -36,28 +36,22 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		return
 	}
 
-	// nasty
-	c.postKey = key
-
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
-		key := c.postKey
+		defer ctx.NewAction("dismiss")
+
 		interactedPost := c.posts[key]
 
 		if interactedPost.Nickname != c.user.Nickname {
 			toast.Text(common.ERR_POST_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.deletePostModalShow = false
-				c.deleteModalButtonsDisabled = false
-			})
+			return
 		}
 
 		input := &common.CallInput{
 			Method:      "DELETE",
-			Url:         "/api/v1/posts/" + interactedPost.ID,
-			Data:        interactedPost,
+			Url:         "/api/v1/posts/" + key,
+			Data:        nil,
 			CallerID:    c.user.Nickname,
 			PageNo:      c.pageNo,
 			HideReplies: c.hideReplies,
@@ -67,6 +61,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			return
 		}
 
 		if output.Code != 200 {
@@ -76,9 +71,6 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 
 		ctx.Dispatch(func(ctx app.Context) {
 			delete(c.posts, key)
-
-			c.deletePostModalShow = false
-			c.deleteModalButtonsDisabled = false
 		})
 	})
 }

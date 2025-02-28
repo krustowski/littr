@@ -71,6 +71,7 @@ func (c *Content) Render() app.UI {
 
 		// Post deletion modal.
 		&organisms.ModalPostDelete{
+			PostID:                   c.posts[c.interactedPostKey].ID,
 			ModalShow:                c.deletePostModalShow,
 			ModalButtonsDisabled:     c.deleteModalButtonsDisabled,
 			OnClickDismissActionName: "dismiss",
