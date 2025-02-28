@@ -201,12 +201,14 @@ func (p *PostFeed) Render() app.UI {
 						OriginalContent string
 						OriginalSummary string
 						PostTimestamp   string
+						SystemLink      string
 					}{
 						ImageSource:     p.imageSource,
 						PostSummary:     p.postSummary,
 						OriginalContent: p.originalContent,
 						OriginalSummary: p.originalSummary,
 						PostTimestamp:   p.postTimestamp,
+						SystemLink:      p.systemLink,
 					},
 					ButtonDisabled:  p.ButtonsDisabled,
 					LoaderShowImage: p.LoaderShowImage,

@@ -16,6 +16,7 @@ type PostBody struct {
 		OriginalContent string
 		OriginalSummary string
 		PostTimestamp   string
+		SystemLink      string
 	}
 
 	Post models.Post
@@ -58,7 +59,9 @@ func (p *PostBody) Render() app.UI {
 
 		app.If(p.Post.Nickname == "system", func() app.UI {
 			return app.Article().Class("border blue-border bold center-align thicc info").Style("max-width", "100%").Body(
-				app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+				app.A().Href(p.RenderProps.SystemLink).Body(
+					app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+				),
 			)
 		}),
 
