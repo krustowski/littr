@@ -57,13 +57,13 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 
 		// Delete the request from one's (the controlling one's) requestList.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -101,18 +101,18 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 
 		// Update the counterpart's flowList.
 		if ok := common.FetchData(input2, output2); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output2.Code != 200 {
-			toast.Text(output2.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output2.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Cast the successful update of both lists.
-		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
+		toast.Text(common.MSG_USER_UPDATED_SUCCESS).Type(common.TTYPE_INFO).Dispatch()
 
 		common.SaveUser(&currentUser, &ctx)
 
@@ -168,17 +168,17 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 
 		// Delete the request from the controlling one's requestList.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 		}
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Cast the successful request removal.
-		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		common.SaveUser(&currentUser, &ctx)
 
@@ -232,17 +232,17 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 
 		// Call the API to delete the follow request.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 		}
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Cast the successful request removal.
-		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
+		toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_INFO).Dispatch()
 
 		// Dispatch the changes to match the reality in the UI.
 		ctx.Dispatch(func(ctx app.Context) {
@@ -295,7 +295,7 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 
 		// Patch the requestList of the counterpart user's.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			requestList[c.user.Nickname] = false
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -307,7 +307,7 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			requestList[c.user.Nickname] = false
 
 			ctx.Dispatch(func(ctx app.Context) {
@@ -318,7 +318,7 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		}
 
 		// Cast the successful patch made.
-		toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		// Dispatch the changes to match the reality in the UI.
 		user.RequestList = requestList

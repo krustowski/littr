@@ -41,13 +41,13 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 		// Read the figure/image data.
 		data, err = common.ReadFile(file)
 		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(i)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		processedImg, err = common.ProcessImage(&data)
 		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(i)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -62,7 +62,7 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 		})
 
 		// Cast the image ready message.
-		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(i)
+		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch()
 	})
 }
 

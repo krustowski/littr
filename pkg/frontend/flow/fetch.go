@@ -101,13 +101,13 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 	}
 
 	if output.Code != 200 {
-		toast.Text(output.Message).Type("error").Dispatch(c, dispatch)
+		toast.Text(output.Message).Type("error").Dispatch()
 		return nil, nil
 	}
 
 	data, ok := output.Data.(*dataModel)
 	if !ok {
-		toast.Text("cannot get data").Type("error").Dispatch(c, dispatch)
+		toast.Text("cannot get data").Type("error").Dispatch()
 		return nil, nil
 	}
 

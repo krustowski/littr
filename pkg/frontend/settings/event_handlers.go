@@ -41,12 +41,12 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
 
 		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
-			toast.Text(common.ERR_PASSPHRASE_MISSING).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISSING).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if passphrase != passphraseAgain {
-			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -74,12 +74,12 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -87,7 +87,7 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 
 		/*var userStream []byte
 		if err := reload(c.user, &userStream); err != nil {
-			toast.Text("cannot update local storage").Type("error").Dispatch(c, dispatch)
+			toast.Text("cannot update local storage").Type("error").Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.settingsButtonDisabled = false
@@ -95,7 +95,7 @@ func (c *Content) onClickPass(ctx app.Context, e app.Event) {
 			return
 		}*/
 
-		toast.Text(common.MSG_PASSPHRASE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_PASSPHRASE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch()
 	})
 }
 
@@ -115,12 +115,12 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 		aboutText := strings.TrimSpace(c.aboutText)
 
 		if aboutText == "" {
-			toast.Text(common.ERR_ABOUT_TEXT_UNCHANGED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_ABOUT_TEXT_UNCHANGED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if len(aboutText) > 100 {
-			toast.Text(common.ERR_ABOUT_TEXT_CHAR_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_ABOUT_TEXT_CHAR_LIMIT).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -140,19 +140,19 @@ func (c *Content) onClickAbout(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Update the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
 
-		toast.Text(common.MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_ABOUT_TEXT_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch()
 		return
 	})
 }
@@ -172,20 +172,20 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 
 		// check the trimmed version of website string
 		if website == "" {
-			toast.Text(common.ERR_WEBSITE_UNCHANGED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_UNCHANGED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// check the URL/URI format
 		if _, err := url.ParseRequestURI(website); err != nil {
-			toast.Text(common.ERR_WEBSITE_INVALID).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_INVALID).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// create a regex object
 		regex, err := regexp.Compile("^(http|https)://")
 		if err != nil {
-			toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -209,16 +209,16 @@ func (c *Content) onClickWebsite(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
-		toast.Text(common.MSG_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_WEBSITE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		// Update the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
@@ -242,7 +242,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 
 	uuid := c.interactedUUID
 	if uuid == "" {
-		toast.Text(common.ERR_SUBSCRIPTION_BLANK_UUID).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		toast.Text(common.ERR_SUBSCRIPTION_BLANK_UUID).Type(common.TTYPE_ERR).Dispatch()
 		return
 	}
 
@@ -265,12 +265,12 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -283,7 +283,7 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 			newDevs = append(newDevs, dev)
 		}
 
-		toast.Text(common.MSG_UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		ctx.Dispatch(func(ctx app.Context) {
 			if uuid == c.thisDeviceUUID {
@@ -405,7 +405,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		// register the subscription
 		sub, err := ctx.Notifications().Subscribe(vapidPubKey)
 		if err != nil {
-			toast.Text(common.ERR_SUBSCRIPTION_REQ_FAIL+err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_SUBSCRIPTION_REQ_FAIL + err.Error()).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.settingsButtonDisabled = false
@@ -446,7 +446,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.subscribed = false
@@ -455,7 +455,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		}
 
 		if output.Code != 201 && output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -464,7 +464,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 			devs = append(devs, deviceSub)
 		}
 
-		toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		// Update the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
@@ -514,7 +514,7 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.user.LocalTimeMode = localTime
@@ -523,11 +523,11 @@ func (c *Content) onLocalTimeModeSwitch(ctx app.Context, e app.Event) {
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
-		toast.Text(common.MSG_LOCAL_TIME_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_LOCAL_TIME_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		// Update the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
@@ -566,16 +566,16 @@ func (c *Content) onClickPrivateSwitch(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
-		toast.Text(common.MSG_PRIVATE_MODE_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_PRIVATE_MODE_TOGGLE).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		// Update the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
@@ -615,12 +615,12 @@ func (c *Content) onClickDeleteAccount(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -644,7 +644,7 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 
 	ctx.Async(func() {
 		if figData, err := common.ReadFile(file); err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 
 		} else {
@@ -688,24 +688,24 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 			output := &common.Response{Data: &dataModel{}}
 
 			if ok := common.FetchData(input, output); !ok {
-				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			if output.Code != 200 {
-				toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			data, ok := output.Data.(*dataModel)
 			if !ok {
-				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			avatar := "/web/pix/thumb_" + data.Key
 
-			toast.Text(common.MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			toast.Text(common.MSG_AVATAR_CHANGE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 			// Update the LocalStorage.
 			common.SaveUser(&c.user, &ctx)

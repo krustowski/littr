@@ -69,7 +69,7 @@ func (c *Content) OnNav(ctx app.Context) {
 		output := &common.Response{Data: &dataModel{}}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -77,18 +77,18 @@ func (c *Content) OnNav(ctx app.Context) {
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 

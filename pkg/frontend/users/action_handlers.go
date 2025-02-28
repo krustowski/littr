@@ -71,20 +71,20 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 			// Call the API to fetch more data pages.
 			if ok := common.FetchData(input, output); !ok {
-				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			// Check if the HTTP 401 is present, if so, link the user to the logout route and terminate the procedure.
 			if output.Code == 401 {
-				toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch(c, dispatch)
+				toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 				return
 			}
 
 			// Assert the type pointer to the data model.
 			data, ok := output.Data.(*dataModel)
 			if !ok {
-				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
@@ -240,14 +240,14 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 
 		// Patch the current user's flowList.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			flowList[key] = !flowList[key]
 			return
 		}
 
 		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			flowList[key] = !flowList[key]
 			return
 		}
@@ -267,10 +267,10 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		// Tweak the text response for a info/success toast.
 		if followed := user.FlowList[key]; followed {
 			text := fmt.Sprintf(common.MSG_USER_FOLLOW_ADD_FMT, key)
-			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch()
 		} else {
 			text := fmt.Sprintf(common.MSG_USER_FOLLOW_REMOVE_FMT, key)
-			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch()
 		}
 
 		return
@@ -387,13 +387,13 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 		// Patch the counterpart's lists.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -423,20 +423,20 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 		// Patch the controlling user's lists.
 		if ok := common.FetchData(input2, output2); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output2.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Update the current user's state in the LocalStorage.
 		common.SaveUser(&c.user, &ctx)
 
-		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch()
 		return
 	})
 	return
