@@ -94,7 +94,7 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// Call the API to fetch the data.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -103,20 +103,20 @@ func (c *Content) OnNav(ctx app.Context) {
 			ctx.LocalStorage().Set("user", "")
 			ctx.LocalStorage().Set("authGranted", false)
 
-			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 			return
 		}
 
 		// Check if the response code is HTTP 200, otherwise print the API response message.
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Assert the output data to the data model declared before.
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -132,7 +132,7 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.loaderShow = false
 			})
 
-			toast.Text(common.MSG_NO_POLL_TO_SHOW).Type(common.TTYPE_INFO).Link("/post").Dispatch(c, dispatch)
+			toast.Text(common.MSG_NO_POLL_TO_SHOW).Type(common.TTYPE_INFO).Link("/post").Dispatch()
 			return
 		}
 

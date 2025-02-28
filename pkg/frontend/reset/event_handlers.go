@@ -24,7 +24,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		}
 
 		if email == "" {
-			toast.Text(common.ERR_RESET_FIELD_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_RESET_FIELD_REQUIRED).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -35,7 +35,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		// validate the e-mail format
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
-			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -44,7 +44,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 		}
 
 		if err := c.handleResetRequest(email, ""); err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -52,7 +52,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 			return
 		}
 
-		toast.Text(common.MSG_RESET_REQUEST_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_RESET_REQUEST_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.showUUIDPage = true
@@ -119,12 +119,12 @@ func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 		}
 
 		if uuid == "" {
-			toast.Text(common.ERR_RESET_UUID_FIELD_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_RESET_UUID_FIELD_EMPTY).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if err := c.handleResetRequest("", uuid); err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 

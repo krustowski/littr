@@ -29,7 +29,7 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		interactedPoll := c.polls[key]
 
 		if interactedPoll.Author != c.user.Nickname {
-			toast.Text(common.ERR_POLL_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_POLL_UNAUTH_DELETE).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.deletePollModalShow = false
@@ -50,12 +50,12 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -112,23 +112,23 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 
 			// call the API to fetch the data
 			if ok := common.FetchData(input, output); !ok {
-				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			if output.Code == 401 {
-				toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch(c, dispatch)
+				toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 				return
 			}
 
 			if output.Code != 200 {
-				toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
 			data, ok := output.Data.(*dataModel)
 			if !ok {
-				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
@@ -190,7 +190,7 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 			break
 		}
 	} else {
-		toast.Text(common.ERR_POLL_OPTION_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+		toast.Text(common.ERR_POLL_OPTION_MISMATCH).Type(common.TTYPE_ERR).Dispatch()
 	}
 
 	// Compose a payload for backend.
@@ -217,11 +217,11 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 

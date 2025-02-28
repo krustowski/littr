@@ -43,32 +43,32 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 
 		// Validate that every of these strings are not empty.
 		if nickname == "" || passphrase == "" || passphraseAgain == "" || email == "" {
-			toast.Text(common.ERR_REGISTER_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_REGISTER_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Don't allow very long nicknames (nor the short ones.
 		if len(nickname) > config.NicknameLengthMax || len(nickname) < 3 {
-			toast.Text("nickname has to be "+strconv.Itoa(config.NicknameLengthMax)+" chars long at max, or at least 3 characters long").Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text("Nickname has to be " + strconv.Itoa(config.NicknameLengthMax) + " chars long at max, or at least 3 characters long.").Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Don't allow special chars and spaces in the nickname.
 		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
-			toast.Text(common.ERR_REGISTER_CHARSET_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_REGISTER_CHARSET_LIMIT).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Ensure both passphrases match.
 		if passphrase != passphraseAgain {
-			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Validate the e-mail struct.
 		// https://stackoverflow.com/a/66624104
 		if _, err := mail.ParseAddress(email); err != nil {
-			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_WRONG_EMAIL_FORMAT).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -107,13 +107,13 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 
 		// Execute the user registration procedure.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check for the HTTP 201 response code, otherwise print the API response message in the toast.
 		if output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 

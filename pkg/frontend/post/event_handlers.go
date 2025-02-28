@@ -51,7 +51,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			pollOptionIII := strings.TrimSpace(c.pollOptionIII)
 
 			if pollOptionI == "" || pollOptionII == "" || pollQuestion == "" {
-				toast.Text(common.ERR_POLL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_POLL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch()
 				leave = true
 				break
 			}
@@ -82,7 +82,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 			// Allow a just picture posting.
 			if newPost == "" && c.newFigFile == "" {
-				toast.Text(common.ERR_POST_TEXTAREA_EMPTY).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(common.ERR_POST_TEXTAREA_EMPTY).Type(common.TTYPE_ERR).Dispatch()
 				leave = true
 				break
 			}
@@ -91,7 +91,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			content = newPost
 
 		default:
-			toast.Text(common.ERR_POST_UNKNOWN_TYPE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_POST_UNKNOWN_TYPE).Type(common.TTYPE_ERR).Dispatch()
 			leave = true
 			return
 		}
@@ -105,7 +105,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// Decode and unmarshal the local storage user data.
 		if err := common.LoadUser(&user, &ctx); err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -155,13 +155,13 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		// Send new post/poll to backend struct.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Check for the HTTP 201 response code, otherwise print the API response message in the toast.
 		if output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -248,18 +248,18 @@ func (c *Content) handleFigUpload(ctx app.Context, e app.Event) {
 		// Read the figure/image data.
 		data, err = common.ReadFile(file)
 		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		processedImg, err = common.ProcessImage(&data)
 		if err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Cast the image ready message.
-		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch(c, dispatch)
+		toast.Text(common.MSG_IMAGE_READY).Type(common.TTYPE_INFO).Dispatch()
 
 		// Load the image data to the Content structure.
 		ctx.Dispatch(func(ctx app.Context) {

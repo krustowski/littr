@@ -38,7 +38,7 @@ func (c *Content) OnMount(ctx app.Context) {
 		c.showUUIDPage = true
 
 		if err := c.handleResetRequest("", uuid); err != nil {
-			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(err.Error()).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonsDisabled = false
@@ -46,7 +46,7 @@ func (c *Content) OnMount(ctx app.Context) {
 			return
 		}
 
-		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.buttonsDisabled = false
