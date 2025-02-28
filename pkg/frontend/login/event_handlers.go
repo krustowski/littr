@@ -37,13 +37,13 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		}
 
 		if nickname == "" || passphrase == "" {
-			toast.Text(common.ERR_ALL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_ALL_FIELDS_REQUIRED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Don't allow special chars and spaces in the nickname
 		if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(nickname) {
-			toast.Text(common.ERR_LOGIN_CHARS_LIMIT).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOGIN_CHARS_LIMIT).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -76,33 +76,33 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 		if ok := common.FetchData(input, output); !ok {
 			if output.Error != nil {
-				toast.Text(output.Error.Error()).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+				toast.Text(output.Error.Error()).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		data, ok := output.Data.(*dataModel)
 		if !ok {
-			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		if !data.AuthGranted {
-			toast.Text(common.ERR_ACCESS_DENIED).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_ACCESS_DENIED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		/*user, err := json.Marshal(data.User)
 		if err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}*/
 

@@ -31,7 +31,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 
 	if value, found := flowList[key]; found {
 		if !value && c.users[key].Private {
-			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonDisabled = false
@@ -42,7 +42,7 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		flowList[key] = !flowList[key]
 	} else {
 		if c.users[key].Private {
-			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_PRIVATE_ACC).Type(common.TTYPE_ERR).Dispatch()
 
 			ctx.Dispatch(func(ctx app.Context) {
 				c.buttonDisabled = false
@@ -82,13 +82,13 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		output := &common.Response{}
 
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			flowList[key] = !flowList[key]
 			return
 		}
 
 		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			flowList[key] = !flowList[key]
 			return
 		}

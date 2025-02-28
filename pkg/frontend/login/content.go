@@ -35,9 +35,9 @@ func (c *Content) handleSuccess(ctx *app.Context, t string) {
 
 	switch t {
 	case "registration":
-		toast.Text("Registration was successful, check your mail inbox to get the activation link").Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_REGISTER_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 	case "reset":
-		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_RESET_PASSPHRASE_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 	default:
 		return
 	}
@@ -90,17 +90,17 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// Call the API to fetch the data.
 		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// Something went wrong...
 		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch(c, dispatch)
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		// User successfully activated.
-		toast.Text(common.MSG_USER_ACTIVATED).Type(common.TTYPE_SUCCESS).Dispatch(c, dispatch)
+		toast.Text(common.MSG_USER_ACTIVATED).Type(common.TTYPE_SUCCESS).Dispatch()
 	})
 }

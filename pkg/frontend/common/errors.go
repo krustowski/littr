@@ -56,6 +56,7 @@ const (
 	ERR_POST_UNKNOWN_TYPE       = "Unknown post type."
 
 	// Register-related error messages.
+	MSG_REGISTER_SUCCESS         = "Registration successful, check your mail inbox to get the activation link."
 	ERR_REGISTER_FIELDS_REQUIRED = "All fields are required."
 	ERR_REGISTER_CHARSET_LIMIT   = "Only characters a-z, A-Z and numbers can be used."
 	ERR_WRONG_EMAIL_FORMAT       = "Invalid e-mail address format entered."

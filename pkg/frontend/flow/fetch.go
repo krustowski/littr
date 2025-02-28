@@ -63,7 +63,6 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 			})
 			return nil, nil
 		}
-
 	}
 
 	input := &common.CallInput{
