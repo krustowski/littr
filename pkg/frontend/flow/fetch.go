@@ -8,7 +8,7 @@ import (
 )
 
 type pageOptions struct {
-	PageNo   int `default:0`
+	PageNo   int
 	Context  app.Context
 	CallerID string
 

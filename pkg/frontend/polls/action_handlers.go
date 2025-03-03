@@ -78,6 +78,28 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *Content) handleOptionClick(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	poll := c.polls[key]
+
+	var option string
+
+	switch a.Name {
+	case "option-one-click":
+		option = poll.OptionOne.Content
+	case "option-two-click":
+		option = poll.OptionTwo.Content
+	case "option-three-click":
+		option = poll.OptionThree.Content
+	}
+
+	ctx.NewActionWithValue("vote", []string{key, option})
+}
+
 // handleScroll()
 func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	toast := common.Toast{AppContext: &ctx}

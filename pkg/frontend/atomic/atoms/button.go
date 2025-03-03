@@ -14,9 +14,12 @@ type Button struct {
 	ColorText         string
 	Icon              string
 	ID                string
+	Name              string
 	Text              string
 	Title             string
 	OnClickActionName string
+
+	DataSet map[string]string
 
 	Attr map[string]string
 
@@ -57,7 +60,11 @@ func (b *Button) Render() app.UI {
 		bt.Attr(key, val)
 	}
 
-	return bt.ID(b.ID).Title(b.Title).Class(b.composeClass()).OnClick(b.onClick).Disabled(b.Disabled).Body(
+	for key, val := range b.DataSet {
+		bt.DataSet(key, val)
+	}
+
+	return bt.ID(b.ID).Name(b.Name).Title(b.Title).Class(b.composeClass()).OnClick(b.onClick).Disabled(b.Disabled).Body(
 		app.If(b.Disabled && b.ShowProgress, func() app.UI {
 			return app.Progress().Class("circle white-border small")
 		}),

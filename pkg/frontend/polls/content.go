@@ -160,6 +160,10 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("dismiss", c.handleDismiss)
 
+	ctx.Handle("option-one-click", c.handleOptionClick)
+	ctx.Handle("option-two-click", c.handleOptionClick)
+	ctx.Handle("option-three-click", c.handleOptionClick)
+
 	// The loader.
 	c.loaderShow = true
 
