@@ -11,7 +11,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Body(
 			app.Div().Class("").Body(
 				app.Div().Class("row center-align").Body(
-					app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
+					app.Img().Src("/web/android-chrome-512x512.png").Style("max-width", "10em"),
 					app.H4().Body(
 						app.Span().Body(
 							app.Text("littr"),
@@ -29,16 +29,16 @@ func (c *Content) Render() app.UI {
 			app.Div().Class("no-margin large-padding").Body(
 				//app.I().Text("lightbulb").Class("amber-text"),
 				app.P().Class().Body(
-					app.Span().Class("deep-orange-text").Text("Welcome to "),
-					app.Span().Class("deep-orange-text bold").Text("littr"),
-					app.Span().Class("deep-orange-text").Text("! "),
+					app.Span().Class("blue-text").Text("Welcome to "),
+					app.Span().Class("blue-text bold").Text("littr"),
+					app.Span().Class("blue-text").Text("! "),
 					app.Span().Text("This site acts as a simple platform for anyone who likes to post short notes, messages, daydreaming ideas and more! You can use it as a personal journal charting your journey through life that can be shared with other user accounts."),
 				),
 				//app.Div().Class("small-space"),
 
 				app.P().Class().Body(
 					app.Span().Text("The very main page of this platform is called just "),
-					app.Span().Class("deep-orange-text bold").Text("flow"),
+					app.Span().Class("blue-text bold").Text("flow"),
 					app.Span().Text(". This page lists all your posts in reverse chronological order (newest to oldest) plus posts from other folks/accounts that you have added to your flow (that you are following)."),
 				),
 				//app.Div().Class("small-space"),
@@ -49,7 +49,7 @@ func (c *Content) Render() app.UI {
 					app.Span().Text(" page (where the link to "),
 					app.Span().Class("bold").Text("registration"),
 					app.Span().Text(" sits as well), use the "),
-					app.I().Class("small").Class("deep-orange-text").Body(
+					app.I().Class("small").Class("blue-text").Body(
 						app.Text("key_vertical"),
 					),
 					app.Span().Text(" button in the upper right corner."),

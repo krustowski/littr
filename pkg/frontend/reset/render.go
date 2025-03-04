@@ -33,14 +33,14 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				// Passphrase reset credentials fields.
-				app.Div().Class("field border label deep-orange-text thicc").Body(
+				app.Div().Class("field border label blue-text thicc").Body(
 					app.Input().ID("email-input").Type("email").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.email)).Class("active").Attr("autocomplete", "email").AutoFocus(true),
-					app.Label().Text("E-mail").Class("active deep-orange-text"),
+					app.Label().Text("E-mail").Class("active blue-text"),
 				),
 
 				// Request button.
 				app.Div().Class("row center-align max").Body(
-					app.Button().ID("request-button").Class("max shrink deep-orange7 white-text bold thicc").OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
+					app.Button().ID("request-button").Class("max shrink primary-container white-text bold thicc").OnClick(c.onClickRequest).Disabled(c.buttonsDisabled).TabIndex(2).Body(
 						app.If(c.buttonsDisabled, func() app.UI {
 							return app.Progress().Class("circle white-border small")
 						}),
@@ -68,14 +68,14 @@ func (c *Content) Render() app.UI {
 				app.Div().Class("space"),
 
 				// Passphrase reset credentials fields.
-				app.Div().Class("field border label deep-orange-text thicc").Body(
+				app.Div().Class("field border label blue-text thicc").Body(
 					app.Input().ID("uuid-input").Type("text").Required(true).TabIndex(1).Value("").OnChange(c.ValueTo(&c.uuid)).Class("active").AutoFocus(true),
-					app.Label().Text("UUID").Class("active deep-orange-text"),
+					app.Label().Text("UUID").Class("active blue-text"),
 				),
 
 				// Passphrase reset button.
 				app.Div().Class("row center-align max").Body(
-					app.Button().ID("reset-button").Class("max shrink deep-orange7 white-text bold thicc").TabIndex(2).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).Body(
+					app.Button().ID("reset-button").Class("max shrink primary-container white-text bold thicc").TabIndex(2).OnClick(c.onClickReset).Disabled(c.buttonsDisabled).Body(
 						app.If(c.buttonsDisabled, func() app.UI {
 							return app.Progress().Class("circle white-border small")
 						}),

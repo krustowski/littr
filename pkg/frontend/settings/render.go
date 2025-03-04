@@ -252,14 +252,14 @@ func (c *Content) Render() app.UI {
 				app.Label().Class("switch icon").Body(
 					// A nasty workaround to ensure the switch to be updated "correctly".
 					app.If(c.subscription.Replies, func() app.UI {
-						return app.Div().Body(
+						return app.Label().Class("switch icon").Body(
 							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 							app.Span().Body(
 								app.I().Text("notifications"),
 							),
 						)
 					}).Else(func() app.UI {
-						return app.Div().Body(
+						return app.Label().Class("switch icon").Body(
 							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 							app.Span().Body(
 								app.I().Text("notifications"),
@@ -279,14 +279,14 @@ func (c *Content) Render() app.UI {
 				app.Label().Class("switch icon").Body(
 					// A nasty workaround to ensure the switch to be updated "correctly".
 					app.If(c.subscription.Mentions, func() app.UI {
-						return app.Div().Body(
+						return app.Label().Class("switch icon").Body(
 							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 							app.Span().Body(
 								app.I().Text("notifications"),
 							),
 						)
 					}).Else(func() app.UI {
-						return app.Div().Body(
+						return app.Label().Class("switch icon").Body(
 							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
 							app.Span().Body(
 								app.I().Text("notifications"),
