@@ -192,6 +192,7 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 + resolve tikets in github and redmine (priv)
 
 ### roadmap to v0.47
++ blu theme
 + FE refactor + atomization (atomic design experiment)
 + swagger BE docs review
 
