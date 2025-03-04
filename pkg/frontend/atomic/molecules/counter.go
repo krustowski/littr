@@ -23,7 +23,7 @@ func (c *Counter) onClick(ctx app.Context, e app.Event) {
 
 func (c *Counter) Render() app.UI {
 	return app.Div().Body(
-		app.B().Title(c.Title).Text(c.Count).Class("left-padding"),
+		app.B().Title(c.Title).Text(c.Count).Class("small-padding"),
 		app.Span().Title(c.Title).Class("bold").OnClick(c.onClick).ID(c.ID).Body(
 			app.I().Text(c.Icon),
 		),
