@@ -99,14 +99,16 @@ var appHandler = &app.Handler{
 	},
 	// CSS styles files.
 	Styles: []string{
-		"https://cdn.vxn.dev/css/beercss-3.7.0-custom.min.css",
+		//"https://cdn.vxn.dev/css/beercss-3.7.0-custom.min.css",
+		"https://cdn.vxn.dev/css/beercss-3.9.7-custom.min.css",
 		"https://cdn.vxn.dev/css/sortable.min.css",
 		"/web/littr.css",
 	},
 	// JS script files.
 	Scripts: []string{
 		"https://cdn.vxn.dev/js/jquery.min.js",
-		"https://cdn.vxn.dev/js/beer.min.js",
+		//"https://cdn.vxn.dev/js/beer.min.js",
+		"https://cdn.vxn.dev/js/beer-3.9.7.min.js",
 		//"https://cdn.jsdelivr.net/npm/beercss@3.7.0/dist/cdn/beer.min.js",
 		"https://cdn.vxn.dev/js/material-dynamic-colors.min.js",
 		//"https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js",

@@ -123,9 +123,19 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("search", c.handleSearch)
 	ctx.Handle("shade", c.handleUserShade)
 	ctx.Handle("toggle", c.handleToggle)
+	ctx.Handle("flow-link-click", c.handleLink)
 
 	ctx.Handle("mouse-enter", c.handleMouseEnter)
 	ctx.Handle("mouse-leave", c.handleMouseLeave)
+
+	ctx.Handle("user", c.handleUserPreview)
+	ctx.Handle("nickname-click", c.handleUserPreview)
+
+	ctx.Handle("unfollow", c.handleToggle)
+	ctx.Handle("follow", c.handleToggle)
+
+	ctx.Handle("ask", c.handleUserActions)
+	ctx.Handle("cancel", c.handleUserActions)
 
 	c.paginationEnd = false
 	c.pagination = 0

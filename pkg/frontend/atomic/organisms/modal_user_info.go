@@ -90,6 +90,7 @@ func (m *ModalUserInfo) Render() app.UI {
 					},
 
 					&atoms.Button{
+						ID:                m.User.Nickname,
 						Class:             "max deep-orange7 white-text thicc",
 						Icon:              "tsunami",
 						Text:              "Flow",

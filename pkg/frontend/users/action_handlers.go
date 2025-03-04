@@ -22,6 +22,10 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *Content) handleLink(ctx app.Context, a app.Action) {
+	common.HandleLink(ctx, a, "/flow/users/", "/flow/users/")
+}
+
 func (c *Content) handleMouseEnter(ctx app.Context, a app.Action) {
 	common.HandleMouseEnter(ctx, a)
 }
@@ -132,9 +136,7 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 				c.userStats = data.UserStats
 				c.processingScroll = false
 			})
-			return
 		}
-		return
 	})
 }
 
@@ -175,7 +177,6 @@ func (c *Content) handleSearch(ctx app.Context, a app.Action) {
 			c.users = users
 			c.loaderShow = false
 		})
-		return
 	})
 }
 
@@ -195,6 +196,11 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 	if c.user.ShadeList[key] {
 		return
 	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.userButtonDisabled = true
+		c.usersButtonDisabled = true
+	})
 
 	// Patch the nil flowList map.
 	// Assign the following of oneself explicitly for the core app functions to work properly.
@@ -219,6 +225,7 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 
 	ctx.Async(func() {
 		defer ctx.Dispatch(func(ctx app.Context) {
+			c.userButtonDisabled = false
 			c.usersButtonDisabled = false
 
 			user.Searched = true
@@ -280,9 +287,17 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 			text := fmt.Sprintf(common.MSG_USER_FOLLOW_REMOVE_FMT, key)
 			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch()
 		}
-
-		return
 	})
+}
+
+func (c *Content) handleUserActions(ctx app.Context, a app.Action) {
+	switch a.Name {
+	case "ask":
+	case "follow":
+	case "unfollow":
+	case "cancel":
+	default:
+	}
 }
 
 // handleUserPreview is an action handler function that enables the showing of the user modal.
@@ -293,17 +308,11 @@ func (c *Content) handleUserPreview(ctx app.Context, a app.Action) {
 		return
 	}
 
-	ctx.Async(func() {
-		// Fetch such user requested.
-		user := c.users[val]
-
-		// Dispatch the changes for the UI = enable showing of the requested user's modal.
-		ctx.Dispatch(func(ctx app.Context) {
-			c.showUserPreviewModal = true
-			c.userInModal = user
-		})
+	// Dispatch the changes for the UI = enable showing of the requested user's modal.
+	ctx.Dispatch(func(ctx app.Context) {
+		c.showUserPreviewModal = true
+		c.userInModal = c.users[val]
 	})
-	return
 }
 
 // handleUserShade is an action handler function that enables one to shade other accounts.
@@ -314,20 +323,28 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		return
 	}
 
-	defer ctx.Dispatch(func(ctx app.Context) {
-		c.usersButtonDisabled = false
-	})
-
 	// One cannot shade themselves.
 	if c.user.Nickname == key {
 		return
 	}
 
 	// Fetch the to-be-(un)shaded counterpart user. If not found, simply return the call.
-	userShaded, found := c.users[key]
-	if !found {
+	var (
+		found      bool
+		loggedUser models.User
+		userShaded models.User
+	)
+
+	loggedUser = c.user
+
+	if userShaded, found = c.users[key]; !found {
 		return
 	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.userButtonDisabled = true
+		c.usersButtonDisabled = true
+	})
 
 	// Patch the to-be-(un)shaded counterpart user's flowList.
 	if userShaded.FlowList == nil {
@@ -336,41 +353,46 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 	if userShaded.RequestList != nil {
 		reqList := userShaded.RequestList
-		reqList[c.user.Nickname] = false
+		reqList[loggedUser.Nickname] = false
 		userShaded.RequestList = reqList
 	}
 
 	// Fetch and negate the current shade status.
-	shadeListItem := c.user.ShadeList[key]
+	shadeListItem := loggedUser.ShadeList[key]
 
 	// Patch the controlling user's flowList/shadeList nil map.
 	if c.user.FlowList == nil {
-		c.user.FlowList = make(map[string]bool)
+		loggedUser.FlowList = make(map[string]bool)
 	}
 	if c.user.ShadeList == nil {
-		c.user.ShadeList = make(map[string]bool)
+		loggedUser.ShadeList = make(map[string]bool)
 	}
 	if c.user.RequestList != nil {
-		reqList := c.user.RequestList
+		reqList := loggedUser.RequestList
 		reqList[userShaded.Nickname] = false
-		c.user.RequestList = reqList
+		loggedUser.RequestList = reqList
 	}
 
 	// Only (un)shade user accounts different from the controlling user's one.
-	if key != c.user.Nickname {
-		c.user.ShadeList[key] = !shadeListItem
+	if key != loggedUser.Nickname {
+		loggedUser.ShadeList[key] = !shadeListItem
 	}
 
 	// Disable the following of the controlling user in the counterpart user's flowList. And vice versa.
 	if c.user.ShadeList[key] {
-		userShaded.FlowList[c.user.Nickname] = false
-		c.user.FlowList[key] = false
+		userShaded.FlowList[loggedUser.Nickname] = false
+		loggedUser.FlowList[key] = false
 	}
 
 	// Instantiate the toast.
 	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.userButtonDisabled = false
+			c.usersButtonDisabled = false
+		})
+
 		// Prepare the request body data structure.
 		payload := struct {
 			FlowList    map[string]bool `json:"flow_list"`
@@ -411,17 +433,17 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 			ShadeList   map[string]bool `json:"shade_list"`
 			RequestList map[string]bool `json:"request_list"`
 		}{
-			FlowList:    c.user.FlowList,
-			ShadeList:   c.user.ShadeList,
-			RequestList: c.user.RequestList,
+			FlowList:    loggedUser.FlowList,
+			ShadeList:   loggedUser.ShadeList,
+			RequestList: loggedUser.RequestList,
 		}
 
 		// Compsoe the second API call input.
 		input2 := &common.CallInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/users/" + c.user.Nickname + "/lists",
+			Url:         "/api/v1/users/" + loggedUser.Nickname + "/lists",
 			Data:        payload2,
-			CallerID:    c.user.Nickname,
+			CallerID:    loggedUser.Nickname,
 			PageNo:      0,
 			HideReplies: false,
 		}
@@ -437,7 +459,7 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
 		if output2.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			toast.Text(output2.Message).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -445,7 +467,10 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		common.SaveUser(&c.user, &ctx)
 
 		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch()
-		return
+
+		ctx.Dispatch(func(ctx app.Context) {
+			c.user = loggedUser
+			c.users[c.user.Nickname] = c.user
+		})
 	})
-	return
 }

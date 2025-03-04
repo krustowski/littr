@@ -122,7 +122,7 @@ func (c *Content) Render() app.UI {
 			Users:                     c.users,
 			ShowModal:                 c.showUserPreviewModal,
 			OnClickDismissActionName:  "dismiss",
-			OnClickUserFlowActionName: "flow",
+			OnClickUserFlowActionName: "flow-link-click",
 		},
 
 		&atoms.SearchBar{
@@ -142,10 +142,16 @@ func (c *Content) Render() app.UI {
 			ButtonsDisabled: c.userButtonDisabled,
 			LoaderShowImage: c.loaderShow,
 			//
-			OnClickUserActionName:     "user",
-			OnClickNicknameActionName: "nickname-click",
-			OnMouseEnterActionName:    "mouse-enter",
-			OnMouseLeaveActionName:    "mouse-leave",
+			OnClickUserActionName:      "user",
+			OnClickUnfollowActionName:  "unfollow",
+			OnClickAskActionName:       "ask",
+			OnClickCancelActionName:    "cancel",
+			OnClickFollowActionName:    "follow",
+			OnClickPostCountActionName: "flow-link-click",
+			OnClickNicknameActionName:  "nickname-click",
+			OnClickShadeActionName:     "shade",
+			OnMouseEnterActionName:     "mouse-enter",
+			OnMouseLeaveActionName:     "mouse-leave",
 		},
 
 		&atoms.Loader{

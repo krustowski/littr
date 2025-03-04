@@ -75,6 +75,10 @@ func (p *PostFeed) processPost(post models.Post) bool {
 		if originalPost, found := p.Posts[post.ReplyToID]; found {
 			if flowListValue, foundUser := p.LoggedUser.FlowList[originalPost.Nickname]; (!flowListValue || !foundUser) && (p.Users[originalPost.Nickname].Private || p.Users[originalPost.Nickname].Options["private"]) {
 				p.originalContent = "this content is private"
+			} else if value, found := p.LoggedUser.ShadeList[originalPost.Nickname]; found && value {
+				p.originalContent = "the content is shaded"
+			} else if value, found := p.Users[originalPost.Nickname].ShadeList[p.LoggedUser.Nickname]; found && value {
+				p.originalContent = "the content is shaded"
 			} else {
 				p.originalContent = originalPost.Nickname + " posted: " + originalPost.Content
 			}

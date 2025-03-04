@@ -2,7 +2,6 @@ package flow
 
 import (
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -138,29 +137,7 @@ func (c *Content) handleImage(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleLink(ctx app.Context, a app.Action) {
-	id, ok := a.Value.(string)
-	if !ok {
-		return
-	}
-
-	url := ctx.Page().URL()
-	scheme := url.Scheme
-	host := url.Host
-	path := "/flow/posts/"
-
-	if _, err := strconv.ParseFloat(id, 64); err != nil {
-		path = "/flow/users/"
-	}
-
-	// Write the link to browsers's clipboard.
-	navigator := app.Window().Get("navigator")
-	if !navigator.IsNull() {
-		clipboard := navigator.Get("clipboard")
-		if !clipboard.IsNull() && !clipboard.IsUndefined() {
-			clipboard.Call("writeText", scheme+"://"+host+path+id)
-		}
-	}
-	ctx.Navigate(path + id)
+	common.HandleLink(ctx, a, "/flow/posts/", "/flow/users/")
 }
 
 func (c *Content) handleModalPostDeleteShow(ctx app.Context, a app.Action) {
@@ -196,32 +173,12 @@ func (c *Content) handleModalPostReplyShow(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *Content) handleMouseEnter(_ app.Context, a app.Action) {
-	id, ok := a.Value.(string)
-	if !ok {
-		return
-	}
-
-	elem := app.Window().GetElementByID(id)
-	if elem.IsNull() {
-		return
-	}
-
-	elem.Get("style").Call("setProperty", "font-size", "1.2rem")
+func (c *Content) handleMouseEnter(ctx app.Context, a app.Action) {
+	common.HandleMouseEnter(ctx, a)
 }
 
-func (c *Content) handleMouseLeave(_ app.Context, a app.Action) {
-	id, ok := a.Value.(string)
-	if !ok {
-		return
-	}
-
-	elem := app.Window().GetElementByID(id)
-	if elem.IsNull() {
-		return
-	}
-
-	elem.Get("style").Call("setProperty", "font-size", "1rem")
+func (c *Content) handleMouseLeave(ctx app.Context, a app.Action) {
+	common.HandleMouseLeave(ctx, a)
 }
 
 func (c *Content) handleRefresh(ctx app.Context, a app.Action) {

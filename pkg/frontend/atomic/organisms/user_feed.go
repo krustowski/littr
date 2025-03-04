@@ -27,16 +27,17 @@ type UserFeed struct {
 	ButtonsDisabled bool
 	LoaderShowImage bool
 
-	OnClickUserActionName     string
-	OnClickUnfollowActionName string
-	OnClickAskActionName      string
-	OnClickCancelActionName   string
-	OnClickFollowActionName   string
-
+	OnClickUserActionName      string
+	OnClickUnfollowActionName  string
+	OnClickAskActionName       string
+	OnClickCancelActionName    string
+	OnClickFollowActionName    string
 	OnClickNicknameActionName  string
 	OnClickPostCountActionName string
-	OnMouseEnterActionName     string
-	OnMouseLeaveActionName     string
+	OnClickShadeActionName     string
+
+	OnMouseEnterActionName string
+	OnMouseLeaveActionName string
 
 	// Per user vars. Modified via the processUser() function.
 	isInFlow    bool
@@ -167,8 +168,8 @@ func (u *UserFeed) Render() app.UI {
 						&atoms.Button{
 							Class:    "max responsive shrink grey white-text thicc",
 							Disabled: true,
-							Text:     "Shade",
-							Icon:     "block",
+							Text:     "That's you",
+							Icon:     "cruelty_free",
 						},
 
 						&atoms.Button{
@@ -182,10 +183,12 @@ func (u *UserFeed) Render() app.UI {
 					// When the user is shaded, all actions are blocked by default.
 					return app.Div().Class("row").Body(
 						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: u.isShaded,
-							Text:     "Shaded",
-							Icon:     "block",
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey white-text thicc",
+							Disabled:          !u.isShaded,
+							Text:              "Unshade",
+							Icon:              "cruelty_free",
+							OnClickActionName: u.OnClickShadeActionName,
 						},
 
 						&atoms.Button{
@@ -200,10 +203,12 @@ func (u *UserFeed) Render() app.UI {
 					// When the user is followed.
 					return app.Div().Class("row").Body(
 						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: u.isShaded,
-							Text:     "Shade",
-							Icon:     "block",
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey white-text thicc",
+							Disabled:          u.isShaded,
+							Text:              "Shade",
+							Icon:              "block",
+							OnClickActionName: u.OnClickShadeActionName,
 						},
 
 						&atoms.Button{
@@ -218,10 +223,12 @@ func (u *UserFeed) Render() app.UI {
 				}).ElseIf(u.isPrivate && !u.isInFlow, func() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: u.isShaded,
-							Text:     "Shade",
-							Icon:     "block",
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey white-text thicc",
+							Disabled:          u.isShaded,
+							Text:              "Shade",
+							Icon:              "block",
+							OnClickActionName: u.OnClickShadeActionName,
 						},
 
 						&atoms.Button{
@@ -236,10 +243,12 @@ func (u *UserFeed) Render() app.UI {
 				}).ElseIf(!u.isInFlow && u.isRequested && u.isPrivate, func() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: u.isShaded,
-							Text:     "Shade",
-							Icon:     "block",
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey white-text thicc",
+							Disabled:          u.isShaded,
+							Text:              "Shade",
+							Icon:              "block",
+							OnClickActionName: u.OnClickShadeActionName,
 						},
 
 						&atoms.Button{
@@ -254,10 +263,12 @@ func (u *UserFeed) Render() app.UI {
 				}).Else(func() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: u.isShaded,
-							Text:     "Shade",
-							Icon:     "block",
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey white-text thicc",
+							Disabled:          u.isShaded,
+							Text:              "Shade",
+							Icon:              "block",
+							OnClickActionName: u.OnClickShadeActionName,
 						},
 
 						&atoms.Button{
@@ -368,56 +379,4 @@ func (u *UserFeed) Render() app.UI {
 		),
 	)
 }
-
-/*
-	return app.Div().Class("post-feed").Body(
-		app.Range(p.SortedPolls).Slice(func(idx int) app.UI {
-			poll := p.SortedPolls[idx]
-
-			if !p.processPoll(poll) {
-				return nil
-			}
-
-			return app.Div().Class("post").Body(
-				&molecules.PollHeader{
-					Poll:                  poll,
-					ButtonsDisabled:       p.ButtonsDisabled,
-					OnClickLinkActionName: p.OnClickLinkActionName,
-				},
-
-				&molecules.PollBody{
-					Poll:       poll,
-					LoggedUser: p.LoggedUser,
-					RenderProps: struct {
-						PollTimestamp    string
-						UserVoted        bool
-						OptionOneShare   int64
-						OptionTwoShare   int64
-						OptionThreeShare int64
-					}{
-						PollTimestamp:    p.pollTimestamp,
-						UserVoted:        p.userVoted,
-						OptionOneShare:   p.optionOneShare,
-						OptionTwoShare:   p.optionTwoShare,
-						OptionThreeShare: p.optionThreeShare,
-					},
-
-					OnClickOptionOneActionName:   p.OnClickOptionOneActionName,
-					OnClickOptionTwoActionName:   p.OnClickOptionTwoActionName,
-					OnClickOptionThreeActionName: p.OnClickOptionThreeActionName,
-
-					ButtonDisabled:  p.ButtonsDisabled,
-					LoaderShowImage: p.LoaderShowImage,
-				},
-
-				&molecules.PollFooter{
-					Poll:                    poll,
-					LoggedUserNickname:      p.LoggedUser.Nickname,
-					PollTimestamp:           p.pollTimestamp,
-					ButtonsDisabled:         p.ButtonsDisabled,
-					OnClickDeleteActionName: p.OnClickDeleteModalShowActionName,
-				},
-			)
-		}),
-	)
-}*/
+*/
