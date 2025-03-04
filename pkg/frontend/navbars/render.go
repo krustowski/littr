@@ -9,6 +9,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
 	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
+	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -32,9 +33,9 @@ func (h *Header) Render() app.UI {
 	}
 
 	// The very SSE online status (last ~15 seconds).
-	sseConnStatus := "disconnected"
+	h.sseConnStatus = "disconnected"
 	if last > 0 && (time.Now().Unix()-last) < 45 {
-		sseConnStatus = "connected"
+		h.sseConnStatus = "connected"
 	}
 
 	// Set the toast default content.
@@ -63,7 +64,7 @@ func (h *Header) Render() app.UI {
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted, func() app.UI {
 					return app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
-						app.I().Class("large").Class("deep-orange-text").Body(
+						app.I().Class("large").Class("blue-text").Body(
 							app.Text("build")),
 					)
 				}).Else(func() app.UI {
@@ -73,7 +74,7 @@ func (h *Header) Render() app.UI {
 				// show intallation button if available
 				app.If(h.appInstallable, func() app.UI {
 					return app.A().Class("button circle transparent").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
-						app.I().Class("large").Class("deep-orange-text").Body(
+						app.I().Class("large").Class("blue-text").Body(
 							app.Text("download"),
 						),
 					)
@@ -157,101 +158,50 @@ func (h *Header) Render() app.UI {
 					},
 				),
 
-				// app info modal
 				app.If(h.modalInfoShow, func() app.UI {
-					return app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc").Body(
-						app.Article().Class("row white-text center-align border thicc").Body(
-							app.Img().Src("/web/android-chrome-512x512.svg").Style("max-width", "10em"),
-							app.H4().Body(
-								app.Span().Body(
-									app.Text("littr"),
-									app.If(app.Getenv("APP_ENVIRONMENT") != "prod", func() app.UI {
-										return app.Span().Class("col").Body(
-											app.Sup().Body(
-												app.If(app.Getenv("APP_ENVIRONMENT") == "stage", func() app.UI {
-													return app.Text(" (stage) ")
-												}).Else(func() app.UI {
-													return app.Text(" (dev) ")
-												}),
-											),
-										)
-									}),
-								),
-							),
-						),
-
-						app.Article().Class("center-align large-text border thicc").Body(
-							app.P().Body(
-								app.A().Class("deep-orange-text bold").Href("/tos").Text("Terms of Service"),
-							),
-							app.P().Body(
-								app.A().Class("deep-orange-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
-							),
-						),
-
-						app.Article().Class("center-align white-text border thicc").Body(
-							app.Text("Version: "),
-							app.A().Text(app.Getenv("APP_VERSION")).Href("https://github.com/krustowski/littr").Style("font-weight", "bolder"),
-							app.P().Body(
-								app.Text("SSE status: "),
-								app.If(sseConnStatus == "connected", func() app.UI {
-									return app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("green-text bold")
-								}).Else(func() app.UI {
-									return app.Span().ID("heartbeat-info-text").Text(sseConnStatus).Class("amber-text bold")
-								}),
-							),
-						),
-
-						app.Nav().Class("center-align").Body(
-							app.P().Body(
-								app.Text("Powered by "),
-								app.A().Href("https://go-app.dev/").Text("go-app").Style("font-weight", "bolder"),
-								app.Text(" & "),
-								app.A().Href("https://www.beercss.com/").Text("beercss").Style("font-weight", "bolder"),
-							),
-						),
-
-						app.Div().Class("row").Body(
-							app.Button().Class("max bold black white-text thicc").OnClick(h.onClickModalDismiss).Body(
-								app.Span().Body(
-									app.I().Style("padding-right", "5px").Text("close"),
-									app.Text("Close"),
-								),
-							),
-							app.Button().Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickReload).Body(
-								app.Span().Body(
-									app.I().Style("padding-right", "5px").Text("refresh"),
-									app.Text("Reload"),
-								),
-							),
-						),
-					)
+					return &organisms.ModalAppInfo{
+						ShowModal:                h.modalInfoShow,
+						SseConnectionStatus:      h.sseConnStatus,
+						OnClickDismissActionName: "dismiss-general",
+						OnClickReloadActionName:  "reload",
+					}
 				}),
 
 				// update button
 				app.If(h.updateAvailable, func() app.UI {
-					return app.A().Class("button circle transparent").Text("update").OnClick(h.onClickReload).Title("update").Aria("label", "update").Body(
-						app.Div().Class("badge blue-border blue-text border").Text("NEW"),
-						app.I().Class("large").Class("deep-orange-text").Body(
-							app.Text("update"),
-						),
-					)
-					// hotfix to keep the nav items' distances
+					return &atoms.Button{
+						BadgeText:         "NEW",
+						ID:                "",
+						Class:             "circle transparent blue-text",
+						Title:             "update available",
+						Aria:              map[string]string{"label": "update"},
+						Icon:              "update",
+						OnClickActionName: "reload",
+					}
 				}).Else(func() app.UI {
+					// hotfix to keep the nav items' distances
 					return app.A().Class("").OnClick(nil).Body()
 				}),
 
 				// login/logout button
 				app.If(h.authGranted, func() app.UI {
-					return app.A().Class("button circle transparent").Text("user").Class("").OnClick(h.onClickShowLogoutModal).Title("user").Aria("label", "user").Body(
-						app.I().Class("large").Class("deep-orange-text").Body(
-							app.Text("person")),
-					)
+					return &atoms.Button{
+						ID:                "",
+						Class:             "circle transparent blue-text",
+						Title:             "user info",
+						Aria:              map[string]string{"label": "user_info"},
+						Icon:              "person",
+						OnClickActionName: "user-modal-show",
+					}
 				}).Else(func() app.UI {
-					return app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
-						app.I().Class("large").Class("deep-orange-text").Body(
-							app.Text("key_vertical")),
-					)
+					return &atoms.Button{
+						ID:                "",
+						Class:             "circle transparent blue-text",
+						Title:             "login link",
+						Aria:              map[string]string{"label": "login"},
+						Icon:              "key_vertical",
+						OnClickActionName: "login-click",
+					}
 				}),
 			),
 		)
@@ -259,19 +209,7 @@ func (h *Header) Render() app.UI {
 
 // bottom navbar
 func (f *Footer) Render() app.UI {
-	statsHref := "/stats"
-	usersHref := "/users"
-	postHref := "/post"
-	pollsHref := "/polls"
-	flowHref := "/flow"
-
 	if !f.authGranted {
-		/*statsHref = "#"
-		usersHref = "#"
-		postHref = "#"
-		pollsHref = "#"
-		flowHref = "#"*/
-
 		return app.Div()
 	}
 
@@ -288,39 +226,57 @@ func (f *Footer) Render() app.UI {
 			}
 		}
 		return count
-	}()
+	}
 
 	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
-				app.A().Class("button circle transparent").Href(statsHref).Text("stats").Class("").Title("stats [1]").Aria("label", "stats").Body(
-					app.I().Class("large deep-orange-text").Body(
-						app.Text("query_stats")),
-				),
+				&atoms.Button{
+					ID:                "button-stats",
+					Class:             "circle transparent blue-text",
+					Title:             "stats [1]",
+					Aria:              map[string]string{"label": "stats"},
+					Icon:              "query_stats",
+					OnClickActionName: "stats-click",
+				},
 
-				app.A().Class("button circle transparent").Href(usersHref).Text("users").Class("").Title("users [2]").Aria("label", "users").Body(
-					app.If(reqCount > 0, func() app.UI {
-						return app.Div().Class("badge border").Text(fmt.Sprintf("%d", reqCount))
-					}),
-					app.I().Class("large deep-orange-text").Body(
-						app.Text("group")),
-				),
+				&atoms.Button{
+					BadgeText:         fmt.Sprintf("%d", reqCount()),
+					ID:                "button-users",
+					Class:             "circle transparent blue-text",
+					Title:             "users [2]",
+					Aria:              map[string]string{"label": "users"},
+					Icon:              "group",
+					OnClickActionName: "users-click",
+				},
 
-				app.A().Class("button circle transparent").Href(postHref).Text("post").Class("").Title("new post/poll [3]").Aria("label", "new post/poll").Body(
-					app.I().Class("large deep-orange-text").Body(
-						app.Text("add")),
-				),
+				&atoms.Button{
+					ID:                "button-post",
+					Class:             "circle transparent blue-text",
+					Title:             "post [3]",
+					Aria:              map[string]string{"label": "post"},
+					Icon:              "add",
+					OnClickActionName: "post-click",
+				},
 
-				app.A().Class("button circle transparent").Href(pollsHref).Text("polls").Class("").Title("polls [4]").Aria("label", "polls").Body(
-					app.I().Class("large deep-orange-text").Body(
-						app.Text("equalizer")),
-				),
+				&atoms.Button{
+					ID:                "button-polls",
+					Class:             "circle transparent blue-text",
+					Title:             "polls [4]",
+					Aria:              map[string]string{"label": "polls"},
+					Icon:              "equalizer",
+					OnClickActionName: "polls-click",
+				},
 
-				app.A().Class("button circle transparent").Href(flowHref).Text("flow").Class("").Title("flow [5]").Aria("label", "flow").Body(
-					app.I().Class("large deep-orange-text").Body(
-						app.Text("tsunami")),
-				),
+				&atoms.Button{
+					ID:                "button-flow",
+					Class:             "circle transparent blue-text",
+					Title:             "flow [5]",
+					Aria:              map[string]string{"label": "flow"},
+					Icon:              "tsunami",
+					OnClickActionName: "flow-click",
+				},
 			),
 		)
 }

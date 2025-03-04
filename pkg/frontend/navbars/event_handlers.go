@@ -21,12 +21,6 @@ func (h *Header) onInstallButtonClicked(ctx app.Context, e app.Event) {
 	ctx.ShowAppInstallPrompt()
 }
 
-func (h *Header) onClickHeadline(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		h.modalInfoShow = true
-	})
-}
-
 func (h *Header) onClickShowLogoutModal(ctx app.Context, e app.Event) {
 	ctx.Dispatch(func(ctx app.Context) {
 		h.modalLogoutShow = true
@@ -56,16 +50,6 @@ func (h *Header) onClickModalDismiss(ctx app.Context, e app.Event) {
 	}
 
 	ctx.NewAction("dismiss-general")
-}
-
-func (h *Header) onClickReload(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		h.updateAvailable = false
-	})
-
-	ctx.LocalStorage().Set("newUpdate", false)
-
-	ctx.Reload()
 }
 
 func (h *Header) onClickLogout(ctx app.Context, e app.Event) {

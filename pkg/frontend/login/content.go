@@ -44,6 +44,10 @@ func (c *Content) handleSuccess(ctx *app.Context, t string) {
 }
 
 func (c *Content) OnNav(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	url := strings.Split(ctx.Page().URL().Path, "/")
 
 	var activationUUID string

@@ -226,3 +226,43 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 		ctx.Navigate("/settings")
 	}
 }
+
+func (h *Header) handleHeaderClick(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalInfoShow = true
+	})
+}
+
+func (h *Header) handleReload(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.updateAvailable = false
+	})
+
+	ctx.LocalStorage().Set("newUpdate", false)
+	ctx.Reload()
+}
+
+func (h *Header) handleLoginClick(ctx app.Context, a app.Action) {
+	switch a.Name {
+	case "login-click":
+		ctx.Navigate("/login")
+	case "stats-click":
+		ctx.Navigate("/stats")
+	case "users-click":
+		ctx.Navigate("/users")
+	case "post-click":
+		ctx.Navigate("/post")
+	case "polls-click":
+		ctx.Navigate("/polls")
+	case "flow-click":
+		ctx.Navigate("/flow")
+	case "settings-click":
+		ctx.Navigate("/settings")
+	}
+}
+
+func (h *Header) handleUserModalShow(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalLogoutShow = true
+	})
+}

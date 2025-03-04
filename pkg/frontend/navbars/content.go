@@ -63,6 +63,8 @@ type Header struct {
 	processingKeydown bool
 
 	isUserFlow bool
+
+	sseConnStatus string
 }
 
 type Footer struct {
@@ -239,17 +241,22 @@ func (h *Header) OnMount(ctx app.Context) {
 	ctx.Handle("dismiss-general", h.handleDismiss)
 	//ctx.Handle("generic-event", h.handleGenericEvent)
 	ctx.Handle("keydown", h.handleKeydown)
+	ctx.Handle("littr-header-click", h.handleHeaderClick)
+	ctx.Handle("reload", h.handleReload)
+	ctx.Handle("user-modal-show", h.handleUserModalShow)
+
+	ctx.Handle("login-click", h.handleLoginClick)
+	ctx.Handle("stats-click", h.handleLoginClick)
+	ctx.Handle("users-click", h.handleLoginClick)
+	ctx.Handle("post-click", h.handleLoginClick)
+	ctx.Handle("polls-click", h.handleLoginClick)
+	ctx.Handle("flow-click", h.handleLoginClick)
+	ctx.Handle("settings-click", h.handleLoginClick)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
 		h.pagePath = path
 	})
-}
-
-func (h *Header) OnNav(ctx app.Context) {
-}
-
-func (h *Header) OnDismount(ctx app.Context) {
 }
 
 // Exclussively used for the SSE client as a whole.
@@ -356,8 +363,4 @@ func (f *Footer) OnMount(ctx app.Context) {
 		return
 	})
 	//}()*/
-}
-
-func (f *Footer) OnDismount(ctx app.Context) {
-	//f.sseCancel()
 }

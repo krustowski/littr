@@ -9,6 +9,7 @@ import (
 type Button struct {
 	app.Compo
 
+	BadgeText         string
 	Class             string
 	Color             string
 	ColorText         string
@@ -19,9 +20,9 @@ type Button struct {
 	Title             string
 	OnClickActionName string
 
+	Aria    map[string]string
+	Attr    map[string]string
 	DataSet map[string]string
-
-	Attr map[string]string
 
 	Disabled     bool
 	ShowProgress bool
@@ -56,6 +57,10 @@ func (b *Button) composeClass() string {
 func (b *Button) Render() app.UI {
 	bt := app.Button()
 
+	for key, val := range b.Aria {
+		bt.Aria(key, val)
+	}
+
 	for key, val := range b.Attr {
 		bt.Attr(key, val)
 	}
@@ -65,9 +70,14 @@ func (b *Button) Render() app.UI {
 	}
 
 	return bt.ID(b.ID).Name(b.Name).Title(b.Title).Class(b.composeClass()).OnClick(b.onClick).Disabled(b.Disabled).Body(
+		app.If(b.BadgeText != "", func() app.UI {
+			return app.Div().Class("badge blue-border blue-text border").Text(b.BadgeText)
+		}),
+
 		app.If(b.Disabled && b.ShowProgress, func() app.UI {
 			return app.Progress().Class("circle white-border small")
 		}),
+
 		app.If(b.Text != "", func() app.UI {
 			return app.Span().Body(
 				app.I().Style("padding-right", "5px").Text(b.Icon),
