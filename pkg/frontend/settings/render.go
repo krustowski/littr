@@ -34,13 +34,13 @@ func (c *Content) Render() app.UI {
 			app.If(c.user.Nickname != "", func() app.UI {
 				return app.P().Class("max").Body(
 					app.Span().Text("Logged as: "),
-					app.Span().Class("bold deep-orange-text").Text(c.user.Nickname),
+					app.Span().Class("bold blue-text").Text(c.user.Nickname),
 					app.Div().Class("small-space"),
 					app.Span().Text("E-mail: "),
-					app.Span().Class("bold deep-orange-text").Text(c.user.Email),
+					app.Span().Class("bold blue-text").Text(c.user.Email),
 				)
 			}).Else(func() app.UI {
-				return app.Progress().Class("circle deep-orange-border active")
+				return app.Progress().Class("circle blue-border active")
 			}),
 		),
 
@@ -60,7 +60,7 @@ func (c *Content) Render() app.UI {
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/png, image/jpeg"),
 			//app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-			//app.Label().Text("image").Class("active deep-orange-text"),
+			//app.Label().Text("image").Class("active blue-text"),
 			//app.I().Text("image"),
 		),
 
@@ -89,7 +89,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Class("row border blue-border thicc info").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("The UI mode "),
+				app.Span().Class("blue-text").Text("The UI mode "),
 				app.Span().Text("can be adjusted according to the user's choice. The mode may differ on the other sessions when logged-in on multiple devices."),
 			),
 		),
@@ -113,7 +113,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Class("row border blue-border thicc info").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("The local time mode "),
+				app.Span().Class("blue-text").Text("The local time mode "),
 				app.Span().Text("is a feature allowing you to see any post's (or poll's) timestamp according to your device's setting (mainly the timezone). When disabled, the server time is used instead."),
 			),
 		),
@@ -137,7 +137,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Class("row border blue-border thicc info").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("The live mode "),
+				app.Span().Class("blue-text").Text("The live mode "),
 				app.Span().Text("is a feature for the live flow experience. When enabled, a notice about some followed account's/user's new post is shown on the bottom of the page."),
 			),
 		),
@@ -161,7 +161,7 @@ func (c *Content) Render() app.UI {
 		app.Article().Class("row border blue-border thicc info").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("Private account "),
+				app.Span().Class("blue-text").Text("Private account "),
 				app.Span().Text("is a feature allowing one to be hidden on the site. When enabled, other accounts/users need to ask you to follow you (the follow request will show on the users page). Any reply to your post will be shown as redacted (a private content notice) to those not following you."),
 			),
 		),
@@ -195,10 +195,10 @@ func (c *Content) Render() app.UI {
 		app.Article().Class("row border blue-border thicc info").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
-				app.Span().Class("deep-orange-text").Text("Reply "),
+				app.Span().Class("blue-text").Text("Reply "),
 				app.Span().Text("notifications are fired when someone posts a reply to your post."),
 				app.Div().Class("small-space"),
-				app.Span().Class("deep-orange-text").Text("Mention "),
+				app.Span().Class("blue-text").Text("Mention "),
 				app.Span().Text("notifications are fired when someone mentions you via the at-sign (@) handler in their post (e.g. Hello, @example!)."),
 			),
 		),
@@ -337,7 +337,7 @@ func (c *Content) Render() app.UI {
 									),
 									app.P().Body(
 										app.Text("Subscribed to: "),
-										app.Span().Text(dev.Tags).Class("deep-orange-text"),
+										app.Span().Text(dev.Tags).Class("blue-text"),
 									),
 									app.P().Body(
 										app.Text("Registered: "),
@@ -367,23 +367,23 @@ func (c *Content) Render() app.UI {
 		),
 		//app.Div().Class("medium-space"),
 
-		app.Div().Class("field label border deep-orange-text thicc").Body(
+		app.Div().Class("field label border blue-text thicc").Body(
 			app.Input().ID("passphrase-current").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
-			app.Label().Text("Old passphrase").Class("active deep-orange-text"),
+			app.Label().Text("Old passphrase").Class("active blue-text"),
 		),
 
-		app.Div().Class("field label border deep-orange-text thicc").Body(
+		app.Div().Class("field label border blue-text thicc").Body(
 			app.Input().ID("passphrase-new").Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("New passphrase").Class("active deep-orange-text"),
+			app.Label().Text("New passphrase").Class("active blue-text"),
 		),
 
-		app.Div().Class("field label border deep-orange-text thicc").Body(
+		app.Div().Class("field label border blue-text thicc").Body(
 			app.Input().ID("passphrase-new-again").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
-			app.Label().Text("New passphrase again").Class("active deep-orange-text"),
+			app.Label().Text("New passphrase again").Class("active blue-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold thicc").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled).Body(
+			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled).Body(
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("save"),
 					app.Text("Save"),
@@ -412,13 +412,13 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// About-you textarea
-		app.Div().Class("field textarea label border extra deep-orange-text thicc").Body(
+		app.Div().Class("field textarea label border extra blue-text thicc").Body(
 			app.Textarea().ID("about-you-textarea").Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("About").Class("active deep-orange-text"),
+			app.Label().Text("About").Class("active blue-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold thicc").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled).Body(
+			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled).Body(
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("save"),
 					app.Text("Save"),
@@ -445,13 +445,13 @@ func (c *Content) Render() app.UI {
 		),
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border deep-orange-text thicc").Body(
+		app.Div().Class("field label border blue-text thicc").Body(
 			app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
-			app.Label().Text("URL").Class("active deep-orange-text"),
+			app.Label().Text("URL").Class("active blue-text"),
 		),
 
 		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center deep-orange7 white-text bold thicc").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled).Body(
+			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled).Body(
 				app.Span().Body(
 					app.I().Style("padding-right", "5px").Text("save"),
 					app.Text("Save"),

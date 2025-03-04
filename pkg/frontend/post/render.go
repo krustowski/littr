@@ -20,9 +20,9 @@ func (c *Content) Render() app.UI {
 		),
 
 		// New post textarea.
-		app.Div().Class("field textarea label border extra deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field textarea label border extra blue-text").Style("border-radius", "8px").Body(
 			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true).ID("post-textarea").TabIndex(1).Text(c.newPost).OnBlur(c.onTextareaBlur),
-			app.Label().Text("Content").Class("active deep-orange-text"),
+			app.Label().Text("Content").Class("active blue-text"),
 		),
 		/*app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
 			app.If(c.postButtonsDisabled,
@@ -32,16 +32,16 @@ func (c *Content) Render() app.UI {
 		),*/
 
 		// New fig input.
-		app.Div().Class("field border label extra deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field border label extra blue-text").Style("border-radius", "8px").Body(
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/*").TabIndex(2),
 			app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-			app.Label().Text("Image").Class("active deep-orange-text"),
+			app.Label().Text("Image").Class("active blue-text"),
 			app.I().Text("image"),
 		),
 
 		// New post button.
 		app.Div().Class("row").Body(
-			app.Button().ID("post").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
+			app.Button().ID("post").Class("max shrink center primary-container white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
 				app.If(c.postButtonsDisabled, func() app.UI {
 					return app.Progress().Class("circle white-border small")
 				}),
@@ -68,24 +68,24 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("space"),
 
 		// newx poll input area
-		app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field border label blue-text").Style("border-radius", "8px").Body(
 			app.Input().ID("poll-question").Type("text").OnChange(c.ValueTo(&c.pollQuestion)).Required(true).Class("active").MaxLength(50).TabIndex(4),
-			app.Label().Text("Question").Class("active deep-orange-text"),
+			app.Label().Text("Question").Class("active blue-text"),
 		),
-		app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field border label blue-text").Style("border-radius", "8px").Body(
 			app.Input().ID("poll-option-i").Type("text").OnChange(c.ValueTo(&c.pollOptionI)).Required(true).Class("active").MaxLength(50).TabIndex(5),
-			app.Label().Text("Option one").Class("active deep-orange-text"),
+			app.Label().Text("Option one").Class("active blue-text"),
 		),
-		app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field border label blue-text").Style("border-radius", "8px").Body(
 			app.Input().ID("poll-option-ii").Type("text").OnChange(c.ValueTo(&c.pollOptionII)).Required(true).Class("active").MaxLength(50).TabIndex(6),
-			app.Label().Text("Option two").Class("active deep-orange-text"),
+			app.Label().Text("Option two").Class("active blue-text"),
 		),
-		app.Div().Class("field border label deep-orange-text").Style("border-radius", "8px").Body(
+		app.Div().Class("field border label blue-text").Style("border-radius", "8px").Body(
 			app.Input().ID("poll-option-iii").Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60).TabIndex(7),
-			app.Label().Text("Option three (optional)").Class("active deep-orange-text"),
+			app.Label().Text("Option three (optional)").Class("active blue-text"),
 		),
 		app.Div().Class("row").Body(
-			app.Button().ID("poll").Class("max shrink center deep-orange7 white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
+			app.Button().ID("poll").Class("max shrink center primary-container white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
 				app.If(c.postButtonsDisabled, func() app.UI {
 					return app.Progress().Class("circle white-border small")
 				}),
