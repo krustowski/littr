@@ -187,13 +187,18 @@ Successfully copied 3.07kB to /home/user/littr/run_data/
 
 ### roadmap to v1.0.0
 + fix the code smells as scanned by `sonar-scanner`
++ lefthand switch
++ live switch implementation (to disable SSE)
 + resolve tikets in github and redmine (priv)
+
+### roadmap to v0.47
++ FE refactor + atomization (atomic design experiment)
++ swagger BE docs review
 
 ### roadmap to v0.46
 + ~~add new modal to show logged user and links to flow and to log out~~
 + ~~add the user's flow link to logout modal and user info modal~~
 + ~~enhance the UI: consistency (volors, buttons, modals, textboxes)~~, ~~fix texts in toasts~~
-+ live switch implementation (to disable SSE)
 
 ### roadmap to v0.45
 + add controler+service+repository experiment for ~~polls~~, ~~users~~, posts (wip)
