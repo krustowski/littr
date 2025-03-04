@@ -92,10 +92,10 @@ func (c *Content) Render() app.UI {
 			OnClickOptionTwoActionName:   "option-two-click",
 			OnClickOptionThreeActionName: "option-three-click",
 
-			OnClickDeleteActionName: "delete",
-			OnClickLinkActionName:   "link",
-			OnMouseEnterActionName:  "mouse-enter",
-			OnMouseLeaveActionName:  "mouse-leave",
+			OnClickDeleteModalShowActionName: "delete-click",
+			OnClickLinkActionName:            "link",
+			OnMouseEnterActionName:           "mouse-enter",
+			OnMouseLeaveActionName:           "mouse-leave",
 		},
 
 		&atoms.Loader{

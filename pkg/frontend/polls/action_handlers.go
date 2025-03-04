@@ -68,6 +68,19 @@ func (c *Content) handleDelete(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *Content) handleDeleteClick(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.interactedPollKey = key
+		c.deleteModalButtonsDisabled = false
+		c.deletePollModalShow = true
+	})
+}
+
 // handleDismiss()
 func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
@@ -76,6 +89,28 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 		c.pollsButtonDisabled = false
 		c.deletePollModalShow = false
 	})
+}
+
+func (c *Content) handleLink(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	url := ctx.Page().URL()
+	scheme := url.Scheme
+	host := url.Host
+
+	// write the link to browsers's clipboard
+	navigator := app.Window().Get("navigator")
+	if !navigator.IsNull() {
+		clipboard := navigator.Get("clipboard")
+		if !clipboard.IsNull() && !clipboard.IsUndefined() {
+			clipboard.Call("writeText", scheme+"://"+host+"/polls/"+key)
+		}
+	}
+
+	ctx.Navigate("/polls/" + key)
 }
 
 func (c *Content) handleOptionClick(ctx app.Context, a app.Action) {

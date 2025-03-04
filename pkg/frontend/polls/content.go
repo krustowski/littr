@@ -159,6 +159,9 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("link", c.handleLink)
+
+	ctx.Handle("delete-click", c.handleDeleteClick)
 
 	ctx.Handle("option-one-click", c.handleOptionClick)
 	ctx.Handle("option-two-click", c.handleOptionClick)

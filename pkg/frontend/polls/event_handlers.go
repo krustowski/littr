@@ -14,15 +14,6 @@ func (c *Content) onClickDelete(ctx app.Context, e app.Event) {
 }
 
 // onClickDeleteButton()
-func (c *Content) onClickDeleteButton(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.interactedPollKey = key
-		c.deleteModalButtonsDisabled = false
-		c.deletePollModalShow = true
-	})
-}
 
 // onClickDismiss()
 func (c *Content) onClickDismiss(ctx app.Context, e app.Event) {

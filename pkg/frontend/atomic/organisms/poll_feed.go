@@ -29,10 +29,10 @@ type PollFeed struct {
 	OnClickOptionTwoActionName   string
 	OnClickOptionThreeActionName string
 
-	OnClickDeleteActionName string
-	OnClickLinkActionName   string
-	OnMouseEnterActionName  string
-	OnMouseLeaveActionName  string
+	OnClickDeleteModalShowActionName string
+	OnClickLinkActionName            string
+	OnMouseEnterActionName           string
+	OnMouseLeaveActionName           string
 
 	pollTimestamp    string
 	userVoted        bool
@@ -50,6 +50,8 @@ func (p *PollFeed) clearProps() {
 }
 
 func (p *PollFeed) processPoll(poll models.Poll) bool {
+	p.clearProps()
+
 	p.userVoted = slices.Contains(poll.Voted, p.LoggedUser.Nickname)
 
 	var pollCounterSum int64
@@ -126,7 +128,7 @@ func (p *PollFeed) Render() app.UI {
 					LoggedUserNickname:      p.LoggedUser.Nickname,
 					PollTimestamp:           p.pollTimestamp,
 					ButtonsDisabled:         p.ButtonsDisabled,
-					OnClickDeleteActionName: p.OnClickDeleteActionName,
+					OnClickDeleteActionName: p.OnClickDeleteModalShowActionName,
 				},
 			)
 		}),
