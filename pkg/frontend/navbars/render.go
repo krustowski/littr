@@ -265,7 +265,7 @@ func (h *Header) Render() app.UI {
 				}).Else(func() app.UI {
 					return app.A().Class("button circle transparent").Href("/login").Text("login").Class("").Title("login").Aria("label", "login").Body(
 						app.I().Class("large").Class("deep-orange-text").Body(
-							app.Text("login")),
+							app.Text("key_vertical")),
 					)
 				}),
 			),
