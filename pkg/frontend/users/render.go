@@ -2,14 +2,15 @@ package users
 
 import (
 	"sort"
-	"time"
 
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-func (c *Content) Render() app.UI {
+func (c *Content) processUsers() []models.User {
 	keys := []string{}
 
 	// prepare the keys array
@@ -34,21 +35,6 @@ func (c *Content) Render() app.UI {
 
 		return sorted
 	}()
-
-	var userInModalInfo map[string]string = nil
-
-	if c.showUserPreviewModal {
-		userInModalInfo = map[string]string{
-			"full name": c.userInModal.FullName,
-			"web":       c.userInModal.Web,
-			//"e-mail":    c.userInModal.Email,
-			"last active": c.userInModal.LastActiveTime.Format("Jan 02, 2006; 15:04:05 -0700"),
-			"registered":  c.userInModal.RegisteredTime.Format("Jan 02, 2006; 15:04:05 -0700"),
-		}
-
-		//userGravatarURL := getGravatar(c.userInModal.Email)
-		//userGravatarURL = c.getGravatarURL()
-	}
 
 	// prepare posts according to the actual pagination and pageNo
 	pagedUsers := []models.User{}
@@ -84,332 +70,88 @@ func (c *Content) Render() app.UI {
 		pagedUsers = sortedUsers[start:stop]
 	}
 
-	var numOfReqs int64 = 0
+	return pagedUsers
+}
+
+func (c *Content) sumRequests() int {
+	var numOfReqs int = 0
 
 	requestList := c.user.RequestList
 	for _, state := range requestList {
 		if state {
 			numOfReqs++
-			// we don't need to loop further as the number is going to be always greater than zero henceforth
+
+			// We don't need to loop further as the number is always going to be
+			// greater than zero henceforth.
 			break
 		}
 	}
 
-	var userRegisteredTime string
-	var userLastActiveTime string
+	return numOfReqs
+}
 
-	if c.userInModal.Nickname != "" {
-		registeredTime := c.userInModal.RegisteredTime
-		lastActiveTime := c.userInModal.LastActiveTime
-
-		registered := app.Window().
-			Get("Date").
-			New(registeredTime.Format(time.RFC3339))
-
-		lastActive := app.Window().
-			Get("Date").
-			New(lastActiveTime.Format(time.RFC3339))
-
-		userRegisteredTime = registered.Call("toLocaleString", "en-GB").String()
-		userLastActiveTime = lastActive.Call("toLocaleString", "en-GB").String()
-	}
-
+func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.If(c.user.RequestList != nil && numOfReqs > 0, func() app.UI {
+		app.If(c.user.RequestList != nil && c.sumRequests() > 0, func() app.UI {
 			return app.Div().Body(
+				&atoms.PageHeading{
+					Title: "requests",
+				},
 
-				app.Div().Class("row").Body(
-					app.Div().Class("max padding").Body(
-						app.H5().Text("requests"),
-					),
-				),
-				app.Div().Class("space"),
+				//
+				&organisms.UserRequests{
+					LoggedUser:              c.user,
+					Users:                   c.users,
+					OnClickAllowActionName:  "allow",
+					OnClickCancelActionName: "cancel",
+					OnClickUserActionName:   "user",
+					OnMouseEnterActionName:  "mouse-enter",
+					OnMouseLeaveActionName:  "mouse-leave",
+					ButtonsDisabled:         c.userButtonDisabled,
+				},
 
-				// requests table
-				app.Table().Class("border").ID("table-users").Style("width", "100%").Body(
-					app.TBody().Body(
-						app.Range(c.user.RequestList).Map(func(key string) app.UI {
-							if !c.user.RequestList[key] {
-								return nil
-							}
-
-							return app.Tr().Body(
-								app.Td().Class("left-align").Body(
-
-									// cell's header
-									app.Div().Class("row medium top-padding").Body(
-										app.Img().Class("responsive max left").Src(c.users[key].AvatarURL).Style("max-width", "60px").Style("border-radius", "50%"),
-										app.P().ID(c.users[key].Nickname).Text(c.users[key].Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser),
-										app.Button().Class("max responsive no-padding grey10 bold white-text thicc").OnClick(c.onClickCancel).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
-											app.Span().Body(
-												app.I().Style("padding-right", "5px").Text("close"),
-												app.Text("Cancel"),
-											),
-										),
-										app.Button().Class("max responsive no-padding bold deep-orange7 white-text thicc").OnClick(c.onClickAllow).Disabled(c.userButtonDisabled).ID(c.users[key].Nickname).Body(
-											app.Span().Body(
-												app.I().Style("padding-right", "5px").Text("check"),
-												app.Text("Allow"),
-											),
-										),
-									),
-								),
-							)
-						}),
-					),
-				),
 				app.Div().Class("space"),
 			)
 		}),
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("flowers"),
-			),
-		),
-		app.Div().Class("space"),
+		&atoms.PageHeading{
+			Title: "flowers",
+		},
 
-		// user info modal
-		app.If(c.showUserPreviewModal && userInModalInfo != nil, func() app.UI {
-			return app.Dialog().ID("user-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Body(
+		&organisms.ModalUserInfo{
+			User:                      c.userInModal,
+			Users:                     c.users,
+			ShowModal:                 c.showUserPreviewModal,
+			OnClickDismissActionName:  "dismiss",
+			OnClickUserFlowActionName: "flow",
+		},
 
-				//app.Img().Class("small-width small-height").Src(c.userInModal.AvatarURL),
-				app.Img().Class("small-width").Src(c.userInModal.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
+		&atoms.SearchBar{
+			ID:                 "user-search",
+			OnSearchActionName: "search",
+		},
 
-				app.Div().Class("row center-align").Body(
-					app.H5().Class().Body(
-						app.A().Href("/flow/users/"+c.userInModal.Nickname).Text(c.userInModal.Nickname),
-					),
+		&organisms.UserFeed{
+			LoggedUser:  c.user,
+			SortedUsers: c.processUsers(),
+			Users:       c.users,
+			FlowStats:   c.flowStats,
+			UserStats:   c.userStats,
+			Pagination:  c.pagination,
+			PageNo:      c.pageNo,
+			//
+			ButtonsDisabled: c.userButtonDisabled,
+			LoaderShowImage: c.loaderShow,
+			//
+			OnClickUserActionName:     "user",
+			OnClickNicknameActionName: "nickname-click",
+			OnMouseEnterActionName:    "mouse-enter",
+			OnMouseLeaveActionName:    "mouse-leave",
+		},
 
-					app.If(c.userInModal.Web != "", func() app.UI {
-						return app.A().Href(c.userInModal.Web).Body(
-							app.Span().Class("bold").Body(
-								app.I().Text("captive_portal"),
-							),
-						)
-					}),
-				),
-
-				app.If(c.userInModal.About != "", func() app.UI {
-					return app.Article().Class("center-align white-text border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Text(c.userInModal.About)
-				}),
-
-				app.Article().Class("white-text border left-align thicc").Body(
-					app.P().Class("bold").Text("Registered"),
-					app.P().Class().Text(userRegisteredTime),
-
-					app.P().Class("bold").Text("Last online"),
-					app.P().Class().Text(userLastActiveTime),
-				),
-
-				//app.Div().Class("large-space"),
-				app.Div().Class("row center-align").Body(
-					app.Button().Class("max black white-text thicc").OnClick(c.onDismissToast).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Close"),
-						),
-					),
-					app.Button().Class("max deep-orange7 white-text thicc").ID(c.userInModal.Nickname).OnClick(c.onClickUserFlow).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("tsunami"),
-							app.Text("Flow"),
-						),
-					),
-				),
-			)
-		}),
-
-		// search bar
-		app.Div().Class("field prefix round fill thicc").Body(
-			app.I().Class("front").Text("search"),
-			//app.Input().Type("search").OnChange(c.ValueTo(&c.searchString)).OnSearch(c.onSearch),
-			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
-		),
-
-		// users table
-		app.Table().Class("border").ID("table-users").Style("width", "100%").Style("border-spacing", "0.1em").Style("padding", "0 0 2em 0").Body(
-			app.TBody().Body(
-				app.Range(pagedUsers).Slice(func(idx int) app.UI {
-					//app.Range(c.users).Map(func(idx string) app.UI {
-					user := pagedUsers[idx]
-					//user := c.users[idx]
-
-					var inFlow bool = false
-					var shaded bool = false
-					var requested bool = false
-					var found bool
-
-					if c.user.FlowList != nil {
-						if inFlow, found = c.user.FlowList[user.Nickname]; found && inFlow {
-							inFlow = true
-						}
-					}
-
-					if c.user.ShadeList != nil {
-						if shaded, found = c.user.ShadeList[user.Nickname]; found && shaded {
-							shaded = true
-						}
-					}
-
-					if user.RequestList != nil {
-						if requested, found = user.RequestList[c.user.Nickname]; !found {
-							requested = false
-						}
-					}
-
-					if !user.Searched || user.Nickname == "system" {
-						return nil
-					}
-
-					return app.Tr().Body(
-						app.Td().Class("left-align").Body(
-
-							// cell's header
-							app.Div().Class("row medium top-padding").Body(
-								app.Img().ID(user.Nickname).Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%").OnClick(c.onClickUser),
-
-								app.If(user.Private, func() app.UI {
-									return app.Div().Body(
-										// nasty hack to ensure the padding lock icon is next to nickname
-										app.P().ID(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser).Body(
-											app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
-										),
-
-										// show private mode
-										app.Span().Class("bold max").Body(
-											app.I().Text("lock"),
-										),
-									)
-								}).Else(func() app.UI {
-									return app.P().ID(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser).Body(
-										app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
-									)
-								}),
-
-								// user's stats --- flower count
-								app.B().Title("flower count").Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
-								app.Span().Title("flower count").Class("bold").Body(
-									//app.I().Text("filter_vintage"),
-									app.I().Text("group"),
-								),
-
-								// user's stats --- post count
-								app.B().Title("post count").Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
-								app.Span().Title("post count (link to their flow)").Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
-									app.I().Text("news"),
-								),
-
-								// more button
-								/*
-									app.If(shaded,
-										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-											//app.Text("unshade"),
-											app.I().Text("more_horiz"),
-										),
-									).ElseIf(user.Nickname == c.user.Nickname,
-										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
-											app.I().Text("more_horiz"),
-										),
-									).Else(
-										app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-											//app.Text("shade"),
-											app.I().Text("more_horiz"),
-										),
-									),
-								*/
-							),
-
-							// cell's body
-							app.Div().Class("row middle-align").Body(
-
-								app.Article().Class("max border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Body(
-									app.Span().Text(user.About),
-								),
-							),
-
-							app.Div().Class("row center-align bottom-padding").Body(
-
-								// If shaded, block any action.
-								app.If(shaded, func() app.UI {
-									return app.Button().Class("max shrink deep-orange7 white-text bold thicc").Disabled(true).Body(
-										app.Text("shaded"),
-									)
-								}).Else(func() app.UI {
-									return app.Div().Body(
-
-										// make button inactive for logged user
-										app.If(user.Nickname == c.user.Nickname, func() app.UI {
-											return app.Button().Class("max shrink deep-orange7 white-text bold thicc").Disabled(true).Body(
-												app.Text("that's you"),
-											)
-											// if system acc
-										}).ElseIf(user.Nickname == "system", func() app.UI {
-											return app.Button().Class("max shrink deep-orange7 white-text bold thicc").Disabled(true).Body(
-												app.Text("system acc"),
-											)
-											// private mode
-										}).ElseIf(user.Private && !requested && !inFlow, func() app.UI {
-											return app.Button().Class("max shrink yellow10 white-text bold thicc").OnClick(c.onClickPrivateOn).Disabled(c.usersButtonDisabled).ID(user.Nickname).Body(
-												app.Span().Body(
-													app.I().Style("padding-right", "5px").Text("drafts"),
-													app.Text("Ask to follow"),
-												),
-											)
-											// private mode, requested already
-										}).ElseIf(user.Private && requested && !inFlow, func() app.UI {
-											return app.Button().Class("max shrink grey9 white-text bold thicc").OnClick(c.onClickPrivateOff).Disabled(c.usersButtonDisabled).ID(user.Nickname).Body(
-												app.Span().Body(
-													app.I().Style("padding-right", "5px").Text("close"),
-													app.Text("Cancel the follow request"),
-												),
-											)
-											// flow toggle off
-										}).ElseIf(inFlow, func() app.UI {
-											return app.Button().Class("max shrink grey10 white-border white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
-												app.Span().Body(
-													app.I().Style("padding-right", "5px").Text("close"),
-													app.Text("Unfollow"),
-												),
-											)
-											// flow toggle on
-										}).Else(func() app.UI {
-											return app.Button().Class("max shrink deep-orange7 white-text bold thicc").ID(user.Nickname).OnClick(c.onClick).Disabled(c.usersButtonDisabled).Body(
-												app.Span().Body(
-													app.I().Style("padding-right", "5px").Text("add"),
-													app.Text("Follow"),
-												),
-											)
-										}),
-									)
-								}),
-
-								// shading button
-								app.If(shaded, func() app.UI {
-									return app.Button().Class("no-padding transparent circular white-text thicc").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Title("unshade").Body(
-										app.I().Text("block"),
-									)
-								}).ElseIf(user.Nickname == c.user.Nickname, func() app.UI {
-									return app.Button().Class("no-padding transparent circular grey white-text thicc").OnClick(nil).Disabled(true).ID(user.Nickname).Title("shading not allowed").Body(
-										app.I().Text("block"),
-									)
-								}).Else(func() app.UI {
-									return app.Button().Class("no-padding transparent circular grey white-text thicc").OnClick(c.onClickUserShade).Disabled(c.userButtonDisabled).ID(user.Nickname).Title("shade").Body(
-										app.I().Text("block"),
-									)
-								}),
-							),
-						),
-					)
-				}),
-			),
-		),
-		app.Div().ID("page-end-anchor"),
-		app.If(c.loaderShow, func() app.UI {
-			return app.Div().Body(
-				app.Div().Class("small-space"),
-				app.Progress().Class("circle center large deep-orange-border active"),
-			)
-		}),
+		&atoms.Loader{
+			ID:         "page-end-anchor",
+			ShowLoader: c.loaderShow,
+		},
 	)
 }

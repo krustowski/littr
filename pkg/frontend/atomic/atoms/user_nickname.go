@@ -8,6 +8,7 @@ type UserNickname struct {
 	app.Compo
 
 	Class                  string
+	Icon                   string
 	Nickname               string
 	SpanID                 string
 	Title                  string
@@ -34,5 +35,12 @@ func (u *UserNickname) Render() app.UI {
 		app.A().ID(u.Nickname).Title(u.Title).Class(u.Class).OnClick(u.onClick).Body(
 			app.Span().ID(u.SpanID).Class(u.Class).Text(u.Nickname).OnMouseEnter(u.onMouseEnter).OnMouseLeave(u.onMouseLeave),
 		),
+
+		// Append an icon if defined.
+		app.If(u.Icon != "", func() app.UI {
+			return app.Span().Class("bold max").Body(
+				app.I().Style("padding-right", "5px").Text(u.Icon),
+			)
+		}),
 	)
 }
