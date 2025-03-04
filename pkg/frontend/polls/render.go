@@ -60,13 +60,9 @@ func (c *Content) sortPolls() []models.Poll {
 
 func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("polls"),
-				//app.P().Text("brace yourself"),
-			),
-		),
-		app.Div().Class("space"),
+		&atoms.PageHeading{
+			Title: "polls",
+		},
 
 		// Poll deletion modal.
 		&organisms.ModalPollDelete{
@@ -77,6 +73,7 @@ func (c *Content) Render() app.UI {
 			OnClickDeleteActionName:  "delete",
 		},
 
+		// The very polls feed.
 		&organisms.PollFeed{
 			LoggedUser: c.user,
 

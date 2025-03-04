@@ -26,20 +26,28 @@ type UserFeed struct {
 	LoaderShowImage bool
 
 	OnClickUserActionName     string
-	OnClickNicknameActionName string
-	OnMouseEnterActionName    string
-	OnMouseLeaveActionName    string
+	OnClickUnfollowActionName string
+	OnClickAskActionName      string
+	OnClickCancelActionName   string
+	OnClickFollowActionName   string
+
+	OnClickNicknameActionName  string
+	OnClickPostCountActionName string
+	OnMouseEnterActionName     string
+	OnMouseLeaveActionName     string
 
 	// Per user vars. Modified via the processUser() function.
 	isInFlow    bool
-	isShaded    bool
+	isPrivate   bool
 	isRequested bool
+	isShaded    bool
 }
 
 func (u *UserFeed) processUser(user models.User) bool {
 	u.isInFlow = false
-	u.isShaded = false
+	u.isPrivate = false
 	u.isRequested = false
+	u.isShaded = false
 
 	var found bool
 
@@ -59,6 +67,10 @@ func (u *UserFeed) processUser(user models.User) bool {
 		if u.isRequested, found = user.RequestList[u.LoggedUser.Nickname]; !found {
 			u.isRequested = false
 		}
+	}
+
+	if user.Private || user.Options["private"] {
+		u.isPrivate = true
 	}
 
 	if !user.Searched || user.Nickname == "system" {
@@ -123,13 +135,139 @@ func (u *UserFeed) Render() app.UI {
 					},
 
 					&molecules.Counter{
-						Count:             u.UserStats[user.Nickname].FlowerCount,
+						Count:             u.UserStats[user.Nickname].PostCount,
 						ID:                user.Nickname,
-						Title:             "flower count",
-						Icon:              "group",
-						OnClickActionName: u.OnClickNicknameActionName,
+						Title:             "post count",
+						Icon:              "news",
+						OnClickActionName: u.OnClickPostCountActionName,
 					},
 				),
+
+				app.Div().Class("row middle-align").Body(
+					app.Article().Class("max border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Body(
+						app.Span().Text(user.About),
+					),
+				),
+
+				app.Div().Class("space"),
+
+				//
+				// Follow and shade buttons.
+				//
+
+				app.If(user.Nickname == "system", func() app.UI {
+					return nil
+				}),
+
+				app.If(user.Nickname == u.LoggedUser.Nickname, func() app.UI {
+					// When the user is followed.
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: true,
+							Text:     "Shade",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							Class:    "max responsive shrink grey10 white-border white-text bold thicc",
+							Disabled: true,
+							Icon:     "close",
+							Text:     "That's you",
+						},
+					)
+				}).ElseIf(u.isShaded, func() app.UI {
+					// When the user is shaded, all actions are blocked by default.
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: u.isShaded,
+							Text:     "Shaded",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							ID:       user.Nickname,
+							Class:    "max responsive shrink grey10 white-border white-text bold thicc",
+							Disabled: u.isShaded,
+							Icon:     "close",
+							Text:     "Shaded",
+						},
+					)
+				}).ElseIf(u.isInFlow || (u.isInFlow && u.isPrivate), func() app.UI {
+					// When the user is followed.
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: u.isShaded,
+							Text:     "Shade",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							ID:                user.Nickname,
+							Class:             "max responsive shrink grey10 white-border white-text bold thicc",
+							Disabled:          u.ButtonsDisabled,
+							Icon:              "close",
+							Text:              "Unfollow",
+							OnClickActionName: u.OnClickUnfollowActionName,
+						},
+					)
+				}).ElseIf(u.isPrivate && !u.isInFlow, func() app.UI {
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: u.isShaded,
+							Text:     "Shade",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							ID:                user.Nickname,
+							Class:             "max responsive shrink yellow10 white-border white-text bold thicc",
+							Disabled:          u.ButtonsDisabled,
+							Icon:              "drafts",
+							Text:              "Ask to follow",
+							OnClickActionName: u.OnClickAskActionName,
+						},
+					)
+				}).ElseIf(!u.isInFlow && u.isRequested && u.isPrivate, func() app.UI {
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: u.isShaded,
+							Text:     "Shade",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							ID:                user.Nickname,
+							Class:             "max responsive shrink yellow10 white-border white-text bold thicc",
+							Disabled:          u.ButtonsDisabled,
+							Icon:              "close",
+							Text:              "Cancel the follow request",
+							OnClickActionName: u.OnClickCancelActionName,
+						},
+					)
+				}).Else(func() app.UI {
+					return app.Div().Class("row").Body(
+						&atoms.Button{
+							Class:    "max responsive shrink grey white-text thicc",
+							Disabled: u.isShaded,
+							Text:     "Shade",
+							Icon:     "block",
+						},
+
+						&atoms.Button{
+							ID:                user.Nickname,
+							Class:             "max responsive shrink deep-orange7 white-border white-text bold thicc",
+							Disabled:          u.ButtonsDisabled,
+							Icon:              "add",
+							Text:              "Follow",
+							OnClickActionName: u.OnClickFollowActionName,
+						},
+					)
+				}),
 			)
 		}),
 	)
@@ -142,60 +280,6 @@ func (u *UserFeed) Render() app.UI {
 			app.Range(pagedUsers).Slice(func(idx int) app.UI {
 				return app.Tr().Body(
 					app.Td().Class("left-align").Body(
-
-						// cell's header
-						app.Div().Class("row medium top-padding").Body(
-							app.Img().ID(user.Nickname).Class("responsive max left").Src(user.AvatarURL).Style("max-width", "60px").Style("border-radius", "50%").OnClick(c.onClickUser),
-
-							app.If(user.Private, func() app.UI {
-								return app.Div().Body(
-									// nasty hack to ensure the padding lock icon is next to nickname
-									app.P().ID(user.Nickname).Class("deep-orange-text bold").OnClick(c.onClickUser).Body(
-										app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
-									),
-
-									// show private mode
-									app.Span().Class("bold max").Body(
-										app.I().Text("lock"),
-									),
-								)
-							}).Else(func() app.UI {
-								return app.P().ID(user.Nickname).Class("deep-orange-text bold max").OnClick(c.onClickUser).Body(
-									app.Span().Class("large-text bold deep-orange-text").Text(user.Nickname),
-								)
-							}),
-
-							// user's stats --- flower count
-							app.B().Title("flower count").Text(c.userStats[user.Nickname].FlowerCount).Class("left-padding"),
-							app.Span().Title("flower count").Class("bold").Body(
-								//app.I().Text("filter_vintage"),
-								app.I().Text("group"),
-							),
-
-							// user's stats --- post count
-							app.B().Title("post count").Text(c.userStats[user.Nickname].PostCount).Class("left-padding"),
-							app.Span().Title("post count (link to their flow)").Class("bold").OnClick(c.onClickUserFlow).ID(user.Nickname).Body(
-								app.I().Text("news"),
-							),
-
-							// more button
-							/*
-								app.If(shaded,
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-										//app.Text("unshade"),
-										app.I().Text("more_horiz"),
-									),
-								).ElseIf(user.Nickname == c.user.Nickname,
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(true).Body(
-										app.I().Text("more_horiz"),
-									),
-								).Else(
-									app.Button().Class("no-padding transparent circle white-text bold").ID(user.Nickname).OnClick(nil).Disabled(c.usersButtonDisabled).Body(
-										//app.Text("shade"),
-										app.I().Text("more_horiz"),
-									),
-								),
-						),
 
 						// cell's body
 						app.Div().Class("row middle-align").Body(

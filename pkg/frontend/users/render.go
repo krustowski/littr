@@ -98,7 +98,6 @@ func (c *Content) Render() app.UI {
 					Title: "requests",
 				},
 
-				//
 				&organisms.UserRequests{
 					LoggedUser:              c.user,
 					Users:                   c.users,
@@ -110,7 +109,7 @@ func (c *Content) Render() app.UI {
 					ButtonsDisabled:         c.userButtonDisabled,
 				},
 
-				app.Div().Class("space"),
+				app.Div().Class("large-space"),
 			)
 		}),
 
