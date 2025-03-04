@@ -39,7 +39,7 @@ func (u *UserNickname) Render() app.UI {
 		// Append an icon if defined.
 		app.If(u.Icon != "", func() app.UI {
 			return app.Span().Class("bold max").Body(
-				app.I().Style("padding-right", "5px").Text(u.Icon),
+				app.I().Class("small-padding").Text(u.Icon),
 			)
 		}),
 	)

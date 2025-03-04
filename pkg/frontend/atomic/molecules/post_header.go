@@ -40,7 +40,7 @@ func (p *PostHeader) Render() app.UI {
 		&atoms.UserNickname{
 			SpanID:                 "user-flow-link-" + p.PostID,
 			Title:                  "user's flow link",
-			Class:                  "large-text bold deep-orange-text",
+			Class:                  "large-text bold primary-text",
 			Nickname:               p.PostAuthor,
 			OnClickActionName:      p.OnClickLinkActionName,
 			OnMouseEnterActionName: p.OnMouseEnterActionName,

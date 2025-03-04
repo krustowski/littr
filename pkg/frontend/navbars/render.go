@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -133,43 +135,26 @@ func (h *Header) Render() app.UI {
 
 				// littr header
 				app.Div().Class("row center-align").Body(
-					// snackbar toast top
-					app.A().ID("snackbar-general-top-link").Href("").Body(
-						app.If(toastTopText != "", func() app.UI {
-							return app.Div().ID("snackbar-general-top").Class("snackbar white-text top").Style("border-radius", "8px").Body(
-							//app.I().Text("info"),
-							//app.Span().Text(toastText),
-							)
-						}),
-					),
+					&atoms.Snackbar{
+						Class:    "snackbar white-text thicc",
+						ID:       "snackbar-general-top",
+						IDLink:   "snackbar-general-top-link",
+						Position: "top",
+						Text:     toastTopText,
+					},
 
-					// littr header
-					app.H4().Title("system info (click to open)").Class("center-align deep-orange-text").OnClick(h.onClickHeadline).ID("top-header").Body(
-						app.Span().Body(
-							app.Text(headerString),
-							app.If(app.Getenv("APP_ENVIRONMENT") != "prod", func() app.UI {
-								return app.Span().Class("col").Body(
-									app.Sup().Body(
-										app.If(app.Getenv("APP_ENVIRONMENT") == "stage", func() app.UI {
-											return app.Text(" (stage) ")
-										}).Else(func() app.UI {
-											return app.Text(" (dev) ")
-										}),
-									),
-								)
-							}),
-						),
-					),
+					&molecules.LittrHeader{
+						HeaderString:              headerString,
+						OnClickHeadlineActionName: "littr-header-click",
+					},
 
-					// snackbar toast bottom
-					app.A().ID("snackbar-general-bottom-link").Href("").Body(
-						app.If(toastBottomText != "", func() app.UI {
-							return app.Div().ID("snackbar-general-bottom").Class("snackbar white-text bottom").Style("border-radius", "8px").Body(
-							//app.I().Text("info"),
-							//app.Span().Text(toastText),
-							)
-						}),
-					),
+					&atoms.Snackbar{
+						Class:    "snackbar white-text thicc",
+						ID:       "snackbar-general-bottom",
+						IDLink:   "snackbar-general-bottom-link",
+						Position: "bottom",
+						Text:     toastBottomText,
+					},
 				),
 
 				// app info modal

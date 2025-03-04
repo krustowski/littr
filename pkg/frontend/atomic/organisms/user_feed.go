@@ -107,7 +107,7 @@ func (u *UserFeed) Render() app.UI {
 
 					app.If(user.Private, func() app.UI {
 						return &atoms.UserNickname{
-							Class:                  "deep-orange-text bold large-text",
+							Class:                  "primary-text bold large-text",
 							Icon:                   "lock",
 							Nickname:               user.Nickname,
 							SpanID:                 fmt.Sprintf("%s-span", user.Nickname),
@@ -119,7 +119,7 @@ func (u *UserFeed) Render() app.UI {
 						}
 					}).Else(func() app.UI {
 						return &atoms.UserNickname{
-							Class:                  "deep-orange-text bold large-text",
+							Class:                  "primary-text bold large-text",
 							Nickname:               user.Nickname,
 							SpanID:                 fmt.Sprintf("%s-span", user.Nickname),
 							Title:                  "user's nickname",
@@ -206,7 +206,7 @@ func (u *UserFeed) Render() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink grey white-text thicc",
+							Class:             "max responsive shrink grey black-text thicc",
 							Disabled:          u.isShaded,
 							Text:              "Shade",
 							Icon:              "block",
@@ -226,7 +226,7 @@ func (u *UserFeed) Render() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink grey white-text thicc",
+							Class:             "max responsive shrink grey black-text thicc",
 							Disabled:          u.isShaded,
 							Text:              "Shade",
 							Icon:              "block",
@@ -235,7 +235,7 @@ func (u *UserFeed) Render() app.UI {
 
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink yellow10 white-border white-text bold thicc",
+							Class:             "max responsive shrink blue10 white-border white-text bold thicc",
 							Disabled:          u.ButtonsDisabled,
 							Icon:              "drafts",
 							Text:              "Ask to follow",
@@ -246,7 +246,7 @@ func (u *UserFeed) Render() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink grey white-text thicc",
+							Class:             "max responsive shrink grey black-text thicc",
 							Disabled:          u.isShaded,
 							Text:              "Shade",
 							Icon:              "block",
@@ -266,7 +266,7 @@ func (u *UserFeed) Render() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink grey white-text thicc",
+							Class:             "max responsive shrink grey black-text thicc",
 							Disabled:          u.isShaded,
 							Text:              "Shade",
 							Icon:              "block",
@@ -275,7 +275,7 @@ func (u *UserFeed) Render() app.UI {
 
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink deep-orange7 white-border white-text bold thicc",
+							Class:             "max responsive shrink primary-container white-border white-text bold thicc",
 							Disabled:          u.ButtonsDisabled,
 							Icon:              "add",
 							Text:              "Follow",

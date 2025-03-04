@@ -33,7 +33,7 @@ func (p *PostBody) OnMount(ctx app.Context) {}
 func (p *PostBody) Render() app.UI {
 	return app.Div().Body(
 		app.If(p.Post.ReplyToID != "", func() app.UI {
-			return app.Article().Class("black-text border reply thicc").Style("max-width", "100%").Body(
+			return app.Article().Class("black-text border primary thicc").Style("max-width", "100%").Body(
 				app.Div().Class("row max").Body(
 					app.If(p.RenderProps.OriginalSummary != "", func() app.UI {
 						return app.Details().Class("max").Body(

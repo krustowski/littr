@@ -39,7 +39,7 @@ func (u *UserRequests) Render() app.UI {
 					},
 
 					&atoms.UserNickname{
-						Class:                  "deep-orange-text bold max large-text",
+						Class:                  "primary-text bold max large-text",
 						Nickname:               key,
 						SpanID:                 key,
 						Title:                  "user's nickname",
@@ -60,7 +60,7 @@ func (u *UserRequests) Render() app.UI {
 
 					&atoms.Button{
 						ID:                key,
-						Class:             "max responsive no-padding bold deep-orange7 white-text thicc",
+						Class:             "max responsive no-padding bold primary-container white-text thicc",
 						Icon:              "check",
 						Text:              "Allow",
 						OnClickActionName: u.OnClickAllowActionName,
