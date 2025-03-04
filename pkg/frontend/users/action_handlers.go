@@ -22,6 +22,14 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 	})
 }
 
+func (c *Content) handleMouseEnter(ctx app.Context, a app.Action) {
+	common.HandleMouseEnter(ctx, a)
+}
+
+func (c *Content) handleMouseLeave(ctx app.Context, a app.Action) {
+	common.HandleMouseLeave(ctx, a)
+}
+
 // handleScroll is an action handler function that takes care of the action upon a generic scroll. More specially, it requests new items page, when the specified point/trigger is hit.
 func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	// Instantiate the toast.

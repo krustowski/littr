@@ -437,13 +437,3 @@ func (c *Content) onSearch(ctx app.Context, e app.Event) {
 	// Cast new search action.
 	ctx.NewActionWithValue("search", val)
 }
-
-func (c *Content) onMouseEnter(ctx app.Context, e app.Event) {
-	//ctx.JSSrc().Get("classList").Call("add", "underline")
-	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1.85rem")
-}
-
-func (c *Content) onMouseLeave(ctx app.Context, e app.Event) {
-	//ctx.JSSrc().Get("classList").Call("remove", "underline")
-	ctx.JSSrc().Get("style").Call("setProperty", "font-size", "1.75rem")
-}

@@ -1,6 +1,8 @@
 package organisms
 
 import (
+	"fmt"
+
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
@@ -105,7 +107,7 @@ func (u *UserFeed) Render() app.UI {
 							Class:                  "deep-orange-text bold large-text",
 							Icon:                   "lock",
 							Nickname:               user.Nickname,
-							SpanID:                 user.Nickname,
+							SpanID:                 fmt.Sprintf("%s-span", user.Nickname),
 							Title:                  "user's nickname",
 							Text:                   user.Nickname,
 							OnClickActionName:      u.OnClickNicknameActionName,
@@ -116,7 +118,7 @@ func (u *UserFeed) Render() app.UI {
 						return &atoms.UserNickname{
 							Class:                  "deep-orange-text bold large-text",
 							Nickname:               user.Nickname,
-							SpanID:                 user.Nickname,
+							SpanID:                 fmt.Sprintf("%s-span", user.Nickname),
 							Title:                  "user's nickname",
 							Text:                   user.Nickname,
 							OnClickActionName:      u.OnClickNicknameActionName,

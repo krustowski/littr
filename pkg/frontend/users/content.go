@@ -124,6 +124,9 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("shade", c.handleUserShade)
 	ctx.Handle("toggle", c.handleToggle)
 
+	ctx.Handle("mouse-enter", c.handleMouseEnter)
+	ctx.Handle("mouse-leave", c.handleMouseLeave)
+
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
