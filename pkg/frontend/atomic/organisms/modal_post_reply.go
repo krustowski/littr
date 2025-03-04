@@ -51,7 +51,7 @@ func (m *ModalPostReply) Render() app.UI {
 
 				// Original content (text).
 				app.If(m.PostOriginal.Content != "", func() app.UI {
-					return app.Article().Class("reply black-text border thicc").Style("max-width", "100%").Body(
+					return app.Article().Class("primary-text border primary-border thicc").Style("max-width", "100%").Body(
 						app.If(replySummary != "", func() app.UI {
 							return app.Details().Body(
 								app.Summary().Text(replySummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
@@ -67,7 +67,7 @@ func (m *ModalPostReply) Render() app.UI {
 
 				&atoms.Textarea{
 					ID:               "reply-textarea",
-					Class:            "field label textarea border extra deep-orange-text thicc",
+					Class:            "field label textarea border extra blue-text thicc",
 					Content:          *m.ReplyPostContent,
 					Name:             "replyPost",
 					LabelText:        fmt.Sprintf("Reply to: %s", m.PostOriginal.Nickname),
@@ -93,7 +93,7 @@ func (m *ModalPostReply) Render() app.UI {
 
 					&atoms.Button{
 						ID:                "reply",
-						Class:             "max bold deep-orange7 white-text thicc",
+						Class:             "max bold blue10 white-text thicc",
 						Icon:              "reply",
 						Text:              "Reply",
 						OnClickActionName: m.OnClickReplyActionName,

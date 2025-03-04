@@ -15,7 +15,7 @@ func (l *Loader) Render() app.UI {
 		app.If(l.ShowLoader, func() app.UI {
 			return app.Div().Body(
 				app.Div().Class("small-space"),
-				app.Progress().Class("circle center large deep-orange-border active"),
+				app.Progress().Class("circle center large blue-border active"),
 			)
 		}),
 	)

@@ -21,6 +21,6 @@ func (t *Textarea) onBlur(ctx app.Context, e app.Event) {
 func (t *Textarea) Render() app.UI {
 	return app.Div().Class(t.Class).Style("border-radius", "8px").Body(
 		app.Textarea().Class("active").Name(t.Name).Text(t.Content).OnChange(t.ValueTo(&t.Content)).AutoFocus(true).ID(t.ID).OnBlur(t.onBlur),
-		app.Label().Text(t.LabelText).Class("active deep-orange-text"),
+		app.Label().Text(t.LabelText).Class("active blue-text"),
 	)
 }

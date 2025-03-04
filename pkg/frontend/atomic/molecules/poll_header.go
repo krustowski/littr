@@ -21,7 +21,7 @@ func (p *PollHeader) Render() app.UI {
 
 		app.P().Class("max").Body(
 			app.Span().Title("question").Text("Q: "),
-			app.Span().Text(p.Poll.Question).Class("deep-orange-text space bold"),
+			app.Span().Text(p.Poll.Question).Class("blue-text space bold"),
 		),
 
 		&atoms.Button{

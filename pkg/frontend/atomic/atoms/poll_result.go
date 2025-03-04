@@ -23,7 +23,7 @@ func (p *PollResult) composeClass() string {
 		p.OrangelLevel = 3
 	}
 
-	return fmt.Sprintf("bold progress left deep-orange%d medium padding thicc", p.OrangelLevel)
+	return fmt.Sprintf("bold progress left blue%d medium padding thicc", p.OrangelLevel)
 }
 
 func (p *PollResult) Render() app.UI {
