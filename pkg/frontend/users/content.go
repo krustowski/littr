@@ -134,8 +134,8 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("unfollow", c.handleToggle)
 	ctx.Handle("follow", c.handleToggle)
 
-	ctx.Handle("ask", c.handleUserActions)
-	ctx.Handle("cancel", c.handleUserActions)
+	ctx.Handle("ask", c.handlePrivateMode)
+	ctx.Handle("cancel", c.handlePrivateMode)
 
 	c.paginationEnd = false
 	c.pagination = 0

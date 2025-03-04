@@ -80,6 +80,8 @@ func (u *UserFeed) processUser(user models.User) bool {
 		return false
 	}
 
+	//log.Printf("user: %s, isInFlow: %t, isShaded: %t, isRequested: %t, isPrivate: %t\n", user.Nickname, u.isInFlow, u.isShaded, u.isRequested, u.isPrivate)
+
 	return true
 }
 
@@ -199,7 +201,7 @@ func (u *UserFeed) Render() app.UI {
 							Text:     "Shaded",
 						},
 					)
-				}).ElseIf(u.isInFlow || (u.isInFlow && u.isPrivate), func() app.UI {
+				}).ElseIf(u.isInFlow, func() app.UI {
 					// When the user is followed.
 					return app.Div().Class("row").Body(
 						&atoms.Button{
@@ -220,7 +222,7 @@ func (u *UserFeed) Render() app.UI {
 							OnClickActionName: u.OnClickUnfollowActionName,
 						},
 					)
-				}).ElseIf(u.isPrivate && !u.isInFlow, func() app.UI {
+				}).ElseIf(!u.isInFlow && u.isPrivate && !u.isRequested, func() app.UI {
 					return app.Div().Class("row").Body(
 						&atoms.Button{
 							ID:                user.Nickname,
@@ -253,7 +255,7 @@ func (u *UserFeed) Render() app.UI {
 
 						&atoms.Button{
 							ID:                user.Nickname,
-							Class:             "max responsive shrink yellow10 white-border white-text bold thicc",
+							Class:             "max responsive shrink grey10 white-border white-text bold thicc",
 							Disabled:          u.ButtonsDisabled,
 							Icon:              "close",
 							Text:              "Cancel the follow request",
