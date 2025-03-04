@@ -14,7 +14,7 @@ func initClientCommon() {
 	app.Route("/", func() app.Composer {
 		return &fe.WelcomeView{}
 	})
-	app.RouteWithRegexp("^/activation/[a-zA-Z]+$", func() app.Composer {
+	app.RouteWithRegexp("^/activation/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}$", func() app.Composer {
 		return &fe.LoginView{}
 	})
 	app.RouteWithRegexp("^/(flow|flow/posts/[0-9]+|flow/hashtags/[a-zA-Z]+|flow/users/[a-zA-Z]+)$", func() app.Composer {
