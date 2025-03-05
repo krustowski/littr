@@ -34,16 +34,15 @@ func (c *Content) Render() app.UI {
 		},
 
 		// New post button.
-		app.Div().Class("row").Body(
-			&atoms.Button{
-				Class:             "max shrink center primary-container white-text bold thicc",
-				Icon:              "send",
-				Text:              "Send",
-				Disabled:          c.postButtonsDisabled,
-				ShowProgress:      c.postButtonsDisabled,
-				OnClickActionName: "send-post",
-			},
-		),
+		&atoms.Button{
+			ID:                "button-new-post",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			Icon:              "send",
+			Text:              "Send",
+			Disabled:          c.postButtonsDisabled,
+			ShowProgress:      c.postButtonsDisabled,
+			OnClickActionName: "send-post",
+		},
 
 		app.Div().Class("space"),
 
@@ -73,17 +72,17 @@ func (c *Content) Render() app.UI {
 			app.Input().ID("poll-option-iii").Type("text").OnChange(c.ValueTo(&c.pollOptionIII)).Required(false).Class("active").MaxLength(60).TabIndex(7),
 			app.Label().Text("Option three (optional)").Class("active blue-text"),
 		),
-		app.Div().Class("row").Body(
-			app.Button().ID("poll").Class("max shrink center primary-container white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).TabIndex(8).Body(
-				app.If(c.postButtonsDisabled, func() app.UI {
-					return app.Progress().Class("circle white-border small")
-				}),
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("send"),
-					app.Text("Send"),
-				),
-			),
-		),
+
+		&atoms.Button{
+			ID:                "button-new-poll",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			Icon:              "send",
+			Text:              "Send",
+			Disabled:          c.postButtonsDisabled,
+			ShowProgress:      c.postButtonsDisabled,
+			OnClickActionName: "send-poll",
+		},
+
 		app.Div().Class("space"),
 	)
 }

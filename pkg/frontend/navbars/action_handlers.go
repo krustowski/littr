@@ -173,13 +173,13 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 	if event.Get("ctrlKey").Bool() && event.Get("key").String() == "Enter" {
 		// Click the new post button.
 		if !textareaPost.IsNull() && len(textareaPost.Get("value").String()) > 0 {
-			app.Window().GetElementByID("post").Call("click")
+			app.Window().GetElementByID("button-new-post").Call("click")
 			return
 		}
 
 		// Click the new reply button.
 		if !textareaReply.IsNull() && len(textareaReply.Get("value").String()) > 0 {
-			app.Window().GetElementByID("reply").Call("click")
+			app.Window().GetElementByID("button-reply").Call("click")
 			return
 		}
 
@@ -195,7 +195,7 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 			!win.GetElementByID("poll-option-iii").IsNull() &&
 			len(win.GetElementByID("poll-option-iii").Get("value").String()) > 0 {
 
-			app.Window().GetElementByID("poll").Call("click")
+			app.Window().GetElementByID("button-new-poll").Call("click")
 		}
 	}
 

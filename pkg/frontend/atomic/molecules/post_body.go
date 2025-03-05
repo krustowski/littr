@@ -94,7 +94,7 @@ func (p *PostBody) Render() app.UI {
 				&atoms.Image{
 					ID:                "img-" + p.Post.ID,
 					Src:               p.RenderProps.ImageSource,
-					Class:             "no-padding center middle lazy",
+					Class:             "no-padding center",
 					OnClickActionName: p.OnClickImageActionName,
 					Styles:            map[string]string{"max-height": "100%", "max-width": "100%"},
 					Attr:              map[string]string{"loading": "lazy"},

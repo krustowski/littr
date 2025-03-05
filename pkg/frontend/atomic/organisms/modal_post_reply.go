@@ -92,7 +92,7 @@ func (m *ModalPostReply) Render() app.UI {
 					},
 
 					&atoms.Button{
-						ID:                "reply",
+						ID:                "button-reply",
 						Class:             "max bold primary-container white-text thicc",
 						Icon:              "reply",
 						Text:              "Reply",
