@@ -49,90 +49,46 @@ func (h *Header) Render() app.UI {
 		toastBottomText = "new post added to the flow"
 	}
 
-	// Link to the settings view.
-	settingsHref := "/settings"
-
-	// If not authorized, hide the bar and its items.
-	if !h.authGranted {
-		settingsHref = "#"
-	}
-
 	// Top navbar render.
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
 			app.Div().Class("row top-items max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted, func() app.UI {
-					return app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
-						app.I().Class("large").Class("blue-text").Body(
-							app.Text("build")),
-					)
+					return &atoms.Button{
+						ID:                "",
+						Class:             "circle transparent blue-text",
+						Title:             "settings [6]",
+						Aria:              map[string]string{"label": "setings"},
+						Icon:              "build",
+						OnClickActionName: "settings-click",
+					}
 				}).Else(func() app.UI {
 					return app.A().Class("").OnClick(nil).Body()
 				}),
 
 				// show intallation button if available
 				app.If(h.appInstallable, func() app.UI {
-					return app.A().Class("button circle transparent").Text("install").OnClick(h.onInstallButtonClicked).Title("install").Aria("label", "install").Body(
-						app.I().Class("large").Class("blue-text").Body(
-							app.Text("download"),
-						),
-					)
-					// hotfix to keep the nav items' distances
+					return &atoms.Button{
+						ID:                "",
+						Class:             "circle transparent blue-text",
+						Title:             "install",
+						Aria:              map[string]string{"label": "install"},
+						Icon:              "download",
+						OnClickActionName: "install-click",
+					}
 				}).Else(func() app.UI {
+					// hotfix to keep the nav items' distances
 					return app.A().Class("").OnClick(nil).Body()
 				}),
 
-				// app logout modal
-				app.If(h.modalLogoutShow, func() app.UI {
-					return app.Dialog().ID("logout-modal").Class("grey10 white-text active thicc").Body(
-						app.Nav().Class("center-align").Body(
-							app.H5().Text("user"),
-						),
-
-						app.Div().Class("space"),
-
-						// User's avatar and nickname.
-						app.Div().Class("row border thicc").Body(
-							app.Img().ID(h.user.Nickname).Title("user's avatar").Class("responsive padding max left").Src(h.user.AvatarURL).Style("max-width", "100px").Style("border-radius", "50%").OnClick(h.onClickUserFlow),
-							app.P().Class("max").Body(
-								app.A().Title("user's flow link").Class("bold deep-orange-text").OnClick(h.onClickUserFlow).ID(h.user.Nickname).Body(
-									app.Span().ID("user-flow-link").Class("large-text bold deep-orange-text").Text(h.user.Nickname),
-								),
-							),
-							app.Button().ID(h.user.Nickname).Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickUserFlow).Style("margin-right", "15px").Body(
-								app.I().Text("tsunami"),
-								app.Text("Flow"),
-							),
-						),
-
-						app.Div().Class("space"),
-
-						/*app.Article().Class("row warn amber-border white-text border thicc").Body(
-							app.I().Text("warning").Class("amber-text"),
-							app.P().Class("max bold").Body(
-								app.Span().Text("Are you sure you want to end this session and log out?"),
-							),
-						),
-
-						app.Div().Class("space"),*/
-
-						app.Div().Class("row").Body(
-							app.Button().Class("max bold black white-text thicc").OnClick(h.onClickModalDismiss).Body(
-								app.Span().Body(
-									app.I().Style("padding-right", "5px").Text("close"),
-									app.Text("Close"),
-								),
-							),
-							app.Button().Class("max bold deep-orange7 white-text thicc").OnClick(h.onClickLogout).Body(
-								app.Span().Body(
-									app.I().Style("padding-right", "5px").Text("logout"),
-									app.Text("Log out"),
-								),
-							),
-						),
-					)
-				}),
+				&organisms.ModalUserLogout{
+					User:                     h.user,
+					ShowModal:                h.modalLogoutShow,
+					OnClickDismissActionName: "dismiss-general",
+					OnClickLogoutActionName:  "logout",
+					OnClickFlowActionName:    "user-flow-click",
+				},
 
 				// littr header
 				app.Div().Class("row center-align").Body(
@@ -158,16 +114,14 @@ func (h *Header) Render() app.UI {
 					},
 				),
 
-				app.If(h.modalInfoShow, func() app.UI {
-					return &organisms.ModalAppInfo{
-						ShowModal:                h.modalInfoShow,
-						SseConnectionStatus:      h.sseConnStatus,
-						OnClickDismissActionName: "dismiss-general",
-						OnClickReloadActionName:  "reload",
-					}
-				}),
+				&organisms.ModalAppInfo{
+					ShowModal:                h.modalInfoShow,
+					SseConnectionStatus:      h.sseConnStatus,
+					OnClickDismissActionName: "dismiss-general",
+					OnClickReloadActionName:  "reload",
+				},
 
-				// update button
+				// Update button
 				app.If(h.updateAvailable, func() app.UI {
 					return &atoms.Button{
 						BadgeText:         "NEW",
