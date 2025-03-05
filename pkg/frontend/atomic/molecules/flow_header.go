@@ -20,6 +20,20 @@ type FlowHeader struct {
 }
 
 func (h *FlowHeader) Render() app.UI {
+	var heading = func() string {
+		if h.Hashtag != "" && len(h.Hashtag) < 20 {
+			return "hashtag #" + h.Hashtag
+		}
+		if h.Hashtag != "" && len(h.Hashtag) >= 20 {
+			return "hashtag"
+		}
+		if h.SinglePostID != "" {
+			return "single post and replies"
+		}
+
+		return "flow"
+	}
+
 	return app.Div().Class("row").Body(
 		app.Div().Class("max padding").Body(
 			app.If(h.SingleUser.Nickname != "", func() app.UI {
@@ -32,14 +46,8 @@ func (h *FlowHeader) Render() app.UI {
 						)
 					}),
 				)
-			}).ElseIf(h.SinglePostID != "", func() app.UI {
-				return app.H5().Text("single post and replies")
-			}).ElseIf(h.Hashtag != "" && len(h.Hashtag) < 20, func() app.UI {
-				return app.H5().Text("hashtag #" + h.Hashtag)
-			}).ElseIf(h.Hashtag != "" && len(h.Hashtag) >= 20, func() app.UI {
-				return app.H5().Text("hashtag")
 			}).Else(func() app.UI {
-				return app.H5().Text("flow")
+				return app.H5().Text(heading())
 			}),
 		),
 
@@ -47,7 +55,7 @@ func (h *FlowHeader) Render() app.UI {
 			&atoms.Button{
 				ID:                "refresh-button",
 				Title:             "refresh flow [R]",
-				Class:             "grey10 white-text bold thicc",
+				Class:             "primary-container white-text bold thicc",
 				Icon:              "refresh",
 				Text:              "Refresh",
 				OnClickActionName: "refresh",
