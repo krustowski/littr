@@ -36,7 +36,7 @@ func (m *ModalUserLogout) Render() app.UI {
 						Src:               m.User.AvatarURL,
 						Class:             "responsive padding max left",
 						OnClickActionName: m.OnClickFlowActionName,
-						Styles:            map[string]string{"max-height": "100%", "border-radius": "50%"},
+						Styles:            map[string]string{"max-height": "100%", "max-width": "10rem", "border-radius": "50%"},
 					},
 
 					&atoms.UserNickname{
