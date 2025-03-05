@@ -33,9 +33,9 @@ func (u *UserRequests) Render() app.UI {
 				app.Div().Class("row medium top-padding").Body(
 					&atoms.Image{
 						ID:     key,
-						Class:  "responsive max left thicc",
+						Class:  "responsive max left",
 						Src:    u.Users[key].AvatarURL,
-						Styles: map[string]string{"max-width": "60px"},
+						Styles: map[string]string{"max-width": "60px", "border-radius": "50%"},
 					},
 
 					&atoms.UserNickname{

@@ -49,9 +49,9 @@ func (m *ModalUserInfo) Render() app.UI {
 			return app.Dialog().ID("user-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Body(
 
 				&atoms.Image{
-					Class:  "small-width thicc",
+					Class:  "",
 					Src:    m.User.AvatarURL,
-					Styles: map[string]string{"max-width": "120px"},
+					Styles: map[string]string{"max-width": "120px", "border-radius": "50%"},
 				},
 
 				app.Div().Class("row center-align").Body(

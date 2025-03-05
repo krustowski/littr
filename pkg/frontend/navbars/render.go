@@ -167,11 +167,11 @@ func (f *Footer) Render() app.UI {
 		return app.Div()
 	}
 
-	var reqCount = func() int64 {
-		var count int64
+	var requestCountString = func() string {
+		var count int
 
 		if reflect.DeepEqual(f.user, (models.User{})) || f.user.RequestList == nil {
-			return count
+			return ""
 		}
 
 		for _, val := range f.user.RequestList {
@@ -179,7 +179,7 @@ func (f *Footer) Render() app.UI {
 				count++
 			}
 		}
-		return count
+		return fmt.Sprintf("%d", count)
 	}
 
 	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
@@ -196,7 +196,7 @@ func (f *Footer) Render() app.UI {
 				},
 
 				&atoms.Button{
-					BadgeText:         fmt.Sprintf("%d", reqCount()),
+					BadgeText:         requestCountString(),
 					ID:                "button-users",
 					Class:             "circle transparent blue-text",
 					Title:             "users [2]",
