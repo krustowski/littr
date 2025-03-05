@@ -49,6 +49,7 @@ func (m *ModalUserLogout) Render() app.UI {
 					},
 
 					&atoms.Button{
+						ID:                m.User.Nickname,
 						Class:             "max bold primary-container white-text right-margin thicc",
 						Icon:              "tsunami",
 						Text:              "Flow",

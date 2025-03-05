@@ -3,6 +3,7 @@ package navbars
 import (
 	//"fmt"
 	//"strings"
+	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -112,6 +113,16 @@ func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
 	}*/
 
 	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
+}
+
+func (h *Header) handleHeaderClick(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.modalInfoShow = true
+	})
+}
+
+func (h *Header) handleInstallClick(ctx app.Context, a app.Action) {
+	ctx.ShowAppInstallPrompt()
 }
 
 // onKeyDown is a callback to handle the key-down event: this allows one to control the app using their keyboard more effectively.
@@ -227,22 +238,7 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 	}
 }
 
-func (h *Header) handleHeaderClick(ctx app.Context, a app.Action) {
-	ctx.Dispatch(func(ctx app.Context) {
-		h.modalInfoShow = true
-	})
-}
-
-func (h *Header) handleReload(ctx app.Context, a app.Action) {
-	ctx.Dispatch(func(ctx app.Context) {
-		h.updateAvailable = false
-	})
-
-	ctx.LocalStorage().Set("newUpdate", false)
-	ctx.Reload()
-}
-
-func (h *Header) handleLoginClick(ctx app.Context, a app.Action) {
+func (h *Header) handleLinkClick(ctx app.Context, a app.Action) {
 	switch a.Name {
 	case "login-click":
 		ctx.Navigate("/login")
@@ -258,7 +254,67 @@ func (h *Header) handleLoginClick(ctx app.Context, a app.Action) {
 		ctx.Navigate("/flow")
 	case "settings-click":
 		ctx.Navigate("/settings")
+	case "user-flow-click":
+		id, ok := a.Value.(string)
+		if !ok {
+			break
+		}
+
+		if strings.Contains(ctx.Page().URL().Path, "/flow") {
+			ctx.NewAction("dismiss-general")
+
+			if strings.Contains(ctx.Page().URL().Path, id) {
+				break
+			}
+		}
+
+		ctx.Navigate("/flow/users/" + id)
 	}
+}
+
+func (h *Header) handleLogout(ctx app.Context, _ app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.authGranted = false
+	})
+
+	ctx.LocalStorage().Set("user", "")
+	ctx.LocalStorage().Set("authGranted", false)
+
+	toast := common.Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		input := &common.CallInput{
+			Method:      "POST",
+			Url:         "/api/v1/auth/logout",
+			Data:        nil,
+			CallerID:    "",
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		/*if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}*/
+
+		ctx.Navigate("/logout")
+	})
+}
+
+func (h *Header) handleReload(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		h.updateAvailable = false
+	})
+
+	ctx.LocalStorage().Set("newUpdate", false)
+	ctx.Reload()
 }
 
 func (h *Header) handleUserModalShow(ctx app.Context, a app.Action) {

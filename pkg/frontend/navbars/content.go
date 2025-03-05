@@ -244,14 +244,17 @@ func (h *Header) OnMount(ctx app.Context) {
 	ctx.Handle("littr-header-click", h.handleHeaderClick)
 	ctx.Handle("reload", h.handleReload)
 	ctx.Handle("user-modal-show", h.handleUserModalShow)
+	ctx.Handle("install-click", h.handleInstallClick)
+	ctx.Handle("logout", h.handleLogout)
 
-	ctx.Handle("login-click", h.handleLoginClick)
-	ctx.Handle("stats-click", h.handleLoginClick)
-	ctx.Handle("users-click", h.handleLoginClick)
-	ctx.Handle("post-click", h.handleLoginClick)
-	ctx.Handle("polls-click", h.handleLoginClick)
-	ctx.Handle("flow-click", h.handleLoginClick)
-	ctx.Handle("settings-click", h.handleLoginClick)
+	ctx.Handle("login-click", h.handleLinkClick)
+	ctx.Handle("stats-click", h.handleLinkClick)
+	ctx.Handle("users-click", h.handleLinkClick)
+	ctx.Handle("post-click", h.handleLinkClick)
+	ctx.Handle("polls-click", h.handleLinkClick)
+	ctx.Handle("flow-click", h.handleLinkClick)
+	ctx.Handle("settings-click", h.handleLinkClick)
+	ctx.Handle("user-flow-click", h.handleLinkClick)
 
 	ctx.Dispatch(func(ctx app.Context) {
 		h.authGranted = authGranted
