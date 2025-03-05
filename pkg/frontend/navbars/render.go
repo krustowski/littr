@@ -61,7 +61,7 @@ func (h *Header) Render() app.UI {
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
-			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
+			app.Div().Class("row top-items max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted, func() app.UI {
 					return app.A().Class("button circle transparent").Href(settingsHref).Text("settings").Class("").Title("settings [6]").Aria("label", "settings").Body(
 						app.I().Class("large").Class("blue-text").Body(

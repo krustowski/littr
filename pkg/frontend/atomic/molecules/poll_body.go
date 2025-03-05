@@ -39,7 +39,7 @@ func (p *PollBody) Render() app.UI {
 					ID:                p.Poll.ID,
 					Name:              p.Poll.OptionOne.Content,
 					Title:             "option one",
-					Class:             "blue10 bold white-text responsive thicc",
+					Class:             "primary-container bold white-text responsive thicc",
 					Text:              p.Poll.OptionOne.Content,
 					OnClickActionName: p.OnClickOptionOneActionName,
 					Disabled:          p.ButtonDisabled,
@@ -52,7 +52,7 @@ func (p *PollBody) Render() app.UI {
 					ID:                p.Poll.ID,
 					Name:              p.Poll.OptionTwo.Content,
 					Title:             "option two",
-					Class:             "blue10 bold white-text responsive thicc",
+					Class:             "primary-container bold white-text responsive thicc",
 					Text:              p.Poll.OptionTwo.Content,
 					OnClickActionName: p.OnClickOptionTwoActionName,
 					Disabled:          p.ButtonDisabled,
@@ -67,7 +67,7 @@ func (p *PollBody) Render() app.UI {
 							ID:                p.Poll.ID,
 							Name:              p.Poll.OptionThree.Content,
 							Title:             "option three",
-							Class:             "blue10 bold white-text responsive thicc",
+							Class:             "primary-container bold white-text responsive thicc",
 							Text:              p.Poll.OptionThree.Content,
 							OnClickActionName: p.OnClickOptionThreeActionName,
 							Disabled:          p.ButtonDisabled,
@@ -83,17 +83,17 @@ func (p *PollBody) Render() app.UI {
 				&atoms.PollResult{
 					OptionShare:  p.RenderProps.OptionOneShare,
 					Option:       p.Poll.OptionOne,
-					OrangelLevel: 3,
+					OrangelLevel: 4,
 				},
-				app.Div().Class("medium-space"),
+				app.Div().Class("space"),
 
 				// Option two results.
 				&atoms.PollResult{
 					OptionShare:  p.RenderProps.OptionTwoShare,
 					Option:       p.Poll.OptionTwo,
-					OrangelLevel: 5,
+					OrangelLevel: 7,
 				},
-				app.Div().Class("medium-space"),
+				app.Div().Class("space"),
 
 				// Option three results (if present).
 				app.If(p.Poll.OptionThree.Content != "", func() app.UI {
@@ -103,7 +103,7 @@ func (p *PollBody) Render() app.UI {
 							Option:       p.Poll.OptionThree,
 							OrangelLevel: 9,
 						},
-						app.Div().Class("medium-space"),
+						app.Div().Class("space"),
 					)
 				}),
 			)

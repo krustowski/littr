@@ -2,6 +2,8 @@ package post
 
 import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 )
 
 func (c *Content) Render() app.UI {
@@ -11,45 +13,36 @@ func (c *Content) Render() app.UI {
 		//  New post
 		//
 
-		// New post header.
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("new post"),
-				//app.P().Text("drop it, drop it"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "new post",
+		},
 
-		// New post textarea.
-		app.Div().Class("field textarea label border extra blue-text").Style("border-radius", "8px").Body(
-			app.Textarea().Class("active").Name("newPost").OnChange(c.ValueTo(&c.newPost)).AutoFocus(true).ID("post-textarea").TabIndex(1).Text(c.newPost).OnBlur(c.onTextareaBlur),
-			app.Label().Text("Content").Class("active blue-text"),
-		),
-		/*app.Button().ID("post").Class("responsive deep-orange7 white-text bold").OnClick(c.onClick).Disabled(c.postButtonsDisabled).Body(
-			app.If(c.postButtonsDisabled,
-				app.Progress().Class("circle white-border small"),
-			),
-			app.Text("post text"),
-		),*/
+		&atoms.Textarea{
+			ID:               "post-textarea",
+			Class:            "field textarea label border extra blue-text thicc",
+			Content:          c.newPost,
+			Name:             "newPost",
+			LabelText:        "Content",
+			OnBlurActionName: "blur-post",
+		},
 
-		// New fig input.
-		app.Div().Class("field border label extra blue-text").Style("border-radius", "8px").Body(
-			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/*").TabIndex(2),
-			app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-			app.Label().Text("Image").Class("active blue-text"),
-			app.I().Text("image"),
-		),
+		&molecules.ImageInput{
+			ImageData:       &c.newFigData,
+			ImageFile:       &c.newFigFile,
+			ImageLink:       &c.newFigLink,
+			ButtonsDisabled: &c.postButtonsDisabled,
+		},
 
 		// New post button.
 		app.Div().Class("row").Body(
-			app.Button().ID("post").Class("max shrink center primary-container white-text bold").Style("border-radius", "8px").OnClick(c.onClick).Disabled(c.postButtonsDisabled).On("keydown", c.onKeyDown).TabIndex(3).Body(
-				app.If(c.postButtonsDisabled, func() app.UI {
-					return app.Progress().Class("circle white-border small")
-				}),
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("send"),
-					app.Text("Send"),
-				),
-			),
+			&atoms.Button{
+				Class:             "max shrink center primary-container white-text bold thicc",
+				Icon:              "send",
+				Text:              "Send",
+				Disabled:          c.postButtonsDisabled,
+				ShowProgress:      c.postButtonsDisabled,
+				OnClickActionName: "send-post",
+			},
 		),
 
 		app.Div().Class("space"),
@@ -58,13 +51,9 @@ func (c *Content) Render() app.UI {
 		//  New poll
 		//
 
-		// New poll header text.
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("new poll"),
-				//app.P().Text("lmao gotem"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "new poll",
+		},
 		app.Div().Class("space"),
 
 		// newx poll input area

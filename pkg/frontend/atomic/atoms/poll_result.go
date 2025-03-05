@@ -23,18 +23,17 @@ func (p *PollResult) composeClass() string {
 		p.OrangelLevel = 3
 	}
 
-	return fmt.Sprintf("bold progress left blue%d medium padding thicc", p.OrangelLevel)
+	return fmt.Sprintf("bold progress left blue%d small-padding thicc", p.OrangelLevel)
 }
 
 func (p *PollResult) Render() app.UI {
-	return app.Div().Class("medium-space border thicc").Body(
-		app.Div().Class(p.composeClass()).
-			Style("clip-path", "polygon(0% 0%, 0% 98%, "+strconv.FormatInt(p.OptionShare, 10)+"% 98%, "+strconv.FormatInt(p.OptionShare, 10)+"% 0%);"),
+	return app.Div().Class("thicc").Body(
+		app.Div().Class(p.composeClass()).Style("clip-path", "polygon(0% 0%, 0% 98%, "+strconv.FormatInt(p.OptionShare, 10)+"% 98%, "+strconv.FormatInt(p.OptionShare, 10)+"% 0%);"),
 
 		//app.Progress().Value(strconv.Itoa(optionOneShare)).Max(100).Class("deep-orange-text padding medium bold left"),
 		//app.Div().Class("progress left light-green"),
 
-		app.Div().Class("middle right-align bold").Body(
+		app.Div().Class("bold").Body(
 			app.Span().Text(p.Option.Content+" ("+strconv.FormatInt(p.OptionShare, 10)+"%)"),
 		),
 	)
