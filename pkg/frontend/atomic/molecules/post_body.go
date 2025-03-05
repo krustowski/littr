@@ -42,11 +42,12 @@ func (p *PostBody) Render() app.UI {
 			return app.Article().Class("primary-text border primary-border thicc").Style("max-width", "100%").Body(
 				app.Div().Class("row max").Body(
 					app.If(p.RenderProps.OriginalSummary != "", func() app.UI {
-						return app.Details().Class("max").Body(
-							app.Summary().Text(p.RenderProps.OriginalSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
-							app.Div().Class("space"),
-							app.Span().ID(p.Post.ReplyToID).Class("bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(p.onClickText),
-						)
+						return &atoms.Details{
+							SummaryText:           p.RenderProps.PostSummary,
+							FullText:              p.RenderProps.OriginalContent,
+							SpanID:                p.Post.ReplyToID,
+							OnClickSpanActionName: p.OnClickHistoryActionName,
+						}
 					}).ElseIf(len(p.RenderProps.OriginalContent) > 0, func() app.UI {
 						return app.Span().ID(p.Post.ReplyToID).Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(p.onClickText)
 					}),

@@ -5,28 +5,29 @@ import (
 	"net/url"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
 )
+
+var textboxStrings = map[string]string{
+	"avatar-gravatar": "",
+}
 
 func (c *Content) Render() app.UI {
 	devicesToShow := len(c.devices)
 
 	return app.Main().Class("responsive").ID("anchor-settings-top").Body(
-		//app.Div().ID("anchor-settings-top"),
-		app.Div().Class("row").Body(
-			app.Div().ID("heading-settings").Class("max padding").Body(
-				app.H5().Text("settings"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "settings",
+		},
 
 		//
 		// Section user and avatar
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("user and avatar"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "user and avatar",
+			Level: 6,
+		},
 
 		// Logged user's info.
 		app.Article().Class("row border thicc").Body(
