@@ -28,7 +28,13 @@ type PostBody struct {
 	LoaderShowImage bool
 }
 
-func (p *PostBody) OnMount(ctx app.Context) {}
+func (p *PostBody) onClickText(ctx app.Context, e app.Event) {
+	if p.Post.ReplyToID == "" {
+		return
+	}
+
+	ctx.NewActionWithValue(p.OnClickHistoryActionName, p.Post.ReplyToID)
+}
 
 func (p *PostBody) Render() app.UI {
 	return app.Div().Body(
@@ -39,10 +45,10 @@ func (p *PostBody) Render() app.UI {
 						return app.Details().Class("max").Body(
 							app.Summary().Text(p.RenderProps.OriginalSummary).Style("word-break", "break-word").Style("hyphens", "auto").Class("italic"),
 							app.Div().Class("space"),
-							app.Span().Class("bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
+							app.Span().ID(p.Post.ReplyToID).Class("bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(p.onClickText),
 						)
 					}).ElseIf(len(p.RenderProps.OriginalContent) > 0, func() app.UI {
-						return app.Span().Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
+						return app.Span().ID(p.Post.ReplyToID).Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(p.onClickText)
 					}),
 
 					&atoms.Button{

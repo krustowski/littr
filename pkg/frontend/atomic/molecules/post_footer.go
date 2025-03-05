@@ -70,7 +70,7 @@ func (p *PostFooter) Render() app.UI {
 					ID:                p.Post.ID,
 					Title:             "increase the reaction count",
 					Class:             "transparent circle",
-					Icon:              "ac_unit",
+					Icon:              "bomb", // snowflake = ac_unit
 					OnClickActionName: p.OnClickStarActionName,
 					Disabled:          p.ButtonsDisabled,
 					Attr:              map[string]string{"touch-action": "none"},
