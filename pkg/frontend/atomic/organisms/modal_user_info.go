@@ -51,7 +51,7 @@ func (m *ModalUserInfo) Render() app.UI {
 				&atoms.Image{
 					Class:  "",
 					Src:    m.User.AvatarURL,
-					Styles: map[string]string{"max-width": "120px", "border-radius": "50%"},
+					Styles: map[string]string{"max-width": "60px", "border-radius": "50%"},
 				},
 
 				app.Div().Class("row center-align").Body(
