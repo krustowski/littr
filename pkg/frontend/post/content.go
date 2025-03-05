@@ -33,11 +33,17 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	// Always focus the post textarea when the post.Content component is mounted.
 	app.Window().Get("document").Call("getElementById", "post-textarea").Call("focus")
 
 	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
 	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("send-poll", c.handlePostPoll)
+	ctx.Handle("send-post", c.handlePostPoll)
 
 	/*app.Window().Call("addEventListener", "keydown", app.FuncOf(func(this app.Value, args []app.Value) any {
 		key := args[0].Get("key")
