@@ -4,6 +4,7 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 )
 
 type ModalPollDelete struct {
@@ -30,7 +31,7 @@ func (m *ModalPollDelete) Render() app.UI {
 
 					app.Div().Class("space"),
 
-					&atoms.TextBox{
+					&molecules.TextBox{
 						Class:     "row border amber-border white-text warn thicc",
 						IconClass: "amber-text",
 						Icon:      "warning",

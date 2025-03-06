@@ -6,6 +6,8 @@ import (
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
+	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 )
 
 var textboxStrings = map[string]string{
@@ -80,11 +82,10 @@ func (c *Content) Render() app.UI {
 		// Section switches
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("switches"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "switches",
+			Level: 6,
+		},
 
 		// Darkmode infobox.
 		app.Article().Class("row border blue-border thicc info").Body(
@@ -186,11 +187,10 @@ func (c *Content) Render() app.UI {
 		// Section notifications
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("notifications"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "notifications",
+			Level: 6,
+		},
 
 		// Notification infoboxes.
 		app.Article().Class("row border blue-border thicc info").Body(
@@ -361,12 +361,10 @@ func (c *Content) Render() app.UI {
 		// Section passphrase change
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("passphrase change"),
-			),
-		),
-		//app.Div().Class("medium-space"),
+		&atoms.PageHeading{
+			Title: "passphrase change",
+			Level: 6,
+		},
 
 		app.Div().Class("field label border blue-text thicc").Body(
 			app.Input().ID("passphrase-current").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
@@ -398,67 +396,79 @@ func (c *Content) Render() app.UI {
 		// Section about-you
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("about you"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "about you",
+			Level: 6,
+		},
 
-		// About-you infobox.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Text("This textarea is to hold your current status, a brief info about you, or just anything up to 100 characters."),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			Text:        "This textarea is to hold your current status, a brief info about you, or just anything up to 100 characters.",
+			MakeSummary: true,
+		},
 
 		app.Div().Class("space"),
 
-		// About-you textarea
-		app.Div().Class("field textarea label border extra blue-text thicc").Body(
-			app.Textarea().ID("about-you-textarea").Text(c.user.About).Class("active").OnChange(c.ValueTo(&c.aboutText)),
-			app.Label().Text("About").Class("active blue-text"),
-		),
+		&atoms.Textarea{
+			ID:               "about-you-textarea",
+			Class:            "field textarea label border extra blue-text thicc",
+			Content:          c.aboutText,
+			LabelText:        "About",
+			OnBlurActionName: "blur-about-textarea",
+		},
 
-		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickAbout).Disabled(c.settingsButtonDisabled).Body(
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("save"),
-					app.Text("Save"),
-				),
-			),
-		),
+		&atoms.Button{
+			Class:             "max responsive shrink primary-container white-text bold thicc",
+			OnClickActionName: "about-you-submit",
+			Disabled:          c.settingsButtonDisabled,
+			Icon:              "save",
+			Text:              "Save",
+		},
 
-		// website link
 		app.Div().Class("space"),
 
 		//
 		// Section website
 		//
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("website link"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "website link",
+			Level: 6,
+		},
 
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Text("Down below, you can enter a link to your personal homepage. The link will then be visible to others via the user modal on the users (flowers) page."),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			Text:        "Down below, you can enter a link to your personal homepage. The link will then be visible to others via the user modal on the users (flowers) page.",
+			MakeSummary: true,
+		},
+
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border blue-text thicc").Body(
-			app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 			app.Label().Text("URL").Class("active blue-text"),
+			&atoms.Input{
+				ID:           "website-input",
+				Type:         "text",
+				Class:        "active",
+				OnChangeType: atoms.InputOnChangeValueTo,
+				Value:        c.website,
+				AutoComplete: true,
+				MaxLength:    60,
+			},
+			//app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 		),
 
-		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickWebsite).Disabled(c.settingsButtonDisabled).Body(
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("save"),
-					app.Text("Save"),
-				),
-			),
-		),
+		&atoms.Button{
+			Class:             "max responsive shrink primary-container white-text bold thicc",
+			OnClickActionName: "website-input",
+			Disabled:          c.settingsButtonDisabled,
+			Icon:              "save",
+			Text:              "Save",
+		},
 
 		app.Div().Class("space"),
 
@@ -466,59 +476,34 @@ func (c *Content) Render() app.UI {
 		// Section account deletion
 		//
 
-		// Account deletion modal.
-		app.If(c.deleteAccountModalShow, func() app.UI {
-			return app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("account deletion"),
-				),
-				app.Div().Class("space"),
+		&atoms.PageHeading{
+			Title: "account deletion",
+			Level: 6,
+		},
 
-				app.Article().Class("row border white-text red-border thicc danger").Body(
-					app.I().Text("warning").Class("red-text"),
-					app.P().Class("max bold").Body(
-						app.Span().Text("Are you sure you want to delete your account and all posted items?"),
-					),
-				),
-				app.Div().Class("space"),
+		&organisms.ModalUserDelete{
+			ModalShow:                      c.deleteAccountModalShow,
+			LoggedUserNickname:             c.user.Nickname,
+			OnClickDismissActionName:       "dismiss",
+			OnClickDeleteAccountActionName: "user-delete",
+		},
 
-				app.Div().Class("row").Body(
-					app.Button().Class("max bold black white-text thicc").OnClick(c.onDismissToast).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Cancel"),
-						),
-					),
-					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDeleteAccount).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("delete"),
-							app.Text("Delete"),
-						),
-					),
-				),
-			)
-		}),
+		&molecules.TextBox{
+			Class:     "row border red-border thicc danger",
+			Icon:      "warning",
+			IconClass: "red-text",
+			Text:      "Please note that this action is irreversible!",
+		},
 
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H6().Text("account deletion"),
-			),
-		),
-
-		app.Article().Class("row border red-border thicc danger").Body(
-			app.I().Text("warning").Class("red-text"),
-			app.P().Class("max").Text("Please note that this action is irreversible!"),
-		),
 		app.Div().Class("space"),
 
-		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center red10 white-text bold thicc").OnClick(c.onClickDeleteAccountModalShow).Disabled(c.settingsButtonDisabled).Body(
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("delete"),
-					app.Text("Delete"),
-				),
-			),
-		),
+		&atoms.Button{
+			Class:             "max responsive shrink red10 white-text bold thicc",
+			Disabled:          c.settingsButtonDisabled,
+			OnClickActionName: "user-modal-delete-show",
+			Icon:              "delete",
+			Text:              "Delete",
+		},
 
 		app.Div().Class("large-space"),
 	)

@@ -7,32 +7,33 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 )
 
-type ModalPostDelete struct {
+type ModalUserDelete struct {
 	app.Compo
 
-	PostID string
+	LoggedUserNickname string
 
-	ModalButtonsDisabled bool
-	ModalShow            bool
+	ModalShow bool
 
-	OnClickDismissActionName string
-	OnClickDeleteActionName  string
+	OnClickDismissActionName       string
+	OnClickDeleteAccountActionName string
 }
 
-func (m *ModalPostDelete) Render() app.UI {
+func (m *ModalUserDelete) Render() app.UI {
+	// Account deletion modal.
 	return app.Div().Body(
 		app.If(m.ModalShow, func() app.UI {
-			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("post deletion"),
-				),
-				app.Div().Class("space"),
+			return app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
+				&atoms.PageHeading{
+					Class: "center-align",
+					Title: "account deletion",
+					Level: 6,
+				},
 
 				&molecules.TextBox{
-					Class:     "row amber-border white-text border warn thicc",
-					IconClass: "amber-text",
+					Class:     "row border white-text redd-border thicc danger",
 					Icon:      "warning",
-					Text:      "Are you sure you want to delete your post?",
+					IconClass: "red-text",
+					Text:      "Are you sure you want to delete your account and all posted items?",
 				},
 				app.Div().Class("space"),
 
@@ -42,15 +43,14 @@ func (m *ModalPostDelete) Render() app.UI {
 						Icon:              "close",
 						Text:              "Cancel",
 						OnClickActionName: m.OnClickDismissActionName,
-						Disabled:          m.ModalButtonsDisabled,
 					},
+
 					&atoms.Button{
-						ID:                m.PostID,
+						ID:                m.LoggedUserNickname,
 						Class:             "max bold red10 white-text thicc",
 						Icon:              "delete",
 						Text:              "Delete",
-						OnClickActionName: m.OnClickDeleteActionName,
-						Disabled:          m.ModalButtonsDisabled,
+						OnClickActionName: m.OnClickDismissActionName,
 					},
 				),
 			)
