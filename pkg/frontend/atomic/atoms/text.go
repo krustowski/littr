@@ -22,7 +22,7 @@ type Text struct {
 }
 
 var (
-	markRegex = regexp.MustCompile(`#(\w+)( [^$]+)?#(.*?)##`)
+	markRegex = regexp.MustCompile(`#(\w+)( [^$]*?)?#(.*?)##(\w+)#`)
 	attrRegex = regexp.MustCompile(`(\w+)='(.*?)'`)
 )
 
@@ -43,11 +43,21 @@ func (t *Text) parseMarkupAndCompose() (elems []app.UI) {
 		}
 
 		tag := t.FormattedText[match[2]:match[3]]
-		attrString := t.FormattedText[match[4]:match[5]]
-		content := t.FormattedText[match[6]:match[7]]
+
+		var (
+			attrs      = make(map[string]string)
+			attrString string
+			content    string
+		)
+
+		if match[4] > 0 && match[5] > 0 {
+			attrString = t.FormattedText[match[4]:match[5]]
+		}
+
+		content = t.FormattedText[match[6]:match[7]]
 
 		// Parse attributes
-		attrs := make(map[string]string)
+		attrs = make(map[string]string)
 		for _, attr := range attrRegex.FindAllStringSubmatch(attrString, -1) {
 			attrs[attr[1]] = attr[2]
 		}
@@ -57,6 +67,9 @@ func (t *Text) parseMarkupAndCompose() (elems []app.UI) {
 		switch tag {
 		case "bold":
 			compo = app.B().Class(attrs["class"]).Text(content)
+
+		case "break":
+			compo = app.Br().Class(attrs["class"])
 
 		case "icon":
 			compo = app.I().Text(content)

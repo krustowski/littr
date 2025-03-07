@@ -30,7 +30,7 @@ func (d *Details) onClickText(ctx app.Context, e app.Event) {
 
 func (d *Details) stripMarkup() string {
 	// Match tags and extract content only
-	tagRegex := regexp.MustCompile(`#(\w+)( [^$]*)?#(.*?)##`)
+	tagRegex := regexp.MustCompile(`#(\w+)( [^$]*?)?#(.*?)##(\w+)#`)
 	plainText := tagRegex.ReplaceAllString(d.FormattedText, "$3") // Keep only inner content
 
 	// Trim excessive spaces

@@ -67,15 +67,6 @@ func (c *Content) Render() app.UI {
 			MakeSummary: true,
 		},
 
-		// Infobox about Gravatar image's caching.
-		&molecules.TextBox{
-			Class:       "row border blue-border thicc info",
-			Icon:        "info",
-			IconClass:   "blue-text",
-			Text:        InfoGravatarCache,
-			MakeSummary: true,
-		},
-
 		app.Div().Class("space"),
 
 		//
@@ -97,19 +88,14 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Darkmode switch.
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("dark/light mode switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("dark-mode-switch").Checked(c.darkModeOn).OnChange(c.onDarkModeSwitch).Disabled(c.settingsButtonDisabled),
-					app.Span().Body(
-						app.I().Text("dark_mode"),
-					),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "dark_mode",
+			ID:                 "dark-mode-switch",
+			Text:               "dark/light mode switch",
+			Checked:            c.darkModeOn,
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "dark-mode-switch-change",
+		},
 
 		// Local time infobox.
 		&molecules.TextBox{
@@ -121,19 +107,14 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Local time switch
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("local time mode switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("local-time-mode-switch").Checked(!c.user.LocalTimeMode).OnChange(c.onLocalTimeModeSwitch).Disabled(c.settingsButtonDisabled),
-					app.Span().Body(
-						app.I().Text("schedule"),
-					),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "schedule",
+			ID:                 "local-time-mode-switch",
+			Text:               "local time mode switch",
+			Checked:            !c.user.LocalTimeMode,
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "local-time-mode-switch-change",
+		},
 
 		// Live mode infobox.
 		&molecules.TextBox{
@@ -145,19 +126,14 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Live mode switch.
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("live switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("live-switch").Checked(true).Disabled(true).OnChange(nil),
-					app.Span().Body(
-						app.I().Text("stream"),
-					),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "stream",
+			ID:                 "live-mode-switch",
+			Text:               "live mode switch",
+			Checked:            true,
+			Disabled:           true,
+			OnChangeActionName: "live-mode-switch-change",
+		},
 
 		// Private account infobox.
 		&molecules.TextBox{
@@ -169,19 +145,14 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Private account switch.
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("private account switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					app.Input().Type("checkbox").ID("private-acc-switch").Checked(c.user.Private).Disabled(c.settingsButtonDisabled).OnChange(c.onClickPrivateSwitch),
-					app.Span().Body(
-						app.I().Text("lock"),
-					),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "lock",
+			ID:                 "private-mode-switch",
+			Text:               "private mode switch",
+			Checked:            c.user.Options["private"],
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "private-mode-switch-change",
+		},
 
 		//
 		// Section notifications
@@ -208,58 +179,24 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Reply notification switch.
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("reply notification switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					// A nasty workaround to ensure the switch to be updated "correctly".
-					app.If(c.subscription.Replies, func() app.UI {
-						return app.Label().Class("switch icon").Body(
-							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-							app.Span().Body(
-								app.I().Text("notifications"),
-							),
-						)
-					}).Else(func() app.UI {
-						return app.Label().Class("switch icon").Body(
-							app.Input().Type("checkbox").ID("reply-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-							app.Span().Body(
-								app.I().Text("notifications"),
-							),
-						)
-					}),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "notifications",
+			ID:                 "reply-notif-switch",
+			Text:               "reply notification switch",
+			Checked:            c.subscription.Replies,
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "reply-notif-switch-change",
+		},
 
 		// Mention notification switch.
-		app.Div().Class("field middle-align").Body(
-			app.Div().Class("row").Body(
-				app.Div().Class("max").Body(
-					app.Span().Text("mention notification switch"),
-				),
-				app.Label().Class("switch icon").Body(
-					// A nasty workaround to ensure the switch to be updated "correctly".
-					app.If(c.subscription.Mentions, func() app.UI {
-						return app.Label().Class("switch icon").Body(
-							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(true).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-							app.Span().Body(
-								app.I().Text("notifications"),
-							),
-						)
-					}).Else(func() app.UI {
-						return app.Label().Class("switch icon").Body(
-							app.Input().Type("checkbox").ID("mention-notification-switch").Checked(false).Disabled(c.settingsButtonDisabled).OnChange(c.onClickNotifSwitch),
-							app.Span().Body(
-								app.I().Text("notifications"),
-							),
-						)
-					}),
-				),
-			),
-		),
+		&molecules.Switch{
+			Icon:               "notifications",
+			ID:                 "mention-notif-switch",
+			Text:               "mention notification switch",
+			Checked:            c.subscription.Mentions,
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "mention-notif-switch-change",
+		},
 
 		// Print list of subscribed devices.
 		app.If(devicesToShow > 0, func() app.UI {
