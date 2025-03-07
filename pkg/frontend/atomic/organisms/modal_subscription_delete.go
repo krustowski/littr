@@ -25,6 +25,7 @@ func (m *ModalSubscriptionDelete) Render() app.UI {
 					Title: "subscription deletion",
 					Level: 6,
 				},
+				app.Div().Class("space"),
 
 				&molecules.TextBox{
 					Class:     "row border white-text amber-border thicc danger",

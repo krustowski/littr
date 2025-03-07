@@ -62,6 +62,10 @@ type Content struct {
 }
 
 func (c *Content) OnMount(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	// This function call is broken due to the slider not hitting the actual top of the page.
 	//ctx.ScrollTo("anchor-settings-top")
 	scrollObj := map[string]any{"top": 0}
@@ -71,7 +75,20 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	ctx.Handle("dismiss", c.handleDismiss)
 
-	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
+	/*ctx.Handle("dark-mode-switch-change", c.handleSwitchChange)
+	ctx.Handle("local-time-mode-switch-change", c.handleSwitchChange)
+	ctx.Handle("live-mode-switch-change", c.handleSwitchChange)
+	ctx.Handle("private-mode-switch-change", c.handleSwitchChange)
+
+	ctx.Handle("reply-notif-switch-change", c.handleNotifSwitchChange)
+	ctx.Handle("mention-notif-switch-change", c.handleNotifSwitchChange)*/
+
+	ctx.Handle("subscription-delete-modal-show", c.handleModalShow)
+	ctx.Handle("user-delete-modal-show", c.handleModalShow)
+
+	/*ctx.Handle("passphrase-submit", c.handlePassphraseSubmit)
+	ctx.Handle("about-you-submit", c.handleAboutYouSubmit)
+	ctx.Handle("website-submit", c.handleWebsiteSubmit)*/
 }
 
 func (c *Content) OnNav(ctx app.Context) {

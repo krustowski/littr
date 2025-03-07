@@ -393,7 +393,7 @@ func (c *Content) Render() app.UI {
 
 		&atoms.Button{
 			Class:             "max responsive shrink center primary-container white-text bold thicc",
-			OnClickActionName: "website-input",
+			OnClickActionName: "website-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
 			Text:              "Save",
@@ -429,7 +429,7 @@ func (c *Content) Render() app.UI {
 		&atoms.Button{
 			Class:             "max responsive shrink center red10 white-text bold thicc",
 			Disabled:          c.settingsButtonDisabled,
-			OnClickActionName: "user-modal-delete-show",
+			OnClickActionName: "user-delete-modal-show",
 			Icon:              "delete",
 			Text:              "Delete",
 		},

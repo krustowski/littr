@@ -317,25 +317,6 @@ func (c *Content) onDarkModeSwitch(ctx app.Context, e app.Event) {
 	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
 }
 
-// onCliclDeleteSubscriptionModalShow()
-func (c *Content) onClickDeleteSubscriptionModalShow(ctx app.Context, e app.Event) {
-	uuid := ctx.JSSrc().Get("id").String()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.deleteSubscriptionModalShow = true
-		c.settingsButtonDisabled = true
-		c.interactedUUID = uuid
-	})
-}
-
-// onClickDeleteAccountModalShow()
-func (c *Content) onClickDeleteAccountModalShow(ctx app.Context, e app.Event) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.deleteAccountModalShow = true
-		c.settingsButtonDisabled = true
-	})
-}
-
 // onDismissToast
 func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
 	ctx.NewAction("dismiss")

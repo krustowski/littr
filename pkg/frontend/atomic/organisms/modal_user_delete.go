@@ -28,6 +28,7 @@ func (m *ModalUserDelete) Render() app.UI {
 					Title: "account deletion",
 					Level: 6,
 				},
+				app.Div().Class("space"),
 
 				&molecules.TextBox{
 					Class:     "row border white-text red-border thicc danger",
