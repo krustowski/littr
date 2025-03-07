@@ -53,9 +53,9 @@ func (m *ModalPostReply) Render() app.UI {
 				app.If(m.PostOriginal.Content != "", func() app.UI {
 					return app.Article().Class("primary-text border primary-border thicc").Style("max-width", "100%").Body(
 						app.If(replySummary != "", func() app.UI {
-							return &atoms.Details{
-								SummaryText: replySummary,
-								FullText:    m.PostOriginal.Content,
+							return &molecules.Details{
+								Text:  m.PostOriginal.Content,
+								Limit: 40,
 							}
 						}).Else(func() app.UI {
 							return app.Span().Class("bold").Text(m.PostOriginal.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("font-type", "italic")

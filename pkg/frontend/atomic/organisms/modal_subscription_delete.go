@@ -7,33 +7,30 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 )
 
-type ModalUserDelete struct {
+type ModalSubscriptionDelete struct {
 	app.Compo
-
-	LoggedUserNickname string
 
 	ModalShow bool
 
-	OnClickDismissActionName       string
-	OnClickDeleteAccountActionName string
+	OnClickDismissActionName string
+	OnClickDeleteActionName  string
 }
 
-func (m *ModalUserDelete) Render() app.UI {
-	// Account deletion modal.
+func (m *ModalSubscriptionDelete) Render() app.UI {
 	return app.Div().Body(
 		app.If(m.ModalShow, func() app.UI {
-			return app.Dialog().ID("delete-modal").Class("grey10 white-text thicc active").Body(
+			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
 				&atoms.PageHeading{
 					Class: "center-align",
-					Title: "account deletion",
+					Title: "subscription deletion",
 					Level: 6,
 				},
 
 				&molecules.TextBox{
-					Class:     "row border white-text red-border thicc danger",
+					Class:     "row border white-text amber-border thicc danger",
 					Icon:      "warning",
-					IconClass: "red-text",
-					Text:      "Are you sure you want to delete your account and all posted items?",
+					IconClass: "amber-text",
+					Text:      "Are you sure you want to delete this subscription?",
 				},
 				app.Div().Class("space"),
 
@@ -46,11 +43,10 @@ func (m *ModalUserDelete) Render() app.UI {
 					},
 
 					&atoms.Button{
-						ID:                m.LoggedUserNickname,
 						Class:             "max bold red10 white-text thicc",
 						Icon:              "delete",
 						Text:              "Delete",
-						OnClickActionName: m.OnClickDeleteAccountActionName,
+						OnClickActionName: m.OnClickDeleteActionName,
 					},
 				),
 			)

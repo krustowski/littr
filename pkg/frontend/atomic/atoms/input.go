@@ -23,6 +23,8 @@ type Input struct {
 	Checked      bool
 	Disabled     bool
 
+	Attr map[string]string
+
 	OnChangeType       onChangeType
 	OnChangeActionName string
 }
@@ -37,6 +39,10 @@ func (i *Input) onChange(ctx app.Context, e app.Event) {
 
 func (i *Input) Render() app.UI {
 	ipt := app.Input()
+
+	for key, val := range i.Attr {
+		ipt.Attr(key, val)
+	}
 
 	// OnChange(<eventHandler>)
 	// OnChange(compo.ValueTo(compo.Content))

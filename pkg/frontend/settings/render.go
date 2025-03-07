@@ -47,15 +47,6 @@ func (c *Content) Render() app.UI {
 			}),
 		),
 
-		// Gravatar linking info.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Text("One's avatar is linked to one's e-mail address, which should be registered with "),
-				app.A().Class("bold").Text("Gravatar.com").Href("https://gravatar.com/profile/avatars"),
-				app.Span().Text("."),
-			),
-		),
 		app.Div().Class("space"),
 
 		// User's avatar view and a (hidden) upload option.
@@ -67,14 +58,23 @@ func (c *Content) Render() app.UI {
 			//app.I().Text("image"),
 		),
 
+		// Gravatar linking info.
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoGravatarLinking,
+			MakeSummary: true,
+		},
+
 		// Infobox about Gravatar image's caching.
-		app.Div().Class("space"),
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Text("Note: if you just changed your icon at Gravatar.com, and the thumbnail above shows the old avatar, some intercepting cache probably has the resource cached (e.g. your browser). You may need to wait for some time for the change to propagate through the network."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			Text:        InfoGravatarCache,
+			MakeSummary: true,
+		},
 
 		app.Div().Class("space"),
 
@@ -88,13 +88,13 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Darkmode infobox.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("The UI mode "),
-				app.Span().Text("can be adjusted according to the user's choice. The mode may differ on the other sessions when logged-in on multiple devices."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoUIMode,
+			MakeSummary: true,
+		},
 
 		// Darkmode switch.
 		app.Div().Class("field middle-align").Body(
@@ -112,13 +112,13 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Local time infobox.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("The local time mode "),
-				app.Span().Text("is a feature allowing you to see any post's (or poll's) timestamp according to your device's setting (mainly the timezone). When disabled, the server time is used instead."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoLocalTimeMode,
+			MakeSummary: true,
+		},
 
 		// Local time switch
 		app.Div().Class("field middle-align").Body(
@@ -136,13 +136,13 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Live mode infobox.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("The live mode "),
-				app.Span().Text("is a feature for the live flow experience. When enabled, a notice about some followed account's/user's new post is shown on the bottom of the page."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoLiveMode,
+			MakeSummary: true,
+		},
 
 		// Live mode switch.
 		app.Div().Class("field middle-align").Body(
@@ -160,13 +160,13 @@ func (c *Content) Render() app.UI {
 		),
 
 		// Private account infobox.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("Private account "),
-				app.Span().Text("is a feature allowing one to be hidden on the site. When enabled, other accounts/users need to ask you to follow you (the follow request will show on the users page). Any reply to your post will be shown as redacted (a private content notice) to those not following you."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoPrivateMode,
+			MakeSummary: true,
+		},
 
 		// Private account switch.
 		app.Div().Class("field middle-align").Body(
@@ -192,57 +192,20 @@ func (c *Content) Render() app.UI {
 			Level: 6,
 		},
 
+		&organisms.ModalSubscriptionDelete{
+			ModalShow:                c.deleteSubscriptionModalShow,
+			OnClickDismissActionName: "dismiss",
+			OnClickDeleteActionName:  "subscription-delete",
+		},
+
 		// Notification infoboxes.
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("Reply "),
-				app.Span().Text("notifications are fired when someone posts a reply to your post."),
-				app.Div().Class("small-space"),
-				app.Span().Class("blue-text").Text("Mention "),
-				app.Span().Text("notifications are fired when someone mentions you via the at-sign (@) handler in their post (e.g. Hello, @example!)."),
-			),
-		),
-
-		app.Article().Class("row border blue-border thicc info").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Text("You will be prompted for the notification permission, which is required if you want to subscribe to the notification service. Your device's UUID (unique identification string) will be saved in the database to be used by the notification service. You can delete any subscribed device any time (if listed below)."),
-			),
-		),
-
-		// Subscription deletion modal.
-		app.If(c.deleteSubscriptionModalShow, func() app.UI {
-			return app.Dialog().ID("delete-modal").Class("grey10 white-text active thicc").Body(
-				app.Nav().Class("center-align").Body(
-					app.H5().Text("subscription deletion"),
-				),
-				app.Div().Class("space"),
-
-				app.Article().Class("row border amber-border white-text thicc warn").Body(
-					app.I().Text("warning").Class("amber-text"),
-					app.P().Class("max bold").Body(
-						app.Span().Text("Are you sure you want to delete this subscription?"),
-					),
-				),
-				app.Div().Class("space"),
-
-				app.Div().Class("row").Body(
-					app.Button().Class("max bold black white-text thicc").OnClick(c.onDismissToast).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("close"),
-							app.Text("Cancel"),
-						),
-					),
-					app.Button().Class("max bold red10 white-text thicc").OnClick(c.onClickDeleteSubscription).Body(
-						app.Span().Body(
-							app.I().Style("padding-right", "5px").Text("delete"),
-							app.Text("Delete"),
-						),
-					),
-				),
-			)
-		}),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  InfoNotifications,
+			MakeSummary: true,
+		},
 
 		// Reply notification switch.
 		app.Div().Class("field middle-align").Body(
@@ -367,28 +330,54 @@ func (c *Content) Render() app.UI {
 		},
 
 		app.Div().Class("field label border blue-text thicc").Body(
-			app.Input().ID("passphrase-current").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseCurrent)).MaxLength(50).Attr("autocomplete", "current-password"),
+			&atoms.Input{
+				ID:           "passphrase-current",
+				Type:         "password",
+				Class:        "active",
+				OnChangeType: atoms.InputOnChangeValueTo,
+				Value:        c.passphraseCurrent,
+				AutoComplete: false,
+				MaxLength:    64,
+				Attr:         map[string]string{"autocomplete": "current-password"},
+			},
 			app.Label().Text("Old passphrase").Class("active blue-text"),
 		),
 
 		app.Div().Class("field label border blue-text thicc").Body(
-			app.Input().ID("passphrase-new").Type("password").Class("active").OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Attr("autocomplete", "new-password"),
+			&atoms.Input{
+				ID:           "passphrase-new",
+				Type:         "password",
+				Class:        "active",
+				OnChangeType: atoms.InputOnChangeValueTo,
+				Value:        c.passphrase,
+				AutoComplete: false,
+				MaxLength:    64,
+				Attr:         map[string]string{"autocomplete": "new-password"},
+			},
 			app.Label().Text("New passphrase").Class("active blue-text"),
 		),
 
 		app.Div().Class("field label border blue-text thicc").Body(
-			app.Input().ID("passphrase-new-again").Type("password").Class("active").OnChange(c.ValueTo(&c.passphraseAgain)).MaxLength(50).Attr("autocomplete", "new-password"),
+			&atoms.Input{
+				ID:           "passphrase-new-again",
+				Type:         "password",
+				Class:        "active",
+				OnChangeType: atoms.InputOnChangeValueTo,
+				Value:        c.passphraseAgain,
+				AutoComplete: false,
+				MaxLength:    64,
+				Attr:         map[string]string{"autocomplete": "new-password"},
+			},
 			app.Label().Text("New passphrase again").Class("active blue-text"),
 		),
 
-		app.Div().Class("row").Body(
-			app.Button().Class("max shrink center primary-container white-text bold thicc").OnClick(c.onClickPass).Disabled(c.settingsButtonDisabled).Body(
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("save"),
-					app.Text("Save"),
-				),
-			),
-		),
+		&atoms.Button{
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			OnClickActionName: "passphrase-submit",
+			Disabled:          c.settingsButtonDisabled,
+			Icon:              "save",
+			Text:              "Save",
+		},
 
 		app.Div().Class("space"),
 
@@ -405,7 +394,7 @@ func (c *Content) Render() app.UI {
 			Class:       "row border blue-border thicc info",
 			Icon:        "info",
 			IconClass:   "blue-text",
-			Text:        "This textarea is to hold your current status, a brief info about you, or just anything up to 100 characters.",
+			Text:        InfoAboutYouTextarea,
 			MakeSummary: true,
 		},
 
@@ -420,7 +409,7 @@ func (c *Content) Render() app.UI {
 		},
 
 		&atoms.Button{
-			Class:             "max responsive shrink primary-container white-text bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			OnClickActionName: "about-you-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -442,14 +431,13 @@ func (c *Content) Render() app.UI {
 			Class:       "row border blue-border thicc info",
 			Icon:        "info",
 			IconClass:   "blue-text",
-			Text:        "Down below, you can enter a link to your personal homepage. The link will then be visible to others via the user modal on the users (flowers) page.",
+			Text:        InfoWebsiteLink,
 			MakeSummary: true,
 		},
 
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border blue-text thicc").Body(
-			app.Label().Text("URL").Class("active blue-text"),
 			&atoms.Input{
 				ID:           "website-input",
 				Type:         "text",
@@ -459,11 +447,12 @@ func (c *Content) Render() app.UI {
 				AutoComplete: true,
 				MaxLength:    60,
 			},
+			app.Label().Text("URL").Class("active blue-text"),
 			//app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 		),
 
 		&atoms.Button{
-			Class:             "max responsive shrink primary-container white-text bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			OnClickActionName: "website-input",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -492,13 +481,13 @@ func (c *Content) Render() app.UI {
 			Class:     "row border red-border thicc danger",
 			Icon:      "warning",
 			IconClass: "red-text",
-			Text:      "Please note that this action is irreversible!",
+			Text:      AlertUserDeletion,
 		},
 
 		app.Div().Class("space"),
 
 		&atoms.Button{
-			Class:             "max responsive shrink red10 white-text bold thicc",
+			Class:             "max responsive shrink center red10 white-text bold thicc",
 			Disabled:          c.settingsButtonDisabled,
 			OnClickActionName: "user-modal-delete-show",
 			Icon:              "delete",

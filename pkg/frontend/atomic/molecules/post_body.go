@@ -42,9 +42,9 @@ func (p *PostBody) Render() app.UI {
 			return app.Article().Class("primary-text border primary-border thicc").Style("max-width", "100%").Body(
 				app.Div().Class("row max").Body(
 					app.If(p.RenderProps.OriginalSummary != "", func() app.UI {
-						return &atoms.Details{
-							SummaryText:           p.RenderProps.PostSummary,
-							FullText:              p.RenderProps.OriginalContent,
+						return &Details{
+							Limit:                 40,
+							Text:                  p.RenderProps.OriginalContent,
 							SpanID:                p.Post.ReplyToID,
 							OnClickSpanActionName: p.OnClickHistoryActionName,
 						}

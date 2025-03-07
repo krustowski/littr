@@ -2,6 +2,7 @@ package molecules
 
 import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
+
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
 )
 
@@ -13,30 +14,35 @@ type TextBox struct {
 	IconClass string
 	Text      string
 
+	MarkupText string
+
 	MakeSummary bool
 }
 
-func (t *TextBox) composeContent() app.UI {
+func (t *TextBox) composeContentComponent() app.UI {
 	if t.MakeSummary {
-		var summary string
-
-		if len(t.Text) > 40 {
-			summary = t.Text[:40] + "..."
-		}
-
-		return &atoms.Details{
-			SummaryText: summary,
-			FullText:    t.Text,
+		return &Details{
+			Limit:         40,
+			Text:          t.Text,
+			FormattedText: t.MarkupText,
 		}
 	}
 
-	return app.P().Class("max bold").Body(app.Span().Text((t.Text)))
+	if t.MarkupText != "" {
+		return &atoms.Text{
+			FormattedText: t.MarkupText,
+		}
+	}
+
+	return &atoms.Text{
+		PlainText: t.Text,
+	}
 }
 
 func (t *TextBox) Render() app.UI {
 	return app.Article().Class(t.Class).Body(
 		app.I().Text(t.Icon).Class(t.IconClass),
 
-		t.composeContent(),
+		t.composeContentComponent(),
 	)
 }
