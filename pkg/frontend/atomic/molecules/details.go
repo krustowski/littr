@@ -41,6 +41,9 @@ func (d *Details) Render() app.UI {
 	// Limited text summary.
 	summaryBody := func() app.UI {
 		if d.FormattedText != "" {
+			if len(d.FormattedText) < d.Limit {
+				return app.Text(d.FormattedText)
+			}
 			return app.Text(d.stripMarkup()[:d.Limit] + "...")
 		}
 

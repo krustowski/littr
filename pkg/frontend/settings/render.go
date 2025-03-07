@@ -31,21 +31,13 @@ func (c *Content) Render() app.UI {
 			Level: 6,
 		},
 
-		// Logged user's info.
-		app.Article().Class("row border thicc").Body(
-			app.I().Text("person").Class(""),
-			app.If(c.user.Nickname != "", func() app.UI {
-				return app.P().Class("max").Body(
-					app.Span().Text("Logged as: "),
-					app.Span().Class("bold blue-text").Text(c.user.Nickname),
-					app.Div().Class("small-space"),
-					app.Span().Text("E-mail: "),
-					app.Span().Class("bold blue-text").Text(c.user.Email),
-				)
-			}).Else(func() app.UI {
-				return app.Progress().Class("circle blue-border active")
-			}),
-		),
+		&molecules.TextBox{
+			Class:      "row border thicc",
+			Icon:       "person",
+			MarkupText: FormatUserInfo,
+			FormatArgs: []interface{}{c.user.Nickname, c.user.Email},
+			ShowLoader: c.user.Nickname == "",
+		},
 
 		app.Div().Class("space"),
 
@@ -53,9 +45,6 @@ func (c *Content) Render() app.UI {
 		app.Div().Class("transparent middle-align center-align bottom").Body(
 			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
 			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/png, image/jpeg"),
-			//app.Input().Class("active").Type("text").Value(c.newFigFile).Disabled(true),
-			//app.Label().Text("image").Class("active blue-text"),
-			//app.I().Text("image"),
 		),
 
 		// Gravatar linking info.
@@ -201,11 +190,10 @@ func (c *Content) Render() app.UI {
 		// Print list of subscribed devices.
 		app.If(devicesToShow > 0, func() app.UI {
 			return app.Div().Body(
-				app.Div().Class("row").Body(
-					app.Div().Class("max padding").Body(
-						app.H6().Text("registered devices"),
-					),
-				),
+				&atoms.PageHeading{
+					Title: "subscribed devices",
+					Level: 6,
+				},
 
 				// Loop over the array of subscribed devices.
 				app.Div().Class().Body(
@@ -230,7 +218,22 @@ func (c *Content) Render() app.UI {
 						deviceText += " (" + u.Host + ")"
 
 						// Compose the component to show (a device's infobox).
-						return app.Article().Class("border thicc").Body(
+						return &molecules.TextBox{
+							Class:      "row border deep-orange-border thicc info",
+							Icon:       "",
+							IconClass:  "deep-orange-text",
+							MarkupText: InfoNotifications,
+							FormatArgs: []interface{}{deviceText, dev.Tags, dev.TimeCreated.Format("2006-01-02 15:04:05")},
+							Button: &atoms.Button{
+								ID:                dev.UUID,
+								Class:             "transparent circle",
+								OnClickActionName: "subscription-delete-modal-show",
+								Disabled:          c.settingsButtonDisabled,
+								Icon:              "delete",
+							},
+						}
+
+						/*return app.Article().Class("border thicc").Body(
 							app.Div().Class("row max").Body(
 								app.Div().Class("max").Body(
 									app.P().Class("bold").Body(
@@ -250,7 +253,7 @@ func (c *Content) Render() app.UI {
 									app.I().Text("delete"),
 								),
 							),
-						)
+						)*/
 					}),
 				),
 				app.Div().Class("space"),
