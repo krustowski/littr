@@ -1,6 +1,12 @@
 package settings
 
 import (
+	"crypto/sha512"
+	"fmt"
+	"net/url"
+	"regexp"
+	"strings"
+
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -126,11 +132,110 @@ func (c *Content) handleNotificationSwitchChange(ctx app.Context, a app.Action) 
 		}
 
 		c.updateSubscriptionTag(ctx, tag)
-		return
 	})
 }
 
-func (c *Content) handleOptionSwitchChange(ctx app.Context, a app.Action) {
+func (c *Content) handleOptionsChange(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = true
+	})
+
+	toast := common.Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.settingsButtonDisabled = false
+		})
+
+		var message string
+		payload := c.prefillPayload()
+
+		switch a.Name {
+		case "about-you-submit":
+			aboutText := strings.TrimSpace(c.aboutText)
+
+			if aboutText == "" || aboutText == c.user.About {
+				toast.Text(common.ERR_ABOUT_TEXT_UNCHANGED).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+
+			if len(aboutText) > 100 {
+				toast.Text(common.ERR_ABOUT_TEXT_CHAR_LIMIT).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+
+			message = common.MSG_ABOUT_TEXT_UPDATED
+			payload.AboutText = aboutText
+
+		case "website-submit":
+			websiteCompo := app.Window().GetElementByID("website-input")
+			if websiteCompo.IsNull() {
+				return
+			}
+
+			website := strings.TrimSpace(websiteCompo.Get("value").String())
+
+			// check the trimmed version of website string
+			if website == "" {
+				toast.Text(common.ERR_WEBSITE_UNCHANGED).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+
+			// check the URL/URI format
+			if _, err := url.ParseRequestURI(website); err != nil {
+				toast.Text(common.ERR_WEBSITE_INVALID).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+
+			// create a regex object
+			regex, err := regexp.Compile("^(http|https)://")
+			if err != nil {
+				toast.Text(common.ERR_WEBSITE_REGEXP_FAIL).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+
+			if !regex.MatchString(website) {
+				website = "https://" + website
+			}
+
+			message = common.MSG_WEBSITE_UPDATED
+			payload.WebsiteLink = website
+		}
+
+		input := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/options",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		// Dispatch the good news to client.
+		ctx.Dispatch(func(ctx app.Context) {
+			c.updateOptions(payload)
+
+			// Update the LocalStorage.
+			common.SaveUser(&c.user, &ctx)
+		})
+
+		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
+	})
+}
+
+func (c *Content) handleOptionsSwitchChange(ctx app.Context, a app.Action) {
 	key, ok := a.Value.(string)
 	if !ok {
 		return
@@ -200,6 +305,136 @@ func (c *Content) handleOptionSwitchChange(ctx app.Context, a app.Action) {
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
+	})
+}
+
+func (c *Content) handlePassphraseChange(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = true
+	})
+
+	toast := common.Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.settingsButtonDisabled = false
+		})
+
+		passphrase := strings.TrimSpace(c.passphrase)
+		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
+		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
+
+		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
+			toast.Text(common.ERR_PASSPHRASE_MISSING).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		if passphrase != passphraseAgain {
+			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
+		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
+		passHashCurrent := sha512.Sum512([]byte(passphraseCurrent + common.AppPepper))
+
+		payload := struct {
+			NewPassphraseHex     string `json:"new_passphrase_hex"`
+			CurrentPassphraseHex string `json:"current_passphrase_hex"`
+		}{
+			NewPassphraseHex:     fmt.Sprintf("%x", passHash),
+			CurrentPassphraseHex: fmt.Sprintf("%x", passHashCurrent),
+		}
+
+		input := &common.CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + c.user.Nickname + "/passphrase",
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		toast.Text(common.MSG_PASSPHRASE_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch()
+	})
+}
+
+func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
+	toast := common.Toast{AppContext: &ctx}
+
+	uuid := c.interactedUUID
+	if uuid == "" {
+		toast.Text(common.ERR_SUBSCRIPTION_BLANK_UUID).Type(common.TTYPE_ERR).Dispatch()
+		return
+	}
+
+	ctx.Async(func() {
+		payload := struct {
+			UUID string `json:"device_uuid"`
+		}{
+			UUID: uuid,
+		}
+
+		input := &common.CallInput{
+			Method:      "DELETE",
+			Url:         "/api/v1/push/subscriptions/" + uuid,
+			Data:        payload,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		devs := c.devices
+		newDevs := []models.Device{}
+		for _, dev := range devs {
+			if dev.UUID == uuid {
+				continue
+			}
+			newDevs = append(newDevs, dev)
+		}
+
+		toast.Text(common.MSG_UNSUBSCRIBED_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
+
+		ctx.Dispatch(func(ctx app.Context) {
+			if uuid == c.thisDeviceUUID {
+				c.subscribed = false
+			}
+
+			c.subscription.Mentions = false
+			c.subscription.Replies = false
+
+			c.thisDevice = models.Device{}
+			c.deleteSubscriptionModalShow = false
+			c.devices = newDevs
+		})
 	})
 }
 

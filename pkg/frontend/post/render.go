@@ -20,7 +20,7 @@ func (c *Content) Render() app.UI {
 		&atoms.Textarea{
 			ID:               "post-textarea",
 			Class:            "field textarea label border extra blue-text thicc",
-			Content:          c.newPost,
+			ContentPointer:   &c.newPost,
 			Name:             "newPost",
 			LabelText:        "Content",
 			OnBlurActionName: "blur-post",

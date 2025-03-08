@@ -1,6 +1,8 @@
 package atoms
 
-import "github.com/maxence-charriere/go-app/v10/pkg/app"
+import (
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
+)
 
 type onChangeType byte
 
@@ -15,7 +17,8 @@ type Input struct {
 	ID    string
 	Type  string
 	Class string
-	Value string
+
+	Content string
 
 	MaxLength int
 
@@ -50,8 +53,8 @@ func (i *Input) Render() app.UI {
 	case InputOnChangeEventHandler:
 		ipt.OnChange(i.onChange)
 	case InputOnChangeValueTo:
-		ipt.OnChange(i.ValueTo(&i.Value))
+		ipt.OnChange(i.ValueTo(&i.Content))
 	}
 
-	return ipt.Class(i.Class).Type(i.Type).ID(i.ID).Checked(i.Checked).Disabled(i.Disabled).AutoComplete(i.AutoComplete).MaxLength(i.MaxLength).Value(i.Value)
+	return ipt.Class(i.Class).Type(i.Type).ID(i.ID).Checked(i.Checked).Disabled(i.Disabled).AutoComplete(i.AutoComplete).MaxLength(i.MaxLength).Value(i.Content)
 }

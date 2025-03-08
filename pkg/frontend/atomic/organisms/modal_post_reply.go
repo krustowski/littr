@@ -31,9 +31,6 @@ type ModalPostReply struct {
 	//OnFigureUpload app.EventHandler
 }
 
-func (m *ModalPostReply) OnMount(ctx app.Context) {
-}
-
 func (m *ModalPostReply) Render() app.UI {
 	// compose a summary of a long post to be replied to
 	replySummary := ""
@@ -66,7 +63,7 @@ func (m *ModalPostReply) Render() app.UI {
 				&atoms.Textarea{
 					ID:               "reply-textarea",
 					Class:            "field label textarea border extra blue-text thicc",
-					Content:          *m.ReplyPostContent,
+					ContentPointer:   m.ReplyPostContent,
 					Name:             "replyPost",
 					LabelText:        fmt.Sprintf("Reply to: %s", m.PostOriginal.Nickname),
 					OnBlurActionName: "blur",

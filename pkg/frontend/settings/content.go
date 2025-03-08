@@ -75,7 +75,7 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	ctx.Handle("dismiss", c.handleDismiss)
 
-	ctx.Handle("options-switch-change", c.handleOptionSwitchChange)
+	ctx.Handle("options-switch-change", c.handleOptionsSwitchChange)
 	ctx.Handle("notifs-switch-change", c.handleNotificationSwitchChange)
 
 	ctx.Handle("subscription-delete-modal-show", c.handleModalShow)
@@ -84,9 +84,9 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("avatar-change", c.handleImageUpload)
 	ctx.Handle("user-delete", c.handleUserDelete)
 
-	/*ctx.Handle("passphrase-submit", c.handlePassphraseSubmit)
-	ctx.Handle("about-you-submit", c.handleAboutYouSubmit)
-	ctx.Handle("website-submit", c.handleWebsiteSubmit)*/
+	ctx.Handle("passphrase-submit", c.handlePassphraseChange)
+	ctx.Handle("about-you-submit", c.handleOptionsChange)
+	ctx.Handle("website-submit", c.handleOptionsChange)
 }
 
 func (c *Content) OnNav(ctx app.Context) {
@@ -172,6 +172,9 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.darkModeOn = mode == "dark"
 			//c.darkModeOn = user.AppBgMode == "dark"
 
+			c.aboutText = data.User.About
+			c.website = data.User.Web
+
 			c.VAPIDpublic = data.PublicKey
 			c.thisDeviceUUID = ctx.DeviceID()
 			c.thisDevice = thisDevice
@@ -181,7 +184,5 @@ func (c *Content) OnNav(ctx app.Context) {
 
 			c.settingsButtonDisabled = false
 		})
-		return
 	})
-	return
 }
