@@ -56,7 +56,9 @@ func (t *TextBox) composeContentComponent() app.UI {
 
 func (t *TextBox) Render() app.UI {
 	return app.Article().Class(t.Class).Body(
-		app.I().Text(t.Icon).Class(t.IconClass),
+		app.If(t.Icon != "", func() app.UI {
+			return app.I().Text(t.Icon).Class(t.IconClass)
+		}),
 
 		t.composeContentComponent(),
 

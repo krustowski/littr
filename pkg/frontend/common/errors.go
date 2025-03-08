@@ -73,6 +73,8 @@ const (
 	MSG_ABOUT_TEXT_UPDATED       = "The About text has been successfully updated."
 	MSG_WEBSITE_UPDATED          = "The website has been successfully updated."
 	MSG_SUBSCRIPTION_REQ_SUCCESS = "Successfully subscribed to notifications."
+	MSG_UI_MODE_TOGGLE           = "UI mode changed."
+	MSG_LIVE_MODE_TOGGLE         = "Live mode changed."
 	MSG_LOCAL_TIME_TOGGLE        = "Local time mode changed."
 	MSG_PRIVATE_MODE_TOGGLE      = "Private mode changed."
 	MSG_AVATAR_CHANGE_SUCCESS    = "Avatar has been successfully updated."

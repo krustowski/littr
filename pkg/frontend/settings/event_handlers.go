@@ -300,28 +300,6 @@ func (c *Content) onClickDeleteSubscription(ctx app.Context, e app.Event) {
 	})
 }
 
-// onDarkModeSwitch()
-func (c *Content) onDarkModeSwitch(ctx app.Context, e app.Event) {
-	//m := ctx.JSSrc().Get("checked").Bool()
-
-	ctx.Dispatch(func(ctx app.Context) {
-		c.darkModeOn = !c.darkModeOn
-
-		ctx.LocalStorage().Set("mode", "dark")
-		if !c.darkModeOn {
-			ctx.LocalStorage().Set("mode", "light")
-		}
-	})
-
-	app.Window().Get("LIT").Call("toggleMode")
-	//c.app.Window().Get("body").Call("toggleClass", "lightmode")
-}
-
-// onDismissToast
-func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
-	ctx.NewAction("dismiss")
-}
-
 // onClickNotifSwitch()
 func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	tag := ""
@@ -348,7 +326,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 		// there's only one tag left, and user unchecked that particular one
 		if len(c.thisDevice.Tags) == 1 && len(c.checkTags(c.thisDevice.Tags, tag)) == 0 {
 			// DELETE
-			c.deleteSubscription(ctx, tag)
+			c.deleteSubscription(ctx)
 			return
 		}
 
@@ -359,7 +337,7 @@ func (c *Content) onClickNotifSwitch(ctx app.Context, e app.Event) {
 	}
 
 	// switched on --- add new device or update the existing one
-	if !c.checkPermission(ctx, checked) {
+	if !c.checkPermission(ctx) {
 		return
 	}
 

@@ -113,7 +113,7 @@ type Options struct {
 	Private bool `json:"private" default:"false"`
 
 	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	// Map equivalent: uiDarkMode
+	// Map equivalent: uiMode
 	UIDarkMode bool `json:"app_bg_mode" default:"true"`
 
 	// LiveMode is a feature allowing to show notifications about new posts

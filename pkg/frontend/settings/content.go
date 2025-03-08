@@ -75,13 +75,8 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	ctx.Handle("dismiss", c.handleDismiss)
 
-	/*ctx.Handle("dark-mode-switch-change", c.handleSwitchChange)
-	ctx.Handle("local-time-mode-switch-change", c.handleSwitchChange)
-	ctx.Handle("live-mode-switch-change", c.handleSwitchChange)
-	ctx.Handle("private-mode-switch-change", c.handleSwitchChange)
-
-	ctx.Handle("reply-notif-switch-change", c.handleNotifSwitchChange)
-	ctx.Handle("mention-notif-switch-change", c.handleNotifSwitchChange)*/
+	ctx.Handle("options-switch-change", c.handleOptionSwitchChange)
+	ctx.Handle("notifs-switch-change", c.handleNotificationSwitchChange)
 
 	ctx.Handle("subscription-delete-modal-show", c.handleModalShow)
 	ctx.Handle("user-delete-modal-show", c.handleModalShow)

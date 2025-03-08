@@ -76,14 +76,14 @@ func (c *Content) Render() app.UI {
 			MakeSummary: true,
 		},
 
-		// Darkmode switch.
+		// UI mode switch.
 		&molecules.Switch{
 			Icon:               "dark_mode",
-			ID:                 "dark-mode-switch",
-			Text:               "dark/light mode switch",
-			Checked:            c.darkModeOn,
+			ID:                 "ui-mode-switch",
+			Text:               "UI mode switch",
+			Checked:            c.user.Options["uiMode"],
 			Disabled:           c.settingsButtonDisabled,
-			OnChangeActionName: "dark-mode-switch-change",
+			OnChangeActionName: "options-switch-change",
 		},
 
 		// Local time infobox.
@@ -100,9 +100,9 @@ func (c *Content) Render() app.UI {
 			Icon:               "schedule",
 			ID:                 "local-time-mode-switch",
 			Text:               "local time mode switch",
-			Checked:            !c.user.LocalTimeMode,
+			Checked:            c.user.Options["localTimeMode"],
 			Disabled:           c.settingsButtonDisabled,
-			OnChangeActionName: "local-time-mode-switch-change",
+			OnChangeActionName: "options-switch-change",
 		},
 
 		// Live mode infobox.
@@ -119,9 +119,9 @@ func (c *Content) Render() app.UI {
 			Icon:               "stream",
 			ID:                 "live-mode-switch",
 			Text:               "live mode switch",
-			Checked:            true,
-			Disabled:           true,
-			OnChangeActionName: "live-mode-switch-change",
+			Checked:            c.user.Options["liveMode"],
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "options-switch-change",
 		},
 
 		// Private account infobox.
@@ -140,7 +140,7 @@ func (c *Content) Render() app.UI {
 			Text:               "private mode switch",
 			Checked:            c.user.Options["private"],
 			Disabled:           c.settingsButtonDisabled,
-			OnChangeActionName: "private-mode-switch-change",
+			OnChangeActionName: "options-switch-change",
 		},
 
 		//
@@ -174,7 +174,7 @@ func (c *Content) Render() app.UI {
 			Text:               "reply notification switch",
 			Checked:            c.subscription.Replies,
 			Disabled:           c.settingsButtonDisabled,
-			OnChangeActionName: "reply-notif-switch-change",
+			OnChangeActionName: "notifs-switch-change",
 		},
 
 		// Mention notification switch.
@@ -184,7 +184,7 @@ func (c *Content) Render() app.UI {
 			Text:               "mention notification switch",
 			Checked:            c.subscription.Mentions,
 			Disabled:           c.settingsButtonDisabled,
-			OnChangeActionName: "mention-notif-switch-change",
+			OnChangeActionName: "notifs-switch-change",
 		},
 
 		// Print list of subscribed devices.
@@ -219,10 +219,10 @@ func (c *Content) Render() app.UI {
 
 						// Compose the component to show (a device's infobox).
 						return &molecules.TextBox{
-							Class:      "row border deep-orange-border thicc info",
+							Class:      "row border deep-orange-border thicc",
 							Icon:       "",
 							IconClass:  "deep-orange-text",
-							MarkupText: InfoNotifications,
+							MarkupText: InfoSubscribedDevice,
 							FormatArgs: []interface{}{deviceText, dev.Tags, dev.TimeCreated.Format("2006-01-02 15:04:05")},
 							Button: &atoms.Button{
 								ID:                dev.UUID,
