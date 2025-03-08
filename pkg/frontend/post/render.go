@@ -27,10 +27,12 @@ func (c *Content) Render() app.UI {
 		},
 
 		&molecules.ImageInput{
-			ImageData:       &c.newFigData,
-			ImageFile:       &c.newFigFile,
-			ImageLink:       &c.newFigLink,
-			ButtonsDisabled: &c.postButtonsDisabled,
+			ImageData:            &c.newFigData,
+			ImageFile:            &c.newFigFile,
+			ImageLink:            &c.newFigLink,
+			ButtonsDisabled:      &c.postButtonsDisabled,
+			LocalStorageFileName: "newPostImageFile",
+			LocalStorageDataName: "newPostImageData",
 		},
 
 		// New post button.

@@ -13,6 +13,9 @@ type ImageInput struct {
 	ImageLink *string
 
 	ButtonsDisabled *bool
+
+	LocalStorageFileName string
+	LocalStorageDataName string
 }
 
 // https://github.com/maxence-charriere/go-app/issues/882
@@ -57,8 +60,8 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 			*i.ImageData = *processedImg
 
 			// Save the figure data in LS as a backup.
-			ctx.LocalStorage().Set("newPostFigFile", file.Get("name").String())
-			ctx.LocalStorage().Set("newPostFigData", *processedImg)
+			ctx.LocalStorage().Set(i.LocalStorageFileName, file.Get("name").String())
+			ctx.LocalStorage().Set(i.LocalStorageDataName, *processedImg)
 		})
 
 		// Cast the image ready message.
@@ -78,10 +81,10 @@ func (i *ImageInput) OnMount(ctx app.Context) {
 
 func (i *ImageInput) Render() app.UI {
 	return app.Div().Class("field label border extra blue-text thicc").Body(
-		//app.Input().ID("fig-upload").Class("active").Type("file").OnChange(i.ValueTo(&i.ImageLink)).OnInput(i.onImageInput).Accept("image/*"),
 		app.Input().ID("fig-upload").Class("active").Type("file").OnInput(i.onImageInput).Accept("image/*"),
 		app.Input().Class("active").Type("text").Value(*i.ImageFile).Disabled(true),
 		app.Label().Text("Image").Class("active blue-text"),
+
 		app.If(*i.ButtonsDisabled, func() app.UI {
 			return app.Progress().Class("circle blue-border small")
 		}).Else(func() app.UI {

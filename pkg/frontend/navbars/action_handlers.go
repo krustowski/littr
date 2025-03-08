@@ -239,21 +239,35 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 }
 
 func (h *Header) handleLinkClick(ctx app.Context, a app.Action) {
+	path := ctx.Page().URL().Path
+
 	switch a.Name {
 	case "login-click":
 		ctx.Navigate("/login")
 	case "stats-click":
-		ctx.Navigate("/stats")
+		if path != "/stats" {
+			ctx.Navigate("/stats")
+		}
 	case "users-click":
-		ctx.Navigate("/users")
+		if path != "/users" {
+			ctx.Navigate("/users")
+		}
 	case "post-click":
-		ctx.Navigate("/post")
+		if path != "/post" {
+			ctx.Navigate("/post")
+		}
 	case "polls-click":
-		ctx.Navigate("/polls")
+		if path != "/polls" {
+			ctx.Navigate("/polls")
+		}
 	case "flow-click":
-		ctx.Navigate("/flow")
+		if path != "/flow" {
+			ctx.Navigate("/flow")
+		}
 	case "settings-click":
-		ctx.Navigate("/settings")
+		if path != "/settings" {
+			ctx.Navigate("/settings")
+		}
 	case "user-flow-click":
 		id, ok := a.Value.(string)
 		if !ok {

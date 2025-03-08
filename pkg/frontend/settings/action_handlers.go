@@ -3,6 +3,7 @@ package settings
 import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"go.vxn.dev/littr/pkg/frontend/common"
+	"go.vxn.dev/littr/pkg/models"
 )
 
 // handleDismiss()
@@ -15,6 +16,21 @@ func (c *Content) handleDismiss(ctx app.Context, a app.Action) {
 		c.deleteAccountModalShow = false
 		c.deleteSubscriptionModalShow = false
 	})
+}
+
+func (c *Content) handleImageUpload(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = true
+	})
+
+	callback := func() {
+		ctx.Dispatch(func(ctx app.Context) {
+			c.settingsButtonDisabled = false
+		})
+	}
+
+	common.HandleImageUpload(ctx, a, &c.user, callback)
+
 }
 
 func (c *Content) handleModalShow(ctx app.Context, a app.Action) {
@@ -184,5 +200,47 @@ func (c *Content) handleOptionSwitchChange(ctx app.Context, a app.Action) {
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
+	})
+}
+
+func (c *Content) handleUserDelete(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = true
+	})
+
+	// Instantiate the toast.
+	toast := common.Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.settingsButtonDisabled = false
+		})
+
+		input := &common.CallInput{
+			Method:      "DELETE",
+			Url:         "/api/v1/users/" + c.user.Nickname,
+			Data:        c.user,
+			CallerID:    c.user.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		output := &common.Response{}
+
+		if ok := common.FetchData(input, output); !ok {
+			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+
+		// Invalidate the LocalStorage contents.
+		ctx.LocalStorage().Set("authGranted", false)
+		common.SaveUser(&models.User{}, &ctx)
+
+		ctx.Navigate("/logout")
 	})
 }

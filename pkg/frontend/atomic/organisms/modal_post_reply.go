@@ -73,10 +73,12 @@ func (m *ModalPostReply) Render() app.UI {
 				},
 
 				&molecules.ImageInput{
-					ImageData:       m.ImageData,
-					ImageFile:       m.ImageFile,
-					ImageLink:       m.ImageLink,
-					ButtonsDisabled: m.ModalButtonsDisabled,
+					ImageData:            m.ImageData,
+					ImageFile:            m.ImageFile,
+					ImageLink:            m.ImageLink,
+					ButtonsDisabled:      m.ModalButtonsDisabled,
+					LocalStorageFileName: "newReplyImageFile",
+					LocalStorageDataName: "newReplyImageData",
 				},
 
 				// Reply buttons.

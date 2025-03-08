@@ -43,8 +43,8 @@ func (c *Content) Render() app.UI {
 
 		// User's avatar view and a (hidden) upload option.
 		app.Div().Class("transparent middle-align center-align bottom").Body(
-			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload),
-			app.Input().ID("fig-upload").Class("active").Type("file").OnChange(c.ValueTo(&c.newFigLink)).OnInput(c.handleFigUpload).Accept("image/png, image/jpeg"),
+			app.Img().Class("small-width middle-align center-align").Src(c.user.AvatarURL).Style("max-width", "120px").Style("border-radius", "50%"),
+			app.Input().ID("avatar-upload").Class("active").Type("file").OnInput(c.onAvatarChange).Accept("image/png, image/jpeg"),
 		),
 
 		// Gravatar linking info.
