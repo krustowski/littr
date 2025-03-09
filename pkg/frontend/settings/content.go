@@ -83,6 +83,7 @@ func (c *Content) OnMount(ctx app.Context) {
 
 	ctx.Handle("avatar-change", c.handleImageUpload)
 	ctx.Handle("user-delete", c.handleUserDelete)
+	ctx.Handle("subscription-delete", c.handleSubscriptionDelete)
 
 	ctx.Handle("passphrase-submit", c.handlePassphraseChange)
 	ctx.Handle("about-you-submit", c.handleOptionsChange)

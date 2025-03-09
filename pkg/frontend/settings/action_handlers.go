@@ -372,10 +372,6 @@ func (c *Content) handlePassphraseChange(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
-	ctx.Dispatch(func(ctx app.Context) {
-		c.settingsButtonDisabled = false
-	})
-
 	toast := common.Toast{AppContext: &ctx}
 
 	uuid := c.interactedUUID
@@ -384,7 +380,15 @@ func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
 		return
 	}
 
+	ctx.Dispatch(func(ctx app.Context) {
+		c.settingsButtonDisabled = false
+	})
+
 	ctx.Async(func() {
+		defer ctx.Dispatch(func(ctx app.Context) {
+			c.settingsButtonDisabled = false
+		})
+
 		payload := struct {
 			UUID string `json:"device_uuid"`
 		}{
