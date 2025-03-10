@@ -20,6 +20,8 @@ type Button struct {
 	Title             string
 	OnClickActionName string
 
+	TabIndex int
+
 	Aria    map[string]string
 	Attr    map[string]string
 	DataSet map[string]string
@@ -56,6 +58,10 @@ func (b *Button) composeClass() string {
 
 func (b *Button) Render() app.UI {
 	bt := app.Button()
+
+	if b.TabIndex > 0 {
+		bt.TabIndex(b.TabIndex)
+	}
 
 	for key, val := range b.Aria {
 		bt.Aria(key, val)

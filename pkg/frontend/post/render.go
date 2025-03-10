@@ -83,6 +83,7 @@ func (c *Content) Render() app.UI {
 			Disabled:          c.postButtonsDisabled,
 			ShowProgress:      c.postButtonsDisabled,
 			OnClickActionName: "send-poll",
+			TabIndex:          8,
 		},
 
 		app.Div().Class("space"),
