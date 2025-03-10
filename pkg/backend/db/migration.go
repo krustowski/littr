@@ -40,7 +40,6 @@ func RunMigrations() string {
 	polls, _ := GetAll(PollCache, models.Poll{})
 	posts, _ := GetAll(FlowCache, models.Post{})
 	reqs, _ := GetAll(RequestCache, models.Request{})
-	subs, _ := GetAll(SubscriptionCache, []models.Device{})
 	tokens, _ := GetAll(TokenCache, models.Token{})
 	users, _ := GetAll(UserCache, models.User{})
 
@@ -58,11 +57,6 @@ func RunMigrations() string {
 			N: "migrateExpiredTokens",
 			F: migrateExpiredTokens,
 			R: []interface{}{tokens},
-		},
-		{
-			N: "migrateSubscriptionsToUsers",
-			F: migrateSubscriptionsToUsers,
-			R: []interface{}{subs, users},
 		},
 		{
 			N: "migrateDeleteBlankDevices",
@@ -229,40 +223,6 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 			// Delete from the tokens map locally within the migrations.
 			delete(*tokens, hash)
 		}
-	}
-
-	return true
-}
-
-func migrateSubscriptionsToUsers(l common.Logger, rawElems []interface{}) bool {
-	var subs *map[string][]models.Device
-	var users *map[string]models.User
-
-	// Assert pointers from the interface array.
-	for _, raw := range rawElems {
-		elem, ok := raw.(*map[string][]models.Device)
-		if ok {
-			subs = elem
-			continue
-		}
-
-		elem2, ok := raw.(*map[string]models.User)
-		if ok {
-			users = elem2
-			continue
-		}
-	}
-
-	// Exit if the subs pointer is nil.
-	if subs == nil || users == nil {
-		l.Msg("subs or users are nil").Status(http.StatusInternalServerError).Log()
-		return false
-	}
-
-	for userID, devs := range *subs {
-		user := (*users)[userID]
-		user.Devices = devs
-		(*users)[userID] = user
 	}
 
 	return true
