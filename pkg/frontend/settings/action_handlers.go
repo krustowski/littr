@@ -397,7 +397,7 @@ func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
 
 		input := &common.CallInput{
 			Method:      "DELETE",
-			Url:         "/api/v1/push/subscriptions/" + uuid,
+			Url:         "/api/v1/users/" + c.user.Nickname + "/subscriptions/" + uuid,
 			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,

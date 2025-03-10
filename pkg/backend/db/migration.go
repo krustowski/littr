@@ -60,14 +60,19 @@ func RunMigrations() string {
 			R: []interface{}{tokens},
 		},
 		{
+			N: "migrateSubscriptionsToUsers",
+			F: migrateSubscriptionsToUsers,
+			R: []interface{}{subs, users},
+		},
+		{
 			N: "migrateDeleteBlankDevices",
 			F: migrateDeleteBlankDevices,
-			R: []interface{}{subs},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateEmptyDeviceTags",
 			F: migrateEmptyDeviceTags,
-			R: []interface{}{subs},
+			R: []interface{}{users},
 		},
 		{
 			N: "migrateAvatarURL",
@@ -229,9 +234,9 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 	return true
 }
 
-// migrateDeleteBlankDevices procedure ensures blank devices are omitted from the user's device list in SubscriptionCache.
-func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
+func migrateSubscriptionsToUsers(l common.Logger, rawElems []interface{}) bool {
 	var subs *map[string][]models.Device
+	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
@@ -240,18 +245,52 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 			subs = elem
 			continue
 		}
+
+		elem2, ok := raw.(*map[string]models.User)
+		if ok {
+			users = elem2
+			continue
+		}
 	}
 
 	// Exit if the subs pointer is nil.
-	if subs == nil {
-		l.Msg("subs are nil").Status(http.StatusInternalServerError).Log()
+	if subs == nil || users == nil {
+		l.Msg("subs or users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
 	for userID, devs := range *subs {
+		user := (*users)[userID]
+		user.Devices = devs
+		(*users)[userID] = user
+	}
+
+	return true
+}
+
+// migrateDeleteBlankDevices procedure ensures blank devices are omitted from the user's device list in SubscriptionCache.
+func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
+	var users *map[string]models.User
+
+	// Assert pointers from the interface array.
+	for _, raw := range rawElems {
+		elem, ok := raw.(*map[string]models.User)
+		if ok {
+			users = elem
+			continue
+		}
+	}
+
+	// Exit if the subs pointer is nil.
+	if users == nil {
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
+		return false
+	}
+
+	for userID, user := range *users {
 		var newDevs []models.Device
 
-		for _, dev := range devs {
+		for _, dev := range user.Devices {
 			if reflect.DeepEqual(dev, (models.Device{})) {
 				continue
 			}
@@ -265,27 +304,17 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 
 			dev.Tags = tags
 
-			dev.Nickname = userID
-
 			newDevs = append(newDevs, dev)
 		}
 
-		if len(newDevs) == 0 {
-			if deleted := DeleteOne(SubscriptionCache, userID); !deleted {
-				l.Msg("could not delete devices: " + userID).Status(http.StatusInternalServerError).Log()
-				return false
-			}
+		user.Devices = newDevs
 
-			delete(*subs, userID)
-			return true
-		}
-
-		if saved := SetOne(SubscriptionCache, userID, newDevs); !saved {
+		if saved := SetOne(UserCache, userID, user); !saved {
 			l.Msg("could not save new devices: " + userID).Status(http.StatusInternalServerError).Log()
 			return false
 		}
 
-		(*subs)[userID] = newDevs
+		(*users)[userID] = user
 	}
 
 	return true
@@ -293,54 +322,48 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 
 // migrateEmptyDeviceTags procedure takes care of filling empty device tags arrays.
 func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
-	var subs *map[string][]models.Device
+	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
 	for _, raw := range rawElems {
-		elem, ok := raw.(*map[string][]models.Device)
+		elem, ok := raw.(*map[string]models.User)
 		if ok {
-			subs = elem
+			users = elem
 			continue
 		}
 	}
 
 	// Exit if the subs pointer is nil.
-	if subs == nil {
-		l.Msg("subs are nil").Status(http.StatusInternalServerError).Log()
+	if users == nil {
+		l.Msg("users are nil").Status(http.StatusInternalServerError).Log()
 		return false
 	}
 
 	// Look for empty tags of subscriptions/devices in nested loops.
-	for key, devs := range *subs {
+	for userID, user := range *users {
 		changed := false
 
 		// Iterate over devices.
-		for idx, dev := range devs {
+		for idx, dev := range user.Devices {
 			if len(dev.Tags) == 0 {
 				dev.Tags = []string{
 					"reply",
 					"mention",
 				}
 				changed = true
-				devs[idx] = dev
-			}
-
-			if dev.Nickname == "" {
-				dev.Nickname = key
-				changed = true
-				devs[idx] = dev
+				user.Devices[idx] = dev
 			}
 		}
 
 		if changed {
 			// Save the changes found and made.
-			if saved := SetOne(SubscriptionCache, key, devs); !saved {
-				l.Msg("cannot save changed dev: " + key).Status(http.StatusInternalServerError).Log()
+			if saved := SetOne(UserCache, userID, user); !saved {
+				l.Msg("cannot save changed dev: " + userID).Status(http.StatusInternalServerError).Log()
 				return false
 			}
 
 			// Update the subs map locally within the migrations.
-			(*subs)[key] = devs
+			(*users)[userID] = user
 		}
 	}
 

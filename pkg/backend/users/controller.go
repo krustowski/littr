@@ -14,6 +14,9 @@ import (
 
 const (
 	LOGGER_WORKER_NAME string = "userController"
+
+	userIDParam     string = "userID"
+	updateTypeParam string = "updateType"
 )
 
 // Structure contents definition for the controller.
@@ -80,6 +83,58 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	l.Msg("new user created successfully").Status(http.StatusCreated).Log().Payload(nil).Write(w)
 }
 
+// Subscribe is the handler function to ensure that a sent device has been subscribed to notifications.
+//
+//	@Summary		Create the notifications subscription
+//	@Description		This function call takes in a device specification and creates a new user subscription to webpush notifications.
+//	@Tags			push
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path	string		true					"ID of the user to update"
+//	@Param			request	body	models.Device	true					"A device to create the notification subscription for."
+//	@Success		201		{object}	common.APIResponse{data=models.Stub}	"The subscription has been created successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data input."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized.."
+//	@Failure		409		{object}	common.APIResponse{data=models.Stub}	"Conflict: a subscription for such device already exists."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal server problem occurred."
+//	@Router			/users/{userID}/subscriptions [post]
+func (c *UserController) Subscribe(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	// Skip blank callerID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, userIDParam)
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if userID != l.CallerID() {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	}
+
+	var dtoIn models.Device
+
+	// Decode the incoming request's body.
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if err := c.userService.Subscribe(r.Context(), &dtoIn); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("ok, the notifictions subscription has been created for given device").Status(http.StatusCreated).Log().Payload(nil).Write(w)
+}
+
 // Activate is a handler function to complete the user's activation procedure.
 //
 //	@Summary		Activate an user via an UUID string
@@ -139,10 +194,7 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) UpdateLists(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
-	const (
-		userIDParam     string = "userID"
-		updateTypeParam string = "updateType"
-	)
+	const ()
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -195,11 +247,6 @@ func (c *UserController) UpdateLists(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) UpdateOptions(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
-	const (
-		userIDParam     string = "userID"
-		updateTypeParam string = "updateType"
-	)
-
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -251,11 +298,6 @@ func (c *UserController) UpdateOptions(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
-	const (
-		userIDParam     string = "userID"
-		updateTypeParam string = "updateType"
-	)
-
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -285,6 +327,70 @@ func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request
 
 	l.Msg("ok, user updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
 
+}
+
+// UpdateSubscription is the handler function used to update an existing subscription.
+//
+//	@Summary		Update the notification subscription tag
+//	@Description		This function call handles a request to change an user's (caller's) notifications subscription for a device specified by UUID param.
+//	@Tags			push
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		string					true	"ID of the user to update"
+//	@Param			uuid	path	string					true	"An UUID of a device to update."
+//	@Param			request	body	push.SubscriptionUpdateRequest		true	"The request's body containing fields to modify."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The subscription has been updated successfully."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid input data."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to update not found."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while the update procedure was processing the data."
+//	@Router			/users/{userID}/subscriptions/{uuid} [patch]
+func (c *UserController) UpdateSubscription(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	// Skip blank callerID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, userIDParam)
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if userID != l.CallerID() {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	}
+
+	var dtoIn UserUpdateSubscriptionRequest
+
+	// Decode the incoming request's body.
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
+		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
+		return
+	}
+	// Fetch the UUID param from path.
+	uuid := chi.URLParam(r, "uuid")
+	if uuid == "" {
+		l.Msg(common.ERR_PUSH_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if len(dtoIn) == 0 {
+		l.Msg("tag to update not specified or is invalid").Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if err := c.userService.UpdateSubscriptionTags(r.Context(), uuid, dtoIn); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("ok, device subscription updated").Status(http.StatusOK).Log().Payload(nil).Write(w)
 }
 
 // UploadAvatar is a handler function to update user's avatar directly in the app.
@@ -427,6 +533,57 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 	l.Msg("passphrase request processed successfully, check your mail inbox").Status(http.StatusOK).Log().Payload(nil).Write(w)
 }
 
+// Unsubscribe is the handler function to ensure a given subscription deleted from the database.
+//
+//	@Summary		Delete a subscription
+//	@Description		This function call takes an UUID as parameter to fetch and purge a device associated with such ID from the subscribed devices list.
+//	@Tags			push
+//	@Produce		json
+//	@Param			userID	path		string	true	"User's ID to update subscription for."
+//	@Param			uuid	path		string	true	"An UUID of a device to delete."
+//	@Success		200		{object}	common.APIResponse{data=models.Stub}	"Requested device has been purged from the subscribed devices list."
+//	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid data input."
+//	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
+//	@Failure		404		{object}	common.APIResponse{data=models.Stub}	"The requested device to delete not found."
+//	@Failure		429		{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
+//	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while processing the delete request."
+//	@Router			/users/{userID}/subscriptions/{uuid} [delete]
+func (c *UserController) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+
+	// Skip blank callerID.
+	if l.CallerID() == "" {
+		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Fetch the userID/nickname from the URI.
+	userID := chi.URLParam(r, userIDParam)
+	if userID == "" {
+		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	if userID != l.CallerID() {
+		l.Msg(common.ERR_CALLER_FAIL).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
+	}
+
+	// Fetch the param from path.
+	uuid := chi.URLParam(r, "uuid")
+	if uuid == "" {
+		l.Msg(common.ERR_PUSH_UUID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+		return
+	}
+
+	// Pass the request to the push notifs service.
+	if err := c.userService.Unsubscribe(r.Context(), uuid); err != nil {
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
+		return
+	}
+
+	l.Msg("ok, device subscription deleted").Status(http.StatusOK).Log().Payload(nil).Write(w)
+}
+
 // Delete is the users handler that processes and deletes given user (oneself) form the database.
 //
 //	@Summary		Delete user
@@ -558,13 +715,12 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type responseData struct {
-		User      models.User     `json:"user,omitempty"`
-		Devices   []models.Device `json:"devices"`
-		PublicKey string          `json:"public_key"`
+		User      models.User `json:"user,omitempty"`
+		PublicKey string      `json:"public_key"`
 	}
 
 	// Fetch the userID/nickname from the URI.
-	userID := chi.URLParam(r, "userID")
+	userID := chi.URLParam(r, userIDParam)
 	if userID == "" {
 		l.Msg(common.ERR_USERID_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
@@ -575,7 +731,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the requested user.
-	user, err := c.userService.FindByID(context.WithValue(r.Context(), "userID", userID), userID)
+	user, err := c.userService.FindByID(context.WithValue(r.Context(), userIDParam, userID), userID)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
@@ -591,7 +747,6 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Prepare the response payload.
 	DTOOut := &responseData{
 		User:      patchedUser,
-		Devices:   nil,
 		PublicKey: os.Getenv("VAPID_PUB_KEY"),
 	}
 

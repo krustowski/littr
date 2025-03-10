@@ -11,7 +11,7 @@ var DefaultUserOptionsMap = UserOptionsMap{
 	"active":        false,
 	"gdpr":          true,
 	"private":       false,
-	"uiDarkMode":    true,
+	"uiMode":        true,
 	"liveMode":      true,
 	"localTimeMode": true,
 }

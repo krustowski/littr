@@ -48,6 +48,8 @@ type UserUpdatePassphraseRequest struct {
 	CurrentPassphraseHex string `json:"current_passphrase_hex"`
 }
 
+type UserUpdateSubscriptionRequest []string
+
 type UserUploadAvatarRequest struct {
 	// New avatar upload/update request payload.
 	AvatarByteData []byte `json:"data" format:"base64"`

@@ -109,7 +109,7 @@ func (c *Content) createSubscription(ctx app.Context, tag string) {
 	// send the registration to backend
 	input := &common.CallInput{
 		Method:      "POST",
-		Url:         "/api/v1/push/subscriptions",
+		Url:         "/api/v1/users/" + c.user.Nickname + "/subscriptions",
 		Data:        deviceSub,
 		CallerID:    c.user.Nickname,
 		PageNo:      0,
@@ -180,7 +180,7 @@ func (c *Content) deleteSubscription(ctx app.Context) {
 	ctx.Async(func() {
 		input := &common.CallInput{
 			Method:      "DELETE",
-			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
+			Url:         "/api/v1/users/" + c.user.Nickname + "/subscriptions/" + ctx.DeviceID(),
 			Data:        payload,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
@@ -250,8 +250,8 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 	ctx.Async(func() {
 		input := &common.CallInput{
 			Method:      "PATCH",
-			Url:         "/api/v1/push/subscriptions/" + ctx.DeviceID(),
-			Data:        payload,
+			Url:         "/api/v1/users/" + c.user.Nickname + "/subscriptions/" + ctx.DeviceID(),
+			Data:        payload.Tags,
 			CallerID:    c.user.Nickname,
 			PageNo:      0,
 			HideReplies: false,

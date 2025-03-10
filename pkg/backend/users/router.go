@@ -34,5 +34,9 @@ func NewUserRouter(userController *UserController) chi.Router {
 	r.Patch("/{userID}/options", userController.UpdateOptions)
 	r.Patch("/{userID}/passphrase", userController.UpdatePassphrase)
 
+	r.Post("/{userID}/subscriptions", userController.Subscribe)
+	r.Patch("/{userID}/subscriptions/{uuid}", userController.UpdateSubscription)
+	r.Delete("/{userID}/subscriptions/{uuid}", userController.Unsubscribe)
+
 	return r
 }

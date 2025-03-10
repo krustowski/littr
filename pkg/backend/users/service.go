@@ -7,7 +7,9 @@ import (
 	"net/http"
 	netmail "net/mail"
 	"os"
+	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -30,18 +32,18 @@ import (
 //
 
 type UserService struct {
-	pollRepository         models.PollRepositoryInterface
-	postRepository         models.PostRepositoryInterface
-	subscriptionRepository models.SubscriptionRepositoryInterface
-	requestRepository      models.RequestRepositoryInterface
-	tokenRepository        models.TokenRepositoryInterface
-	userRepository         models.UserRepositoryInterface
+	pollRepository models.PollRepositoryInterface
+	postRepository models.PostRepositoryInterface
+	//subscriptionRepository models.SubscriptionRepositoryInterface
+	requestRepository models.RequestRepositoryInterface
+	tokenRepository   models.TokenRepositoryInterface
+	userRepository    models.UserRepositoryInterface
 }
 
 func NewUserService(
 	pollRepository models.PollRepositoryInterface,
 	postRepository models.PostRepositoryInterface,
-	subscriptionRepository models.SubscriptionRepositoryInterface,
+	//subscriptionRepository models.SubscriptionRepositoryInterface,
 	requestRepository models.RequestRepositoryInterface,
 	tokenRepository models.TokenRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
@@ -50,7 +52,7 @@ func NewUserService(
 	if pollRepository == nil ||
 		postRepository == nil ||
 		requestRepository == nil ||
-		subscriptionRepository == nil ||
+		//subscriptionRepository == nil ||
 		tokenRepository == nil ||
 		userRepository == nil {
 
@@ -58,12 +60,12 @@ func NewUserService(
 	}
 
 	return &UserService{
-		pollRepository:         pollRepository,
-		postRepository:         postRepository,
-		subscriptionRepository: subscriptionRepository,
-		requestRepository:      requestRepository,
-		tokenRepository:        tokenRepository,
-		userRepository:         userRepository,
+		pollRepository: pollRepository,
+		postRepository: postRepository,
+		//subscriptionRepository: subscriptionRepository,
+		requestRepository: requestRepository,
+		tokenRepository:   tokenRepository,
+		userRepository:    userRepository,
 	}
 }
 
@@ -253,6 +255,77 @@ func (s *UserService) Create(ctx context.Context, createRequestI interface{}) er
 	return nil
 }
 
+func (s *UserService) Subscribe(ctx context.Context, device *models.Device) error {
+	// Fetch the callerID from the given context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the caller's ID")
+	}
+
+	// Check whether the given device is blank.
+	if reflect.DeepEqual(*device, (models.Device{})) {
+		return fmt.Errorf(common.ERR_DEVICE_BLANK)
+	}
+
+	dbUser, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return err
+	}
+
+	for _, dev := range dbUser.Devices {
+		if dev.UUID == device.UUID {
+			return fmt.Errorf("%s", common.ERR_DEVICE_SUBSCRIBED_ALREADY)
+		}
+	}
+
+	dbUser.Devices = append(dbUser.Devices, *device)
+
+	if err := s.userRepository.Save(dbUser); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) Unsubscribe(ctx context.Context, uuid string) error {
+	// Fetch the callerID from the given context.
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the caller's ID")
+	}
+
+	dbUser, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil
+	}
+
+	var newDevices []models.Device
+
+	for _, dev := range dbUser.Devices {
+		if dev.UUID == uuid {
+			continue
+		}
+
+		if reflect.DeepEqual(dev, (models.Device{})) {
+			continue
+		}
+
+		if dev.UUID == "" {
+			continue
+		}
+
+		newDevices = append(newDevices, dev)
+	}
+
+	dbUser.Devices = newDevices
+
+	if err := s.userRepository.Save(dbUser); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *UserService) Activate(ctx context.Context, UUID string) error {
 	if UUID == "" {
 		return fmt.Errorf(common.ERR_REQUEST_UUID_BLANK)
@@ -405,7 +478,7 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		// Toggle dark mode to light mode and vice versa.
 		if data.UIDarkMode != dbUser.UIDarkMode {
 			dbUser.UIDarkMode = !dbUser.UIDarkMode
-			dbUser.Options["uiDarkMode"] = data.UIDarkMode
+			dbUser.Options["uiMode"] = data.UIDarkMode
 		}
 
 		// Toggle the live mode.
@@ -540,6 +613,57 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 	}
 
 	return imageBaseURL, nil
+}
+
+func (s *UserService) UpdateSubscriptionTags(ctx context.Context, uuid string, tags []string) error {
+	callerID, ok := ctx.Value("nickname").(string)
+	if !ok {
+		return fmt.Errorf("could not decode the caller's ID")
+	}
+
+	dbUser, err := s.userRepository.GetByID(callerID)
+	if err != nil {
+		return nil
+	}
+
+	var (
+		devIdx int
+		found  bool
+	)
+
+	for idx, dev := range dbUser.Devices {
+		if dev.UUID == uuid {
+			found = true
+			devIdx = idx
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("%s", common.ERR_SUBSCRIPTION_NOT_FOUND)
+	}
+
+	for _, tag := range tags {
+		if !slices.Contains(dbUser.Devices[devIdx].Tags, tag) {
+			dbUser.Devices[devIdx].Tags = append(dbUser.Devices[devIdx].Tags, tag)
+		} else {
+			var newTags []string
+
+			for _, t := range dbUser.Devices[devIdx].Tags {
+				if t != tag {
+					newTags = append(newTags, t)
+				}
+			}
+
+			dbUser.Devices[devIdx].Tags = newTags
+		}
+	}
+
+	if err := s.userRepository.Save(dbUser); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
@@ -721,11 +845,6 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 		return fmt.Errorf(common.ERR_USER_DELETE_FAIL)
 	}
 
-	// Delete requested user's subscription.
-	if err := s.subscriptionRepository.Delete(userID); err != nil {
-		return fmt.Errorf(common.ERR_SUBSCRIPTION_DELETE_FAIL)
-	}
-
 	//
 	//  Delete all posts, delete polls, delete tokens
 	//
@@ -864,13 +983,8 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	}
 
 	// Include subscription devices if the userID is the caller's one.
-	if userID == callerID {
-		devs, err := s.subscriptionRepository.GetByUserID(userID)
-		if err != nil {
-			user.Devices = nil
-		} else {
-			user.Devices = *devs
-		}
+	if userID != callerID {
+		user.Devices = nil
 	}
 
 	// Patch the user's data for export.

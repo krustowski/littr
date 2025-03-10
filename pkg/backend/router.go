@@ -43,9 +43,6 @@
 //	@tag.name		posts
 //	@tag.description	Operations with contributions
 
-//	@tag.name		push
-//	@tag.description	Real-time (web)push notifications suite
-
 //	@tag.name		stats
 //	@tag.description	System statistics
 
@@ -70,7 +67,6 @@ import (
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
-	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/backend/requests"
 	"go.vxn.dev/littr/pkg/backend/stats"
 	"go.vxn.dev/littr/pkg/backend/tokens"
@@ -135,7 +131,7 @@ func NewAPIRouter() chi.Router {
 	// Init repositories for services.
 	pollRepository := polls.NewPollRepository(db.PollCache)
 	postRepository := posts.NewPostRepository(db.FlowCache)
-	subscriptionRepository := push.NewSubscriptionRepository(db.SubscriptionCache)
+	//subscriptionRepository := push.NewSubscriptionRepository(db.SubscriptionCache)
 	requestRepository := requests.NewRequestRepository(db.RequestCache)
 	tokenRepository := tokens.NewTokenRepository(db.TokenCache)
 	userRepository := users.NewUserRepository(db.UserCache)
@@ -145,14 +141,14 @@ func NewAPIRouter() chi.Router {
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
 	postService := posts.NewPostService(postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
-	subsService := push.NewSubscriptionService(postRepository, subscriptionRepository)
-	userService := users.NewUserService(pollRepository, postRepository, subscriptionRepository, requestRepository, tokenRepository, userRepository)
+	//subsService := push.NewSubscriptionService(postRepository, subscriptionRepository)
+	userService := users.NewUserService(pollRepository, postRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
 	pollController := polls.NewPollController(pollService)
 	postController := posts.NewPostController(postService)
-	pushController := push.NewPushController(subsService)
+	//pushController := push.NewPushController(subsService)
 	statController := stats.NewStatController(statService)
 	userController := users.NewUserController(postService, statService, userService)
 
@@ -168,7 +164,7 @@ func NewAPIRouter() chi.Router {
 	r.Mount("/live", live.NewLiveRouter())
 	r.Mount("/polls", polls.NewPollRouter(pollController))
 	r.Mount("/posts", posts.NewPostRouter(postController))
-	r.Mount("/push", push.NewPushRouter(pushController))
+	//r.Mount("/push", push.NewPushRouter(pushController))
 	r.Mount("/stats", stats.NewStatRouter(statController))
 	r.Mount("/users", users.NewUserRouter(userController))
 

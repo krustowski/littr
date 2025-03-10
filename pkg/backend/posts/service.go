@@ -3,12 +3,14 @@ package posts
 import (
 	"context"
 	"fmt"
+
 	//"strconv"
 	//"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
+
 	//"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -58,7 +60,7 @@ func (s *PostService) Create(ctx context.Context, post *models.Post) error {
 	//
 
 	if err := s.postRepository.Save(post); err != nil {
-		return fmt.Errorf(common.ERR_POST_SAVE_FAIL + ": " + err.Error())
+		return fmt.Errorf("%s: %s", common.ERR_POST_SAVE_FAIL, err.Error())
 	}
 
 	// Broadcast the new post event.

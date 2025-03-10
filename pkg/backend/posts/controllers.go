@@ -229,8 +229,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		receiverName := match[1]
 
 		// fetch related data from cachces
-		devs, _ := db.GetOne(db.SubscriptionCache, receiverName, []models.Device{})
-		_, found := db.GetOne(db.UserCache, receiverName, models.User{})
+		receiver, found := db.GetOne(db.UserCache, receiverName, models.User{})
 		if !found {
 			continue
 		}
@@ -241,7 +240,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// do not notify user --- notifications disabled --- OK condition
-		if len(devs) == 0 {
+		if len(receiver.Devices) == 0 {
 			continue
 		}
 
@@ -259,7 +258,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 		opts := &push.NotificationOpts{
 			Receiver: receiverName,
-			Devices:  &devs,
+			Devices:  &receiver.Devices,
 			Body:     &body,
 			//Logger:   l,
 		}

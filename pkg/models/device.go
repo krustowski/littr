@@ -13,9 +13,6 @@ type Device struct {
 	// https://go-app.dev/reference#Context
 	UUID string `json:"uuid"`
 
-	// Nickname is the identificator of such device's possessor.
-	Nickname string `json:"nickname"`
-
 	// Timestamp of the subscription creation.
 	TimeCreated time.Time `json:"time_created"`
 
@@ -40,10 +37,5 @@ type Keys struct {
 }
 
 func (dd Devices) GetID() string {
-	for _, dev := range dd {
-		if dev.Nickname != "" {
-			return dev.Nickname
-		}
-	}
 	return ""
 }

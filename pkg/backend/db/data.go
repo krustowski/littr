@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/metrics"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
 	//"go.vxn.dev/swis/v5/pkg/core"
 )
@@ -23,6 +25,8 @@ const (
 	subscriptionsFile = "/opt/data/subscriptions.json"
 	tokensFile        = "/opt/data/tokens.json"
 	usersFile         = "/opt/data/users.json"
+
+	dataPath = "/opt/data/"
 )
 
 func LoadAll() string {
@@ -36,7 +40,7 @@ func LoadAll() string {
 		loadOne(RequestCache, requestsFile, models.Request{})))
 
 	subs := makeLoadReport("subscriptions", wrapLoadOutput(
-		loadOne(SubscriptionCache, subscriptionsFile, []models.Device{})))
+		loadOne(SubscriptionCache, subscriptionsFile, models.Devices{})))
 
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
 		loadOne(TokenCache, tokensFile, models.Token{})))
@@ -114,79 +118,80 @@ func wrapLoadOutput(count, total int64, err error) load {
 type item interface {
 }
 
-func loadOne[T any](cache Cacher, filepath string, model T) (int64, int64, error) {
+func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int64, error) {
 	l := common.NewLogger(nil, "data load")
 
 	var count int64
 	var total int64
 
-	/*rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
-	if err != nil {
-		log.Fatal("read: ", err)
-	}
-
-	rbuf := bytes.NewReader(rb)
-	dec := gob.NewDecoder(rbuf)
-
-	var items []T
-	if err := dec.Decode(&items); err != nil {
-		log.Fatalf("decode: %s, err: %s", cache.GetName(), err)
-	}
-
-	for _, item := range items {
-		count++
-		if stored := cache.Store(item.GetID(), item); !stored {
-			log.Fatal(cache.GetName())
-		}
-		total++
-	}*/
-
-	//
-	//
-	//
-
-	rawData, err := os.ReadFile(filepath)
-	if err != nil {
-		l.Error(err).Status(http.StatusInternalServerError).Log()
-		return count, total, err
-	}
-
-	if string(rawData) == "" {
-		l.Msg("empty data on input").Status(http.StatusBadRequest).Log()
-		return count, total, errors.New("empty data on input")
-	}
-
-	matrix := &struct {
-		Items map[string]T `json:"items"`
-	}{}
-
-	err = json.Unmarshal(rawData, matrix)
-	if err != nil {
-		l.Error(err).Status(http.StatusInternalServerError).Log()
-		return count, total, err
-	}
-
-	total = int64(len(matrix.Items))
-
-	for key, val := range matrix.Items {
-		if key == "" || &val == nil {
-			continue
+	switch config.DATA_LOAD_FORMAT {
+	case "binary":
+		rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
+		if err != nil {
+			log.Fatal("read: ", err)
 		}
 
-		if saved := SetOne(cache, key, val); !saved {
-			msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
-			l.Msg(msg).Status(http.StatusInternalServerError).Log()
-			return count, total, fmt.Errorf(msg)
+		rbuf := bytes.NewReader(rb)
+		dec := gob.NewDecoder(rbuf)
+
+		var items []T
+		if err := dec.Decode(&items); err != nil {
+			log.Fatalf("decode: %s, err: %s", cache.GetName(), err)
 		}
 
-		count++
+		for _, item := range items {
+			count++
+			if stored := cache.Store(item.GetID(), item); !stored {
+				log.Fatal(cache.GetName())
+			}
+			total++
+		}
+
+	default:
+		rawData, err := os.ReadFile(filepath)
+		if err != nil {
+			l.Error(err).Status(http.StatusInternalServerError).Log()
+			return count, total, err
+		}
+
+		if string(rawData) == "" {
+			l.Msg("empty data on input").Status(http.StatusBadRequest).Log()
+			return count, total, errors.New("empty data on input")
+		}
+
+		matrix := &struct {
+			Items map[string]T `json:"items"`
+		}{}
+
+		err = json.Unmarshal(rawData, matrix)
+		if err != nil {
+			l.Error(err).Status(http.StatusInternalServerError).Log()
+			return count, total, err
+		}
+
+		total = int64(len(matrix.Items))
+
+		for key, val := range matrix.Items {
+			if key == "" {
+				continue
+			}
+
+			if saved := SetOne(cache, key, val); !saved {
+				msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
+				l.Msg(msg).Status(http.StatusInternalServerError).Log()
+				return count, total, fmt.Errorf("%s", msg)
+			}
+
+			count++
+		}
+
+		matrix = &struct {
+			Items map[string]T `json:"items"`
+		}{}
+
+		metrics.UpdateCountMetric(cache.GetName(), count, true)
+
 	}
-
-	matrix = &struct {
-		Items map[string]T `json:"items"`
-	}{}
-
-	metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	return count, total, nil
 }
@@ -216,93 +221,82 @@ type dumpReport struct {
 func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
-	// check if the model is usable
-	/*if &model == nil {
-		l.Msg("nil pointer to model on input to").Status(http.StatusBadRequest).Log()
-		return &dumpReport{Total: 0, Error: fmt.Errorf("nil pointer to model on input")}
-	}*/
+	switch config.DATA_DUMP_FORMAT {
+	case "binary":
+		var items []T
 
-	//
-	//  Experimental feature (memory dump do binary)
-	//
+		rawItems, count := cache.Range()
 
-	var items []T
-
-	rawItems, count := cache.Range()
-
-	for _, rawItem := range *rawItems {
-		item, ok := rawItem.(T)
-		if ok {
-			items = append(items, item)
+		for _, rawItem := range *rawItems {
+			item, ok := rawItem.(T)
+			if ok {
+				items = append(items, item)
+			}
 		}
-	}
 
-	var buf bytes.Buffer
+		var buf bytes.Buffer
 
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(items); err != nil {
-		l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
-		fmt.Printf("encode: %s", err.Error())
-		return nil
-	}
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(items); err != nil {
+			l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
+			fmt.Printf("encode: %s", err.Error())
+			return nil
+		}
 
-	os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600)
+		os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600)
 
-	buf.Reset()
+		buf.Reset()
 
-	return &dumpReport{Total: count}
+		return &dumpReport{Total: count}
 
-	//
-	//
-	//
-
-	// base struct to map the data to JSON
-	/*matrix := struct {
-		Items *map[string]T `json:"items"`
-	}{}
-
-	var (
-		jsonData []byte
-		err      error
-	)
-
-	defer func() {
-		*matrix.Items = map[string]T{}
-
-		matrix = struct {
+	default:
+		//Base struct to map the data to JSON.
+		matrix := struct {
 			Items *map[string]T `json:"items"`
 		}{}
 
-		jsonData = []byte{}
-	}()
+		var (
+			jsonData []byte
+			err      error
+		)
 
-	var total int64
+		defer func() {
+			*matrix.Items = map[string]T{}
 
-	// dump the in-memoty running data
-	matrix.Items, total = GetAll(cache, model)
+			matrix = struct {
+				Items *map[string]T `json:"items"`
+			}{}
 
-	// prepare the JSON byte stream
-	jsonData, err = json.Marshal(&matrix)
-	if err != nil {
-		return &dumpReport{Error: err}
-	}
+			jsonData = []byte{}
+		}()
 
-	// write dumped data to the file
-	if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
-		// OK condition
+		var total int64
+
+		// Dump the in-memoty running data.
+		matrix.Items, total = GetAll(cache, model)
+
+		// Prepare the JSON byte stream.
+		jsonData, err = json.Marshal(&matrix)
+		if err != nil {
+			return &dumpReport{Error: err}
+		}
+
+		// Write dumped data to the file.
+		if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
+			// OK condition
+			return &dumpReport{Total: total}
+		}
+
+		// Log the first attempt fail, but continue.
+		l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
+		err = nil
+
+		// Try the backup file if previous write failed.
+		if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
+			l.Msg("backup write failed: " + err.Error()).Status(http.StatusInternalServerError).Log()
+			return &dumpReport{Total: 0, Error: err}
+		}
+
 		return &dumpReport{Total: total}
 	}
-
-	// log the first attempt fail, but continue
-	l.Msg("write error: " + err.Error()).Status(http.StatusInternalServerError).Log()
-	err = nil
-
-	// try the backup file if previous write failed
-	if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
-		l.Msg("backup write failed: " + err.Error()).Status(http.StatusInternalServerError).Log()
-		return &dumpReport{Total: 0, Error: err}
-	}
-
-	// OK condition
-	return &dumpReport{Total: total}*/
 }
