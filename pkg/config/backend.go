@@ -2,7 +2,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 )
@@ -12,6 +11,9 @@ const (
 	DEFAULT_PORT = "8054"
 
 	DEFAULT_APP_URL = "https://www.littr.eu"
+
+	DEFAULT_DATA_LOAD_FORMAT = "JSON"
+	DEFAULT_DATA_DUMP_FORMAT = "JSON"
 
 	// Default HTTP port to run Go tests.
 	DEFAULT_TEST_PORT     = "8777"
@@ -28,6 +30,8 @@ const (
 	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
 	APP_PORT             = "APP_PORT"
 	APP_URL_MAIN         = "APP_URL_MAIN"
+	DATA_DUMP_FORMAT     = "DATA_DUMP_FORMAT"
+	DATA_LOAD_FORMAT     = "DATA_LOAD_FORMAT"
 	DOCKER_INTERNAL_PORT = "DOCKER_INTERNAL_PORT"
 	LIMITER_DISABLED     = "LIMITER_DISABLED"
 	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
@@ -39,9 +43,24 @@ var (
 	AppEnvironment string = func() string {
 		if os.Getenv(APP_ENVIRONMENT) != "" {
 			return os.Getenv(APP_ENVIRONMENT)
-		} else {
-			return "dev"
 		}
+		return "dev"
+	}()
+
+	DataDumpFormat string = func() string {
+		if os.Getenv(DATA_DUMP_FORMAT) != "" {
+			return os.Getenv(DATA_DUMP_FORMAT)
+		}
+
+		return DEFAULT_DATA_DUMP_FORMAT
+	}()
+
+	DataLoadFormat string = func() string {
+		if os.Getenv(DATA_LOAD_FORMAT) != "" {
+			return os.Getenv(DATA_LOAD_FORMAT)
+		}
+
+		return DEFAULT_DATA_LOAD_FORMAT
 	}()
 
 	// EnchartedSW is a string variable to hold the templated ServiceWorker contents to load into the very main FE app handler.
@@ -51,7 +70,8 @@ var (
 		if err != nil {
 			return ""
 		}
-		return fmt.Sprintf("%s", tpl)
+
+		return string(tpl)
 	}()
 
 	// IsLimiterDisabled is a feature flag for the API limiter middleware imported at the APIRouter.

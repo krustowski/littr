@@ -32,6 +32,9 @@ API_TOKEN 		?=
 LIMITER_DISABLED 	?= false
 REGISTRATION_ENABLED 	?= true
 
+DATA_DUMP_FORMAT       	?= JSON
+DATA_LOAD_FORMAT     	?= JSON
+
 #
 #  Subscription (webpush) vars
 #
