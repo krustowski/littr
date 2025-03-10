@@ -19,12 +19,11 @@ import (
 )
 
 const (
-	pollsFile         = "/opt/data/polls.json"
-	postsFile         = "/opt/data/posts.json"
-	requestsFile      = "/opt/data/requests.json"
-	subscriptionsFile = "/opt/data/subscriptions.json"
-	tokensFile        = "/opt/data/tokens.json"
-	usersFile         = "/opt/data/users.json"
+	pollsFile    = "/opt/data/polls.json"
+	postsFile    = "/opt/data/posts.json"
+	requestsFile = "/opt/data/requests.json"
+	tokensFile   = "/opt/data/tokens.json"
+	usersFile    = "/opt/data/users.json"
 
 	dataPath = "/opt/data/"
 )
@@ -39,9 +38,6 @@ func LoadAll() string {
 	reqs := makeLoadReport("requests", wrapLoadOutput(
 		loadOne(RequestCache, requestsFile, models.Request{})))
 
-	subs := makeLoadReport("subscriptions", wrapLoadOutput(
-		loadOne(SubscriptionCache, subscriptionsFile, models.Devices{})))
-
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
 		loadOne(TokenCache, tokensFile, models.Token{})))
 
@@ -50,7 +46,7 @@ func LoadAll() string {
 
 	runtime.GC()
 
-	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s, %s", polls, posts, reqs, subs, tokens, users)
+	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s", polls, posts, reqs, tokens, users)
 }
 
 func DumpAll() string {
@@ -64,9 +60,6 @@ func DumpAll() string {
 
 	report += prepareDumpReport("requests",
 		dumpOne(RequestCache, requestsFile, models.Request{}))
-
-	report += prepareDumpReport("subscriptions",
-		dumpOne(SubscriptionCache, subscriptionsFile, models.Devices{}))
 
 	report += prepareDumpReport("tokens",
 		dumpOne(TokenCache, tokensFile, models.Token{}))
