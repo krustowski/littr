@@ -1,11 +1,12 @@
 package config
 
-var (
+const (
 	// NicknameLengthMax is the maximum nickname length to be allowed to register.
 	NicknameLengthMax int = 12
 
 	// MaxPostLength is the maximal length of the fully shown post in the flow. Posts longer than that are to be shorten/hidden.
 	MaxPostLength int = 500
 
-	MAX_SSE_RETRY_COUNT int = 50
+	// Max retry count for the minimal SSE client.
+	MaxSseRetryCount int = 50
 )
