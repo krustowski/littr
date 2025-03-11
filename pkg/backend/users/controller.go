@@ -87,7 +87,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary		Create the notifications subscription
 //	@Description		This function call takes in a device specification and creates a new user subscription to webpush notifications.
-//	@Tags			push
+//	@Tags			users
 //	@Accept			json
 //	@Produce		json
 //	@Param			userID	path	string		true					"ID of the user to update"
@@ -333,12 +333,12 @@ func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request
 //
 //	@Summary		Update the notification subscription tag
 //	@Description		This function call handles a request to change an user's (caller's) notifications subscription for a device specified by UUID param.
-//	@Tags			push
+//	@Tags			users
 //	@Accept			json
 //	@Produce		json
 //	@Param			userID	path		string					true	"ID of the user to update"
 //	@Param			uuid	path	string					true	"An UUID of a device to update."
-//	@Param			request	body	push.SubscriptionUpdateRequest		true	"The request's body containing fields to modify."
+//	@Param			request	body	users.UserUpdateSubscriptionRequest		true	"The request's body containing fields to modify."
 //	@Success		200		{object}	common.APIResponse{data=models.Stub}	"The subscription has been updated successfully."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}	"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}	"User unauthorized."
@@ -537,7 +537,7 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 //
 //	@Summary		Delete a subscription
 //	@Description		This function call takes an UUID as parameter to fetch and purge a device associated with such ID from the subscribed devices list.
-//	@Tags			push
+//	@Tags			users
 //	@Produce		json
 //	@Param			userID	path		string	true	"User's ID to update subscription for."
 //	@Param			uuid	path		string	true	"An UUID of a device to delete."
