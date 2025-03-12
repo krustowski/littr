@@ -136,9 +136,9 @@ func (h *Header) OnMount(ctx app.Context) {
 	common.LoadUser(&h.user, &ctx)
 
 	// Custom SSE client implementation.
-	if !app.Window().Get(common.JS_LITTR_SSE).Get("running").Bool() {
+	if !app.Window().Get(common.JsLittrSse).Get("running").Bool() {
 		fmt.Println("Connecting to the SSE stream...")
-		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
+		app.Window().Get(common.JsLittrSse).Call("tryReconnect")
 	}
 
 	//

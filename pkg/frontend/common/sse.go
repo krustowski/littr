@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	jsLittrSse   = "littrServiceSSE"
-	jsLittrEvent = "littrEventSSE"
+	JsLittrSse   = "littrServiceSSE"
+	JsLittrEvent = "littrEventSSE"
 )
 
 //
@@ -48,7 +48,7 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		}
 	}()
 
-	if (!this.Get("running").IsUndefined() && this.Get("running").Bool()) || app.Window().Get(jsLittrSse).Get("running").Bool() {
+	if (!this.Get("running").IsUndefined() && this.Get("running").Bool()) || app.Window().Get(JsLittrSse).Get("running").Bool() {
 		fmt.Printf("The service is already running")
 		return "ServiceAlreadyRunningError"
 	}
@@ -65,7 +65,7 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		fmt.Println("Caught signal: ", sig)
 
 		this.Call("abort")
-		app.Window().Get(jsLittrSse).Set("running", false)
+		app.Window().Get(JsLittrSse).Set("running", false)
 	}()*/
 
 	// Run the main fetch() logic, and look for errors.
@@ -82,24 +82,24 @@ var connect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 })
 
 var reconnect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
-	if app.Window().Get(jsLittrSse).Get("reconnRunning").Bool() {
+	if app.Window().Get(JsLittrSse).Get("reconnRunning").Bool() {
 		return nil
 	}
-	app.Window().Get(jsLittrSse).Set("reconnRunning", true)
+	app.Window().Get(JsLittrSse).Set("reconnRunning", true)
 
-	timeout := app.Window().Get(jsLittrSse).Get("reconnTimeout").Int()
+	timeout := app.Window().Get(JsLittrSse).Get("reconnTimeout").Int()
 	if timeout <= 0 {
 		return nil
 	}
 
 	// Use the firstTimeout when the app is loaded for the first time. Invalide it right after its value usage.
-	if app.Window().Get(jsLittrSse).Get("firstTimeout").Int() > 0 {
-		timeout = app.Window().Get(jsLittrSse).Get("firstTimeout").Int()
-		app.Window().Get(jsLittrSse).Set("firstTimeout", 0)
+	if app.Window().Get(JsLittrSse).Get("firstTimeout").Int() > 0 {
+		timeout = app.Window().Get(JsLittrSse).Get("firstTimeout").Int()
+		app.Window().Get(JsLittrSse).Set("firstTimeout", 0)
 	}
 
 	// No need to reconnect if the service is running.
-	if app.Window().Get(jsLittrSse).Get("running").Bool() {
+	if app.Window().Get(JsLittrSse).Get("running").Bool() {
 		return nil
 	}
 
@@ -107,16 +107,16 @@ var reconnect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 
 	go func() {
 		// Execute the new fetch() request. Set the timeout to 30000 milliseconds per retry.
-		app.Window().Get(jsLittrSse).Set("signal", app.Window().Get("AbortSignal").Call("timeout", reconnTimeout))
+		app.Window().Get(JsLittrSse).Set("signal", app.Window().Get("AbortSignal").Call("timeout", reconnTimeout))
 
 		for {
 			time.Sleep(time.Millisecond * time.Duration(timeout))
 
-			if app.Window().Get(jsLittrSse).Get("running").Bool() {
+			if app.Window().Get(JsLittrSse).Get("running").Bool() {
 				break
 			}
 
-			err := app.Window().Get(jsLittrSse).Call("connect")
+			err := app.Window().Get(JsLittrSse).Call("connect")
 
 			if retryCount == 0 {
 				fmt.Println("No retries left fo reconnection")
@@ -129,7 +129,7 @@ var reconnect = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 				continue
 			}
 
-			app.Window().Get(jsLittrSse).Set("running", true)
+			app.Window().Get(JsLittrSse).Set("running", true)
 			break
 		}
 	}()
@@ -167,8 +167,8 @@ func init() {
 	//
 
 	// Export littrServiceSSE object.
-	if app.Window().Get(jsLittrSse).IsUndefined() {
-		app.Window().Set(jsLittrSse, map[string]interface{}{
+	if app.Window().Get(JsLittrSse).IsUndefined() {
+		app.Window().Set(JsLittrSse, map[string]interface{}{
 			"name": "littr SSE client",
 			// Options
 			"fetchOpts":     map[string]interface{}{},
@@ -188,17 +188,17 @@ func init() {
 
 	// Set the abort controller signal callback.
 	var aController = app.Window().Get("AbortController").New()
-	app.Window().Get(jsLittrSse).Set("controller", aController)
+	app.Window().Get(JsLittrSse).Set("controller", aController)
 	fetchOpts.Set("signal", aController.Get("signal"))
 
 	// Set the options.
-	app.Window().Get(jsLittrSse).Set("fetchOpts", fetchOpts)
+	app.Window().Get(JsLittrSse).Set("fetchOpts", fetchOpts)
 
 	// Set the methods.
-	app.Window().Get(jsLittrSse).Set("connect", connect)
-	app.Window().Get(jsLittrSse).Set("stop", stop)
-	app.Window().Get(jsLittrSse).Set("abort", abort)
-	app.Window().Get(jsLittrSse).Set("tryReconnect", reconnect)
+	app.Window().Get(JsLittrSse).Set("connect", connect)
+	app.Window().Get(JsLittrSse).Set("stop", stop)
+	app.Window().Get(JsLittrSse).Set("abort", abort)
+	app.Window().Get(JsLittrSse).Set("tryReconnect", reconnect)
 }
 
 // FetchSSE is an early implementation of the SSE client using only await fetch() as the base function.
@@ -210,15 +210,15 @@ func FetchSSE(ch chan string) {
 	}()
 
 	// Check if the service isn't already running. If so, exit.
-	if app.Window().Get(jsLittrSse).Get("running").Bool() {
+	if app.Window().Get(JsLittrSse).Get("running").Bool() {
 		return //fmt.Sprintf("ServiceAlreadyRunningError")
 	}
 
 	// Mark the service as running.
-	app.Window().Get(jsLittrSse).Set("running", true)
+	app.Window().Get(JsLittrSse).Set("running", true)
 
 	// Create a fetch request to read the stream.
-	promise := app.Window().Call("fetch", "/api/v1/live", app.Window().Get(jsLittrSse).Get("fetchOpts"))
+	promise := app.Window().Call("fetch", "/api/v1/live", app.Window().Get(JsLittrSse).Get("fetchOpts"))
 
 	// Handle the Promise result using a callback.
 	promise.Call("then", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
@@ -226,13 +226,13 @@ func FetchSSE(ch chan string) {
 		reader := response.Get("body").Call("getReader")
 
 		if response.Get("status").Int() != 200 {
-			app.Window().Get(jsLittrSse).Call("abort")
+			app.Window().Get(JsLittrSse).Call("abort")
 
 			return response.Get("statusText").String()
 		}
 
 		fmt.Println("Connected")
-		app.Window().Get(jsLittrSse).Set("reconnRunning", false)
+		app.Window().Get(JsLittrSse).Set("reconnRunning", false)
 
 		// Define a function to recursively read chunks.
 		var readChunk app.Value
@@ -250,7 +250,7 @@ func FetchSSE(ch chan string) {
 					if ch != nil {
 						ch <- "StreamClosedError"
 					}
-					app.Window().Get(jsLittrSse).Call("abort")
+					app.Window().Get(JsLittrSse).Call("abort")
 					return nil
 				}
 
@@ -317,7 +317,7 @@ func FetchSSE(ch chan string) {
 				ShowGenericToast(tPl)
 
 				// Continue reading the next chunk.
-				if app.Window().Get(jsLittrSse).Get("running").Bool() {
+				if app.Window().Get(JsLittrSse).Get("running").Bool() {
 					readChunk.Invoke()
 				}
 
@@ -336,7 +336,7 @@ func FetchSSE(ch chan string) {
 					ch <- err
 				}
 
-				app.Window().Get(jsLittrSse).Call("stop")
+				app.Window().Get(JsLittrSse).Call("stop")
 				return nil
 			}))
 
@@ -359,7 +359,7 @@ func FetchSSE(ch chan string) {
 		}
 
 		fmt.Println("Fetch error caught: ", err)
-		app.Window().Get(jsLittrSse).Call("stop")
+		app.Window().Get(JsLittrSse).Call("stop")
 		return nil
 	}))
 }
