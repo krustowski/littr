@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.37"
+        "version": "0.46.38"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3159,7 +3159,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "push"
+                    "users"
                 ],
                 "summary": "Create the notifications subscription",
                 "parameters": [
@@ -3299,7 +3299,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "push"
+                    "users"
                 ],
                 "summary": "Delete a subscription",
                 "parameters": [
@@ -3438,7 +3438,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "push"
+                    "users"
                 ],
                 "summary": "Update the notification subscription tag",
                 "parameters": [
@@ -3462,7 +3462,10 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.SubscriptionUpdateRequest"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -4169,21 +4172,6 @@
                     "additionalProperties": {
                         "$ref": "#/definitions/models.Post"
                     }
-                }
-            }
-        },
-        "push.SubscriptionUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "reply",
-                        "mention"
-                    ]
                 }
             }
         },
