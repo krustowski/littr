@@ -3,7 +3,6 @@ package backend
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/auth"
 	"go.vxn.dev/littr/pkg/backend/common"
+
 	//"go.vxn.dev/littr/pkg/backend/db"
 	//"go.vxn.dev/littr/pkg/backend/live"
 	//"go.vxn.dev/littr/pkg/backend/polls"
@@ -24,7 +24,7 @@ import (
 	"go.vxn.dev/littr/pkg/config"
 )
 
-const ROUTE_PREFIX = "/api/v1"
+const routePrefix = "/api/v1"
 
 func TestAPIRouter(t *testing.T) {
 	dummy := func(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func TestAPIRouter(t *testing.T) {
 
 		jsonBody, err := json.Marshal(body)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		w.WriteHeader(200)
@@ -61,12 +61,12 @@ func TestAPIRouter(t *testing.T) {
 		r.Use(limiter)
 	}
 
-	r.Get(ROUTE_PREFIX, root)
+	r.Get(routePrefix, root)
 
 	// Auth bypass routes
-	r.Post(ROUTE_PREFIX+"/users", dummy)
+	r.Post(routePrefix+"/users", dummy)
 	for _, path := range auth.PathExceptions {
-		if path == ROUTE_PREFIX {
+		if path == routePrefix {
 			continue
 		}
 
@@ -92,38 +92,38 @@ func TestAPIRouter(t *testing.T) {
 	//  Basic route tests
 	//
 
-	if resp, body := testRequest(t, ts, "GET", "/afdshfajshfafd", nil); resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusUnauthorized {
+	if resp, body := testRequest(t, ts, http.MethodGet, "/afdshfajshfafd", nil); resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusUnauthorized {
 		t.Errorf("Response: %d", resp.StatusCode)
-		t.Errorf(body)
+		t.Error(body)
 	}
 
-	if resp, body := testRequest(t, ts, "POST", "/afdshfajshfafd", nil); resp.StatusCode != http.StatusMethodNotAllowed && resp.StatusCode != http.StatusUnauthorized {
+	if resp, body := testRequest(t, ts, http.MethodGet, "/afdshfajshfafd", nil); resp.StatusCode != http.StatusMethodNotAllowed && resp.StatusCode != http.StatusUnauthorized {
 		t.Errorf("Response: %d", resp.StatusCode)
-		t.Errorf(body)
+		t.Error(body)
 	}
 
-	if resp, body := testRequest(t, ts, "GET", ROUTE_PREFIX, nil); resp.StatusCode == http.StatusOK {
+	if resp, body := testRequest(t, ts, http.MethodGet, routePrefix, nil); resp.StatusCode == http.StatusOK {
 		var data common.APIResponse
 
 		err := json.Unmarshal([]byte(body), &data)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		if data.Message != "littr JSON API service (v"+os.Getenv("APP_VERSION")+")" {
 			t.Errorf("invalid response message")
-			t.Errorf(body)
+			t.Error(body)
 		}
 
 		if data.Timestamp == 0 {
 			t.Errorf("timestamp is zero")
-			t.Errorf(body)
+			t.Error(body)
 		}
 	}
 
-	if resp, body := testRequest(t, ts, "GET", ROUTE_PREFIX, nil); resp.StatusCode != http.StatusOK {
+	if resp, body := testRequest(t, ts, http.MethodGet, routePrefix, nil); resp.StatusCode != http.StatusOK {
 		t.Errorf("Response: %d", resp.StatusCode)
-		t.Errorf(body)
+		t.Error(body)
 	}
 
 	//
@@ -131,9 +131,9 @@ func TestAPIRouter(t *testing.T) {
 	//
 
 	for _, path := range auth.PathExceptions {
-		if resp, body := testRequest(t, ts, "GET", path, nil); resp.StatusCode != http.StatusOK {
+		if resp, body := testRequest(t, ts, http.MethodGet, path, nil); resp.StatusCode != http.StatusOK {
 			t.Errorf("Response: %d", resp.StatusCode)
-			t.Errorf(body)
+			t.Error(body)
 		}
 	}
 
@@ -143,12 +143,12 @@ func TestAPIRouter(t *testing.T) {
 
 	if !config.IsLimiterDisabled {
 		for i := 0; i < config.LIMITER_REQS_NUM; i++ {
-			_, _ = testRequest(t, ts, "GET", ROUTE_PREFIX, nil)
+			_, _ = testRequest(t, ts, http.MethodGet, routePrefix, nil)
 		}
 
-		if resp, body := testRequest(t, ts, "GET", ROUTE_PREFIX, nil); resp.StatusCode != http.StatusTooManyRequests {
+		if resp, body := testRequest(t, ts, http.MethodGet, routePrefix, nil); resp.StatusCode != http.StatusTooManyRequests {
 			t.Errorf("Response: %d", resp.StatusCode)
-			t.Errorf(body)
+			t.Error(body)
 		}
 	}
 }
@@ -167,7 +167,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 		return nil, ""
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 		return nil, ""
