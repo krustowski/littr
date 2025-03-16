@@ -81,8 +81,10 @@ type User struct {
 	// be saved if the boolean is false.
 	GDPR bool `json:"gdpr"`
 
-	// AppBgMode string defines the colour mode of the app's background (light vs dark).
-	UIDarkMode bool `json:"app_bg_mode" default:"true"`
+	// UIMode bool defines the colour mode of the app's background (light vs dark).
+	UIMode bool `json:"ui_mode"`
+
+	UITheme Theme `json:"ui_theme"`
 
 	// LiveMode is a feature allowing to show notifications about new posts
 	LiveMode bool `json:"live_mode"`
@@ -95,6 +97,14 @@ type User struct {
 
 	// Tags is an array of possible roles and other various attributes assigned to such user.
 	Tags []string `json:"tags" example:"user"`
+}
+
+func (u User) Copy() *User {
+	return &u
+}
+
+func (u User) GetID() string {
+	return u.Nickname
 }
 
 // Options is an umbrella struct to hold all the booleans in one place.
@@ -143,10 +153,36 @@ type UserStat struct {
 	Searched bool `json:"searched" default:"true" swaggerignore:"true"`
 }
 
-func (u User) Copy() *User {
-	return &u
+type Theme int
+
+const (
+	ThemeDefault Theme = iota
+	ThemeOrang
+)
+
+func (t Theme) Bg() string {
+	var labels = []string{
+		"blue",
+		"deep-orange7",
+	}
+
+	return labels[t]
 }
 
-func (u User) GetID() string {
-	return u.Nickname
+func (t Theme) Text() string {
+	var labels = []string{
+		"blue-text",
+		"deep-orange-text",
+	}
+
+	return labels[t]
+}
+
+func (t Theme) Border() string {
+	var labels = []string{
+		"blue-border",
+		"deep-orange-border",
+	}
+
+	return labels[t]
 }
