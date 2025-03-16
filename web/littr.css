@@ -32,7 +32,7 @@ sub {
 
 @media only screen and (min-width: 993px) {
 	main {
-		max-width: 50% !important;
+		max-width: 40% !important;
 	}
 
 	button.shrink {
@@ -40,7 +40,7 @@ sub {
 	}
 
 	div.shrink {
-		max-width: 50% !important;
+		max-width: 40% !important;
 	}
 }
 
