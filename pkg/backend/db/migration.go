@@ -957,9 +957,9 @@ func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
 
 		// uiMode: true
 
-		if _, found := options["uiMode"]; !found {
+		/*if _, found := options["uiMode"]; !found {
 			options["uiMode"] = user.UIDarkMode
-		}
+		}*/
 
 		// liveMode: true
 

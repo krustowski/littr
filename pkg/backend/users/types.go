@@ -1,6 +1,7 @@
 package users
 
 import (
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -33,7 +34,8 @@ type UserUpdateListsRequest struct {
 
 type UserUpdateOptionsRequest struct {
 	// Options updata request payload (legacy fields).
-	UIDarkMode    bool                  `json:"dark_mode"`
+	UIMode        bool                  `json:"ui_mode"`
+	UITheme       config.Theme          `json:"ui_theme"`
 	LiveMode      bool                  `json:"live_mode"`
 	LocalTimeMode bool                  `json:"local_time_mode"`
 	Private       bool                  `json:"private"`

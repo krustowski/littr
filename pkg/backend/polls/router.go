@@ -15,7 +15,6 @@ func NewPollRouter(pollController *PollController) chi.Router {
 	// Operations on an existing resource.
 	r.Get("/{pollID}", pollController.GetByID)
 	r.Patch("/{pollID}", pollController.Update)
-	r.Patch("/{pollID}", pollController.Update)
 	r.Delete("/{pollID}", pollController.Delete)
 
 	return r

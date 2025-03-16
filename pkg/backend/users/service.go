@@ -476,9 +476,12 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		}
 
 		// Toggle dark mode to light mode and vice versa.
-		if data.UIDarkMode != dbUser.UIDarkMode {
-			dbUser.UIDarkMode = !dbUser.UIDarkMode
-			dbUser.Options["uiMode"] = data.UIDarkMode
+		if data.UIMode != dbUser.UIMode {
+			dbUser.UIMode = !dbUser.UIMode
+			dbUser.Options["uiMode"] = data.UIMode
+		}
+		if data.UITheme != dbUser.UITheme {
+			dbUser.UITheme = data.UITheme
 		}
 
 		// Toggle the live mode.
