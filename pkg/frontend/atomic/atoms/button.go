@@ -77,7 +77,7 @@ func (b *Button) Render() app.UI {
 
 	return bt.ID(b.ID).Name(b.Name).Title(b.Title).Class(b.composeClass()).OnClick(b.onClick).Disabled(b.Disabled).Body(
 		app.If(b.BadgeText != "" && b.BadgeText != "0", func() app.UI {
-			return app.Div().Class("badge blue-border blue-text border").Text(b.BadgeText)
+			return app.Div().Class("badge red-border border").Text(b.BadgeText)
 		}),
 
 		app.If(b.Disabled && b.ShowProgress, func() app.UI {

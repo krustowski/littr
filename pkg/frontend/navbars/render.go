@@ -57,7 +57,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.authGranted, func() app.UI {
 					return &atoms.Button{
 						ID:                "",
-						Class:             "circle transparent blue-text",
+						Class:             "circle transparent primary-text",
 						Title:             "settings [6]",
 						Aria:              map[string]string{"label": "setings"},
 						Icon:              "build",
@@ -71,7 +71,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.appInstallable, func() app.UI {
 					return &atoms.Button{
 						ID:                "",
-						Class:             "circle transparent blue-text",
+						Class:             "circle transparent primary-text",
 						Title:             "install",
 						Aria:              map[string]string{"label": "install"},
 						Icon:              "download",
@@ -126,7 +126,7 @@ func (h *Header) Render() app.UI {
 					return &atoms.Button{
 						BadgeText:         "NEW",
 						ID:                "",
-						Class:             "circle transparent blue-text",
+						Class:             "circle transparent",
 						Title:             "update available",
 						Aria:              map[string]string{"label": "update"},
 						Icon:              "update",
@@ -141,7 +141,7 @@ func (h *Header) Render() app.UI {
 				app.If(h.authGranted, func() app.UI {
 					return &atoms.Button{
 						ID:                "",
-						Class:             "circle transparent blue-text",
+						Class:             "circle transparent primary-text",
 						Title:             "user info",
 						Aria:              map[string]string{"label": "user_info"},
 						Icon:              "person",
@@ -150,7 +150,7 @@ func (h *Header) Render() app.UI {
 				}).Else(func() app.UI {
 					return &atoms.Button{
 						ID:                "",
-						Class:             "circle transparent blue-text",
+						Class:             "circle transparent primary-text",
 						Title:             "login link",
 						Aria:              map[string]string{"label": "login"},
 						Icon:              "key_vertical",
@@ -188,7 +188,7 @@ func (f *Footer) Render() app.UI {
 			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
 				&atoms.Button{
 					ID:                "button-stats",
-					Class:             "circle transparent blue-text",
+					Class:             "circle transparent primary-text",
 					Title:             "stats [1]",
 					Aria:              map[string]string{"label": "stats"},
 					Icon:              "query_stats",
@@ -198,7 +198,7 @@ func (f *Footer) Render() app.UI {
 				&atoms.Button{
 					BadgeText:         requestCountString(),
 					ID:                "button-users",
-					Class:             "circle transparent blue-text",
+					Class:             "circle transparent primary-text",
 					Title:             "users [2]",
 					Aria:              map[string]string{"label": "users"},
 					Icon:              "group",
@@ -207,7 +207,7 @@ func (f *Footer) Render() app.UI {
 
 				&atoms.Button{
 					ID:                "button-post",
-					Class:             "circle transparent blue-text",
+					Class:             "circle transparent primary-text",
 					Title:             "post [3]",
 					Aria:              map[string]string{"label": "post"},
 					Icon:              "add",
@@ -216,7 +216,7 @@ func (f *Footer) Render() app.UI {
 
 				&atoms.Button{
 					ID:                "button-polls",
-					Class:             "circle transparent blue-text",
+					Class:             "circle transparent primary-text",
 					Title:             "polls [4]",
 					Aria:              map[string]string{"label": "polls"},
 					Icon:              "equalizer",
@@ -225,7 +225,7 @@ func (f *Footer) Render() app.UI {
 
 				&atoms.Button{
 					ID:                "button-flow",
-					Class:             "circle transparent blue-text",
+					Class:             "circle transparent primary-text",
 					Title:             "flow [5]",
 					Aria:              map[string]string{"label": "flow"},
 					Icon:              "tsunami",

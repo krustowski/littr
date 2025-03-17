@@ -74,6 +74,7 @@ const (
 	MSG_WEBSITE_UPDATED          = "The website has been successfully updated."
 	MSG_SUBSCRIPTION_REQ_SUCCESS = "Successfully subscribed to notifications."
 	MSG_UI_MODE_TOGGLE           = "UI mode changed."
+	MSG_UI_THEME_TOGGLE          = "UI theme changed."
 	MSG_LIVE_MODE_TOGGLE         = "Live mode changed."
 	MSG_LOCAL_TIME_TOGGLE        = "Local time mode changed."
 	MSG_PRIVATE_MODE_TOGGLE      = "Private mode changed."
