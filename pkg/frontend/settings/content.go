@@ -58,6 +58,8 @@ type Content struct {
 	newFigData []byte
 	newFigFile string
 
+	themeMode string
+
 	//keyDownEventListener func()
 }
 
@@ -161,6 +163,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		var mode string
 		ctx.LocalStorage().Get("mode", &mode)
 		//ctx.LocalStorage().Set("mode", user.AppBgMode)
+
+		common.SaveUser(&data.User, &ctx)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = data.User

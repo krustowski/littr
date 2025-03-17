@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
+
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
 	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
@@ -81,7 +82,16 @@ func (c *Content) Render() app.UI {
 			Icon:               "dark_mode",
 			ID:                 "ui-mode-switch",
 			Text:               "UI mode switch",
-			Checked:            c.user.Options["uiMode"],
+			Checked:            !c.user.UIMode,
+			Disabled:           c.settingsButtonDisabled,
+			OnChangeActionName: "options-switch-change",
+		},
+
+		&molecules.Switch{
+			Icon:               "palette",
+			ID:                 "ui-theme-switch",
+			Text:               "UI theme switch",
+			Checked:            c.user.UITheme > 0,
 			Disabled:           c.settingsButtonDisabled,
 			OnChangeActionName: "options-switch-change",
 		},
@@ -219,7 +229,7 @@ func (c *Content) Render() app.UI {
 
 						// Compose the component to show (a device's infobox).
 						return &molecules.TextBox{
-							Class:      "row border deep-orange-border thicc",
+							Class:      "row border thicc primary-border",
 							Icon:       "",
 							IconClass:  "deep-orange-text",
 							MarkupText: InfoSubscribedDevice,

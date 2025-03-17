@@ -125,7 +125,7 @@
   }
 
   // toggle dark/light UI mode
-  window.LIT.toggleMode = function () {
+  /*window.LIT.toggleMode = function () {
     $('body').toggleClass('dark')
     if ($('body').attr('class') === 'dark') {
       delete localStorage['lightmode']
@@ -133,11 +133,11 @@
       localStorage['lightmode'] = 1
     }
     window.LIT.fixColors()
-  }
+  }*/
 
   // fix colors
   window.LIT.fixColors = function () {
-    if ($('body').attr('class') === 'dark') {
+    /*if ($('body').attr('class') === 'dark') {
       $('.sun').css('background-color', '#000')
       $('textarea,input').css('color', '#888')
       $('dialog > table').css('color', '#fff')
@@ -145,7 +145,7 @@
       $('.sun').css('background-color', '#fff')
       $('textarea,input').css('color', '#888')
       $('dialog > table').css('color', '#fff')
-    }
+    }*/
   }
 
   // scroll to top
@@ -352,11 +352,11 @@
     console.log(LIT.version)
 
     // set UI mode defined by localStorage
-    if (localStorage && localStorage['lightmode']) {
+    /*if (localStorage && localStorage['lightmode']) {
       $('body').removeClass('dark')
     } else {
       $('body').addClass('dark')
-    }
+    }*/
 
     // Sortable tables - https://www.cssscript.com/fast-html-table-sorting/
     //$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.gscloud.cz/css//sortable.min.css">')

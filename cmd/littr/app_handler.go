@@ -43,7 +43,7 @@ var appHandler = &app.Handler{
 	Image: "/web/android-chrome-512x512.png",
 	// Ensure the default light theme is dark.
 	Body: func() app.HTMLBody {
-		return app.Body().Class("dark")
+		return app.Body().Class("")
 	},
 	Version: os.Getenv("APP_VERSION") + "-" + time.Now().Format("2006-01-02_15:04:05"),
 	// Environment constants to be transferred to the app context.

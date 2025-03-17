@@ -8,77 +8,79 @@ import (
 
 func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("login"),
-			),
-		),
-		app.Div().Class("space"),
-
-		// Login credentials fields
-		app.Div().Class("field border label blue-text thicc").Body(
-			app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
-			app.Label().Text("Nickname").Class("active blue-text"),
-		),
-
-		app.Div().Class("field border label blue-text thicc").Body(
-			app.Input().ID("passphrase-input").Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
-			app.Label().Text("Passphrase").Class("active blue-text"),
-		),
-
-		// Session duration infobox.
-		app.Article().Class("row border blue-border info thicc").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Text("The login session lasts 30 days."),
-			),
-		),
-		app.Div().Class("space"),
-
-		// login button
-		app.Div().Class("row center-align").Body(
-			app.Button().ID("login-button").Class("max shrink primary-container white-text bold thicc").OnClick(c.onClick).Disabled(c.loginButtonDisabled).TabIndex(3).Body(
-				app.If(c.loginButtonDisabled, func() app.UI {
-					return app.Progress().Class("circle white-border small")
-				}),
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("login"),
-					app.Text("Login"),
+		app.Div().Class("shrink center").Body(
+			app.Div().Class("row left-align").Body(
+				app.Div().Class("max padding").Body(
+					app.H5().Text("login"),
 				),
 			),
-		),
-		app.Div().Class("space"),
+			app.Div().Class("space"),
 
-		// reset button
-		app.Div().Class("row center-align").Body(
-			app.Button().Class("max shrink primary-container white-text bold thicc").TabIndex(4).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
-				app.Span().Body(
-					app.I().Style("padding-right", "5px").Text("password"),
-					app.Text("Recover passphrase"),
+			// Login credentials fields
+			app.Div().Class("field border label blue-text thicc center-align").Body(
+				app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
+				app.Label().Text("Nickname").Class("active blue-text"),
+			),
+
+			app.Div().Class("field border label blue-text thicc center-align").Body(
+				app.Input().ID("passphrase-input").Type("password").Required(true).TabIndex(2).OnChange(c.ValueTo(&c.passphrase)).MaxLength(50).Class("active").Attr("autocomplete", "current-password"),
+				app.Label().Text("Passphrase").Class("active blue-text"),
+			),
+
+			// Session duration infobox.
+			app.Article().Class("row border blue-border info thicc").Body(
+				app.I().Text("info").Class("blue-text"),
+				app.P().Class("max").Body(
+					app.Span().Text("The login session lasts 30 days."),
 				),
 			),
-		),
-		app.Div().Class("space"),
+			app.Div().Class("space"),
 
-		// register button
-		app.Div().Class("row center-align").Body(
+			// login button
+			app.Div().Class("row center-align").Body(
+				app.Button().ID("login-button").Class("max primary-container white-text bold thicc").OnClick(c.onClick).Disabled(c.loginButtonDisabled).TabIndex(3).Body(
+					app.If(c.loginButtonDisabled, func() app.UI {
+						return app.Progress().Class("circle white-border small")
+					}),
+					app.Span().Body(
+						app.I().Style("padding-right", "5px").Text("login"),
+						app.Text("Login"),
+					),
+				),
+			),
+			app.Div().Class("little-space"),
+
+			// reset button
+			app.Div().Class("row center-align").Body(
+				app.Button().Class("max primary-container white-text bold thicc").TabIndex(4).OnClick(c.onClickReset).Disabled(c.loginButtonDisabled).Body(
+					app.Span().Body(
+						app.I().Style("padding-right", "5px").Text("password"),
+						app.Text("Recover passphrase"),
+					),
+				),
+			),
+			app.Div().Class("little-space"),
+
 			// register button
-			app.If(config.IsRegistrationEnabled, func() app.UI {
-				return app.Button().Class("max shrink primary-container white-text bold thicc").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
-					app.Span().Body(
-						app.I().Style("padding-right", "5px").Text("app_registration"),
-						app.Text("Register"),
-					),
-				)
-			}).Else(func() app.UI {
-				return app.Button().Class("max shrink primary-container white-text bold thicc").TabIndex(5).OnClick(nil).Disabled(true).Body(
-					app.Span().Body(
-						app.I().Style("padding-right", "5px").Text("app_registration"),
-						app.Text("Registration disabled"),
-					),
-				)
-			}),
+			app.Div().Class("row center-align").Body(
+				// register button
+				app.If(config.IsRegistrationEnabled, func() app.UI {
+					return app.Button().Class("max primary-container white-text bold thicc").TabIndex(5).OnClick(c.onClickRegister).Disabled(c.loginButtonDisabled).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("app_registration"),
+							app.Text("Register"),
+						),
+					)
+				}).Else(func() app.UI {
+					return app.Button().Class("max primary-container white-text bold thicc").TabIndex(5).OnClick(nil).Disabled(true).Body(
+						app.Span().Body(
+							app.I().Style("padding-right", "5px").Text("app_registration"),
+							app.Text("Registration disabled"),
+						),
+					)
+				}),
+			),
+			app.Div().Class("medium-space"),
 		),
-		app.Div().Class("medium-space"),
 	)
 }

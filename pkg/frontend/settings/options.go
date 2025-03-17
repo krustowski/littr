@@ -1,19 +1,27 @@
 package settings
 
-import "github.com/maxence-charriere/go-app/v10/pkg/app"
+import (
+	"strings"
 
-type OptionsPayload struct {
-	UIMode        bool   `json:"ui_mode"`
-	LiveMode      bool   `json:"live_mode"`
-	LocalTimeMode bool   `json:"local_time_mode"`
-	Private       bool   `json:"private"`
-	AboutText     string `json:"about_you"`
-	WebsiteLink   string `json:"website_link"`
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
+
+	"go.vxn.dev/littr/pkg/models"
+)
+
+type optionsPayload struct {
+	UIMode        bool         `json:"ui_mode"`
+	UITheme       models.Theme `json:"ui_theme"`
+	LiveMode      bool         `json:"live_mode"`
+	LocalTimeMode bool         `json:"local_time_mode"`
+	Private       bool         `json:"private"`
+	AboutText     string       `json:"about_you"`
+	WebsiteLink   string       `json:"website_link"`
 }
 
-func (c *Content) prefillPayload() OptionsPayload {
-	payload := OptionsPayload{
-		UIMode:        c.user.Options["uiMode"],
+func (c *Content) prefillPayload() optionsPayload {
+	payload := optionsPayload{
+		UIMode:        c.user.UIMode,
+		UITheme:       c.user.UITheme,
 		LiveMode:      c.user.Options["liveMode"],
 		LocalTimeMode: c.user.Options["localTimeMode"],
 		Private:       c.user.Options["private"],
@@ -24,17 +32,50 @@ func (c *Content) prefillPayload() OptionsPayload {
 	return payload
 }
 
-func (c *Content) updateOptions(payload OptionsPayload) {
-	if payload.UIMode != c.user.Options["uiMode"] {
-		/*ctx.LocalStorage().Set("mode", "dark")
-		if !c.darkModeOn {
-			ctx.LocalStorage().Set("mode", "light")
-		}*/
+func (c *Content) updateOptions(payload optionsPayload) {
+	if payload.UIMode != c.user.UIMode {
+		body := app.Window().Get("document").Call("querySelector", "body")
+		currentClass := body.Get("className").String()
+		parts := strings.Split(currentClass, "-")
 
-		app.Window().Get("LIT").Call("toggleMode")
+		mode := func() string {
+			if len(parts) != 2 {
+				return "light-orang"
+			}
+
+			if parts[0] == "light" {
+				return "dark-" + parts[1]
+			}
+
+			return "light-" + parts[1]
+		}()
+
+		body.Set("className", mode)
 	}
 
-	c.user.Options["uiMode"] = payload.UIMode
+	if payload.UITheme != c.user.UITheme {
+		body := app.Window().Get("document").Call("querySelector", "body")
+		currentClass := body.Get("className").String()
+		parts := strings.Split(currentClass, "-")
+
+		// This is going to be replaced with switch soon.
+		theme := func() string {
+			if len(parts) != 2 {
+				return "dark-orang"
+			}
+
+			if parts[1] == "blu" {
+				return "orang-" + parts[0]
+			}
+
+			return "blu-" + parts[0]
+		}()
+
+		body.Set("className", theme)
+	}
+
+	c.user.UIMode = payload.UIMode
+	c.user.UITheme = payload.UITheme
 	c.user.Options["liveMode"] = payload.LiveMode
 	c.user.Options["localTimeMode"] = payload.LocalTimeMode
 	c.user.Options["private"] = payload.Private

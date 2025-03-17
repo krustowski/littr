@@ -16,13 +16,14 @@
 
 #littr
 .env
-run_data/
+/run_data/
 .scannerwork/
 *.log
-.run_data/*
-.tmp/
-littr
+/.run_data/*
+/.tmp/
+/littr
+/bin/*
 
-cmd/await/web/*
-test/jmeter/auth.json
-deployments/*override*
+/cmd/await/web/*
+/test/jmeter/auth.json
+/deployments/*override*

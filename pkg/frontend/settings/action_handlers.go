@@ -262,6 +262,18 @@ func (c *Content) handleOptionsSwitchChange(ctx app.Context, a app.Action) {
 			message = common.MSG_UI_MODE_TOGGLE
 			payload.UIMode = !payload.UIMode
 
+		case "ui-theme-switch":
+			message = common.MSG_UI_THEME_TOGGLE
+			payload.UITheme = func() models.Theme {
+				// Very nasty hack, but whatever.
+				switch payload.UITheme {
+				case models.ThemeOrang:
+					return models.ThemeDefault
+				default:
+					return models.ThemeOrang
+				}
+			}()
+
 		case "local-time-mode-switch":
 			message = common.MSG_LOCAL_TIME_TOGGLE
 			payload.LocalTimeMode = !payload.LocalTimeMode
@@ -299,6 +311,7 @@ func (c *Content) handleOptionsSwitchChange(ctx app.Context, a app.Action) {
 		// Dispatch the good news to client.
 		ctx.Dispatch(func(ctx app.Context) {
 			c.updateOptions(payload)
+			c.themeMode = payload.UITheme.Bg()
 
 			// Update the LocalStorage.
 			common.SaveUser(&c.user, &ctx)
