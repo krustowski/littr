@@ -8,7 +8,7 @@ import (
 
 func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.Div().Class("shrink center").Body(
+		app.Div().Class("shrink-50 center").Body(
 			app.Div().Class("row left-align").Body(
 				app.Div().Class("max padding").Body(
 					app.H5().Text("login"),

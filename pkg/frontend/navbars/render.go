@@ -53,7 +53,7 @@ func (h *Header) Render() app.UI {
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
 		//Style("background-color", navbarColor).
 		Body(
-			app.Div().Class("row top-items max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
+			app.Div().Class("row top-items max shrink-45").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted, func() app.UI {
 					return &atoms.Button{
 						ID:                "",
@@ -185,7 +185,7 @@ func (f *Footer) Render() app.UI {
 	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
-			app.Div().Class("row max shrink").Style("width", "100%").Style("justify-content", "space-between").Body(
+			app.Div().Class("row max shrink-45").Style("width", "100%").Style("justify-content", "space-between").Body(
 				&atoms.Button{
 					ID:                "button-stats",
 					Class:             "circle transparent primary-text",

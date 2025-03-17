@@ -100,6 +100,10 @@ func (h *Header) OnAppUpdate(ctx app.Context) {
 }
 
 func (h *Header) OnMount(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	// Register the app's indicators.
 	h.appInstallable = ctx.IsAppInstallable()
 	h.onlineState = true
@@ -262,8 +266,21 @@ func (h *Header) OnMount(ctx app.Context) {
 	})
 }
 
+func (f *Footer) OnNav(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
+	// Prepare the variable to load the user's data from LS.
+	common.LoadUser(&f.user, &ctx)
+}
+
 // Exclussively used for the SSE client as a whole.
 func (f *Footer) OnMount(ctx app.Context) {
+	if app.IsServer {
+		return
+	}
+
 	var authGranted bool
 	ctx.LocalStorage().Get("authGranted", &authGranted)
 
@@ -273,10 +290,6 @@ func (f *Footer) OnMount(ctx app.Context) {
 	if !f.authGranted {
 		//return
 	}
-
-	// Prepare the variable to load the user's data from LS.
-	//var user models.User
-	common.LoadUser(&f.user, &ctx)
 
 	// If the options map is nil, or the liveMode is disabled within, do not continue as well.
 	/*if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {
