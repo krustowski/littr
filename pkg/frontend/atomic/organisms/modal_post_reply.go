@@ -62,7 +62,7 @@ func (m *ModalPostReply) Render() app.UI {
 
 				&atoms.Textarea{
 					ID:               "reply-textarea",
-					Class:            "field label textarea border extra blue-text thicc",
+					Class:            "field label textarea border extra primary-text thicc",
 					ContentPointer:   m.ReplyPostContent,
 					Name:             "replyPost",
 					LabelText:        fmt.Sprintf("Reply to: %s", m.PostOriginal.Nickname),

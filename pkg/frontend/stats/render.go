@@ -100,7 +100,7 @@ func (c *Content) Render() app.UI {
 							app.P().Body(
 								app.P().Body(
 									//app.B().Text(key).Class("deep-orange-text"),
-									app.A().Class("bold blue-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
+									app.A().Class("bold primary-text").OnClick(c.onClickUserFlow).Text(key).ID(key),
 									//app.A().Class("bold deep-orange-text").OnClick(nil).Text(key).ID(key),
 								),
 							),
@@ -137,7 +137,7 @@ func (c *Content) Render() app.UI {
 		app.If(c.loaderShow, func() app.UI {
 			return app.Div().Body(
 				app.Div().Class("small-space"),
-				app.Progress().Class("circle center large blue-border active"),
+				app.Progress().Class("circle center large primary-border active"),
 			)
 		}),
 
@@ -168,7 +168,7 @@ func (c *Content) Render() app.UI {
 						app.Td().Class("left-align").Body(
 							app.P().Body(
 								app.P().Body(
-									app.B().Text(key).Class("blue-text"),
+									app.B().Text(key).Class("primary-text"),
 								),
 							),
 						),
@@ -185,7 +185,7 @@ func (c *Content) Render() app.UI {
 		app.If(c.loaderShow, func() app.UI {
 			return app.Div().Body(
 				app.Div().Class("small-space"),
-				app.Progress().Class("circle center large blue-border active"),
+				app.Progress().Class("circle center large primary-border active"),
 			)
 		}),
 	)

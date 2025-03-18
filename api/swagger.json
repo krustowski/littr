@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.38"
+        "version": "0.46.39"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -3819,6 +3819,17 @@
                 }
             }
         },
+        "models.Theme": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "ThemeDefault",
+                "ThemeOrang"
+            ]
+        },
         "models.User": {
             "type": "object",
             "required": [
@@ -3834,11 +3845,6 @@
                     "description": "Active boolean indicates an activated user's account.",
                     "type": "boolean",
                     "example": true
-                },
-                "app_bg_mode": {
-                    "description": "AppBgMode string defines the colour mode of the app's background (light vs dark).",
-                    "type": "boolean",
-                    "default": true
                 },
                 "avatar_url": {
                     "description": "AvatarURL is an URL to the user's custom profile picture.",
@@ -3946,6 +3952,13 @@
                     "example": [
                         "user"
                     ]
+                },
+                "ui_mode": {
+                    "description": "UIMode bool defines the colour mode of the app's background (light vs dark).",
+                    "type": "boolean"
+                },
+                "ui_theme": {
+                    "$ref": "#/definitions/models.Theme"
                 },
                 "web": {
                     "description": "Web is user's personal homepage.",
@@ -4339,10 +4352,6 @@
                     "type": "string",
                     "example": "let's gooo"
                 },
-                "dark_mode": {
-                    "description": "Options updata request payload (legacy fields).",
-                    "type": "boolean"
-                },
                 "live_mode": {
                     "type": "boolean"
                 },
@@ -4361,6 +4370,13 @@
                 },
                 "private": {
                     "type": "boolean"
+                },
+                "ui_mode": {
+                    "description": "Options updata request payload (legacy fields).",
+                    "type": "boolean"
+                },
+                "ui_theme": {
+                    "$ref": "#/definitions/models.Theme"
                 },
                 "website_link": {
                     "type": "string",
