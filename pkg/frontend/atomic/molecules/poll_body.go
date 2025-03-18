@@ -81,17 +81,17 @@ func (p *PollBody) Render() app.UI {
 			return app.Div().Body(
 				// Option one results.
 				&atoms.PollResult{
-					OptionShare:  p.RenderProps.OptionOneShare,
-					Option:       p.Poll.OptionOne,
-					OrangelLevel: 4,
+					OptionShare: p.RenderProps.OptionOneShare,
+					Option:      p.Poll.OptionOne,
+					OptlLevel:   1,
 				},
 				app.Div().Class("space"),
 
 				// Option two results.
 				&atoms.PollResult{
-					OptionShare:  p.RenderProps.OptionTwoShare,
-					Option:       p.Poll.OptionTwo,
-					OrangelLevel: 7,
+					OptionShare: p.RenderProps.OptionTwoShare,
+					Option:      p.Poll.OptionTwo,
+					OptlLevel:   2,
 				},
 				app.Div().Class("space"),
 
@@ -99,9 +99,9 @@ func (p *PollBody) Render() app.UI {
 				app.If(p.Poll.OptionThree.Content != "", func() app.UI {
 					return app.Div().Body(
 						&atoms.PollResult{
-							OptionShare:  p.RenderProps.OptionThreeShare,
-							Option:       p.Poll.OptionThree,
-							OrangelLevel: 9,
+							OptionShare: p.RenderProps.OptionThreeShare,
+							Option:      p.Poll.OptionThree,
+							OptlLevel:   3,
 						},
 						app.Div().Class("space"),
 					)

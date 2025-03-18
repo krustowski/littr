@@ -15,15 +15,11 @@ type PollResult struct {
 	OptionShare int64
 	Option      models.PollOption
 
-	OrangelLevel int
+	OptlLevel int
 }
 
 func (p *PollResult) composeClass() string {
-	if p.OrangelLevel == 0 {
-		p.OrangelLevel = 3
-	}
-
-	return fmt.Sprintf("bold progress left blue%d small-padding thicc", p.OrangelLevel)
+	return fmt.Sprintf("bold progress left poll-opt%d small-padding thicc", p.OptlLevel)
 }
 
 func (p *PollResult) Render() app.UI {
