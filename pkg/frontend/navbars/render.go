@@ -126,7 +126,7 @@ func (h *Header) Render() app.UI {
 					return &atoms.Button{
 						BadgeText:         "NEW",
 						ID:                "",
-						Class:             "circle transparent",
+						Class:             "circle transparent primary-text",
 						Title:             "update available",
 						Aria:              map[string]string{"label": "update"},
 						Icon:              "update",

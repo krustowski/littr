@@ -33,6 +33,6 @@ func (t *Textarea) OnMount(ctx app.Context) {
 func (t *Textarea) Render() app.UI {
 	return app.Div().Class(t.Class).Style("border-radius", "8px").Body(
 		app.Textarea().Class("primary-text active").Name(t.Name).Text(t.Content).OnChange(t.ValueTo(t.ContentPointer)).AutoFocus(true).ID(t.ID).OnBlur(t.onBlur),
-		app.Label().Text(t.LabelText).Class("active blue-text"),
+		app.Label().Text(t.LabelText).Class("active primary-text"),
 	)
 }

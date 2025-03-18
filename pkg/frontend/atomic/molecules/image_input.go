@@ -80,13 +80,13 @@ func (i *ImageInput) OnMount(ctx app.Context) {
 }
 
 func (i *ImageInput) Render() app.UI {
-	return app.Div().Class("field label border extra blue-text thicc").Body(
+	return app.Div().Class("field label border extra primary-text thicc").Body(
 		app.Input().ID("fig-upload").Class("active").Type("file").OnInput(i.onImageInput).Accept("image/*"),
 		app.Input().Class("active").Type("text").Value(*i.ImageFile).Disabled(true),
-		app.Label().Text("Image").Class("active blue-text"),
+		app.Label().Text("Image").Class("active primary-text"),
 
 		app.If(*i.ButtonsDisabled, func() app.UI {
-			return app.Progress().Class("circle blue-border small")
+			return app.Progress().Class("circle primary-border small")
 		}).Else(func() app.UI {
 			return app.I().Text("image")
 		}),
