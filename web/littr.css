@@ -218,41 +218,53 @@ body.light-blu {
 
 body.dark-orang {
 	--primary: #ff5722;
-	--on-primary: #000;
-	--primary-container: #33231f;
-	--on-primary-container: #ffdad2;
-	--secondary: #9f98a5;
-	--on-secondary: #201f22;
-	--secondary-container: #322f36;
-	--on-secondary-container: #d5ced9;
-	--tertiary: #dba89f;
-	--on-tertiary: #3a1f1b;
-	--tertiary-container: #4f322f;
-	--on-tertiary-container: #ffdad5;
-	--error: #ffb4ab;
-	--on-error: #690005;
+	/* Official orange */
+	--on-primary: #000000;
+	--primary-container: #ff6d3a;
+	/* Brighter for contrast */
+	--on-primary-container: #1a0a05;
+	--secondary: #e0bfb3;
+	/* Warmer, slightly lighter for contrast */
+	--on-secondary: #3a2925;
+	--secondary-container: #6d5049;
+	/* Darker, more contrast */
+	--on-secondary-container: #ffebe3;
+	--tertiary: #ff9f5e;
+	/* More vivid for highlights */
+	--on-tertiary: #3b1c00;
+	--tertiary-container: #633b20;
+	/* Darker contrast */
+	--on-tertiary-container: #ffdcc3;
+	--error: #ffb4a8;
+	--on-error: #4f0005;
 	--error-container: #93000a;
-	--on-error-container: #ffdad2;
-	--background: #0d0c0c;
-	--on-background: #e0dbe2;
-	--surface: #1a191b;
-	--on-surface: #dad3df;
-	--surface-variant: #39363d;
-	--on-surface-variant: #ada7b3;
-	--outline: #7e7982;
-	--outline-variant: #4a464d;
+	--on-error-container: #ffb4a8;
+	--background: #131214;
+	/* Deep black for max contrast */
+	--on-background: #f3f2f3;
+	/* Brighter text */
+	--surface: #181617;
+	/* Slightly lighter than background */
+	--on-surface: #f0f0f0;
+	--surface-variant: #5a4f52;
+	/* More contrast */
+	--on-surface-variant: #d6cad0;
+	--outline: #a3979b;
+	/* Darker outline for structure */
+	--outline-variant: #5a4f52;
 	--shadow: #000000;
 	--scrim: #000000;
-	--inverse-surface: #e0dbe2;
-	--inverse-on-surface: #262427;
-	--inverse-primary: #a14e32;
-	--surface-dim: #080808;
-	--surface-bright: #252427;
-	--surface-container-lowest: #0a0909;
-	--surface-container-low: #121111;
-	--surface-container: #181717;
-	--surface-container-high: #222021;
-	--surface-container-highest: #2d2b2c;
+	--inverse-surface: #f0f0f0;
+	--inverse-on-surface: #262425;
+	--inverse-primary: #ff784e;
+	/* Brighter alternative */
+	--surface-dim: #131214;
+	--surface-bright: #3b3739;
+	--surface-container-lowest: #0e0d0e;
+	--surface-container-low: #191718;
+	--surface-container: #1d1b1d;
+	--surface-container-high: #282628;
+	--surface-container-highest: #323032;
 }
 
 body.light-orang {
