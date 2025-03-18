@@ -279,7 +279,7 @@ func (c *Content) Render() app.UI {
 			Level: 6,
 		},
 
-		app.Div().Class("field label border blue-text thicc").Body(
+		app.Div().Class("field label border primary-text thicc").Body(
 			&atoms.Input{
 				ID:           "passphrase-current",
 				Type:         "password",
@@ -290,10 +290,10 @@ func (c *Content) Render() app.UI {
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "current-password"},
 			},
-			app.Label().Text("Old passphrase").Class("active blue-text"),
+			app.Label().Text("Old passphrase").Class("active primary-text"),
 		),
 
-		app.Div().Class("field label border blue-text thicc").Body(
+		app.Div().Class("field label border primary-text thicc").Body(
 			&atoms.Input{
 				ID:           "passphrase-new",
 				Type:         "password",
@@ -304,10 +304,10 @@ func (c *Content) Render() app.UI {
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "new-password"},
 			},
-			app.Label().Text("New passphrase").Class("active blue-text"),
+			app.Label().Text("New passphrase").Class("active primary-text"),
 		),
 
-		app.Div().Class("field label border blue-text thicc").Body(
+		app.Div().Class("field label border primary-text thicc").Body(
 			&atoms.Input{
 				ID:           "passphrase-new-again",
 				Type:         "password",
@@ -318,11 +318,11 @@ func (c *Content) Render() app.UI {
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "new-password"},
 			},
-			app.Label().Text("New passphrase again").Class("active blue-text"),
+			app.Label().Text("New passphrase again").Class("active primary-text"),
 		),
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			Class:             "max responsive shrink center primary-container bold thicc",
 			OnClickActionName: "passphrase-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -352,7 +352,7 @@ func (c *Content) Render() app.UI {
 
 		&atoms.Textarea{
 			ID:               "about-you-textarea",
-			Class:            "field textarea label border extra blue-text thicc",
+			Class:            "field textarea label border extra primary-text thicc",
 			Content:          c.user.About,
 			ContentPointer:   &c.aboutText,
 			LabelText:        "About",
@@ -360,7 +360,7 @@ func (c *Content) Render() app.UI {
 		},
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			Class:             "max responsive shrink center primary-container bold thicc",
 			OnClickActionName: "about-you-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -381,14 +381,14 @@ func (c *Content) Render() app.UI {
 		&molecules.TextBox{
 			Class:       "row border blue-border thicc info",
 			Icon:        "info",
-			IconClass:   "blue-text",
+			IconClass:   "primary-text",
 			Text:        InfoWebsiteLink,
 			MakeSummary: true,
 		},
 
 		app.Div().Class("space"),
 
-		app.Div().Class("field label border blue-text thicc").Body(
+		app.Div().Class("field label border primary-text thicc").Body(
 			&atoms.Input{
 				ID:           "website-input",
 				Type:         "text",
@@ -398,12 +398,12 @@ func (c *Content) Render() app.UI {
 				AutoComplete: true,
 				MaxLength:    60,
 			},
-			app.Label().Text("URL").Class("active blue-text"),
+			app.Label().Text("URL").Class("active primary-text"),
 			//app.Input().ID("website-input").Type("text").Class("active").OnChange(c.ValueTo(&c.website)).AutoComplete(true).MaxLength(60).Value(c.user.Web),
 		),
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container white-text bold thicc",
+			Class:             "max responsive shrink center primary-container bold thicc",
 			OnClickActionName: "website-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
