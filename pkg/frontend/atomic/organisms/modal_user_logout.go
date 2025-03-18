@@ -34,18 +34,9 @@ func (m *ModalUserLogout) Render() app.UI {
 						ID:                m.User.Nickname,
 						Title:             "user's flow link",
 						Src:               m.User.AvatarURL,
-						Class:             "responsive padding max left",
+						Class:             "responsive padding max",
 						OnClickActionName: m.OnClickFlowActionName,
 						Styles:            map[string]string{"max-height": "100%", "max-width": "10rem", "border-radius": "50%"},
-					},
-
-					&atoms.UserNickname{
-						Class:             "bold primary-text",
-						Nickname:          m.User.Nickname,
-						SpanID:            "user-flow-link",
-						Title:             "user's flow link",
-						Text:              m.User.Nickname,
-						OnClickActionName: m.OnClickFlowActionName,
 					},
 
 					&atoms.Button{
