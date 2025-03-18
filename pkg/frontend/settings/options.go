@@ -65,10 +65,10 @@ func (c *Content) updateOptions(payload optionsPayload) {
 			}
 
 			if parts[1] == "blu" {
-				return "orang-" + parts[0]
+				return parts[0] + "-orang"
 			}
 
-			return "blu-" + parts[0]
+			return parts[0] + "-blu"
 		}()
 
 		body.Set("className", theme)
