@@ -99,9 +99,9 @@ func NewToken(user *models.User, r models.TokenRepositoryInterface) ([]string, e
 }
 
 func (s *TokenService) Delete(ctx context.Context, tokenID string) error {
-	return fmt.Errorf("not yet implemented")
+	return errNotImplemented
 }
 
 func (s *TokenService) FindByID(ctx context.Context, tokenID string) (*models.Token, error) {
-	return nil, fmt.Errorf("not yet implemented")
+	return nil, errNotImplemented
 }
