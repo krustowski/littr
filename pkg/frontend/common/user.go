@@ -36,7 +36,7 @@ func SaveUser(user *models.User, ctx *app.Context) error {
 	// Encode (marshal) the user model into JSON byte stream.
 	userJSON, err := json.Marshal(user)
 	if err != nil {
-		return fmt.Errorf("%v", ERR_LOCAL_STORAGE_USER_FAIL)
+		return fmt.Errorf("%v", ErrLocalStorageUserSave)
 	}
 
 	// Save the encoded user data to the LocalStorage.

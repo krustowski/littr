@@ -13,10 +13,7 @@ import (
 type Content struct {
 	app.Compo
 
-	scrollEventListener func()
-
-	loggedUser string
-	user       models.User
+	user models.User
 
 	loaderShow bool
 
@@ -26,7 +23,6 @@ type Content struct {
 	pagination    int
 	pageNo        int
 
-	pollKey                    string
 	interactedPollKey          string
 	deleteModalButtonsDisabled bool
 	deletePollModalShow        bool
@@ -100,8 +96,12 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		if output.Code == 401 {
 			// Void user's session indicators in the LocalStorage.
-			ctx.LocalStorage().Set("user", "")
-			ctx.LocalStorage().Set("authGranted", false)
+			if err := ctx.LocalStorage().Set("user", ""); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Link("/logout").Dispatch()
+			}
+			if err := ctx.LocalStorage().Set("authGranted", false); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Link("/logout").Dispatch()
+			}
 
 			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 			return
@@ -150,7 +150,6 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.loaderShow = false
 		})
 	})
-	return
 }
 
 func (c *Content) OnMount(ctx app.Context) {

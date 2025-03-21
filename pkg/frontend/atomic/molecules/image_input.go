@@ -2,6 +2,7 @@ package molecules
 
 import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
+
 	"go.vxn.dev/littr/pkg/frontend/common"
 )
 

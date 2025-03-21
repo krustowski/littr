@@ -236,15 +236,12 @@ func (c *Content) handleVote(ctx app.Context, a app.Action) {
 		switch option {
 		case poll.OptionOne.Content:
 			poll.OptionOne.Counter++
-			break
 
 		case poll.OptionTwo.Content:
 			poll.OptionTwo.Counter++
-			break
 
 		case poll.OptionThree.Content:
 			poll.OptionThree.Counter++
-			break
 		}
 	} else {
 		toast.Text(common.ERR_POLL_OPTION_MISMATCH).Type(common.TTYPE_ERR).Dispatch()

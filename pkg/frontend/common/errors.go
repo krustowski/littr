@@ -32,7 +32,8 @@ const (
 	ERR_ALL_FIELDS_REQUIRED     = "All fields are required."
 	ERR_LOGIN_CHARS_LIMIT       = "Only characters a-z, A-Z and numbers can be used."
 	ERR_ACCESS_DENIED           = "Incorrect login details entered."
-	ERR_LOCAL_STORAGE_USER_FAIL = "littr can't save user data to your browser."
+	ErrLocalStorageUserSave     = "littr can't save user data to your browser."
+	ErrLocalStorageUserLoad     = "littr can't save user data to your browser."
 	ERR_ACTIVATION_INVALID_UUID = "Invalid activation UUID entered."
 	ERR_ACTIVATION_EXPIRED_UUID = "Expired activation UUID entered."
 
