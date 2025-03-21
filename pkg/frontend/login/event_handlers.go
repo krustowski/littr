@@ -107,8 +107,14 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 		}*/
 
 		// Save encoded user data to the Local browser storage.
-		common.SaveUser(data.User, &ctx)
-		ctx.LocalStorage().Set("authGranted", true)
+		if err := common.SaveUser(data.User, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+		if err := ctx.LocalStorage().Set("authGranted", true); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
 
 		if data.AuthGranted {
 			ctx.Navigate("/flow")

@@ -135,25 +135,29 @@ func (c *Content) createSubscription(ctx app.Context, tag string) {
 	devs := c.devices
 	devs = append(devs, deviceSub)
 
-	toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
-
 	// Update the LocalStorage.
-	common.SaveUser(&c.user, &ctx)
+	if err := common.SaveUser(&c.user, &ctx); err != nil {
+		toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+	}
 
 	// dispatch the good news to client
 	ctx.Dispatch(func(ctx app.Context) {
 		//c.user = user
 		c.subscribed = true
 
-		if tag == "mention" {
+		switch tag {
+		case "mention":
 			c.subscription.Mentions = !c.subscription.Mentions
-		} else if tag == "reply" {
+
+		case "reply":
 			c.subscription.Replies = !c.subscription.Replies
 		}
 
 		c.thisDevice = deviceSub
 		c.devices = devs
 	})
+
+	toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
 }
 
 func (c *Content) deleteSubscription(ctx app.Context) {
@@ -280,9 +284,10 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 		toast.Text(common.MSG_SUBSCRIPTION_UPDATED).Type(common.TTYPE_SUCCESS).Dispatch()
 
 		ctx.Dispatch(func(ctx app.Context) {
-			if tag == "mention" {
+			switch tag {
+			case "mention":
 				c.subscription.Mentions = !c.subscription.Mentions
-			} else if tag == "reply" {
+			case "reply":
 				c.subscription.Replies = !c.subscription.Replies
 			}
 

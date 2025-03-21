@@ -45,11 +45,13 @@ func TestAPIRouter(t *testing.T) {
 
 		jsonBody, err := json.Marshal(body)
 		if err != nil {
-			t.Error(err.Error())
+			t.Error(err)
 		}
 
 		w.WriteHeader(200)
-		w.Write(jsonBody)
+		if _, err := w.Write(jsonBody); err != nil {
+			t.Error(err)
+		}
 	}
 
 	r := chi.NewRouter()

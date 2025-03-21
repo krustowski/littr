@@ -185,9 +185,18 @@ func (c *Content) handlePostPoll(ctx app.Context, a app.Action) {
 		}
 
 		// Delete the draft(s) from LocalStorage.
-		ctx.LocalStorage().Set("newPostDraft", nil)
-		ctx.LocalStorage().Set("newPostFigFile", nil)
-		ctx.LocalStorage().Set("newPostFigData", nil)
+		if err := ctx.LocalStorage().Set("newPostDraft", nil); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+		if err := ctx.LocalStorage().Set("newPostFigFile", nil); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
+		if err := ctx.LocalStorage().Set("newPostFigData", nil); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
 
 		// Redirection according to the post type.
 		if postType == "poll" {

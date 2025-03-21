@@ -374,9 +374,9 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		// Delete the draft(s) from LocalStorage.
-		ctx.LocalStorage().Set("newReplyDraft", nil)
-		ctx.LocalStorage().Set("newReplyFigFile", nil)
-		ctx.LocalStorage().Set("newReplyFigData", nil)
+		_ = ctx.LocalStorage().Set("newReplyDraft", nil)
+		_ = ctx.LocalStorage().Set("newReplyFigFile", nil)
+		_ = ctx.LocalStorage().Set("newReplyFigData", nil)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			// add new post to post list on frontend side to render
@@ -575,7 +575,9 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 
 func (c *Content) handleTextareaBlur(ctx app.Context, _ app.Action) {
 	// Save a new post draft, if the focus on textarea is lost.
-	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
+	if err := ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String()); err != nil {
+		return
+	}
 }
 
 func (c *Content) handleUser(ctx app.Context, a app.Action) {

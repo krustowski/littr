@@ -104,11 +104,11 @@ func (c *Content) OnMount(ctx app.Context) {
 	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
 
 	// Load the saved draft from localStorage.
-	ctx.LocalStorage().Get("newReplyDraft", &c.replyPostContent)
-	ctx.LocalStorage().Get("newReplyFigFile", &c.newFigFile)
+	_ = ctx.LocalStorage().Get("newReplyDraft", &c.replyPostContent)
+	_ = ctx.LocalStorage().Get("newReplyFigFile", &c.newFigFile)
 
 	var data string
-	ctx.LocalStorage().Get("newReplyFigData", &data)
+	_ = ctx.LocalStorage().Get("newReplyFigData", &data)
 
 	c.newFigData, _ = base64.StdEncoding.DecodeString(data)
 }
@@ -187,8 +187,8 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.user = (*users)[c.key]
 				c.users = *users
 
-				// Also update the user struct in the LS.
-				common.SaveUser(c.user.Copy(), &ctx)
+				// Also update the user struct in the LS. Don't catch error as other vars are loaded into the component.
+				_ = common.SaveUser(c.user.Copy(), &ctx)
 			}
 
 			if posts != nil {

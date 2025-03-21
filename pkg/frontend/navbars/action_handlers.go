@@ -66,7 +66,11 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 
 	// Fetch the auth state.
 	var authGranted bool
-	ctx.LocalStorage().Get("authGranted", &authGranted)
+	if err := ctx.LocalStorage().Get("authGranted", &authGranted); err != nil {
+		toast := common.Toast{AppContext: &ctx}
+		toast.Text(common.ErrLocalStorageUserLoad).Type(common.TTYPE_ERR).Dispatch()
+		return
+	}
 
 	// Do not continue when unacthenticated/unauthorized.
 	if !authGranted {
@@ -217,8 +221,8 @@ func (h *Header) handleLogout(ctx app.Context, _ app.Action) {
 		h.authGranted = false
 	})
 
-	ctx.LocalStorage().Set("user", "")
-	ctx.LocalStorage().Set("authGranted", false)
+	_ = ctx.LocalStorage().Set("user", "")
+	_ = ctx.LocalStorage().Set("authGranted", false)
 
 	toast := common.Toast{AppContext: &ctx}
 
@@ -253,7 +257,7 @@ func (h *Header) handleReload(ctx app.Context, a app.Action) {
 		h.updateAvailable = false
 	})
 
-	ctx.LocalStorage().Set("newUpdate", false)
+	_ = ctx.LocalStorage().Set("newUpdate", false)
 	ctx.Reload()
 }
 

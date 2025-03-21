@@ -228,7 +228,10 @@ func (c *Content) handleOptionsChange(ctx app.Context, a app.Action) {
 			c.updateOptions(payload)
 
 			// Update the LocalStorage.
-			common.SaveUser(&c.user, &ctx)
+			if err := common.SaveUser(&c.user, &ctx); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
@@ -314,7 +317,10 @@ func (c *Content) handleOptionsSwitchChange(ctx app.Context, a app.Action) {
 			c.themeMode = payload.UITheme.Bg()
 
 			// Update the LocalStorage.
-			common.SaveUser(&c.user, &ctx)
+			if err := common.SaveUser(&c.user, &ctx); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
@@ -490,8 +496,11 @@ func (c *Content) handleUserDelete(ctx app.Context, a app.Action) {
 		}
 
 		// Invalidate the LocalStorage contents.
-		ctx.LocalStorage().Set("authGranted", false)
-		common.SaveUser(&models.User{}, &ctx)
+		_ = ctx.LocalStorage().Set("authGranted", false)
+		if err := common.SaveUser(&models.User{}, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
 
 		ctx.Navigate("/logout")
 	})

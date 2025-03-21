@@ -41,7 +41,6 @@ func (c *Content) handleSearch(ctx app.Context, a app.Action) {
 
 			c.loaderShow = false
 		})
-		return
 	})
 
 }

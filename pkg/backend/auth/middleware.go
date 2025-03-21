@@ -95,7 +95,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Access cookie is expired (not present), or userClaims can be decoded but the token is invalid (expired).
 		// Generate a new access token.
-		if err != nil || (userClaims != nil && userClaims.StandardClaims.Valid() != nil) {
+		if err != nil || (userClaims != nil && userClaims.Valid() != nil) {
 			// Fetch the request token's database record
 			refToken, err := fetchRefreshTokenRecord(refreshCookie, &w)
 			if refToken == nil && err != nil {
@@ -188,7 +188,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Continue with the HTTP request's propragation.
 		next.ServeHTTP(w, r)
-		return
 	})
 }
 

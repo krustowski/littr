@@ -600,11 +600,10 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 	// Delete the saved avatar from the filesystem.
 	if !regex.MatchString(prevAvatarURL) {
 		fileName := strings.Replace(prevAvatarURL, "/web/", "/opt/", 1)
-		if err := os.Remove(fileName); err != nil {
-			// Do not fail on missing file: this prevents uploading a new avatar when
-			// the current one is missing in the filesystem...
-			//return nil, fmt.Errorf(common.ERR_AVATAR_DELETE_FAIL)
-		}
+
+		// Do not fail on missing file: this prevents uploading a new avatar when
+		// the current one is missing in the filesystem...
+		_ = os.Remove(fileName)
 	}
 
 	user.AvatarURL = "/web/pix/thumb_" + *imageBaseURL

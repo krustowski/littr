@@ -65,8 +65,13 @@ func (c *Content) OnNav(ctx app.Context) {
 		if output.Code == 401 {
 			toast.Text(common.ERR_LOGIN_AGAIN).Link("/logout").Type(common.TTYPE_INFO).Dispatch()
 
-			ctx.LocalStorage().Set("user", "")
-			ctx.LocalStorage().Set("authGranted", false)
+			if err := ctx.LocalStorage().Set("user", ""); err != nil {
+				toast.Text(common.ErrLocalStorageUserLoad).Link("/logout").Type(common.TTYPE_INFO).Dispatch()
+			}
+
+			if err := ctx.LocalStorage().Set("authGranted", false); err != nil {
+				toast.Text(common.ErrLocalStorageUserLoad).Link("/logout").Type(common.TTYPE_INFO).Dispatch()
+			}
 			return
 		}
 
@@ -88,6 +93,5 @@ func (c *Content) OnNav(ctx app.Context) {
 
 			c.loaderShow = false
 		})
-		return
 	})
 }

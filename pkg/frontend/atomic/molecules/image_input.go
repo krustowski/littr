@@ -61,8 +61,14 @@ func (i *ImageInput) onImageInput(ctx app.Context, e app.Event) {
 			*i.ImageData = *processedImg
 
 			// Save the figure data in LS as a backup.
-			ctx.LocalStorage().Set(i.LocalStorageFileName, file.Get("name").String())
-			ctx.LocalStorage().Set(i.LocalStorageDataName, *processedImg)
+			if err := ctx.LocalStorage().Set(i.LocalStorageFileName, file.Get("name").String()); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
+			if err := ctx.LocalStorage().Set(i.LocalStorageDataName, *processedImg); err != nil {
+				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+				return
+			}
 		})
 
 		// Cast the image ready message.

@@ -94,7 +94,10 @@ func (c *Content) onClickFollow(ctx app.Context, e app.Event) {
 		}
 
 		user.FlowList = flowList
-		common.SaveUser(&user, &ctx)
+		if err := common.SaveUser(&user, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = user

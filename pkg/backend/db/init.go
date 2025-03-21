@@ -65,8 +65,6 @@ func init() {
 
 	// RLock the initial RO state, so nobody can read before the data are imported and migrated properly.
 	database.mu.RLock()
-
-	return
 }
 
 //

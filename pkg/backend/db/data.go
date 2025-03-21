@@ -24,8 +24,6 @@ const (
 	requestsFile = "/opt/data/requests.json"
 	tokensFile   = "/opt/data/tokens.json"
 	usersFile    = "/opt/data/users.json"
-
-	dataPath = "/opt/data/"
 )
 
 func LoadAll() string {
@@ -106,9 +104,6 @@ func wrapLoadOutput(count, total int64, err error) load {
 		total: total,
 		err:   err,
 	}
-}
-
-type item interface {
 }
 
 func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, error) {

@@ -89,7 +89,9 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	// Keep the update button on until clicked.
 	var newUpdate bool
-	ctx.LocalStorage().Get("newUpdate", &newUpdate)
+	if err := ctx.LocalStorage().Get("newUpdate", &newUpdate); err != nil {
+		newUpdate = false
+	}
 
 	if newUpdate {
 		h.updateAvailable = true
@@ -101,7 +103,9 @@ func (h *Header) OnMount(ctx app.Context) {
 
 	// Get the current auth state from LocalStorage.
 	var authGranted bool
-	ctx.LocalStorage().Get("authGranted", &authGranted)
+	if err := ctx.LocalStorage().Get("authGranted", &authGranted); err != nil {
+		authGranted = false
+	}
 
 	// Redirect client to the unauthorized zone.
 	path := ctx.Page().URL().Path
@@ -116,7 +120,10 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
-	common.LoadUser(&h.user, &ctx)
+	if err := common.LoadUser(&h.user, &ctx); err != nil {
+		ctx.Navigate("/login")
+		return
+	}
 
 	// Custom SSE client implementation.
 	if !app.Window().Get(common.JsLittrSse).Get("running").Bool() {
@@ -251,7 +258,9 @@ func (f *Footer) OnNav(ctx app.Context) {
 	}
 
 	// Prepare the variable to load the user's data from LS.
-	common.LoadUser(&f.user, &ctx)
+	if err := common.LoadUser(&f.user, &ctx); err != nil {
+		return
+	}
 }
 
 // Exclussively used for the SSE client as a whole.
@@ -260,15 +269,14 @@ func (f *Footer) OnMount(ctx app.Context) {
 		return
 	}
 
-	var authGranted bool
-	ctx.LocalStorage().Get("authGranted", &authGranted)
-
-	f.authGranted = authGranted
+	if err := ctx.LocalStorage().Get("authGranted", &f.authGranted); err != nil {
+		return
+	}
 
 	// Do not start the SSE client for the unauthenticated visitors at all.
-	if !f.authGranted {
-		//return
-	}
+	//if !f.authGranted {
+	//return
+	//}
 
 	// If the options map is nil, or the liveMode is disabled within, do not continue as well.
 	/*if user.Options == nil || (user.Options != nil && !user.Options["liveMode"]) {

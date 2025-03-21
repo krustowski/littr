@@ -118,8 +118,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		}
 
 		if output.Code == 401 {
-			ctx.LocalStorage().Set("user", "")
-			ctx.LocalStorage().Set("authGranted", false)
+			_ = ctx.LocalStorage().Set("user", "")
+			_ = ctx.LocalStorage().Set("authGranted", false)
 
 			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Dispatch()
 			return
@@ -155,10 +155,14 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// get the mode
 		var mode string
-		ctx.LocalStorage().Get("mode", &mode)
-		//ctx.LocalStorage().Set("mode", user.AppBgMode)
+		if err := ctx.LocalStorage().Get("mode", &mode); err != nil {
+			mode = "dark"
+		}
 
-		common.SaveUser(&data.User, &ctx)
+		if err := common.SaveUser(&data.User, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
+			return
+		}
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = data.User

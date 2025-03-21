@@ -90,11 +90,17 @@ func (c *Content) OnMount(ctx app.Context) {
 	}))*/
 
 	// Load the saved draft from localStorage.
-	ctx.LocalStorage().Get("newPostDraft", &c.newPost)
-	ctx.LocalStorage().Get("newPostFigFile", &c.newFigFile)
+	if err := ctx.LocalStorage().Get("newPostDraft", &c.newPost); err != nil {
+		return
+	}
+	if err := ctx.LocalStorage().Get("newPostFigFile", &c.newFigFile); err != nil {
+		return
+	}
 
 	var data string
-	ctx.LocalStorage().Get("newPostFigData", &data)
+	if err := ctx.LocalStorage().Get("newPostFigData", &data); err != nil {
+		return
+	}
 
 	c.newFigData, _ = base64.StdEncoding.DecodeString(data)
 }
