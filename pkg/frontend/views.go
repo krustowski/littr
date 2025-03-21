@@ -141,7 +141,6 @@ func (v *RegisterView) Render() app.UI {
 
 type ResetView struct {
 	app.Compo
-	userLogged bool
 }
 
 func (v *ResetView) OnMount(ctx app.Context) {
@@ -245,8 +244,6 @@ func (v *UsersView) Render() app.UI {
 
 type WelcomeView struct {
 	app.Compo
-
-	mode string
 }
 
 func (v *WelcomeView) OnNav(ctx app.Context) {

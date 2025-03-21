@@ -10,8 +10,6 @@ type PageHeading struct {
 	Class string
 }
 
-var headingLevels = map[int]app.Compo{}
-
 func (p *PageHeading) composeClass() string {
 	if p.Class != "" {
 		return p.Class

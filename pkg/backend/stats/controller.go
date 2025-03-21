@@ -59,5 +59,4 @@ func (c *StatController) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, dumping user and system stats").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }

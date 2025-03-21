@@ -46,7 +46,7 @@ var Streamer = &sse.Server{
 		topics := s.Req.URL.Query()["topic"]
 
 		// Loop over the topic list to determine the returned Subscription structure.
-		for _, topic := range topics {
+		/*for _, topic := range topics {
 			// The topic is unknown or invalid.
 			if topic != topicRandomNumbers && topic != topicMetrics {
 				// Do not send a pre-superfluous response.
@@ -54,7 +54,7 @@ var Streamer = &sse.Server{
 				//s.Res.WriteHeader(http.StatusBadRequest)
 				//return sse.Subscription{}, false
 			}
-		}
+		}*/
 
 		// Give the default topics if no topic was requested.
 		if len(topics) == 0 {
@@ -148,14 +148,4 @@ func BroadcastMessage(payload EventPayload) {
 	if Streamer != nil {
 		_ = Streamer.Publish(msg)
 	}
-	return
-}
-
-// cors is a simple HTTP Handler wrapper that serves the CORS-ready headers.
-// https://github.com/tmaxmax/go-sse/blob/master/cmd/complex/main.go
-func cors(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://dev.littr.eu:8080")
-		h.ServeHTTP(w, r)
-	})
 }

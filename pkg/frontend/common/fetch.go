@@ -174,7 +174,7 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 
 		})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 			chC <- 500
-			chE <- fmt.Errorf("%s\n", args[0].Get("message").String())
+			chE <- fmt.Errorf("%s", args[0].Get("message").String())
 			chS <- ""
 
 			close(chC)
@@ -207,12 +207,4 @@ func Fetch(input *map[string]interface{}) (*string, int, error) {
 	//app.Window().Get("fetchController").Call("abort")
 
 	return &output, code, err
-}
-
-// Handle unexpected HTTP Status code
-var handleStatus = func(response app.Value) string {
-	if !response.IsNull() {
-		return fmt.Sprintf("Unexpected HTTP status code: %d (%s).\n", response.Get("status").Int(), response.Get("statusText").String())
-	}
-	return ""
 }

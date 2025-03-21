@@ -17,8 +17,6 @@ type Text struct {
 
 	FormattedText string
 	PlainText     string
-
-	props []AssemblePayload
 }
 
 var (
@@ -45,7 +43,7 @@ func (t *Text) parseMarkupAndCompose() (elems []app.UI) {
 		tag := t.FormattedText[match[2]:match[3]]
 
 		var (
-			attrs      = make(map[string]string)
+			attrs      map[string]string
 			attrString string
 			content    string
 		)

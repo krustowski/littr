@@ -24,12 +24,10 @@ func ProcessPost(post *models.Post, postContent *string) (error, int) {
 		ImageBaseName: post.ID,
 	}
 
-	baseImageURL, err := ProcessImageBytes(data)
+	postContent, err := ProcessImageBytes(data)
 	if err != nil {
 		return err, common.DecideStatusFromError(err)
 	}
-
-	postContent = baseImageURL
 
 	return nil, 200
 }

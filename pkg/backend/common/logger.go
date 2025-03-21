@@ -251,8 +251,9 @@ func (l DefaultLogger) Write(w http.ResponseWriter) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(l.Code)
 
-	io.WriteString(w, fmt.Sprintf("%s", jsonData))
-	return
+	if _, err := io.Writer.Write(w, jsonData); err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 //

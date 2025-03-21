@@ -14,7 +14,9 @@ import (
 func LoadUser(user *models.User, ctx *app.Context) error {
 	var baseString string
 
-	(*ctx).LocalStorage().Get("user", &baseString)
+	if err := (*ctx).LocalStorage().Get("user", &baseString); err != nil {
+		return err
+	}
 
 	// Decode the user.
 	str, err := base64.StdEncoding.DecodeString(baseString)
@@ -40,8 +42,13 @@ func SaveUser(user *models.User, ctx *app.Context) error {
 	}
 
 	// Save the encoded user data to the LocalStorage.
-	(*ctx).LocalStorage().Set("user", userJSON)
-	(*ctx).LocalStorage().Set("authGranted", true)
+	if err := (*ctx).LocalStorage().Set("user", userJSON); err != nil {
+		return err
+	}
+
+	if err := (*ctx).LocalStorage().Set("authGranted", true); err != nil {
+		return err
+	}
 
 	return nil
 }

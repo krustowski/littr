@@ -2,7 +2,6 @@ package mail
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"text/template"
 )
@@ -32,7 +31,8 @@ var fileAsString = func(templateName string) string {
 	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf("%s", tpl)
+
+	return string(tpl)
 }
 
 // bakeTemplate parses the given template with the associated payload and writes the output to the <output> pointer address.

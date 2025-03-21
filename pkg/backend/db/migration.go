@@ -602,7 +602,7 @@ func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}) bool {
 	// Loop over users and fix their registered datetime.
 	for key, user := range *users {
 		// TDA way of defining a first year AD.
-		if user.RegisteredTime == time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC) {
+		if user.RegisteredTime.Equal(time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC)) {
 			// Set the registration time to Sep 1, 2023 by default.
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 
@@ -991,7 +991,7 @@ func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migratePolls procedure loops over all polls making sure that any poll with the non-existing Author will be omitted/deleted.
-func migratePolls(l common.Logger, rawElems []interface{}) bool {
+/*func migratePolls(l common.Logger, rawElems []interface{}) bool {
 	var polls *map[string]models.Poll
 	var users *map[string]models.User
 
@@ -1034,7 +1034,7 @@ func migratePolls(l common.Logger, rawElems []interface{}) bool {
 	}
 
 	return true
-}
+}*/
 
 func migratePostData(l common.Logger, rawElems []interface{}) bool {
 	var posts *map[string]models.Post

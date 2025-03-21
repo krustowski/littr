@@ -54,13 +54,13 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 		BroadcastMessage(EventPayload{Data: "server-stop", Type: "close"})
 
 		// Terminate the SSE server.
-		Streamer.Shutdown(sctx)
+		if err := Streamer.Shutdown(sctx); err != nil {
+			t.Error(err)
+		}
 	}()
 
 	// Wait for the client to exit.
 	wg.Wait()
-
-	return
 }
 
 func testConnectorSSE(t *testing.T, wg *sync.WaitGroup, endpoint string) {
@@ -68,7 +68,7 @@ func testConnectorSSE(t *testing.T, wg *sync.WaitGroup, endpoint string) {
 		return
 	}
 
-	var eventReceived bool = false
+	var eventReceived = false
 
 	defer func() {
 		if !eventReceived {
@@ -98,19 +98,12 @@ func testConnectorSSE(t *testing.T, wg *sync.WaitGroup, endpoint string) {
 
 	// Make a connection to the SSE streamer, wait for errors or context cancel.
 	if err := conn.Connect(); err != nil && err.Error() != "context canceled" {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
-
-	return
 }
 
 func testBeat() {
-	for {
-		// Break the loop if Streamer is nil.
-		if Streamer == nil {
-			break
-		}
-
+	for ok := true; ok; ok = Streamer != nil {
 		// Sleep for the given period of time.
 		time.Sleep(time.Millisecond * 2500)
 

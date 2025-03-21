@@ -74,7 +74,10 @@ func HandleImageUpload(ctx app.Context, a app.Action, user *models.User, callbac
 		user.AvatarURL = "/web/pix/thumb_" + data.Key
 
 		// Update the LocalStorage.
-		SaveUser(user, &ctx)
+		if err := SaveUser(user, &ctx); err != nil {
+			toast.Text(ErrLocalStorageUserSave).Type(TTYPE_ERR).Dispatch()
+			return
+		}
 
 		toast.Text(MSG_AVATAR_CHANGE_SUCCESS).Type(TTYPE_SUCCESS).Dispatch()
 	})

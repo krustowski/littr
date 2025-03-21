@@ -29,13 +29,6 @@ func NewPollController(pollService models.PollServiceInterface) *PollController 
 	}
 }
 
-// Special vars to finger at the function reference of the PollController struct.
-var createPollController = (&PollController{}).Create
-var updatePollController = (&PollController{}).Update
-var deletePollController = (&PollController{}).Delete
-var getOnePollController = (&PollController{}).GetByID
-var getAllPollController = (&PollController{}).GetAll
-
 // addNewPoll ensures a new polls is created and saved.
 //
 //	@Summary		Add new poll

@@ -111,7 +111,7 @@ func wrapLoadOutput(count, total int64, err error) load {
 type item interface {
 }
 
-func loadOne[T models.Item](cache Cacher, filepath string, model T) (int64, int64, error) {
+func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, error) {
 	l := common.NewLogger(nil, "data load")
 
 	var count int64
@@ -236,7 +236,10 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 			return nil
 		}
 
-		os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600)
+		if err := os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600); err != nil {
+			fmt.Print(err)
+			return nil
+		}
 
 		buf.Reset()
 

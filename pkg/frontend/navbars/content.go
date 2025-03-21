@@ -2,15 +2,8 @@
 package navbars
 
 import (
-	"context"
 	"fmt"
-
-	//"net/http"
-	//"os"
-	//"os/signal"
 	"strings"
-	//"syscall"
-	//"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -63,9 +56,6 @@ type Footer struct {
 	authGranted bool
 
 	user models.User
-
-	// Context cancellation function for the SSE client.
-	sseCancel context.CancelFunc
 }
 
 func (h *Header) OnAppInstallChange(ctx app.Context) {
