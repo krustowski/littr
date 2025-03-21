@@ -9,7 +9,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
 
-	chi "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 )
 
 const (

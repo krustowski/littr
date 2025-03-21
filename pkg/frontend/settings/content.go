@@ -103,6 +103,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		c.settingsButtonDisabled = true
 	})
 
+	ctx.ScrollTo("anchor-settings-top")
+
 	ctx.Async(func() {
 		input := &common.CallInput{
 			Method: "GET",
