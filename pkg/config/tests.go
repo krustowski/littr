@@ -29,7 +29,7 @@ func PrepareTestListenerWithPort(t *testing.T, port string) net.Listener {
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		// Cannot listen on such address = a permission issue or already used
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 		return nil
 	}
 

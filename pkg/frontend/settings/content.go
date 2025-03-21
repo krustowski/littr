@@ -26,10 +26,7 @@ type Content struct {
 	user models.User
 
 	// message toast fields
-	toast     common.Toast
-	toastShow bool
-	toastText string
-	toastType string
+	toast common.Toast
 
 	darkModeOn   bool
 	replyNotifOn bool
@@ -40,7 +37,6 @@ type Content struct {
 		Replies  bool
 		Mentions bool
 	}
-	mentionNotificationEnabled bool
 
 	settingsButtonDisabled bool
 
@@ -53,10 +49,6 @@ type Content struct {
 
 	thisDeviceUUID string
 	interactedUUID string
-
-	newFigLink string
-	newFigData []byte
-	newFigFile string
 
 	themeMode string
 

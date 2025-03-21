@@ -19,8 +19,6 @@ type Content struct {
 	flowStats map[string]int
 	userStats map[string]models.UserStat
 
-	postCount int
-
 	userButtonDisabled bool
 
 	loaderShow bool

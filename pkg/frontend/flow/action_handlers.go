@@ -11,8 +11,6 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-type stub struct{}
-
 func (c *Content) handleClear(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.loaderShow = true

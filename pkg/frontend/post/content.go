@@ -13,8 +13,6 @@ import (
 type Content struct {
 	app.Compo
 
-	postType string
-
 	newPost    string
 	newFigLink string
 	newFigFile string
@@ -28,8 +26,6 @@ type Content struct {
 	toast common.Toast
 
 	postButtonsDisabled bool
-
-	keyDownEventListener func()
 }
 
 func (c *Content) OnMount(ctx app.Context) {

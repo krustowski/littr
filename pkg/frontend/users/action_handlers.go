@@ -352,7 +352,9 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 		// Now, we can update the current user's flowList on the frontend too.
 		// Update the flowList and update the user struct in the LocalStorage.
 		user.FlowList = flowList
-		common.SaveUser(&user, &ctx)
+		if err := common.SaveUser(&user, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_SUCCESS).Dispatch()
+		}
 
 		ctx.Dispatch(func(ctx app.Context) {
 			user.Searched = true
@@ -536,7 +538,9 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		}
 
 		// Update the current user's state in the LocalStorage.
-		common.SaveUser(&c.user, &ctx)
+		if err := common.SaveUser(&c.user, &ctx); err != nil {
+			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_SUCCESS).Dispatch()
+		}
 
 		toast.Text(common.MSG_SHADE_SUCCESSFUL).Type(common.TTYPE_SUCCESS).Dispatch()
 

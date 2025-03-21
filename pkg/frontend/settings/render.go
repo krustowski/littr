@@ -11,10 +11,6 @@ import (
 	"go.vxn.dev/littr/pkg/frontend/atomic/organisms"
 )
 
-var textboxStrings = map[string]string{
-	"avatar-gravatar": "",
-}
-
 func (c *Content) Render() app.UI {
 	devicesToShow := len(c.devices)
 
