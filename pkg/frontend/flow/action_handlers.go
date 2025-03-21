@@ -25,7 +25,6 @@ func (c *Content) handleClear(ctx app.Context, a app.Action) {
 		c.posts = nil
 		c.users = nil
 	})
-	return
 }
 
 func (c *Content) handleDelete(ctx app.Context, a app.Action) {
@@ -310,7 +309,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 		}
 
 		type dataModel struct {
-			Posts map[string]models.Post `posts`
+			Posts map[string]models.Post `json:"posts"`
 		}
 
 		output := &common.Response{Data: &dataModel{}}
@@ -576,7 +575,7 @@ func (c *Content) handleStar(ctx app.Context, a app.Action) {
 	})
 }
 
-func (c *Content) handleTextareaBlur(ctx app.Context, a app.Action) {
+func (c *Content) handleTextareaBlur(ctx app.Context, _ app.Action) {
 	// Save a new post draft, if the focus on textarea is lost.
 	ctx.LocalStorage().Set("newReplyDraft", ctx.JSSrc().Get("value").String())
 }

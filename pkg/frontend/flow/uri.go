@@ -33,16 +33,13 @@ func (c *Content) parseFlowURI(ctx app.Context) URIParts {
 		case "posts":
 			parts.SinglePost = true
 			parts.SinglePostID = url[3]
-			break
 
 		case "users":
 			parts.UserFlow = true
 			parts.UserFlowNick = url[3]
-			break
 
 		case "hashtags":
 			parts.Hashtag = url[3]
-			break
 		}
 	}
 

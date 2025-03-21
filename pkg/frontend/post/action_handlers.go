@@ -31,6 +31,7 @@ func (c *Content) handlePostPoll(ctx app.Context, a app.Action) {
 	switch bt {
 	case "button-new-post":
 		postType = "post"
+
 	case "button-new-poll":
 		postType = "poll"
 	}
@@ -111,7 +112,6 @@ func (c *Content) handlePostPoll(ctx app.Context, a app.Action) {
 
 		default:
 			toast.Text(common.ERR_POST_UNKNOWN_TYPE).Type(common.TTYPE_ERR).Dispatch()
-			leave = true
 			return
 		}
 
@@ -195,7 +195,5 @@ func (c *Content) handlePostPoll(ctx app.Context, a app.Action) {
 		} else {
 			ctx.Navigate("/flow")
 		}
-
-		return
 	})
 }

@@ -11,12 +11,7 @@ import (
 type Content struct {
 	app.Compo
 
-	//scrollEventListener  func()
-	//keyDownEventListener func()
-
-	//polls map[string]models.Poll `json:"polls"`
-	//posts map[string]models.Post `json:"posts"`
-	users map[string]models.User `json:"users"`
+	users map[string]models.User
 
 	user        models.User
 	userInModal models.User

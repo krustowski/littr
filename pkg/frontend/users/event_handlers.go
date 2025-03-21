@@ -6,15 +6,8 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-// onClick prolly acts like a callback function for the generic user flow's state ((un)flowed toggling).
-func (c *Content) onClick(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	c.usersButtonDisabled = true
-	ctx.NewActionWithValue("toggle", key)
-}
-
 // onClickAllow is a callback function that enables the controlling user to accept the incoming follow request (one must be in the private mode of their profile).
-func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
+func (c *Content) onClickAllow(ctx app.Context, _ app.Event) {
 	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
@@ -125,7 +118,7 @@ func (c *Content) onClickAllow(ctx app.Context, e app.Event) {
 }
 
 // onClickCancel is a callback function to cancel the incoming follow request.
-func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
+func (c *Content) onClickCancel(ctx app.Context, _ app.Event) {
 	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
@@ -191,7 +184,7 @@ func (c *Content) onClickCancel(ctx app.Context, e app.Event) {
 }
 
 // onClickPrivateOff is to take back the previously sent follow request to the counterpart.
-func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
+func (c *Content) onClickPrivateOff(ctx app.Context, _ app.Event) {
 	// Fetch the counterpart's nickname.
 	nick := ctx.JSSrc().Get("id").String()
 	if nick == "" {
@@ -248,13 +241,11 @@ func (c *Content) onClickPrivateOff(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[nick] = user
 		})
-		return
 	})
-	return
 }
 
 // onClickPrivateOn is a callback function to send a follow request to an account that is in the private mode.
-func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
+func (c *Content) onClickPrivateOn(ctx app.Context, _ app.Event) {
 	key := ctx.JSSrc().Get("id").String()
 	if key == "" {
 		return
@@ -327,13 +318,11 @@ func (c *Content) onClickPrivateOn(ctx app.Context, e app.Event) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.users[user.Nickname] = user
 		})
-		return
 	})
-	return
 }
 
 // onClickUser is a callback function that is called when one clicks on the user's nickname to show their user modal.
-func (c *Content) onClickUser(ctx app.Context, e app.Event) {
+func (c *Content) onClickUser(ctx app.Context, _ app.Event) {
 	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
 
@@ -345,11 +334,10 @@ func (c *Content) onClickUser(ctx app.Context, e app.Event) {
 		c.usersButtonDisabled = true
 		c.showUserPreviewModal = true
 	})
-	return
 }
 
 // onClickUserFlow is a callback function that enables one to be navigated to the counterpart user's flow (if permitted).
-func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
+func (c *Content) onClickUserFlow(ctx app.Context, _ app.Event) {
 	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
 
@@ -393,7 +381,7 @@ func (c *Content) onClickUserFlow(ctx app.Context, e app.Event) {
 }
 
 // oncLickUserShade is a callback function that enables shadeList toggling.
-func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
+func (c *Content) onClickUserShade(ctx app.Context, _ app.Event) {
 	// Fetch the requested ID (nickname).
 	key := ctx.JSSrc().Get("id").String()
 
@@ -406,7 +394,7 @@ func (c *Content) onClickUserShade(ctx app.Context, e app.Event) {
 }
 
 // onDismissToast is a callback function to call the dismiss action to hide any toast present in the UI.
-func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
+func (c *Content) onDismissToast(ctx app.Context, _ app.Event) {
 	ctx.NewAction("dismiss")
 }
 
@@ -420,12 +408,12 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 }
 
 // onScroll is a callback function, that is called on any scroll in the UI. New scroll action is then called just after.
-func (c *Content) onScroll(ctx app.Context, e app.Event) {
+func (c *Content) onScroll(ctx app.Context, _ app.Event) {
 	ctx.NewAction("scroll")
 }
 
 // onSearch is a callback function that helps to order, show and render the searched (matching) user(s) in the UI.
-func (c *Content) onSearch(ctx app.Context, e app.Event) {
+func (c *Content) onSearch(ctx app.Context, _ app.Event) {
 	// Fetch the requested string to compare with the existing users map.
 	val := ctx.JSSrc().Get("value").String()
 
