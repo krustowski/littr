@@ -20,8 +20,6 @@ type Content struct {
 	toast common.Toast
 
 	buttonsDisabled bool
-
-	keyDownEventListener func()
 }
 
 func (c *Content) OnMount(ctx app.Context) {

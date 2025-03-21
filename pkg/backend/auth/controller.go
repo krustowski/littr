@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -98,7 +97,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	pl.AuthGranted = true
 
 	l.Msg("ok, auth granted, sending cookies").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }
 
 // Logout send a client invalidated cookies to cease the session created before.
@@ -124,13 +122,13 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		AuthGranted: false,
 	}
 
-	cookie, err := r.Cookie(REFRESH_TOKEN)
+	_, err := r.Cookie(REFRESH_TOKEN)
 	if err == nil {
 		// Update context with necessary data for the auth service.
-		ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
+		//ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
 
 		// Call the auth service to delete the main session (refresh) token.
-		if err := c.authService.Logout(ctx); err != nil {
+		if err := c.authService.Logout(r.Context()); err != nil {
 			l.Msg("could not delete associated token").Error(err).Status(http.StatusInternalServerError).Log()
 		}
 	}
@@ -158,5 +156,4 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }

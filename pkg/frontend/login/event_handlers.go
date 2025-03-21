@@ -139,16 +139,10 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	}
 }
 
-func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
-	ctx.NewAction("dismiss")
-}
-
-func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
+func (c *Content) onClickRegister(ctx app.Context, _ app.Event) {
 	ctx.Navigate("/register")
-	return
 }
 
-func (c *Content) onClickReset(ctx app.Context, e app.Event) {
+func (c *Content) onClickReset(ctx app.Context, _ app.Event) {
 	ctx.Navigate("/reset")
-	return
 }

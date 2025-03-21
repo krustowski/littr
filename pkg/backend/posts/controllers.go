@@ -99,7 +99,7 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 		Flow: pages.FlowOptions{
 			HideReplies: hideReplies,
-			Plain:       hideReplies == false,
+			Plain:       !hideReplies,
 		},
 	}
 
@@ -127,7 +127,6 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, dumping posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }
 
 // Create handles a new post creation request to the post service, which adds the post to the database.
@@ -279,7 +278,6 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(pl).Write(w)
-	return
 }
 
 // UpdateReactions increases the star count for the given post.
@@ -346,7 +344,6 @@ func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request)
 	}
 
 	l.Msg("ok, star count incremented").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }
 
 // Delete removes the specified post.
@@ -414,7 +411,6 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, post removed").Status(http.StatusOK).Log().Payload(nil).Write(w)
-	return
 }
 
 // GetByID fetches specified post and its interaction.
@@ -477,7 +473,7 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 
 		Flow: pages.FlowOptions{
 			HideReplies:  hideReplies,
-			Plain:        hideReplies == false,
+			Plain:        !hideReplies,
 			SinglePost:   true,
 			SinglePostID: postID,
 		},
@@ -506,7 +502,6 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, dumping single post and its interactions").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }
 
 // GetByHashtag fetches all posts tagged with the specified hashtag.
@@ -569,7 +564,7 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 
 		Flow: pages.FlowOptions{
 			HideReplies: hideReplies,
-			Plain:       hideReplies == false,
+			Plain:       !hideReplies,
 			Hashtag:     hashtag,
 		},
 	}
@@ -597,5 +592,4 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
-	return
 }

@@ -11,6 +11,5 @@ type Content struct {
 	app.Compo
 
 	toast     common.Toast
-	toastText string
 	toastShow bool
 }

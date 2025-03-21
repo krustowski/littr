@@ -21,9 +21,8 @@ type Content struct {
 
 	contentLoadFinished bool
 
-	loggedUser string
-	user       models.User
-	key        string
+	user models.User
+	key  string
 
 	toast common.Toast
 
@@ -54,10 +53,9 @@ type Content struct {
 
 	lastPageFetched bool
 
-	postKey     string
-	posts       map[string]models.Post
-	users       map[string]models.User
-	sortedPosts []models.Post
+	postKey string
+	posts   map[string]models.Post
+	users   map[string]models.User
 
 	refreshClicked bool
 
@@ -206,6 +204,5 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.loaderShowImage = false
 			c.contentLoadFinished = true
 		})
-		return
 	})
 }

@@ -351,9 +351,6 @@ func FetchSSE(ch chan string) {
 	})).Call("catch", app.FuncOf(func(this app.Value, args []app.Value) interface{} {
 		err := args[0].Get("name").String()
 
-		if err == "AbortError" {
-		}
-
 		if ch != nil {
 			ch <- err
 		}

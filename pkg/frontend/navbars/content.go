@@ -43,7 +43,6 @@ type Header struct {
 
 	pagePath string
 
-	// Helper field to catch the timestamp of the last received keepalive event.
 	lastHeartbeatTime int64
 
 	// Toast-related fields.
@@ -53,16 +52,6 @@ type Header struct {
 	toastText string
 	toastShow bool
 	toastType string
-
-	// Context cancellation function for the SSE client.
-	sseCancel context.CancelFunc
-
-	// Event channel.
-	sseChan chan common.Event
-
-	processingKeydown bool
-
-	isUserFlow bool
 
 	sseConnStatus string
 }

@@ -1,14 +1,10 @@
 package navbars
 
 import (
-	//"fmt"
-	//"strings"
+	"slices"
 	"strings"
-	"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
-	"go.vxn.dev/littr/pkg/helpers"
-	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	//"github.com/tmaxmax/go-sse"
@@ -43,76 +39,6 @@ func (h *Header) handleDismiss(ctx app.Context, a app.Action) {
 		h.toastText = ""
 		h.toastType = ""
 	})
-}
-
-// handleGenericEvent is an action handler that receives new SSE events, parses them, and shows notifications.
-func (h *Header) handleGenericEvent(ctx app.Context, a app.Action) {
-	// Fetch the SSE event.
-	//event, ok := a.Value.(sse.Event)
-	//event, ok := a.Value.(common.Event)
-	ev, ok := a.Value.(app.Value)
-	if !ok {
-		// Cannot assert the event.
-		return
-	}
-
-	if ev.Get("eventName").IsNull() || ev.Get("data").IsNull() {
-		return
-	}
-	event := common.Event{Type: ev.Get("eventName").String(), Data: ev.Get("data").String()}
-
-	//fmt.Printf("%s: %s\n", event.Type, event.Data)
-
-	// Exit if the event is a heartbeat. But notice the last timestamp.
-	if event.Data == "heartbeat" || event.Type == "keepalive" {
-		// Update the timestamp value in the LS.
-		ctx.LocalStorage().Set("lastEventTime", time.Now().Unix())
-
-		// Use the content field too for the same action.
-		ctx.Dispatch(func(ctx app.Context) {
-			h.lastHeartbeatTime = time.Now().Unix()
-		})
-		return
-	}
-
-	// Abort the further stream listening, set time timer for a reconnect.
-	/*if event.Type == "close" || event.Type == "server-stop" {
-		app.Window().Get(common.JS_LITTR_SSE).Call("abort")
-
-		fmt.Println("SSE client closed, setting a timeout for a reconnection...")
-		app.Window().Get(common.JS_LITTR_SSE).Set("reconnection_timeout", 20000)
-		app.Window().Get(common.JS_LITTR_SSE).Call("tryReconnect")
-	}*/
-
-	// Fetch the user from the LocalStorage.
-	var user models.User
-	common.LoadUser(&user, &ctx)
-
-	// Do not parse the message when user has live mode disabled.
-	/*if !user.LiveMode {
-		return
-	}*/
-
-	//text, link := event.ParseEventData(&user)
-
-	// Instantiate the new toast.
-	//toast := common.Toast{AppContext: &ctx}
-
-	// Show the snack bar the nasty way.
-	/*snack := app.Window().GetElementByID("snackbar-general")
-	if !snack.IsNull() && text != "" {
-		snack.Get("classList").Call("add", "active")
-		snack.Set("innerHTML", "<a href=\""+link+"\"><i>info</i>"+text+"</a>")
-	}*/
-
-	// Change the page's title to indicate a new event present.
-	/*title := app.Window().Get("document")
-	if !title.IsNull() && !strings.Contains(title.Get("title").String(), "(*)") {
-		prevTitle := title.Get("title").String()
-		title.Set("title", "(*) "+prevTitle)
-	}*/
-
-	//toast.Text(text).Link(link).Type(common.TTYPE_INFO).Dispatch(h, dispatch)
 }
 
 func (h *Header) handleHeaderClick(ctx app.Context, a app.Action) {
@@ -217,7 +143,7 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 	}
 
 	// If any input is active (is written in for example), then do not register the R key.
-	if helpers.Contains(inputs, app.Window().Get("document").Get("activeElement").Get("id").String()) {
+	if slices.Contains(inputs, app.Window().Get("document").Get("activeElement").Get("id").String()) {
 		return
 	}
 

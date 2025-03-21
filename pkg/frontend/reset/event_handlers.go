@@ -58,12 +58,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 			c.showUUIDPage = true
 			c.buttonsDisabled = false
 		})
-		return
 	})
-}
-
-func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
-	ctx.NewAction("dismiss")
 }
 
 func (c *Content) onKeyDown(ctx app.Context, e app.Event) {

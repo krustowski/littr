@@ -124,7 +124,7 @@ func (c *SimpleCache) Load(key string) (interface{}, bool) {
 func (c *SimpleCache) LoadOrStore(key string, rawV interface{}) (interface{}, bool) {
 	// Lock the read access and try to get the keyed value.
 	c.mu.RLock()
-	rawV, found := c.mp[key]
+	_, found := c.mp[key]
 	c.mu.RUnlock()
 
 	if found {

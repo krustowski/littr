@@ -41,12 +41,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//ctx := r.Context()
 
-		/*perm, ok := ctx.Value("acl.permission").(YourPermissionType)
-		if !ok || !perm.IsAdmin() {
-			http.Error(w, http.StatusText(403), 403)
-		    	return
-		  }*/
-
 		// Skip those HTTP routes.
 		if helpers.Contains(PathExceptions, r.URL.Path) ||
 			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {
