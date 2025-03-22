@@ -4,6 +4,7 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -13,12 +14,30 @@ type SingleUserProfile struct {
 	LoggedUser models.User
 	SingleUser models.User
 
-	OnClickFollowActionName string
+	OnClickAskActionName      string
+	OnClickShadeActionName    string
+	OnClickCancelActionName   string
+	OnClickFollowActionName   string
+	OnClickUnfollowActionName string
 
 	ButtonsDisabled bool
 }
 
 func (s *SingleUserProfile) Render() app.UI {
+	var isRequested, isShaded, found bool
+
+	if s.LoggedUser.ShadeList != nil {
+		if isShaded, found = s.LoggedUser.ShadeList[s.SingleUser.Nickname]; found && isShaded {
+			isShaded = true
+		}
+	}
+
+	if s.SingleUser.RequestList != nil {
+		if isRequested, found = s.SingleUser.RequestList[s.LoggedUser.Nickname]; !found {
+			isRequested = false
+		}
+	}
+
 	return app.Div().Body(
 		app.If(s.SingleUser.Nickname != "", func() app.UI {
 			return app.Div().Body(
@@ -28,38 +47,29 @@ func (s *SingleUserProfile) Render() app.UI {
 					Styles: map[string]string{"max-width": "15rem", "border-radius": "50%"},
 				},
 
-				app.Div().Class("row top-padding").Body(
-					app.Article().Class("max thicc border").Style("word-break", "break-word").Style("hyphens", "auto").Text(s.SingleUser.About),
+				&molecules.TextBox{
+					Class: "row border thicc",
+					Icon:  "",
+					Text:  s.SingleUser.About,
+				},
+				app.Div().Class("space"),
 
-					app.If(s.LoggedUser.FlowList[s.SingleUser.Nickname], func() app.UI {
-						return &atoms.Button{
-							ID:                s.SingleUser.Nickname,
-							Class:             "grey10 white-text thicc",
-							Icon:              "close",
-							Text:              "Unfollow",
-							OnClickActionName: s.OnClickFollowActionName,
-							Disabled:          s.ButtonsDisabled || s.SingleUser.Nickname == s.LoggedUser.Nickname,
-						}
-					}).ElseIf(s.SingleUser.Private || s.SingleUser.Options["private"], func() app.UI {
-						return &atoms.Button{
-							ID:       s.SingleUser.Nickname,
-							Class:    "yellow10 white-text thicc",
-							Icon:     "drafts",
-							Text:     "Ask",
-							OnClick:  nil,
-							Disabled: s.ButtonsDisabled || s.SingleUser.Nickname == s.LoggedUser.Nickname,
-						}
-					}).Else(func() app.UI {
-						return &atoms.Button{
-							ID:                s.SingleUser.Nickname,
-							Class:             "deep-orange7 white-text thicc",
-							Icon:              "add",
-							Text:              "Follow",
-							OnClickActionName: s.OnClickFollowActionName,
-							Disabled:          s.ButtonsDisabled || s.SingleUser.Nickname == s.LoggedUser.Nickname,
-						}
-					}),
-				),
+				&molecules.UserFeedButtons{
+					LoggedUserNickname: s.LoggedUser.Nickname,
+					User:               s.SingleUser,
+
+					IsInFlow:        true,
+					IsPrivate:       s.SingleUser.Private,
+					IsRequested:     isRequested,
+					IsShaded:        isShaded,
+					ButtonsDisabled: s.ButtonsDisabled,
+
+					OnClickAskActionName:      s.OnClickAskActionName,
+					OnClickShadeActionName:    s.OnClickShadeActionName,
+					OnClickCancelActionName:   s.OnClickCancelActionName,
+					OnClickFollowActionName:   s.OnClickFollowActionName,
+					OnClickUnfollowActionName: s.OnClickUnfollowActionName,
+				},
 			)
 		}),
 	)

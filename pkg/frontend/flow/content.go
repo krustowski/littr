@@ -3,7 +3,6 @@ package flow
 
 import (
 	"encoding/base64"
-	//"time"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
 	"go.vxn.dev/littr/pkg/models"
@@ -72,9 +71,12 @@ func (c *Content) OnMount(ctx app.Context) {
 		return
 	}
 
+	ctx.Handle("ask", nil)
+	ctx.Handle("cancel", nil)
 	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("dismiss", c.handleDismiss)
+	ctx.Handle("follow", nil)
 	ctx.Handle("history", c.handleLink)
 	ctx.Handle("image-click", c.handleImage)
 	ctx.Handle("link", c.handleLink)
@@ -85,9 +87,10 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("refresh", c.handleRefresh)
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
+	ctx.Handle("shade", nil)
 	ctx.Handle("star", c.handleStar)
+	ctx.Handle("unfollow", nil)
 	ctx.Handle("user", c.handleUser)
-	//ctx.Handle("message", c.handleNewPost)
 
 	c.paginationEnd = false
 	c.pagination = 0
@@ -98,10 +101,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	c.deletePostModalShow = false
 	c.deleteModalButtonsDisabled = false
 
-	//c.eventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	//c.eventListenerMsg = app.Window().AddEventListener("message", c.onMessage)
-	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
-	//c.dismissEventListener = app.Window().AddEventListener("click", c.onClickGeneric)
+	ctx.GetState(common.StateNameUser, &c.user)
 
 	// Load the saved draft from localStorage.
 	_ = ctx.LocalStorage().Get("newReplyDraft", &c.replyPostContent)
@@ -111,11 +111,6 @@ func (c *Content) OnMount(ctx app.Context) {
 	_ = ctx.LocalStorage().Get("newReplyFigData", &data)
 
 	c.newFigData, _ = base64.StdEncoding.DecodeString(data)
-}
-
-func (c *Content) OnDismount() {
-	// https://go-app.dev/reference#BrowserWindow
-	//c.eventListener()
 }
 
 func (c *Content) OnNav(ctx app.Context) {
@@ -142,9 +137,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		parts := c.parseFlowURI(ctx)
 
 		opts := pageOptions{
-			PageNo:   0,
-			Context:  ctx,
-			CallerID: c.user.Nickname,
+			PageNo:  0,
+			Context: ctx,
 
 			SinglePost:   parts.SinglePost,
 			SinglePostID: parts.SinglePostID,
@@ -169,11 +163,6 @@ func (c *Content) OnNav(ctx app.Context) {
 				toast.Text(common.ERR_USER_NOT_FOUND).Type(common.TTYPE_ERR).Link("/flow").Dispatch()
 			}
 
-			// TODO reevaluate this as it is buggy at the moment...
-			/*if value, found := c.user.FlowList[parts.UserFlowNick]; !value || !found {
-				toast.Text("follow the user to see their posts").Type(common.TTYPE_INFO).Dispatch(c, dispatch)
-			}*/
-
 			isPost = false
 		}
 
@@ -188,7 +177,7 @@ func (c *Content) OnNav(ctx app.Context) {
 				c.users = *users
 
 				// Also update the user struct in the LS. Don't catch error as other vars are loaded into the component.
-				_ = common.SaveUser(c.user.Copy(), &ctx)
+				ctx.SetState(common.StateNameUser, c.user).Persist()
 			}
 
 			if posts != nil {

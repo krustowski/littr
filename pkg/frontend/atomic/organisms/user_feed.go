@@ -148,141 +148,33 @@ func (u *UserFeed) Render() app.UI {
 					},
 				),
 
-				app.Div().Class("row middle-align").Body(
-					app.Article().Class("max border thicc").Style("word-break", "break-word").Style("hyphens", "auto").Body(
-						app.Span().Text(user.About),
-					),
-				),
-
+				&molecules.TextBox{
+					Class: "row border thicc",
+					Icon:  "",
+					Text:  user.About,
+				},
 				app.Div().Class("space"),
 
 				//
 				// Follow and shade buttons.
 				//
 
-				app.If(user.Nickname == "system", func() app.UI {
-					return nil
-				}),
+				&molecules.UserFeedButtons{
+					LoggedUserNickname: u.LoggedUser.Nickname,
+					User:               user,
 
-				app.If(user.Nickname == u.LoggedUser.Nickname, func() app.UI {
-					// When the user is followed.
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							Class:    "max responsive shrink grey white-text thicc",
-							Disabled: true,
-							Text:     "That's you",
-							Icon:     "cruelty_free",
-						},
+					IsInFlow:        u.isInFlow,
+					IsPrivate:       u.isPrivate,
+					IsRequested:     u.isRequested,
+					IsShaded:        u.isShaded,
+					ButtonsDisabled: u.ButtonsDisabled,
 
-						&atoms.Button{
-							Class:    "max responsive shrink grey10 white-border white-text bold thicc",
-							Disabled: true,
-							Icon:     "close",
-							Text:     "That's you",
-						},
-					)
-				}).ElseIf(u.isShaded, func() app.UI {
-					// When the user is shaded, all actions are blocked by default.
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey white-text thicc",
-							Disabled:          !u.isShaded,
-							Text:              "Unshade",
-							Icon:              "cruelty_free",
-							OnClickActionName: u.OnClickShadeActionName,
-						},
-
-						&atoms.Button{
-							ID:       user.Nickname,
-							Class:    "max responsive shrink grey10 white-border white-text bold thicc",
-							Disabled: u.isShaded,
-							Icon:     "close",
-							Text:     "Shaded",
-						},
-					)
-				}).ElseIf(u.isInFlow, func() app.UI {
-					// When the user is followed.
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey black-text thicc",
-							Disabled:          u.isShaded,
-							Text:              "Shade",
-							Icon:              "block",
-							OnClickActionName: u.OnClickShadeActionName,
-						},
-
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey10 white-border white-text bold thicc",
-							Disabled:          u.ButtonsDisabled,
-							Icon:              "close",
-							Text:              "Unfollow",
-							OnClickActionName: u.OnClickUnfollowActionName,
-						},
-					)
-				}).ElseIf(!u.isInFlow && u.isPrivate && !u.isRequested, func() app.UI {
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey black-text thicc",
-							Disabled:          u.isShaded,
-							Text:              "Shade",
-							Icon:              "block",
-							OnClickActionName: u.OnClickShadeActionName,
-						},
-
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink blue10 white-border white-text bold thicc",
-							Disabled:          u.ButtonsDisabled,
-							Icon:              "drafts",
-							Text:              "Ask to follow",
-							OnClickActionName: u.OnClickAskActionName,
-						},
-					)
-				}).ElseIf(!u.isInFlow && u.isRequested && u.isPrivate, func() app.UI {
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey black-text thicc",
-							Disabled:          u.isShaded,
-							Text:              "Shade",
-							Icon:              "block",
-							OnClickActionName: u.OnClickShadeActionName,
-						},
-
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey10 white-border white-text bold thicc",
-							Disabled:          u.ButtonsDisabled,
-							Icon:              "close",
-							Text:              "Cancel the follow request",
-							OnClickActionName: u.OnClickCancelActionName,
-						},
-					)
-				}).Else(func() app.UI {
-					return app.Div().Class("row").Body(
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink grey black-text thicc",
-							Disabled:          u.isShaded,
-							Text:              "Shade",
-							Icon:              "block",
-							OnClickActionName: u.OnClickShadeActionName,
-						},
-
-						&atoms.Button{
-							ID:                user.Nickname,
-							Class:             "max responsive shrink primary-container white-border white-text bold thicc",
-							Disabled:          u.ButtonsDisabled,
-							Icon:              "add",
-							Text:              "Follow",
-							OnClickActionName: u.OnClickFollowActionName,
-						},
-					)
-				}),
+					OnClickAskActionName:      u.OnClickAskActionName,
+					OnClickShadeActionName:    u.OnClickShadeActionName,
+					OnClickCancelActionName:   u.OnClickCancelActionName,
+					OnClickFollowActionName:   u.OnClickFollowActionName,
+					OnClickUnfollowActionName: u.OnClickUnfollowActionName,
+				},
 			)
 		}),
 	)

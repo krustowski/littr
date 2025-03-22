@@ -61,12 +61,16 @@ func (c *Content) Render() app.UI {
 
 		// SingleUser view (profile mode)
 		&organisms.SingleUserProfile{
-			LoggedUser:              c.user,
-			SingleUser:              c.users[c.userFlowNick],
-			ButtonsDisabled:         c.buttonDisabled,
-			OnClickFollowActionName: "follow",
+			LoggedUser:      c.user,
+			SingleUser:      c.users[c.userFlowNick],
+			ButtonsDisabled: c.buttonDisabled,
+			//
+			OnClickAskActionName:      "ask",
+			OnClickShadeActionName:    "shade",
+			OnClickCancelActionName:   "cancel",
+			OnClickFollowActionName:   "follow",
+			OnClickUnfollowActionName: "unfollow",
 		},
-
 		app.Div().Class("space"),
 
 		// Post deletion modal.
