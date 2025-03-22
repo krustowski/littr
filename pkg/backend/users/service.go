@@ -134,9 +134,12 @@ func (s *UserService) Create(ctx context.Context, createRequestI interface{}) er
 
 	user := new(models.User)
 
+	passHash := sha512.Sum512([]byte(createRequest.PassphrasePlain + os.Getenv("APP_PEPPER")))
+	passHashHex := fmt.Sprintf("%x", passHash)
+
 	// Transfer fields from the request to a new User object.
 	user.Nickname = createRequest.Nickname
-	user.PassphraseHex = createRequest.PassphraseHex
+	user.PassphraseHex = passHashHex
 	user.Email = createRequest.Email
 
 	user.FlowList = make(models.UserGenericMap)

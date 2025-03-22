@@ -66,16 +66,16 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn UserCreateRequest
+	var dtoIn UserCreateRequest
 
 	// Decode the incoming data.
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Create the user at the UserService.
-	if err := c.userService.Create(r.Context(), &DTOIn); err != nil {
+	if err := c.userService.Create(r.Context(), &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}

@@ -1,17 +1,13 @@
 package register
 
 import (
-	"crypto/sha512"
-	"fmt"
 	"net/mail"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/frontend/common"
-	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -72,34 +68,21 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 			return
 		}
 
-		// Prepare the passphrase to be encoded into a hexadecimal representation of a sha512sum hash.
-		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
-
-		// Compose the new User payload.
-		var user = models.User{
-			Nickname:       nickname,
-			PassphraseHex:  fmt.Sprintf("%x", passHash),
-			Email:          email,
-			FlowList:       make(map[string]bool),
-			RegisteredTime: time.Now(),
+		payload := &struct {
+			Email           string `json:"email"`
+			Nickname        string `json:"nickname"`
+			PassphrasePlain string `json:"passphrase_plain"`
+		}{
+			Email:           email,
+			Nickname:        nickname,
+			PassphrasePlain: passphrase,
 		}
-
-		// Fetch the user's Gravatar according to their e-mail address.
-		//avatarURL := db.GetGravatarURL(user, nil, nil, nil)
-		//user.AvatarURL = avatarURL
-
-		// Set default flowList items.
-		user.FlowList[nickname] = true
-		user.FlowList["system"] = true
 
 		// Compose the API input payload.
 		input := &common.CallInput{
-			Method:      "POST",
-			Url:         "/api/v1/users",
-			Data:        user,
-			CallerID:    user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
+			Method: "POST",
+			Url:    "/api/v1/users",
+			Data:   payload,
 		}
 
 		// Prepare a blank API response object.
