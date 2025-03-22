@@ -2,6 +2,13 @@
 package common
 
 const (
+	StateNameAuthGranted string = "auth-granted"
+	StateNameNewUpdate   string = "new-update"
+	StateNameUser        string = "user"
+	StateNameCachedPosts string = "cached-posts"
+)
+
+const (
 	// Event-related (non-)error messages.
 	MSG_SERVER_START   = "The server has just (re)started."
 	MSG_SERVER_RESTART = "The server is restarting now..."
