@@ -218,7 +218,7 @@ func (c *Content) handleToggle(ctx app.Context, a app.Action) {
 
 		c.user.Searched = true
 
-		ctx.GetState(common.StateNameUser, c.user)
+		ctx.GetState(common.StateNameUser, &c.user)
 	}
 
 	common.HandleToggleFollow(ctx, a, callback)
