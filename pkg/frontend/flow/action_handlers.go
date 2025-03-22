@@ -187,7 +187,7 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 
 	ctx.NewAction("clear")
 
-	/*key, ok := a.Value.(string)
+	key, ok := a.Value.(string)
 	if !ok {
 		key = ""
 		//return
@@ -195,7 +195,7 @@ func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 
 	if key == "x" || key == "X" {
 		c.hideReplies = !c.hideReplies
-	}*/
+	}
 
 	ctx.Async(func() {
 		opts := pageOptions{

@@ -1,8 +1,6 @@
 package settings
 
 import (
-	"crypto/sha512"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -333,30 +331,43 @@ func (c *Content) handlePassphraseChange(ctx app.Context, a app.Action) {
 			c.settingsButtonDisabled = false
 		})
 
-		passphrase := strings.TrimSpace(c.passphrase)
-		passphraseAgain := strings.TrimSpace(c.passphraseAgain)
-		passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
+		passphraseCurrentCompo := app.Window().GetElementByID("passphrase-current")
+		if passphraseCurrentCompo.IsNull() {
+			return
+		}
+		passphraseNewCompo := app.Window().GetElementByID("passphrase-new")
+		if passphraseNewCompo.IsNull() {
+			return
+		}
+		passphraseAgainCompo := app.Window().GetElementByID("passphrase-new-again")
+		if passphraseAgainCompo.IsNull() {
+			return
+		}
 
-		if passphrase == "" || passphraseAgain == "" || passphraseCurrent == "" {
+		passphraseCurrent := strings.TrimSpace(passphraseCurrentCompo.Get("value").String())
+		passphraseNew := strings.TrimSpace(passphraseNewCompo.Get("value").String())
+		passphraseAgain := strings.TrimSpace(passphraseAgainCompo.Get("value").String())
+
+		//passphrase := strings.TrimSpace(c.passphrase)
+		//passphraseAgain := strings.TrimSpace(c.passphraseAgain)
+		//passphraseCurrent := strings.TrimSpace(c.passphraseCurrent)
+
+		if passphraseNew == "" || passphraseAgain == "" || passphraseCurrent == "" {
 			toast.Text(common.ERR_PASSPHRASE_MISSING).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
-		if passphrase != passphraseAgain {
+		if passphraseNew != passphraseAgain {
 			toast.Text(common.ERR_PASSPHRASE_MISMATCH).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
-		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
-		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
-		passHashCurrent := sha512.Sum512([]byte(passphraseCurrent + common.AppPepper))
-
 		payload := struct {
-			NewPassphraseHex     string `json:"new_passphrase_hex"`
-			CurrentPassphraseHex string `json:"current_passphrase_hex"`
+			NewPassphrase     string `json:"new_passphrase_plain"`
+			CurrentPassphrase string `json:"current_passphrase_plain"`
 		}{
-			NewPassphraseHex:     fmt.Sprintf("%x", passHash),
-			CurrentPassphraseHex: fmt.Sprintf("%x", passHashCurrent),
+			NewPassphrase:     passphraseNew,
+			CurrentPassphrase: passphraseCurrent,
 		}
 
 		input := &common.CallInput{

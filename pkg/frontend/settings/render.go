@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Content) Render() app.UI {
-	devicesToShow := len(c.devices)
+	devicesToShow := len(c.user.Devices)
 
 	return app.Main().Class("responsive").ID("anchor-settings-top").Body(
 		&atoms.PageHeading{
@@ -238,28 +238,6 @@ func (c *Content) Render() app.UI {
 								Icon:              "delete",
 							},
 						}
-
-						/*return app.Article().Class("border thicc").Body(
-							app.Div().Class("row max").Body(
-								app.Div().Class("max").Body(
-									app.P().Class("bold").Body(
-										app.Text(deviceText),
-									),
-									app.P().Body(
-										app.Text("Subscribed to: "),
-										app.Span().Text(dev.Tags).Class("blue-text"),
-									),
-									app.P().Body(
-										app.Text("Registered: "),
-										app.Text(dev.TimeCreated),
-									),
-								),
-
-								app.Button().ID(dev.UUID).Class("transparent circle").OnClick(c.onClickDeleteSubscriptionModalShow).Disabled(c.settingsButtonDisabled).Body(
-									app.I().Text("delete"),
-								),
-							),
-						)*/
 					}),
 				),
 				app.Div().Class("space"),
@@ -281,7 +259,7 @@ func (c *Content) Render() app.UI {
 				Type:         "password",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.passphraseCurrent,
+				Value:        &c.passphraseCurrent,
 				AutoComplete: false,
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "current-password"},
@@ -295,7 +273,7 @@ func (c *Content) Render() app.UI {
 				Type:         "password",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.passphrase,
+				Value:        &c.passphrase,
 				AutoComplete: false,
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "new-password"},
@@ -309,7 +287,7 @@ func (c *Content) Render() app.UI {
 				Type:         "password",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.passphraseAgain,
+				Value:        &c.passphraseAgain,
 				AutoComplete: false,
 				MaxLength:    64,
 				Attr:         map[string]string{"autocomplete": "new-password"},
@@ -318,7 +296,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			OnClickActionName: "passphrase-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -356,7 +334,7 @@ func (c *Content) Render() app.UI {
 		},
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			OnClickActionName: "about-you-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",
@@ -399,7 +377,7 @@ func (c *Content) Render() app.UI {
 		),
 
 		&atoms.Button{
-			Class:             "max responsive shrink center primary-container bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			OnClickActionName: "website-submit",
 			Disabled:          c.settingsButtonDisabled,
 			Icon:              "save",

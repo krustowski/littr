@@ -19,6 +19,7 @@ type Input struct {
 	Class string
 
 	Content string
+	Value   *string
 
 	MaxLength int
 
@@ -53,7 +54,7 @@ func (i *Input) Render() app.UI {
 	case InputOnChangeEventHandler:
 		ipt.OnChange(i.onChange)
 	case InputOnChangeValueTo:
-		ipt.OnChange(i.ValueTo(&i.Content))
+		ipt.OnChange(i.ValueTo(i.Value))
 	}
 
 	return ipt.Class(i.Class).Type(i.Type).ID(i.ID).Checked(i.Checked).Disabled(i.Disabled).AutoComplete(i.AutoComplete).MaxLength(i.MaxLength).Value(i.Content)

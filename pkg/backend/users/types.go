@@ -45,8 +45,8 @@ type UserUpdateOptionsRequest struct {
 
 type UserUpdatePassphraseRequest struct {
 	// New passphrase request payload.
-	NewPassphraseHex     string `json:"new_passphrase_hex"`
-	CurrentPassphraseHex string `json:"current_passphrase_hex"`
+	NewPassphrase     string `json:"new_passphrase_plain"`
+	CurrentPassphrase string `json:"current_passphrase_plain"`
 }
 
 type UserUpdateSubscriptionRequest []string

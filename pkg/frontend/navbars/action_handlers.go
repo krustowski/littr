@@ -221,8 +221,8 @@ func (h *Header) handleLogout(ctx app.Context, _ app.Action) {
 		h.authGranted = false
 	})
 
-	_ = ctx.LocalStorage().Set("user", "")
-	_ = ctx.LocalStorage().Set("authGranted", false)
+	ctx.SetState(common.StateNameUser, nil).Persist()
+	ctx.SetState(common.StateNameAuthGranted, false).Persist()
 
 	toast := common.Toast{AppContext: &ctx}
 
@@ -257,7 +257,7 @@ func (h *Header) handleReload(ctx app.Context, a app.Action) {
 		h.updateAvailable = false
 	})
 
-	_ = ctx.LocalStorage().Set("newUpdate", false)
+	ctx.SetState(common.StateNameNewUpdate, false)
 	ctx.Reload()
 }
 

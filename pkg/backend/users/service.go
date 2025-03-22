@@ -541,17 +541,20 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		}
 
 		// Check if both new or old passphrase hashes are blank/empty.
-		if data.NewPassphraseHex == "" || data.CurrentPassphraseHex == "" {
+		if data.NewPassphrase == "" || data.CurrentPassphrase == "" {
 			return fmt.Errorf(common.ERR_PASSPHRASE_REQ_INCOMPLETE)
 		}
 
+		passHashNew := sha512.Sum512([]byte(data.NewPassphrase + os.Getenv("APP_PEPPER")))
+		passHashCurrent := sha512.Sum512([]byte(data.CurrentPassphrase + os.Getenv("APP_PEPPER")))
+
 		// Check if the current passphrasë́'s hash is correct.
-		if data.CurrentPassphraseHex != dbUser.PassphraseHex {
+		if fmt.Sprintf("%x", passHashCurrent) != dbUser.PassphraseHex {
 			return fmt.Errorf(common.ERR_PASSPHRASE_CURRENT_WRONG)
 		}
 
 		// Update user's passphrase.
-		dbUser.PassphraseHex = data.NewPassphraseHex
+		dbUser.PassphraseHex = fmt.Sprintf("%x", passHashNew)
 
 		if err := s.userRepository.Save(dbUser); err != nil {
 			return err
