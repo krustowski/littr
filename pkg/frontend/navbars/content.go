@@ -72,7 +72,7 @@ func (h *Header) OnAppUpdate(ctx app.Context) {
 		h.updateAvailable = true
 	})
 
-	ctx.LocalStorage().Set("newUpdate", true)
+	_ = ctx.LocalStorage().Set("newUpdate", true)
 
 	// Force reload the app on update.
 	//ctx.Reload()
@@ -120,10 +120,7 @@ func (h *Header) OnMount(ctx app.Context) {
 		return
 	}
 
-	if err := common.LoadUser(&h.user, &ctx); err != nil {
-		ctx.Navigate("/login")
-		return
-	}
+	_ = common.LoadUser(&h.user, &ctx)
 
 	// Custom SSE client implementation.
 	if !app.Window().Get(common.JsLittrSse).Get("running").Bool() {
@@ -195,7 +192,7 @@ func (h *Header) OnMount(ctx app.Context) {
 		return nil
 	})
 
-	var offlineHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	var offlineHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		tPl := &common.ToastPayload{
 			Name:  "snackbar-general-bottom",
 			Text:  common.MSG_STATE_OFFLINE,
@@ -208,12 +205,12 @@ func (h *Header) OnMount(ctx app.Context) {
 		return nil
 	})
 
-	var keydownHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	var keydownHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		ctx.NewActionWithValue("keydown", args[0])
 		return nil
 	})
 
-	var scrollHandler = app.FuncOf(func(this app.Value, args []app.Value) interface{} {
+	var scrollHandler = app.FuncOf(func(this app.Value, args []app.Value) any {
 		ctx.NewAction("scroll")
 		return nil
 	})

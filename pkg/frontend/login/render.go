@@ -18,7 +18,7 @@ func (c *Content) Render() app.UI {
 
 			// Login credentials fields
 			app.Div().Class("field border label primary-text thicc center-align").Body(
-				app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.NicknameLengthMax).Class("active").Attr("autocomplete", "username"),
+				app.Input().ID("login-input").Type("text").Required(true).TabIndex(1).OnChange(c.ValueTo(&c.nickname)).MaxLength(config.MaxNicknameLength).Class("active").Attr("autocomplete", "username"),
 				app.Label().Text("Nickname").Class("active primary-text"),
 			),
 

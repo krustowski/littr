@@ -1,8 +1,6 @@
 package login
 
 import (
-	"crypto/sha512"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -15,8 +13,9 @@ import (
 func (c *Content) onClick(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}
 
-	// nasty
-	c.loginButtonDisabled = true
+	ctx.Dispatch(func(ctx app.Context) {
+		c.loginButtonDisabled = true
+	})
 
 	ctx.Async(func() {
 		defer ctx.Dispatch(func(ctx app.Context) {
@@ -47,29 +46,24 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		//passHash := sha512.Sum512([]byte(passphrase + app.Getenv("APP_PEPPER")))
-		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
-
-		payload := &models.User{
-			Nickname:      nickname,
-			Passphrase:    string(passHash[:]),
-			PassphraseHex: fmt.Sprintf("%x", passHash),
+		payload := &struct {
+			Nickname        string `json:"nickname"`
+			PassphrasePlain string `json:"passphrase_plain"`
+		}{
+			Nickname:        nickname,
+			PassphrasePlain: passphrase,
 		}
 
 		input := &common.CallInput{
-			Method:      "POST",
-			Url:         "/api/v1/auth",
-			Data:        payload,
-			CallerID:    nickname,
-			PageNo:      0,
-			HideReplies: false,
+			Method:   "POST",
+			Url:      "/api/v1/auth",
+			Data:     payload,
+			CallerID: nickname,
 		}
 
 		type dataModel struct {
-			AuthGranted bool `json:"auth_granted"`
-			//FlowRecords []string `json:"flow_records"`
-			//Users map[string]models.User `json:"users"`
-			User *models.User `json:"user"`
+			AuthGranted bool         `json:"auth_granted"`
+			User        *models.User `json:"user"`
 		}
 
 		output := &common.Response{Data: &dataModel{}}
@@ -99,12 +93,6 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			toast.Text(common.ERR_ACCESS_DENIED).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
-
-		/*user, err := json.Marshal(data.User)
-		if err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_USER_FAIL).Type(common.TTYPE_ERR).Dispatch()
-			return
-		}*/
 
 		// Save encoded user data to the Local browser storage.
 		if err := common.SaveUser(data.User, &ctx); err != nil {

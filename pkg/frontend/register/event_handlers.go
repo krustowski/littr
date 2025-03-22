@@ -48,8 +48,8 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		}
 
 		// Don't allow very long nicknames (nor the short ones.
-		if len(nickname) > config.NicknameLengthMax || len(nickname) < 3 {
-			toast.Text("Nickname has to be " + strconv.Itoa(config.NicknameLengthMax) + " chars long at max, or at least 3 characters long.").Type(common.TTYPE_ERR).Dispatch()
+		if len(nickname) > config.MaxNicknameLength || len(nickname) < 3 {
+			toast.Text("Nickname has to be " + strconv.Itoa(config.MaxNicknameLength) + " chars long at max, or at least 3 characters long.").Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
@@ -76,7 +76,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 		passHash := sha512.Sum512([]byte(passphrase + common.AppPepper))
 
 		// Compose the new User payload.
-		var user models.User = models.User{
+		var user = models.User{
 			Nickname:       nickname,
 			PassphraseHex:  fmt.Sprintf("%x", passHash),
 			Email:          email,
@@ -125,7 +125,7 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 }
 
 // onDismissToast is a callback function to cast a new valueless dismiss action.
-func (c *Content) onDismissToast(ctx app.Context, e app.Event) {
+func (c *Content) onDismissToast(ctx app.Context, _ app.Event) {
 	ctx.NewAction("dismiss")
 }
 

@@ -2,36 +2,58 @@ package register
 
 import (
 	"go.vxn.dev/littr/pkg/config"
+	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
+	"go.vxn.dev/littr/pkg/frontend/atomic/molecules"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 func (c *Content) Render() app.UI {
 	return app.Main().Class("responsive").Body(
-		app.Div().Class("row").Body(
-			app.Div().Class("max padding").Body(
-				app.H5().Text("registration"),
-			),
-		),
+		&atoms.PageHeading{
+			Title: "registration",
+			Level: 5,
+		},
 		app.Div().Class("space"),
 
 		// Nickname field.
-		app.Article().Class("row border blue-border info thicc").Body(
-			app.I().Text("info").Class("blue-text"),
-			app.P().Class("max").Body(
-				app.Span().Class("blue-text").Text("Nickname "),
-				app.Span().Text("is your unique identifier on the site. Please double-check the input before registering (nickname is case-sensitive)."),
-			),
-		),
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  "#bold class='blue-text'#Nickname##bold# is your unique identifier on the site. Please double-check the input before submitting (nickname is case-sensitive).",
+			MakeSummary: false,
+		},
 		app.Div().Class("space"),
 
 		app.Div().Class("field label border primary-text thicc").Body(
-			app.Input().ID("nickname-input").Type("text").OnChange(c.ValueTo(&c.nickname)).Required(true).Class("active").AutoFocus(true).MaxLength(50).Attr("autocomplete", "username").TabIndex(1).Name("login"),
+			&atoms.Input{
+				ID:           "nickname-input",
+				Type:         "text",
+				Class:        "active",
+				OnChangeType: atoms.InputOnChangeValueTo,
+				Content:      c.nickname,
+				AutoComplete: true,
+				MaxLength:    config.MaxNicknameLength,
+				Attr: map[string]string{
+					"autocomplete": "username",
+				},
+				//Required: true,
+				//TabIndex: 1,
+			},
 			app.Label().Text("Nickname").Class("active primary-text"),
 		),
 		app.Div().Class("space"),
 
 		// Passphrase fields.
+		&molecules.TextBox{
+			Class:       "row border blue-border thicc info",
+			Icon:        "info",
+			IconClass:   "blue-text",
+			MarkupText:  "#bold class='blue-text'#Passphrase##bold# is a secret key to your account. Keep it strong and private.",
+			MakeSummary: false,
+		},
+
 		app.Article().Class("row border blue-border info thicc").Body(
 			app.I().Text("info").Class("blue-text"),
 			app.P().Class("max").Body(
