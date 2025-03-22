@@ -65,6 +65,10 @@ sub {
 	cursor: pointer;
 }
 
+:root {
+	scroll-behavior: smooth;
+}
+
 /*
  *  
  *  Custom backgrounds and rounds for all types of textboxes.

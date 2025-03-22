@@ -87,7 +87,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("refresh", c.handleRefresh)
 	ctx.Handle("reply", c.handleReply)
 	ctx.Handle("scroll", c.handleScroll)
-	ctx.Handle("shade", nil)
+	ctx.Handle("shade", c.handleUserShade)
 	ctx.Handle("star", c.handleStar)
 	ctx.Handle("unfollow", nil)
 	ctx.Handle("user", c.handleUser)

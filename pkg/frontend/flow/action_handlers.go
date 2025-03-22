@@ -509,6 +509,25 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	ctx.NewActionWithValue("star", key)
 }*/
 
+// handleUserShade is an action handler function that enables one to shade other accounts.
+func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
+	// Fetch the requested ID (nickname) and assert it type string.
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.buttonDisabled = true
+	})
+
+	callback := func() {
+		c.buttonDisabled = false
+	}
+
+	common.HandleUserShade(ctx, a, c.users[key], callback)
+}
+
 func (c *Content) handleStar(ctx app.Context, a app.Action) {
 	key, ok := a.Value.(string)
 	if !ok {
