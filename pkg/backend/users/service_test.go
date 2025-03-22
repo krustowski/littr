@@ -26,3 +26,18 @@ func newTestService(t *testing.T) models.UserServiceInterface {
 
 	return service
 }
+
+func TestUsers_UserServiceCreate(t *testing.T) {
+	ctx := newTestContext()
+	service := newTestService(t)
+
+	req := &UserCreateRequest{
+		Email:           "alice@example.com",
+		Nickname:        "alice",
+		PassphrasePlain: "bobdod",
+	}
+
+	if err := service.Create(ctx, req); err != nil {
+		t.Error(err)
+	}
+}

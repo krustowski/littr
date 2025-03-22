@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+
+	gomail "github.com/wneessen/go-mail"
 )
 
 //
@@ -11,6 +13,11 @@ import (
 type AuthServiceInterface interface {
 	Auth(ctx context.Context, user interface{}) (*User, []string, error)
 	Logout(ctx context.Context) error
+}
+
+type MailServiceInterface interface {
+	ComposeMail(payload interface{}) (*gomail.Msg, error)
+	SendMail(msg *gomail.Msg) error
 }
 
 type PollServiceInterface interface {

@@ -32,6 +32,7 @@ import (
 //
 
 type UserService struct {
+	mailService    models.MailServiceInterface
 	pollRepository models.PollRepositoryInterface
 	postRepository models.PostRepositoryInterface
 	//subscriptionRepository models.SubscriptionRepositoryInterface
@@ -41,6 +42,7 @@ type UserService struct {
 }
 
 func NewUserService(
+	mailService models.MailServiceInterface,
 	pollRepository models.PollRepositoryInterface,
 	postRepository models.PostRepositoryInterface,
 	//subscriptionRepository models.SubscriptionRepositoryInterface,
@@ -49,7 +51,8 @@ func NewUserService(
 	userRepository models.UserRepositoryInterface,
 ) models.UserServiceInterface {
 
-	if pollRepository == nil ||
+	if mailService == nil ||
+		pollRepository == nil ||
 		postRepository == nil ||
 		requestRepository == nil ||
 		//subscriptionRepository == nil ||
@@ -60,6 +63,7 @@ func NewUserService(
 	}
 
 	return &UserService{
+		mailService:    mailService,
 		pollRepository: pollRepository,
 		postRepository: postRepository,
 		//subscriptionRepository: subscriptionRepository,
@@ -212,13 +216,13 @@ func (s *UserService) Create(ctx context.Context, createRequestI interface{}) er
 	}
 
 	// Compose a message to send.
-	msg, err := mail.ComposeMail(mailPayload)
+	msg, err := s.mailService.ComposeMail(mailPayload)
 	if err != nil || msg == nil {
 		return fmt.Errorf(common.ERR_MAIL_COMPOSITION_FAIL)
 	}
 
 	// Send the activation mail to such user.
-	if err = mail.SendMail(msg); err != nil {
+	if err = s.mailService.SendMail(msg); err != nil {
 		return fmt.Errorf(common.ERR_ACTIVATION_MAIL_FAIL)
 	}
 
@@ -808,13 +812,13 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 	}
 
 	// Compose a message to send.
-	msg, err := mail.ComposeMail(mailPayload)
+	msg, err := s.mailService.ComposeMail(mailPayload)
 	if err != nil || msg == nil {
 		return fmt.Errorf(common.ERR_MAIL_COMPOSITION_FAIL)
 	}
 
 	// send the message
-	if err := mail.SendMail(msg); err != nil {
+	if err := s.mailService.SendMail(msg); err != nil {
 		return fmt.Errorf(common.ERR_MAIL_NOT_SENT)
 	}
 

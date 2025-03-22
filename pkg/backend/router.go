@@ -65,6 +65,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/live"
+	"go.vxn.dev/littr/pkg/backend/mail"
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/backend/requests"
@@ -138,11 +139,12 @@ func NewAPIRouter() chi.Router {
 
 	// Init services for controllers.
 	authService := auth.NewAuthService(tokenRepository, userRepository)
+	mailService := mail.NewMailService()
 	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
 	postService := posts.NewPostService(postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
 	//subsService := push.NewSubscriptionService(postRepository, subscriptionRepository)
-	userService := users.NewUserService(pollRepository, postRepository, requestRepository, tokenRepository, userRepository)
+	userService := users.NewUserService(mailService, pollRepository, postRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
