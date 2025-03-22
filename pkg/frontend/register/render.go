@@ -32,7 +32,7 @@ func (c *Content) Render() app.UI {
 				Type:         "text",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.nickname,
+				Value:        &c.nickname,
 				AutoComplete: true,
 				MaxLength:    config.MaxNicknameLength,
 				Attr: map[string]string{
@@ -61,7 +61,8 @@ func (c *Content) Render() app.UI {
 				Type:         "password",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.passphrase,
+				Value:        &c.passphrase,
+				MaxLength:    64,
 				AutoComplete: true,
 				Attr: map[string]string{
 					"autocomplete": "new-password",
@@ -78,7 +79,8 @@ func (c *Content) Render() app.UI {
 				Type:         "password",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.passphraseAgain,
+				Value:        &c.passphraseAgain,
+				MaxLength:    64,
 				AutoComplete: true,
 				Attr: map[string]string{
 					"autocomplete": "new-password",
@@ -107,7 +109,7 @@ func (c *Content) Render() app.UI {
 				Type:         "email",
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
-				Content:      c.email,
+				Value:        &c.email,
 				AutoComplete: true,
 				MaxLength:    config.MaxNicknameLength,
 				Attr: map[string]string{
