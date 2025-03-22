@@ -68,7 +68,7 @@ func NewToken(user *models.User, r models.TokenRepositoryInterface) ([]string, e
 	// Compose the user's personal (refresh) token content. Refresh token is restricted (mainly) to 4 weeks of its validity.
 	refreshClaims := jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(common.TOKEN_TTL).Unix(),
+		ExpiresAt: time.Now().Add(common.TokenTTL).Unix(),
 	}
 
 	// Get new refresh token = sign the refresh token with the server's secret.
@@ -87,7 +87,7 @@ func NewToken(user *models.User, r models.TokenRepositoryInterface) ([]string, e
 		Hash:      refreshTokenSum,
 		CreatedAt: time.Now(),
 		Nickname:  user.Nickname,
-		TTL:       common.TOKEN_TTL,
+		TTL:       common.TokenTTL,
 	}
 
 	// Save new refresh token's hash to the Token database.

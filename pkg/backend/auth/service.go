@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/sha512"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,10 +14,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-/*type AuthServiceInterface interface {
-	Auth(ctx context.Context, auth.AuthUser) error
-	Logout(ctx context.Context) error
-}*/
+var appSecret = os.Getenv("APP_PEPPER")
 
 type AuthService struct {
 	tokenRepository models.TokenRepositoryInterface
@@ -40,7 +38,7 @@ func NewAuthService(
 func (s *AuthService) Auth(ctx context.Context, authUserI interface{}) (*models.User, []string, error) {
 	authUser, ok := authUserI.(*AuthUser)
 	if !ok {
-		return nil, nil, fmt.Errorf("cannot assert type AuthUser")
+		return nil, nil, errInvalidInput
 	}
 
 	// Fetch one user from cache according to the login credentials.
@@ -49,40 +47,37 @@ func (s *AuthService) Auth(ctx context.Context, authUserI interface{}) (*models.
 		return nil, nil, err
 	}
 
+	passHash := sha512.Sum512([]byte(authUser.PassphrasePlain + appSecret))
+	passHashHex := fmt.Sprintf("%x", passHash)
+
 	// Check the passhashes.
-	if dbUser.Passphrase == authUser.Passphrase || dbUser.PassphraseHex == authUser.PassphraseHex {
-		// Legacy: update user's hexadecimal passphrase form, as the binary form is broken and cannot be used on BE.
-		if dbUser.PassphraseHex == "" && authUser.PassphraseHex != "" {
-			dbUser.PassphraseHex = authUser.PassphraseHex
-
-			// Note the user tried to login now.
-			dbUser.LastLoginTime = time.Now()
-
-			if err := s.userRepository.Save(dbUser); err != nil {
-				return nil, nil, err
-			}
-		}
-	} else {
+	if dbUser.PassphraseHex != passHashHex {
 		// Return auth fail.
-		return nil, nil, fmt.Errorf(common.ERR_AUTH_FAIL)
+		return nil, nil, errAuthFailed
 	}
 
 	// Check if the user has been activated yet.
-	if !dbUser.Active || !dbUser.Options["active"] {
-		return nil, nil, fmt.Errorf(common.ERR_USER_NOT_ACTIVATED)
+	if !dbUser.Active {
+		return nil, nil, errNotActivated
+	}
+
+	dbUser.LastLoginTime = time.Now()
+
+	if err := s.userRepository.Save(dbUser); err != nil {
+		return nil, nil, err
 	}
 
 	//
 	//  OK, user authorized, now generete tokens
 	//
 
-	tks, err := tokens.NewToken(dbUser, s.tokenRepository)
+	tokens, err := tokens.NewToken(dbUser, s.tokenRepository)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// User authorized.
-	return dbUser, tks, nil
+	return dbUser, tokens, nil
 }
 
 func (s *AuthService) Logout(ctx context.Context) error {

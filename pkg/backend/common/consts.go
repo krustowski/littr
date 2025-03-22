@@ -8,7 +8,7 @@ import (
 // Token consts.
 const (
 	// Refresh token's TTL.
-	TOKEN_TTL = time.Hour * 168 * 4
+	TokenTTL = time.Hour * 168 * 4
 )
 
 // Header names.
@@ -22,7 +22,6 @@ const (
 // (Non-)Error messages.
 const (
 	// Auth-related error messages
-	ERR_AUTH_FAIL           = "wrong credentials entered, or such user does not exist"
 	ERR_AUTH_ACC_TOKEN_FAIL = "could not generate new access token"
 	ERR_AUTH_REF_TOKEN_FAIL = "could not generate new refresh token"
 	ERR_BLANK_REF_TOKEN     = "no refresh token provided with request"
@@ -131,7 +130,6 @@ const (
 	ERR_TARGET_USER_NOT_PRIVATE   = "target user is not private, no need to file new follow requests"
 	ERR_USER_AVATAR_FOREIGN       = "you can update yours avatar only"
 	ERR_ACTIVATION_MAIL_FAIL      = "the activation mail was not sent, try again"
-	ERR_USER_NOT_ACTIVATED        = "user has not been activated yet, check your mail inbox"
 	ERR_USER_UPDATE_REQ_BLANK     = "update request for user not specified"
 	ERR_AVATAR_URL_REGEXP_FAIL    = "failed to compile a regexp object for the previous user's avatarURL"
 	ERR_AVATAR_DELETE_FAIL        = "failed to delete previous user's avatar"

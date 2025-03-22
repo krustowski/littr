@@ -8,26 +8,35 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-type AuthController struct {
+type authController struct {
 	authService models.AuthServiceInterface
 }
 
-func NewAuthController(authService models.AuthServiceInterface) *AuthController {
-	return &AuthController{
+func NewAuthController(authService models.AuthServiceInterface) *authController {
+	if authService == nil {
+		return nil
+	}
+
+	return &authController{
 		authService: authService,
 	}
 }
+
+const (
+	accessTokenName  string = "access-token"
+	refreshTokenName string = "refresh-token"
+
+	logLabel string = "authController"
+)
 
 // Auth handles the nickname-hashed-passphrase common dual input and tries to authenticate the user.
 //
 //	@Summary		Auth an user
 //	@Description		This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).
-//	@Description
-//	@Description		The hashed string is a concatenation of user's passphrase and the server pepper/secret, which is then hashed using the SHA-512 algorithm.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.AuthUser	true	"User's credentials to authenticate."
+//	@Param			request		body		auth.AuthUser			true			"User's credentials to authenticate."
 //	@Success		200		{object}	common.APIResponse{data=auth.Auth.responseData}		"Authentication process successful, HTTP cookies sent in response."
 //	@Failure		400		{object}	common.APIResponse{data=auth.Logout.responseData}	"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=auth.Logout.responseData}	"User not authenticated, wrong passphrase used, or such account does not exist at all."
@@ -35,8 +44,8 @@ func NewAuthController(authService models.AuthServiceInterface) *AuthController 
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
 //	@Failure		500		{object}	common.APIResponse{data=auth.Logout.responseData}	"Internal server problem while processing the request."
 //	@Router			/auth [post]
-func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "authController")
+func (c *authController) Auth(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, logLabel)
 
 	// Response body structure.
 	type responseData struct {
@@ -54,16 +63,14 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the request body.
 	if err := common.UnmarshalRequestData(r, &user); err != nil {
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log()
-		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Payload(pl).Write(w)
+		l.Msg(errInvalidInput.Error()).Status(http.StatusBadRequest).Error(err).Log().Payload(pl).Write(w)
 		return
 	}
 
 	// Try to authenticate given user.
 	grantedUser, tokens, err := c.authService.Auth(r.Context(), &user)
 	if err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(pl).Write(w)
+		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(pl).Write(w)
 		return
 	}
 
@@ -71,7 +78,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Compose the access HTTP cookie and set it.
 	http.SetCookie(w, &http.Cookie{
-		Name:     ACCESS_TOKEN,
+		Name:     accessTokenName,
 		Value:    tokens[0],
 		Expires:  time.Now().Add(time.Minute * 15),
 		Path:     "/",
@@ -82,9 +89,9 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Compose the refresh HTTP cookie and set it.
 	http.SetCookie(w, &http.Cookie{
-		Name:     REFRESH_TOKEN,
+		Name:     refreshTokenName,
 		Value:    tokens[1],
-		Expires:  time.Now().Add(common.TOKEN_TTL),
+		Expires:  time.Now().Add(common.TokenTTL),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -108,9 +115,10 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Success		200	{object}	common.APIResponse{data=auth.Logout.responseData}	"Void cookies sent in response."
 //	@Failure		429	{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
+//	@Failure		500	{object}	common.APIResponse{data=models.Stub}			"Internal server error, try again later."
 //	@Router			/auth/logout [post]
-func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "authController")
+func (c *authController) Logout(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, logLabel)
 
 	// Response body structure.
 	type responseData struct {
@@ -122,20 +130,20 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		AuthGranted: false,
 	}
 
-	_, err := r.Cookie(REFRESH_TOKEN)
+	_, err := r.Cookie(refreshTokenName)
 	if err == nil {
 		// Update context with necessary data for the auth service.
 		//ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
 
 		// Call the auth service to delete the main session (refresh) token.
 		if err := c.authService.Logout(r.Context()); err != nil {
-			l.Msg("could not delete associated token").Error(err).Status(http.StatusInternalServerError).Log()
+			l.Msg(errTokenDeletion.Error()).Error(err).Status(http.StatusInternalServerError).Log()
 		}
 	}
 
 	// Invalidate the access HTTP cookie.
 	http.SetCookie(w, &http.Cookie{
-		Name:     ACCESS_TOKEN,
+		Name:     accessTokenName,
 		Value:    "",
 		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
@@ -146,7 +154,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// Invalidate the refresh HTTP cookie.
 	http.SetCookie(w, &http.Cookie{
-		Name:     REFRESH_TOKEN,
+		Name:     refreshTokenName,
 		Value:    "",
 		Expires:  time.Now().Add(time.Second * -300),
 		MaxAge:   0,
@@ -155,5 +163,5 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	})
 
-	l.Msg("session terminated, void cookies sent (logout)").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	l.Msg(msgSessionTerminated).Status(http.StatusOK).Log().Payload(pl).Write(w)
 }

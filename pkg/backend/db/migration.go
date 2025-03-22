@@ -213,7 +213,7 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 
 	// Loop over tokens and compare their times with durations, if expired, yeet them.
 	for hash, token := range *tokens {
-		if time.Now().After(token.CreatedAt.Add(common.TOKEN_TTL)) {
+		if time.Now().After(token.CreatedAt.Add(common.TokenTTL)) {
 			// Expired token = delete it.
 			if deleted := DeleteOne(TokenCache, hash); !deleted {
 				l.Msg("could not delete token: " + hash).Status(http.StatusInternalServerError).Log()

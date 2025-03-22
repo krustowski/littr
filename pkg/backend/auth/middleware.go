@@ -67,7 +67,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		var err error
 
 		// Get the refresh cookie to check its validity.
-		if refreshCookie, err = r.Cookie(REFRESH_TOKEN); err != nil {
+		if refreshCookie, err = r.Cookie(refreshTokenName); err != nil {
 			l.Msg("client unauthorized (invalid refresh token)").Status(http.StatusUnauthorized).Error(err).Log().Payload(payload).Write(w)
 			return
 		}
@@ -85,7 +85,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		var userClaims *tokens.UserClaims
 
 		// Get the access cookie to check its validity.
-		if accessCookie, err = r.Cookie(ACCESS_TOKEN); err != nil {
+		if accessCookie, err = r.Cookie(accessTokenName); err != nil {
 			//l.Msg("invalid/expired access token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 			//return
 		} else {
@@ -138,7 +138,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			// Compose the new access HTTP cookie structure.
 			accessCookie := &http.Cookie{
-				Name:     ACCESS_TOKEN,
+				Name:     accessTokenName,
 				Value:    accessToken,
 				Expires:  time.Now().Add(time.Minute * 15),
 				Path:     "/",
@@ -199,7 +199,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func invalidateRefreshToken(l common.Logger, w *http.ResponseWriter) bool {
 	// Refresh token is invalid = not found in the Token database => user unauthenticated, invalidate the refresh token.
 	voidCookie := &http.Cookie{
-		Name:     REFRESH_TOKEN,
+		Name:     refreshTokenName,
 		Value:    "",
 		Expires:  time.Now().Add(time.Second * -300),
 		Path:     "/",
