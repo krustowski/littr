@@ -3,7 +3,7 @@ package users
 import (
 	//"fmt"
 	//"log"
-	"fmt"
+
 	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -35,85 +35,28 @@ func (c *Content) handleMouseLeave(ctx app.Context, a app.Action) {
 }
 
 func (c *Content) handlePrivateMode(ctx app.Context, a app.Action) {
-	// Fetch the counterpart's nickname.
-	nick, ok := a.Value.(string)
+	key, ok := a.Value.(string)
 	if !ok {
 		return
 	}
-
-	// Instantiate the toast.
-	toast := common.Toast{AppContext: &ctx}
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.usersButtonDisabled = true
 		c.userButtonDisabled = true
 	})
 
-	ctx.Async(func() {
-		defer ctx.Dispatch(func(ctx app.Context) {
-			c.usersButtonDisabled = false
-			c.userButtonDisabled = false
-		})
+	callback := func(updateUser bool) {
+		c.usersButtonDisabled = false
+		c.userButtonDisabled = false
 
-		user, found := c.users[nick]
-		if !found {
-			return
-		}
+		/*if updateUser {
+			updatee := c.users[key]
+			updatee.RequestList[c.user.Nickname] = !updatee.RequestList[c.user.Nickname]
+			c.users[key] = updatee
+		}*/
+	}
 
-		// Hotfix to show the actual user in the user listing.
-		user.Searched = true
-
-		// Patch the nil requestList map.
-		if user.RequestList == nil {
-			user.RequestList = make(map[string]bool)
-		}
-		user.RequestList[c.user.Nickname] = !user.RequestList[c.user.Nickname]
-
-		// Prepare the request data structure.
-		payload := struct {
-			RequestList map[string]bool `json:"request_list"`
-		}{
-			RequestList: user.RequestList,
-		}
-
-		// Compose the API input payload.
-		input := &common.CallInput{
-			Method:      "PATCH",
-			Url:         "/api/v1/users/" + nick + "/lists",
-			Data:        payload,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		// Prepare the blank API response object.
-		output := &common.Response{}
-
-		// Call the API to delete the follow request.
-		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
-			return
-		}
-
-		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
-		if output.Code != 200 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
-			return
-		}
-
-		switch a.Name {
-		case "ask":
-			toast.Text(common.MSG_REQ_TO_FOLLOW_SUCCESS).Type(common.TTYPE_INFO).Dispatch()
-
-		case "cancel":
-			// Cast the successful request removal.
-			toast.Text(common.MSG_FOLLOW_REQUEST_REMOVED).Type(common.TTYPE_INFO).Dispatch()
-
-		}
-		// Dispatch the changes to match the reality in the UI.
-		ctx.Dispatch(func(ctx app.Context) {
-			c.users[nick] = user
-		})
-	})
+	common.HandlePrivateMode(ctx, a, c.users[key], callback)
 }
 
 // handleScroll is an action handler function that takes care of the action upon a generic scroll. More specially, it requests new items page, when the specified point/trigger is hit.
@@ -264,114 +207,21 @@ func (c *Content) handleSearch(ctx app.Context, a app.Action) {
 
 // handleToggle is an action handler that takes care of user follow toggling.
 func (c *Content) handleToggle(ctx app.Context, a app.Action) {
-	// Fetch the requested ID (nickname) and assert it to string.
-	key, ok := a.Value.(string)
-	if !ok {
-		return
-	}
-
-	// Fetch the current user from the Content struct. Get their flowList.
-	user := c.user
-	flowList := user.FlowList
-
-	// If the requested user is already shaded, we have no job there.
-	if c.user.ShadeList[key] {
-		return
-	}
-
 	ctx.Dispatch(func(ctx app.Context) {
 		c.userButtonDisabled = true
 		c.usersButtonDisabled = true
 	})
 
-	// Patch the nil flowList map.
-	// Assign the following of oneself explicitly for the core app functions to work properly.
-	if flowList == nil {
-		flowList = make(map[string]bool)
-		flowList[user.Nickname] = true
+	callback := func(updateUser bool) {
+		c.userButtonDisabled = false
+		c.usersButtonDisabled = false
+
+		c.user.Searched = true
+
+		ctx.GetState(common.StateNameUser, c.user)
 	}
 
-	// Look for the key (counterpart's nickname) in the current flowList. Unfollow them if found. Follow the otherwise.
-	// Assign the following explicitly by default (because we cannot untoggle the follow first, when the counterpart's record is not in the map yet).
-	if value, found := flowList[key]; found {
-		flowList[key] = !value
-	} else {
-		flowList[key] = true
-	}
-
-	// Also, ensure that the system account is followed by default too. Always.
-	flowList["system"] = true
-
-	// Instantiate the toast.
-	toast := common.Toast{AppContext: &ctx}
-
-	ctx.Async(func() {
-		defer ctx.Dispatch(func(ctx app.Context) {
-			c.userButtonDisabled = false
-			c.usersButtonDisabled = false
-
-			user.Searched = true
-			c.user = user
-			c.users[c.user.Nickname] = user
-		})
-
-		// Prepare the request body data structure.
-		payload := struct {
-			FlowList map[string]bool `json:"flow_list"`
-		}{
-			FlowList: flowList,
-		}
-
-		// Compose the API call input payload.
-		input := &common.CallInput{
-			Method:      "PATCH",
-			Url:         "/api/v1/users/" + user.Nickname + "/lists",
-			Data:        payload,
-			CallerID:    user.Nickname,
-			PageNo:      0,
-			HideReplies: false,
-		}
-
-		// Prepare the blank API response output object.
-		output := &common.Response{}
-
-		// Patch the current user's flowList.
-		if ok := common.FetchData(input, output); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
-			flowList[key] = !flowList[key]
-			return
-		}
-
-		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
-		if output.Code != 200 && output.Code != 201 {
-			toast.Text(output.Message).Type(common.TTYPE_ERR).Dispatch()
-			flowList[key] = !flowList[key]
-			return
-		}
-
-		// Now, we can update the current user's flowList on the frontend too.
-		// Update the flowList and update the user struct in the LocalStorage.
-		user.FlowList = flowList
-		if err := common.SaveUser(&user, &ctx); err != nil {
-			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_SUCCESS).Dispatch()
-		}
-
-		ctx.Dispatch(func(ctx app.Context) {
-			user.Searched = true
-
-			c.user = user
-			c.users[user.Nickname] = user
-		})
-
-		// Tweak the text response for a info/success toast.
-		if followed := user.FlowList[key]; followed {
-			text := fmt.Sprintf(common.MSG_USER_FOLLOW_ADD_FMT, key)
-			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch()
-		} else {
-			text := fmt.Sprintf(common.MSG_USER_FOLLOW_REMOVE_FMT, key)
-			toast.Text(text).Type(common.TTYPE_SUCCESS).Dispatch()
-		}
-	})
+	common.HandleToggleFollow(ctx, a, callback)
 }
 
 // handleUserPreview is an action handler function that enables the showing of the user modal.
@@ -402,9 +252,20 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 		c.usersButtonDisabled = true
 	})
 
-	callback := func() {
+	callback := func(updateUser bool) {
 		c.userButtonDisabled = false
 		c.usersButtonDisabled = false
+
+		if updateUser {
+			updatedUser := c.users[key]
+
+			updatedUser.FlowList[c.user.Nickname] = false
+			c.user.ShadeList[key] = true
+
+			c.users[key] = updatedUser
+		}
+
+		ctx.GetState(common.StateNameUser, &c.user)
 	}
 
 	common.HandleUserShade(ctx, a, c.users[key], callback)

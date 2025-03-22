@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -131,8 +132,186 @@ func HandleMouseLeave(ctx app.Context, a app.Action) {
 	}
 }
 
+func HandlePrivateMode(ctx app.Context, a app.Action, updateUser models.User, callback func(updateUser bool)) {
+	// Fetch the counterpart's nickname.
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	var loggedUser models.User
+	ctx.GetState(StateNameUser, &loggedUser)
+
+	if key == loggedUser.Nickname {
+		return
+	}
+
+	// Instantiate the toast.
+	toast := Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		var finishedSuccessfully bool
+
+		defer ctx.Dispatch(func(ctx app.Context) {
+			callback(finishedSuccessfully)
+		})
+
+		// Hotfix to show the actual user in the user listing.
+		updateUser.Searched = true
+
+		// Patch the nil requestList map.
+		if updateUser.RequestList == nil {
+			updateUser.RequestList = make(map[string]bool)
+		}
+
+		updateUser.RequestList[loggedUser.Nickname] = !updateUser.RequestList[loggedUser.Nickname]
+
+		// Prepare the request data structure.
+		payload := struct {
+			RequestList map[string]bool `json:"request_list"`
+		}{
+			RequestList: updateUser.RequestList,
+		}
+
+		// Compose the API input payload.
+		input := &CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + key + "/lists",
+			Data:        payload,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API response object.
+		output := &Response{}
+
+		// Call the API to delete the follow request.
+		if ok := FetchData(input, output); !ok {
+			toast.Text(ERR_CANNOT_REACH_BE).Type(TTYPE_ERR).Dispatch()
+			return
+		}
+
+		// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
+		if output.Code != 200 {
+			toast.Text(output.Message).Type(TTYPE_ERR).Dispatch()
+			return
+		}
+
+		switch a.Name {
+		case "ask":
+			toast.Text(MSG_REQ_TO_FOLLOW_SUCCESS).Type(TTYPE_INFO).Dispatch()
+
+		case "cancel":
+			// Cast the successful request removal.
+			toast.Text(MSG_FOLLOW_REQUEST_REMOVED).Type(TTYPE_INFO).Dispatch()
+		}
+
+		finishedSuccessfully = true
+
+		ctx.SetState(StateNameUser, loggedUser).Persist()
+	})
+}
+
+// HandleToggleFollow is an action handler that takes care of user follow toggling.
+func HandleToggleFollow(ctx app.Context, a app.Action, callback func(updateUser bool)) {
+	// Fetch the requested ID (nickname) and assert it to string.
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	var loggedUser models.User
+	ctx.GetState(StateNameUser, &loggedUser)
+
+	// If the requested user is already shaded, we have no job there.
+	if loggedUser.ShadeList[key] {
+		return
+	}
+
+	flowList := loggedUser.FlowList
+
+	// Patch the nil flowList map.
+	// Assign the following of oneself explicitly for the core app functions to work properly.
+	if flowList == nil {
+		flowList = make(map[string]bool)
+		flowList[loggedUser.Nickname] = true
+	}
+
+	// Look for the key (counterpart's nickname) in the current flowList. Unfollow them if found. Follow the otherwise.
+	// Assign the following explicitly by default (because we cannot untoggle the follow first, when the counterpart's record is not in the map yet).
+	if value, found := flowList[key]; found {
+		flowList[key] = !value
+	} else {
+		flowList[key] = true
+	}
+
+	// Also, ensure that the system account is followed by default too. Always.
+	flowList["system"] = true
+
+	// Instantiate the toast.
+	toast := Toast{AppContext: &ctx}
+
+	ctx.Async(func() {
+		var finishedSuccessfully bool
+
+		defer ctx.Dispatch(func(ctx app.Context) {
+			callback(finishedSuccessfully)
+		})
+
+		// Prepare the request body data structure.
+		payload := struct {
+			FlowList map[string]bool `json:"flow_list"`
+		}{
+			FlowList: flowList,
+		}
+
+		// Compose the API call input payload.
+		input := &CallInput{
+			Method:      "PATCH",
+			Url:         "/api/v1/users/" + loggedUser.Nickname + "/lists",
+			Data:        payload,
+			CallerID:    loggedUser.Nickname,
+			PageNo:      0,
+			HideReplies: false,
+		}
+
+		// Prepare the blank API response output object.
+		output := &Response{}
+
+		// Patch the current user's flowList.
+		if ok := FetchData(input, output); !ok {
+			toast.Text(ERR_CANNOT_REACH_BE).Type(TTYPE_ERR).Dispatch()
+			flowList[key] = !flowList[key]
+			return
+		}
+
+		// Check for the HTTP 200/201 response code(s), otherwise print the API response message in the toast.
+		if output.Code != 200 && output.Code != 201 {
+			toast.Text(output.Message).Type(TTYPE_ERR).Dispatch()
+			flowList[key] = !flowList[key]
+			return
+		}
+
+		// Now, we can update the current user's flowList on the frontend too.
+		// Update the flowList and update the user struct in the LocalStorage.
+		loggedUser.FlowList = flowList
+		ctx.SetState(StateNameUser, loggedUser).Persist()
+
+		finishedSuccessfully = true
+
+		// Tweak the text response for a info/success toast.
+		if followed := loggedUser.FlowList[key]; followed {
+			text := fmt.Sprintf(MSG_USER_FOLLOW_ADD_FMT, key)
+			toast.Text(text).Type(TTYPE_SUCCESS).Dispatch()
+		} else {
+			text := fmt.Sprintf(MSG_USER_FOLLOW_REMOVE_FMT, key)
+			toast.Text(text).Type(TTYPE_SUCCESS).Dispatch()
+		}
+	})
+}
+
 // HandleUserShade is an action handler function that enables one to shade other accounts.
-func HandleUserShade(ctx app.Context, a app.Action, userToShade models.User, callback func()) {
+func HandleUserShade(ctx app.Context, a app.Action, userToShade models.User, callback func(updateUser bool)) {
 	// Fetch the requested ID (nickname) and assert it type string.
 	key, ok := a.Value.(string)
 	if !ok {
@@ -189,8 +368,10 @@ func HandleUserShade(ctx app.Context, a app.Action, userToShade models.User, cal
 	toast := Toast{AppContext: &ctx}
 
 	ctx.Async(func() {
+		var finishedSuccessfully bool
+
 		defer ctx.Dispatch(func(ctx app.Context) {
-			callback()
+			callback(finishedSuccessfully)
 		})
 
 		// Prepare the request body data structure.

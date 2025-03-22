@@ -56,7 +56,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:                b.User.Nickname,
 					Class:             "max responsive shrink grey white-text thicc",
-					Disabled:          !b.IsShaded,
+					Disabled:          !b.IsShaded || b.ButtonsDisabled,
 					Text:              "Unshade",
 					Icon:              "cruelty_free",
 					OnClickActionName: b.OnClickShadeActionName,
@@ -65,7 +65,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:       b.User.Nickname,
 					Class:    "max responsive shrink grey10 white-border white-text bold thicc",
-					Disabled: b.IsShaded,
+					Disabled: b.IsShaded || b.ButtonsDisabled,
 					Icon:     "close",
 					Text:     "Shaded",
 				},
@@ -76,7 +76,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:                b.User.Nickname,
 					Class:             "max responsive shrink grey black-text thicc",
-					Disabled:          b.IsShaded,
+					Disabled:          b.IsShaded || b.ButtonsDisabled,
 					Text:              "Shade",
 					Icon:              "block",
 					OnClickActionName: b.OnClickShadeActionName,
@@ -96,7 +96,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:                b.User.Nickname,
 					Class:             "max responsive shrink grey black-text thicc",
-					Disabled:          b.IsShaded,
+					Disabled:          b.IsShaded || b.ButtonsDisabled,
 					Text:              "Shade",
 					Icon:              "block",
 					OnClickActionName: b.OnClickShadeActionName,
@@ -116,7 +116,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:                b.User.Nickname,
 					Class:             "max responsive shrink grey black-text thicc",
-					Disabled:          b.IsShaded,
+					Disabled:          b.IsShaded || b.ButtonsDisabled,
 					Text:              "Shade",
 					Icon:              "block",
 					OnClickActionName: b.OnClickShadeActionName,
@@ -136,7 +136,7 @@ func (b *UserFeedButtons) Render() app.UI {
 				&atoms.Button{
 					ID:                b.User.Nickname,
 					Class:             "max responsive shrink grey black-text thicc",
-					Disabled:          b.IsShaded,
+					Disabled:          b.IsShaded || b.ButtonsDisabled,
 					Text:              "Shade",
 					Icon:              "block",
 					OnClickActionName: b.OnClickShadeActionName,

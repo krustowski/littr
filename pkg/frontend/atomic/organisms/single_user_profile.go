@@ -24,7 +24,13 @@ type SingleUserProfile struct {
 }
 
 func (s *SingleUserProfile) Render() app.UI {
-	var isRequested, isShaded, found bool
+	var isInFlow, isRequested, isShaded, found bool
+
+	if s.LoggedUser.FlowList != nil {
+		if isInFlow, found = s.LoggedUser.FlowList[s.SingleUser.Nickname]; found && isInFlow {
+			isInFlow = true
+		}
+	}
 
 	if s.LoggedUser.ShadeList != nil {
 		if isShaded, found = s.LoggedUser.ShadeList[s.SingleUser.Nickname]; found && isShaded {
@@ -58,7 +64,7 @@ func (s *SingleUserProfile) Render() app.UI {
 					LoggedUserNickname: s.LoggedUser.Nickname,
 					User:               s.SingleUser,
 
-					IsInFlow:        true,
+					IsInFlow:        isInFlow,
 					IsPrivate:       s.SingleUser.Private,
 					IsRequested:     isRequested,
 					IsShaded:        isShaded,

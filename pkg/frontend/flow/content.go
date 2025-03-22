@@ -59,11 +59,6 @@ type Content struct {
 	refreshClicked bool
 
 	hashtag string
-
-	//eventListener        func()
-	//eventListenerMsg     func()
-	//keyDownEventListener func()
-	//dismissEventListener func()
 }
 
 func (c *Content) OnMount(ctx app.Context) {
@@ -71,12 +66,12 @@ func (c *Content) OnMount(ctx app.Context) {
 		return
 	}
 
-	ctx.Handle("ask", nil)
-	ctx.Handle("cancel", nil)
+	ctx.Handle("ask", c.handlePrivateMode)
+	ctx.Handle("cancel", c.handlePrivateMode)
 	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)
 	ctx.Handle("dismiss", c.handleDismiss)
-	ctx.Handle("follow", nil)
+	ctx.Handle("follow", c.handleToggle)
 	ctx.Handle("history", c.handleLink)
 	ctx.Handle("image-click", c.handleImage)
 	ctx.Handle("link", c.handleLink)
@@ -89,7 +84,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("shade", c.handleUserShade)
 	ctx.Handle("star", c.handleStar)
-	ctx.Handle("unfollow", nil)
+	ctx.Handle("unfollow", c.handleToggle)
 	ctx.Handle("user", c.handleUser)
 
 	c.paginationEnd = false

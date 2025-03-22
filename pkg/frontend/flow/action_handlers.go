@@ -178,6 +178,25 @@ func (c *Content) handleMouseLeave(ctx app.Context, a app.Action) {
 	common.HandleMouseLeave(ctx, a)
 }
 
+func (c *Content) handlePrivateMode(ctx app.Context, a app.Action) {
+	key, ok := a.Value.(string)
+	if !ok {
+		return
+	}
+
+	ctx.Dispatch(func(ctx app.Context) {
+		c.buttonDisabled = true
+		c.postButtonsDisabled = true
+	})
+
+	callback := func(updateUser bool) {
+		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+	}
+
+	common.HandlePrivateMode(ctx, a, c.users[key], callback)
+}
+
 func (c *Content) handleRefresh(ctx app.Context, a app.Action) {
 	ctx.Dispatch(func(ctx app.Context) {
 		c.buttonDisabled = true
@@ -504,10 +523,22 @@ func (c *Content) handleScroll(ctx app.Context, a app.Action) {
 	})
 }
 
-/*func (c *Content) onClickStar(ctx app.Context, e app.Event) {
-	key := ctx.JSSrc().Get("id").String()
-	ctx.NewActionWithValue("star", key)
-}*/
+// handleToggle is an action handler that takes care of user follow toggling.
+func (c *Content) handleToggle(ctx app.Context, a app.Action) {
+	ctx.Dispatch(func(ctx app.Context) {
+		c.buttonDisabled = true
+		c.postButtonsDisabled = true
+	})
+
+	callback := func(updateUser bool) {
+		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+
+		ctx.GetState(common.StateNameUser, c.user)
+	}
+
+	common.HandleToggleFollow(ctx, a, callback)
+}
 
 // handleUserShade is an action handler function that enables one to shade other accounts.
 func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
@@ -519,10 +550,23 @@ func (c *Content) handleUserShade(ctx app.Context, a app.Action) {
 
 	ctx.Dispatch(func(ctx app.Context) {
 		c.buttonDisabled = true
+		c.postButtonsDisabled = true
 	})
 
-	callback := func() {
+	callback := func(updateUser bool) {
 		c.buttonDisabled = false
+		c.postButtonsDisabled = false
+
+		if updateUser {
+			updatedUser := c.users[key]
+
+			updatedUser.FlowList[c.user.Nickname] = false
+			c.user.ShadeList[key] = true
+
+			c.users[key] = updatedUser
+		}
+
+		ctx.GetState(common.StateNameUser, &c.user)
 	}
 
 	common.HandleUserShade(ctx, a, c.users[key], callback)

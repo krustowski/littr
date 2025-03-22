@@ -40,6 +40,8 @@ func (c *Content) OnNav(ctx app.Context) {
 		return
 	}
 
+	ctx.GetState(common.StateNameUser, &c.user)
+
 	// show loader
 	c.loaderShow = true
 	toast := common.Toast{AppContext: &ctx}
@@ -89,7 +91,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			return
 		}
 
-		// manually toggle all users to be "searched for" on init
+		// Toggle all users to be "searched for" on init manually
 		for k, u := range data.Users {
 			u.Searched = true
 			data.Users[k] = u
@@ -101,12 +103,8 @@ func (c *Content) OnNav(ctx app.Context) {
 			c.users = data.Users
 			c.userStats = data.UserStats
 
-			//c.posts = postsPre.Posts
-
 			c.pagination = 25
 			c.pageNo = 1
-
-			//c.flowStats, c.userStats = c.calculateStats()
 
 			c.loaderShow = false
 		})
@@ -118,7 +116,6 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("preview", c.handleUserPreview)
 	ctx.Handle("scroll", c.handleScroll)
 	ctx.Handle("search", c.handleSearch)
-	ctx.Handle("shade", c.handleUserShade)
 	ctx.Handle("toggle", c.handleToggle)
 	ctx.Handle("flow-link-click", c.handleLink)
 
@@ -128,19 +125,13 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("user", c.handleUserPreview)
 	ctx.Handle("nickname-click", c.handleUserPreview)
 
-	ctx.Handle("unfollow", c.handleToggle)
-	ctx.Handle("follow", c.handleToggle)
-
 	ctx.Handle("ask", c.handlePrivateMode)
 	ctx.Handle("cancel", c.handlePrivateMode)
+	ctx.Handle("follow", c.handleToggle)
+	ctx.Handle("shade", c.handleUserShade)
+	ctx.Handle("unfollow", c.handleToggle)
 
 	c.paginationEnd = false
 	c.pagination = 0
 	c.pageNo = 1
-
-	//c.scrollEventListener = app.Window().AddEventListener("scroll", c.onScroll)
-	//c.keyDownEventListener = app.Window().AddEventListener("keydown", c.onKeyDown)
-
-	// hotfix to catch panic
-	//c.polls = make(map[string]models.Poll)
 }
