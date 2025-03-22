@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
+	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -13,43 +13,7 @@ const (
 	nicknameToFind string = "mocker99"
 )
 
-type mockTokenRepository struct{}
-
 type mockNickname string
-
-func (m *mockTokenRepository) GetAll() (*map[string]models.Token, error) {
-	return &map[string]models.Token{
-		"ff00lerT5": {
-			Hash:      "ff00lertT5",
-			Nickname:  nicknameToFind,
-			CreatedAt: time.Now().Add(-5 * 7 * 24 * time.Hour),
-			TTL:       500,
-		},
-		"xx09wert": {
-			Hash:      "xx00wert",
-			Nickname:  "tweaker66",
-			CreatedAt: time.Now(),
-			TTL:       500,
-		},
-	}, nil
-}
-
-func (m *mockTokenRepository) GetByID(tokenID string) (*models.Token, error) {
-	return &models.Token{
-		Hash:      "ff00lertT5",
-		Nickname:  nicknameToFind,
-		CreatedAt: time.Now().Add(-5 * 7 * 24 * time.Hour),
-		TTL:       500,
-	}, nil
-}
-
-func (m *mockTokenRepository) Save(token *models.Token) error {
-	return nil
-}
-
-func (m *mockTokenRepository) Delete(tokenID string) error {
-	return nil
-}
 
 //
 //  Tests
@@ -60,7 +24,7 @@ func newTestContext() context.Context {
 }
 
 func newTestService(t *testing.T) models.TokenServiceInterface {
-	service := NewTokenService(&mockTokenRepository{})
+	service := NewTokenService(&common.MockTokenRepository{})
 	if service == nil {
 		t.Fatal("nil TokenService")
 	}
