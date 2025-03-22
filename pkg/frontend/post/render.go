@@ -38,7 +38,7 @@ func (c *Content) Render() app.UI {
 		// New post button.
 		&atoms.Button{
 			ID:                "button-new-post",
-			Class:             "max responsive shrink center primary-container bold thicc",
+			Class:             "max responsive shrink center primary-container white-text bold thicc",
 			Icon:              "send",
 			Text:              "Send",
 			Disabled:          c.postButtonsDisabled,

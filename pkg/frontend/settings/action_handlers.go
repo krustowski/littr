@@ -440,7 +440,7 @@ func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
 			return
 		}
 
-		devs := c.devices
+		devs := c.user.Devices
 		newDevs := []models.Device{}
 		for _, dev := range devs {
 			if dev.UUID == uuid {
@@ -461,7 +461,7 @@ func (c *Content) handleSubscriptionDelete(ctx app.Context, _ app.Action) {
 
 			c.thisDevice = models.Device{}
 			c.deleteSubscriptionModalShow = false
-			c.devices = newDevs
+			c.user.Devices = newDevs
 		})
 	})
 }

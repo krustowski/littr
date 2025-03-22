@@ -132,7 +132,7 @@ func (c *Content) createSubscription(ctx app.Context, tag string) {
 		return
 	}
 
-	devs := c.devices
+	devs := c.user.Devices
 	devs = append(devs, deviceSub)
 
 	// Update the LocalStorage.
@@ -154,7 +154,7 @@ func (c *Content) createSubscription(ctx app.Context, tag string) {
 		}
 
 		c.thisDevice = deviceSub
-		c.devices = devs
+		c.user.Devices = devs
 	})
 
 	toast.Text(common.MSG_SUBSCRIPTION_REQ_SUCCESS).Type(common.TTYPE_SUCCESS).Dispatch()
@@ -172,7 +172,7 @@ func (c *Content) deleteSubscription(ctx app.Context) {
 		UUID: uuid,
 	}
 
-	devs := c.devices
+	devs := c.user.Devices
 	newDevs := []models.Device{}
 	for _, dev := range devs {
 		if dev.UUID == ctx.DeviceID() {
@@ -219,7 +219,7 @@ func (c *Content) deleteSubscription(ctx app.Context) {
 
 			c.subscribed = false
 			c.thisDevice = models.Device{}
-			c.devices = newDevs
+			c.user.Devices = newDevs
 		})
 	})
 }
@@ -233,7 +233,7 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 
 	var newDevs = make([]models.Device, 0)
 
-	for _, dev := range c.devices {
+	for _, dev := range c.user.Devices {
 		if dev.UUID == ctx.DeviceID() {
 			if len(c.checkTags(dev.Tags, tag)) == 0 {
 				continue
@@ -292,7 +292,7 @@ func (c *Content) updateSubscriptionTag(ctx app.Context, tag string) {
 			}
 
 			c.thisDevice = deviceSub
-			c.devices = newDevs
+			c.user.Devices = newDevs
 			c.settingsButtonDisabled = false
 		})
 	})

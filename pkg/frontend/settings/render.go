@@ -12,8 +12,6 @@ import (
 )
 
 func (c *Content) Render() app.UI {
-	devicesToShow := len(c.user.Devices)
-
 	return app.Main().Class("responsive").ID("anchor-settings-top").Body(
 		&atoms.PageHeading{
 			Title: "settings",
@@ -194,7 +192,7 @@ func (c *Content) Render() app.UI {
 		},
 
 		// Print list of subscribed devices.
-		app.If(devicesToShow > 0, func() app.UI {
+		app.If(len(c.user.Devices) > 0, func() app.UI {
 			return app.Div().Body(
 				&atoms.PageHeading{
 					Title: "subscribed devices",
@@ -203,9 +201,9 @@ func (c *Content) Render() app.UI {
 
 				// Loop over the array of subscribed devices.
 				app.Div().Class().Body(
-					app.Range(c.devices).Slice(func(i int) app.UI {
+					app.Range(c.user.Devices).Slice(func(i int) app.UI {
 						// Take the i-th device.
-						dev := c.devices[i]
+						dev := c.user.Devices[i]
 						if dev.UUID == "" {
 							return nil
 						}
@@ -355,7 +353,7 @@ func (c *Content) Render() app.UI {
 		&molecules.TextBox{
 			Class:       "row border blue-border thicc info",
 			Icon:        "info",
-			IconClass:   "primary-text",
+			IconClass:   "blue-text",
 			Text:        InfoWebsiteLink,
 			MakeSummary: true,
 		},
@@ -409,7 +407,7 @@ func (c *Content) Render() app.UI {
 			Text:      AlertUserDeletion,
 		},
 
-		app.Div().Class("space"),
+		app.Div().Class("medium-space"),
 
 		&atoms.Button{
 			Class:             "max responsive shrink center red10 white-text bold thicc",

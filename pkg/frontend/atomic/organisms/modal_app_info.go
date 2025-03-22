@@ -48,10 +48,10 @@ func (m *ModalAppInfo) Render() app.UI {
 
 				app.Article().Class("center-align large-text border thicc").Body(
 					app.P().Body(
-						app.A().Class("blue-text bold").Href("/tos").Text("Terms of Service"),
+						app.A().Class("primary-text bold").Href("/tos").Text("Terms of Service"),
 					),
 					app.P().Body(
-						app.A().Class("blue-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
+						app.A().Class("primary-text bold").Href("https://krusty.space/projects/littr").Text("Documentation (external)"),
 					),
 				),
 

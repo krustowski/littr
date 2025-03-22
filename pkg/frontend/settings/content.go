@@ -158,7 +158,6 @@ func (c *Content) OnNav(ctx app.Context) {
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = data.User
 			c.loggedUser = data.User.Nickname
-			c.devices = data.User.Devices
 
 			//c.subscribed = output.Subscribed
 			c.subscription = subscription
