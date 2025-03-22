@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.41"
+        "version": "0.46.42"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -4405,10 +4405,10 @@
         "users.UserUpdatePassphraseRequest": {
             "type": "object",
             "properties": {
-                "current_passphrase_hex": {
+                "current_passphrase_plain": {
                     "type": "string"
                 },
-                "new_passphrase_hex": {
+                "new_passphrase_plain": {
                     "description": "New passphrase request payload.",
                     "type": "string"
                 }
