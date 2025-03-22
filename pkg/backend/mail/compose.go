@@ -1,15 +1,31 @@
 package mail
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"strings"
 
 	gomail "github.com/wneessen/go-mail"
+	"go.vxn.dev/littr/pkg/config"
+)
+
+var (
+	ErrInvalidPayload    = errors.New("invalid input: not of type MessagePayload")
+	ErrNoEmailAddress    = errors.New("invalid input: e-mail address field is empty")
+	ErrActivationNoUUID  = errors.New("invalid input: UUID string is empty")
+	ErrResetNoPassphrase = errors.New("invalid input: new passhrase to send is empty")
+	ErrUnknownMailType   = errors.New("invalid input: unknown mail message type provided")
+
+	ErrTemplateBakeFail = errors.New("message template baking failed, the composition is empty")
 )
 
 // ComposeMail is a function to prepare a go-mail-formatted message for sending.
-func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
+func (s *mailService) ComposeMail(payloadI interface{}) (*gomail.Msg, error) {
+	payload, ok := payloadI.(MessagePayload)
+	if !ok {
+		return nil, ErrInvalidPayload
+	}
+
 	m := gomail.NewMsg()
 
 	// Compose the From field.
@@ -19,22 +35,13 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 
 	// Check if the e-mail address is given.
 	if payload.Email == "" {
-		return nil, fmt.Errorf("no new passhrase given for mail composition")
+		return nil, ErrNoEmailAddress
 	}
 
 	// Compose the To field.
 	if err := m.To(payload.Email); err != nil {
 		return nil, err
 	}
-
-	// Fetch the mail instance URL: used in the PS part of the message.
-	mainURL := func() string {
-		if os.Getenv("APP_URL_MAIN") != "" {
-			return os.Getenv("APP_URL_MAIN")
-		}
-
-		return "www.littr.eu"
-	}()
 
 	// Ensure the nickname is never blank.
 	nickname := func() string {
@@ -52,13 +59,13 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 	// User Activation procedure.
 	case "user_activation":
 		if payload.UUID == "" {
-			return nil, fmt.Errorf("no UUID given for mail composition")
+			return nil, ErrActivationNoUUID
 		}
 
 		tmplPayload = &TemplatePayload{
 			Nickname:       nickname,
-			MainURL:        mainURL,
-			ActivationLink: "https://" + mainURL + "/activation/" + payload.UUID,
+			MainURL:        config.ServerUrl,
+			ActivationLink: "https://" + config.ServerUrl + "/activation/" + payload.UUID,
 			TemplateSrc:    "/opt/templates/activation.tmpl",
 		}
 
@@ -67,13 +74,13 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 	// Passphrase reset request.
 	case "reset_request":
 		if payload.UUID == "" {
-			return nil, fmt.Errorf("no UUID given for mail composition")
+			return nil, ErrActivationNoUUID
 		}
 
 		tmplPayload = &TemplatePayload{
 			Nickname:    nickname,
-			MainURL:     mainURL,
-			ResetLink:   "https://" + mainURL + "/reset/" + payload.UUID,
+			MainURL:     config.ServerUrl,
+			ResetLink:   "https://" + config.ServerUrl + "/reset/" + payload.UUID,
 			UUID:        payload.UUID,
 			TemplateSrc: "/opt/templates/reset_request.tmpl",
 		}
@@ -83,12 +90,12 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 	// New passphrase regeneration procedure.
 	case "reset_passphrase":
 		if payload.Passphrase == "" {
-			return nil, fmt.Errorf("no new passhrase given for mail composition")
+			return nil, ErrResetNoPassphrase
 		}
 
 		tmplPayload = &TemplatePayload{
 			Nickname:    nickname,
-			MainURL:     mainURL,
+			MainURL:     config.ServerUrl,
 			Passphrase:  payload.Passphrase,
 			TemplateSrc: "/opt/templates/new_passphrase.tmpl",
 		}
@@ -96,7 +103,7 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 		m.Subject("Your New Passphrase")
 
 	default:
-		return nil, fmt.Errorf("no or wrong mail Type specified")
+		return nil, ErrUnknownMailType
 	}
 
 	var composition string
@@ -108,7 +115,7 @@ func ComposeMail(payload MessagePayload) (*gomail.Msg, error) {
 
 	// Check the composition content.
 	if composition == "" {
-		return nil, fmt.Errorf("blank mail text composition")
+		return nil, ErrTemplateBakeFail
 	}
 
 	// Set the mail's body.

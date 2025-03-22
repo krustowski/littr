@@ -1,25 +1,37 @@
 package mail
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"strconv"
 
 	gomail "github.com/wneessen/go-mail"
 )
 
-func SendMail(msg *gomail.Msg) error {
-	port, err := strconv.Atoi(os.Getenv("MAIL_PORT"))
+var (
+	ErrIncompleteMailServerConfiguration = errors.New("mail server is not configured properly, check the settings")
+)
+
+var (
+	mailHelo     = os.Getenv("MAIL_HELO")
+	mailHost     = os.Getenv("MAIL_HOST")
+	mailPort     = os.Getenv("MAIL_PORT")
+	mailSaslUser = os.Getenv("MAIL_SASL_USR")
+	mailSaslPass = os.Getenv("MAIL_SASL_PWD")
+)
+
+func (s *mailService) SendMail(msg *gomail.Msg) error {
+	port, err := strconv.Atoi(mailPort)
 	if err != nil {
 		return err
 	}
 
-	if os.Getenv("MAIL_HOST") == "" || os.Getenv("MAIL_SASL_USR") == "" || os.Getenv("MAIL_SASL_PWD") == "" || os.Getenv("MAIL_HELO") == "" {
-		return fmt.Errorf("invalid mail server configuration, check the server settings")
+	if mailHost == "" || mailSaslUser == "" || mailSaslPass == "" || mailHelo == "" {
+		return ErrIncompleteMailServerConfiguration
 	}
 
-	c, err := gomail.NewClient(os.Getenv("MAIL_HOST"), gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
-		gomail.WithUsername(os.Getenv("MAIL_SASL_USR")), gomail.WithPassword(os.Getenv("MAIL_SASL_PWD")), gomail.WithHELO(os.Getenv("MAIL_HELO")))
+	c, err := gomail.NewClient(mailHost, gomail.WithPort(port), gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
+		gomail.WithUsername(mailSaslUser), gomail.WithPassword(mailSaslPass), gomail.WithHELO(mailHelo))
 	if err != nil {
 		return err
 	}
