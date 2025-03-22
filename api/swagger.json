@@ -23,14 +23,14 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.40"
+        "version": "0.46.41"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
     "paths": {
         "/auth": {
             "post": {
-                "description": "This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).\n\nThe hashed string is a concatenation of user's passphrase and the server pepper/secret, which is then hashed using the SHA-512 algorithm.",
+                "description": "This function call acts as a procedure to authenticate an user using their credentials (nickname and hashed passphrase). On success, the pair of HTTP cookies are sent with the API response (`refresh-token` and `access-token`).",
                 "consumes": [
                     "application/json"
                 ],
@@ -198,6 +198,24 @@
                     },
                     "429": {
                         "description": "Too many requests, try again later.",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Stub"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error, try again later.",
                         "schema": {
                             "allOf": [
                                 {
@@ -3602,10 +3620,10 @@
                     "type": "string",
                     "example": "alice"
                 },
-                "passphrase_hex": {
-                    "description": "PassphraseHex is a hexadecimal representation of a passphrase (a SHA-512 checksum).\nUse 'echo $PASS | sha512sum' for example to get the hex format.",
+                "passphrase_plain": {
+                    "description": "PassphrasePlain is the plain-text format of the passphrase.",
                     "type": "string",
-                    "example": "fb43b35a752b0e8045e2dd1b1e292983b9cbf4672a51e30caaa3f9b06c5a3b74d5096bc8092c9e90a2e047c1eab29eceb50c09d6c51e6995c1674beb3b06535e"
+                    "example": "s3creTpauWussw0rt"
                 }
             }
         },
@@ -4286,9 +4304,9 @@
                     "type": "string",
                     "example": "alice"
                 },
-                "passphrase_hex": {
+                "passphrase_plain": {
                     "type": "string",
-                    "example": "fb43b35a752b0e8045e2dd1b1e292983b9cbf4672a51e30caaa3f9b06c5a3b74d5096bc8092c9e90a2e047c1eab29eceb50c09d6c51e6995c1674beb3b06535e"
+                    "example": "s3creTpassuWuort"
                 }
             }
         },

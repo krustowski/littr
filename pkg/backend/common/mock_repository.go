@@ -6,7 +6,10 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-var MockUserNickname = "mocker99"
+var (
+	MockUserNickname = "mocker99"
+	MockUUID         = "550e8400-e29b-41d4-a716-446655440000"
+)
 
 //
 //  PollRepositoryInterface dummy implementation
@@ -73,7 +76,13 @@ var _ models.PostRepositoryInterface = (*MockPostRepository)(nil)
 type MockRequestRepository struct{}
 
 func (m *MockRequestRepository) GetByID(reqID string) (*models.Request, error) {
-	return &models.Request{}, nil
+	return &models.Request{
+		ID:        MockUUID,
+		Email:     "alice@example.com",
+		Nickname:  MockUserNickname,
+		Type:      "activation",
+		CreatedAt: time.Now().Add(-5 * time.Minute),
+	}, nil
 }
 
 func (m *MockRequestRepository) Save(req *models.Request) error {

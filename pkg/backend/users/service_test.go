@@ -19,7 +19,7 @@ func newTestContext() context.Context {
 }
 
 func newTestService(t *testing.T) models.UserServiceInterface {
-	service := NewUserService(&common.MockPollRepository{}, &common.MockPostRepository{}, &common.MockRequestRepository{}, &common.MockTokenRepository{}, &common.MockUserRepository{})
+	service := NewUserService(&common.MockMailService{}, &common.MockPollRepository{}, &common.MockPostRepository{}, &common.MockRequestRepository{}, &common.MockTokenRepository{}, &common.MockUserRepository{})
 	if service == nil {
 		t.Fatal("nil UserService")
 	}
@@ -38,6 +38,15 @@ func TestUsers_UserServiceCreate(t *testing.T) {
 	}
 
 	if err := service.Create(ctx, req); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestUsers_UserServiceActivate(t *testing.T) {
+	ctx := newTestContext()
+	service := newTestService(t)
+
+	if err := service.Activate(ctx, common.MockUserNickname); err != nil {
 		t.Error(err)
 	}
 }
