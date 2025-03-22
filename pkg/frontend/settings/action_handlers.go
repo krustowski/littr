@@ -228,10 +228,7 @@ func (c *Content) handleOptionsChange(ctx app.Context, a app.Action) {
 			c.updateOptions(payload)
 
 			// Update the LocalStorage.
-			if err := common.SaveUser(&c.user, &ctx); err != nil {
-				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
-				return
-			}
+			ctx.SetState(common.StateNameUser, c.user).Persist()
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()
@@ -317,10 +314,7 @@ func (c *Content) handleOptionsSwitchChange(ctx app.Context, a app.Action) {
 			c.themeMode = payload.UITheme.Bg()
 
 			// Update the LocalStorage.
-			if err := common.SaveUser(&c.user, &ctx); err != nil {
-				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
-				return
-			}
+			ctx.SetState(common.StateNameUser, c.user).Persist()
 		})
 
 		toast.Text(message).Type(common.TTYPE_SUCCESS).Dispatch()

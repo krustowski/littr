@@ -4,7 +4,7 @@ package common
 const (
 	StateNameAuthGranted string = "auth-granted"
 	StateNameNewUpdate   string = "new-update"
-	StateNameUser        string = "user"
+	StateNameUser        string = "user-data"
 	StateNameCachedPosts string = "cached-posts"
 )
 

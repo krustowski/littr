@@ -114,6 +114,7 @@ func (h *Header) OnMount(ctx app.Context) {
 	}
 
 	ctx.GetState(common.StateNameUser, &h.user)
+	h.ensureUIColors()
 
 	// Custom SSE client implementation.
 	if !app.Window().Get(common.JsLittrSse).Get("running").Bool() {

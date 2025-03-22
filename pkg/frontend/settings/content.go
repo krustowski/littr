@@ -153,16 +153,7 @@ func (c *Content) OnNav(ctx app.Context) {
 			subscription.Mentions = true
 		}
 
-		// get the mode
-		var mode string
-		if err := ctx.LocalStorage().Get("mode", &mode); err != nil {
-			mode = "dark"
-		}
-
-		if err := common.SaveUser(&data.User, &ctx); err != nil {
-			toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Dispatch()
-			return
-		}
+		ctx.SetState(common.StateNameUser, data.User)
 
 		ctx.Dispatch(func(ctx app.Context) {
 			c.user = data.User
@@ -171,9 +162,6 @@ func (c *Content) OnNav(ctx app.Context) {
 
 			//c.subscribed = output.Subscribed
 			c.subscription = subscription
-
-			c.darkModeOn = mode == "dark"
-			//c.darkModeOn = user.AppBgMode == "dark"
 
 			c.aboutText = data.User.About
 			c.website = data.User.Web

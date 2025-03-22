@@ -94,8 +94,8 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 			return
 		}
 
-		ctx.SetState("auth-granted", true).Persist()
-		ctx.SetState("user", data.User).Persist()
+		ctx.SetState(common.StateNameAuthGranted, true).Persist()
+		ctx.SetState(common.StateNameUser, data.User).Persist()
 
 		if data.AuthGranted {
 			ctx.Navigate("/flow")
