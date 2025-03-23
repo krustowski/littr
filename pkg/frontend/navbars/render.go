@@ -91,7 +91,7 @@ func (h *Header) Render() app.UI {
 				},
 
 				// littr header
-				app.Div().Class("row center-align").Body(
+				app.Div().Class("row max center-align").Body(
 					&atoms.Snackbar{
 						Class:    "snackbar white-text thicc",
 						ID:       "snackbar-general-top",
