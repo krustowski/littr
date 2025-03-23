@@ -61,6 +61,7 @@ func (h *Header) handleKeydown(ctx app.Context, a app.Action) {
 	// Was the key Escape/Esc? Then cast general item dismissal.
 	if event.Get("key").String() == "Escape" || event.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss-general")
+		ctx.NewAction("dismiss")
 		return
 	}
 

@@ -121,12 +121,7 @@ func (c *Content) handlePostPoll(ctx app.Context, a app.Action) {
 		}
 
 		var user models.User
-
-		// Decode and unmarshal the local storage user data.
-		if err := common.LoadUser(&user, &ctx); err != nil {
-			toast.Text(common.ERR_LOCAL_STORAGE_LOAD_FAIL).Type(common.TTYPE_ERR).Dispatch()
-			return
-		}
+		ctx.GetState(common.StateNameUser, &user)
 
 		path := "/api/v1/posts"
 

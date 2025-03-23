@@ -354,36 +354,6 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
-		payloadNotif := struct {
-			OriginalPost string `json:"post_id"`
-		}{
-			OriginalPost: c.interactedPostKey,
-		}
-
-		input = &common.CallInput{
-			Method:      "POST",
-			Url:         "/api/v1/push",
-			Data:        payloadNotif,
-			CallerID:    c.user.Nickname,
-			PageNo:      c.pageNo,
-			HideReplies: c.hideReplies,
-		}
-
-		output2 := &common.Response{}
-
-		// create a notification
-		if ok := common.FetchData(input, output2); !ok {
-			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
-
-			ctx.Dispatch(func(ctx app.Context) {
-				c.interactedPostKey = ""
-				c.replyPostContent = ""
-				c.newFigData = []byte{}
-				c.newFigFile = ""
-			})
-			return
-		}
-
 		posts := c.posts
 
 		// we do not know the ID, as it is assigned in the BE logic,
