@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.43"
+        "version": "0.46.44"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -1122,7 +1122,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/posts.Create.responseData"
+                                            "$ref": "#/definitions/models.Post"
                                         }
                                     }
                                 }
@@ -3810,7 +3810,7 @@
                     "type": "integer"
                 },
                 "reply_to_id": {
-                    "description": "ReplyTo is a reference key to another post, that is being replied to.\nReplyTo   int    `json:\"reply_to\"`",
+                    "description": "ReplyToID is a reference key to another post, that is being replied to.",
                     "type": "string"
                 },
                 "timestamp": {
@@ -4087,17 +4087,6 @@
                 "option_two_count": {
                     "type": "integer",
                     "example": 2
-                }
-            }
-        },
-        "posts.Create.responseData": {
-            "type": "object",
-            "properties": {
-                "posts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/models.Post"
-                    }
                 }
             }
         },

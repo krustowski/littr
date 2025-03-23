@@ -153,14 +153,13 @@ func (s *postService) Create(ctx context.Context, post *models.Post) error {
 	}
 
 	if post.ReplyToID != "" {
-		fmt.Printf("halo\n")
 		if err := s.notifService.SendNotification(ctx, post.ReplyToID); err != nil {
-			return err
+			fmt.Print(err.Error())
 		}
 	}
 
 	// Broadcast the new post event.
-	live.BroadcastMessage(live.EventPayload{Data: "post," + post.ID, Type: "message"})
+	live.BroadcastMessage(live.EventPayload{Data: "post," + post.Nickname, Type: "message"})
 
 	return nil
 }

@@ -10,27 +10,27 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-type SubscriptionService struct {
-	postRepository         models.PostRepositoryInterface
-	subscriptionRepository models.SubscriptionRepositoryInterface
+type notificationService struct {
+	postRepository models.PostRepositoryInterface
+	userRepository models.UserRepositoryInterface
 }
 
-func NewSubscriptionService(
+func NewNotificationService(
 	postRepository models.PostRepositoryInterface,
-	subscriptionRepository models.SubscriptionRepositoryInterface,
-) *SubscriptionService {
+	userRepository models.UserRepositoryInterface,
+) models.NotificationServiceInterface {
 
-	if postRepository == nil || subscriptionRepository == nil {
+	if postRepository == nil || userRepository == nil {
 		return nil
 	}
 
-	return &SubscriptionService{
-		postRepository:         postRepository,
-		subscriptionRepository: subscriptionRepository,
+	return &notificationService{
+		postRepository: postRepository,
+		userRepository: userRepository,
 	}
 }
 
-func (s *SubscriptionService) SendNotification(ctx context.Context, postID string) error {
+func (s *notificationService) SendNotification(ctx context.Context, postID string) error {
 	// Fetch the callerID from the given context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -46,10 +46,9 @@ func (s *SubscriptionService) SendNotification(ctx context.Context, postID strin
 		return err
 	}
 
-	dbSub, err := s.subscriptionRepository.GetByUserID(post.Nickname)
+	user, err := s.userRepository.GetByID(post.Nickname)
 	if err != nil {
-		// It is OK for this to return nothing, loop can handle it later...
-		//return err
+		return err
 	}
 
 	// Do not notify the same person --- OK condition.
@@ -58,7 +57,7 @@ func (s *SubscriptionService) SendNotification(ctx context.Context, postID strin
 	}
 
 	// Do not notify such user --- notifications disabled --- OK condition.
-	if dbSub == nil || len(*dbSub) == 0 {
+	if len(user.Devices) == 0 {
 		return nil
 	}
 
@@ -72,9 +71,8 @@ func (s *SubscriptionService) SendNotification(ctx context.Context, postID strin
 
 	opts := &NotificationOpts{
 		Receiver: post.Nickname,
-		Devices:  dbSub,
+		Devices:  &user.Devices,
 		Body:     &body,
-		//Logger:   l,
 	}
 
 	// Send the webpush notification(s).

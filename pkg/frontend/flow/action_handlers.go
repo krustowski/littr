@@ -329,7 +329,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			Posts map[string]models.Post `json:"posts"`
 		}
 
-		output := &common.Response{Data: &dataModel{}}
+		output := &common.Response{Data: &models.Post{}}
 
 		if ok := common.FetchData(input, output); !ok {
 			toast.Text(common.ERR_CANNOT_REACH_BE).Type(common.TTYPE_ERR).Dispatch()
@@ -337,7 +337,7 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			ctx.Dispatch(func(ctx app.Context) {
 				c.interactedPostKey = ""
 				c.replyPostContent = ""
-				c.newFigData = []byte{}
+				c.newFigData = make([]byte, 0)
 				c.newFigFile = ""
 			})
 			return
@@ -348,19 +348,14 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			return
 		}
 
-		data, ok := output.Data.(*dataModel)
+		data, ok := output.Data.(*models.Post)
 		if !ok {
 			toast.Text(common.ERR_CANNOT_GET_DATA).Type(common.TTYPE_ERR).Dispatch()
 			return
 		}
 
 		posts := c.posts
-
-		// we do not know the ID, as it is assigned in the BE logic,
-		// so we need to loop over the list of posts (1)...
-		for k, p := range data.Posts {
-			posts[k] = p
-		}
+		posts[data.ID] = *data
 
 		// Delete the draft(s) from LocalStorage.
 		_ = ctx.LocalStorage().Set("newReplyDraft", nil)

@@ -28,8 +28,7 @@ type Post struct {
 	// PollID is an identification of the Poll structure/object.
 	PollID string `json:"poll_id"`
 
-	// ReplyTo is a reference key to another post, that is being replied to.
-	//ReplyTo   int    `json:"reply_to"`
+	// ReplyToID is a reference key to another post, that is being replied to.
 	ReplyToID string `json:"reply_to_id"`
 
 	// ReactionCount counts the number of item's reactions.

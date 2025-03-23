@@ -20,6 +20,10 @@ type MailServiceInterface interface {
 	SendMail(msg *gomail.Msg) error
 }
 
+type NotificationServiceInterface interface {
+	SendNotification(ctx context.Context, postID string) error
+}
+
 type PollServiceInterface interface {
 	Create(ctx context.Context, createRequest interface{}) error
 	Update(ctx context.Context, updateRequest interface{}) error
@@ -39,14 +43,6 @@ type PostServiceInterface interface {
 
 type StatServiceInterface interface {
 	Calculate(ctx context.Context) (*map[string]int64, *map[string]UserStat, *map[string]User, error)
-}
-
-type SubscriptionServiceInterface interface {
-	Create(ctx context.Context, device *Device) error
-	Update(ctx context.Context, deviceUUID, tagName string) error
-	Delete(ctx context.Context, deviceUUID string) error
-	//FindByID(ctx context.Context, deviceUUID string) (*Subscription, error)
-	SendNotification(ctx context.Context, postID string) error
 }
 
 type TokenServiceInterface interface {
