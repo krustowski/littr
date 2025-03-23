@@ -1,6 +1,9 @@
 package molecules
 
 import (
+	"fmt"
+	"regexp"
+
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/frontend/atomic/atoms"
@@ -37,6 +40,23 @@ func (p *PostBody) onClickText(ctx app.Context, e app.Event) {
 }
 
 func (p *PostBody) Render() app.UI {
+	var markupText string
+
+	rgx := regexp.MustCompile(`(^|\s)#[\w]+`)
+	markupText = rgx.ReplaceAllStringFunc(p.Post.Content, func(match string) string {
+		return fmt.Sprintf(`#link to='/flow/hashtags/%s' class='primary-text'#%s##link#`, match[1:], match)
+	})
+
+	rgx = regexp.MustCompile(`https?://[^\s]+`)
+	markupText = rgx.ReplaceAllStringFunc(markupText, func(match string) string {
+		return fmt.Sprintf(`#link target='_blank' to='%s' class='primary-text'#%s##link#`, match, match)
+	})
+
+	rgx = regexp.MustCompile(`(^|\s)@[\w]+`)
+	markupText = rgx.ReplaceAllStringFunc(markupText, func(match string) string {
+		return fmt.Sprintf(`#link to='/flow/users/%s' class='primary-text'#%s##link#`, match[1:], match)
+	})
+
 	return app.Div().Body(
 		app.If(p.Post.ReplyToID != "", func() app.UI {
 			return app.Article().Class("primary-text border primary-border thicc").Style("max-width", "100%").Body(
@@ -80,6 +100,10 @@ func (p *PostBody) Render() app.UI {
 						app.Div().Class("space"),
 						app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line"),
 					)
+				}).ElseIf(len(markupText) > 0, func() app.UI {
+					return &atoms.Text{
+						FormattedText: markupText,
+					}
 				}).Else(func() app.UI {
 					return app.Span().Text(p.Post.Content).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
 				}),

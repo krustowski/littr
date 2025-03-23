@@ -17,6 +17,7 @@ type Text struct {
 
 	FormattedText string
 	PlainText     string
+	Target        string
 }
 
 var (
@@ -73,7 +74,7 @@ func (t *Text) parseMarkupAndCompose() (elems []app.UI) {
 			compo = app.I().Text(content)
 
 		case "link":
-			compo = app.A().Href(attrs["to"]).Class(attrs["class"]).Text(content)
+			compo = app.A().Target(attrs["target"]).Href(attrs["to"]).Class(attrs["class"]).Text(content)
 
 		default:
 			compo = app.Span().Text(content)
