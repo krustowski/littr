@@ -1,10 +1,8 @@
 package common
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"go.vxn.dev/littr/pkg/config"
@@ -285,19 +283,12 @@ func FetchSSE(ch chan string) {
 				var userStr string
 
 				LS = app.Window().Get("localStorage")
-				if !LS.IsNull() && !LS.Call("getItem", "user").IsUndefined() {
-					userStr = LS.Call("getItem", "user").String()
-				}
-
-				// Decode the user.
-				str, err := base64.StdEncoding.DecodeString(strings.Trim(userStr, "\""))
-				if err != nil {
-					fmt.Println(err.Error())
-					return nil
+				if !LS.IsNull() && !LS.Call("getItem", "user-data").IsUndefined() {
+					userStr = LS.Call("getItem", "user-data").String()
 				}
 
 				// Unmarshal the result to get an User struct.
-				err = json.Unmarshal(str, &user)
+				err := json.Unmarshal([]byte(userStr), &user)
 				if err != nil {
 					fmt.Println(err.Error())
 					return nil
