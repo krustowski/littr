@@ -2,43 +2,49 @@ package posts
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
-	//"strconv"
-	//"time"
+	"regexp"
+	"strconv"
+	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/image"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
-
-	//"go.vxn.dev/littr/pkg/helpers"
+	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/models"
+
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 //
-// models.PostServiceInterface implementation
+//  models.PostServiceInterface implementation
 //
 
-type PostService struct {
+type postService struct {
+	notifService   models.NotificationServiceInterface
 	postRepository models.PostRepositoryInterface
 	userRepository models.UserRepositoryInterface
 }
 
 func NewPostService(
+	notifService models.NotificationServiceInterface,
 	postRepository models.PostRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.PostServiceInterface {
-	if postRepository == nil || userRepository == nil {
+	if notifService == nil || postRepository == nil || userRepository == nil {
 		return nil
 	}
 
-	return &PostService{
+	return &postService{
+		notifService:   notifService,
 		postRepository: postRepository,
 		userRepository: userRepository,
 	}
 }
 
-func (s *PostService) Create(ctx context.Context, post *models.Post) error {
+func (s *postService) Create(ctx context.Context, post *models.Post) error {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -55,6 +61,44 @@ func (s *PostService) Create(ctx context.Context, post *models.Post) error {
 		return fmt.Errorf(common.ERR_POSTER_INVALID)
 	}
 
+	// Deny blank post.
+	if post.Content == "" && post.Figure == "" && post.Data == nil {
+		return fmt.Errorf(common.ERR_POST_BLANK)
+	}
+
+	//
+	//  Preprocess the post
+	//
+
+	// Prepare the timestamps to sigh the post.
+	timestampFull := time.Now()
+	timestampUnix := strconv.FormatInt(timestampFull.UnixNano(), 10)
+
+	post.ID = timestampUnix
+	post.Timestamp = timestampFull
+
+	// Compose a payload for the image processing.
+	imagePayload := &image.ImageProcessPayload{
+		ImageByteData: &post.Data,
+		ImageFileName: post.Figure,
+		ImageBaseName: post.ID,
+	}
+
+	// Uploaded figure handling.
+	if post.Data != nil && post.Figure != "" {
+		imgReference, err := image.ProcessImageBytes(imagePayload)
+		if err != nil {
+			return err
+		}
+
+		// Ensure the image reference pointer is a valid one.
+		if imgReference != nil {
+			post.Figure = *imgReference
+		}
+
+		post.Data = make([]byte, 0)
+	}
+
 	//
 	//  Validation end --- dispatch the post to repository.
 	//
@@ -63,13 +107,65 @@ func (s *PostService) Create(ctx context.Context, post *models.Post) error {
 		return fmt.Errorf("%s: %s", common.ERR_POST_SAVE_FAIL, err.Error())
 	}
 
+	// Find matches using regexp compiling to '@username' matrix
+	re := regexp.MustCompile(`@(?P<text>\w+)`)
+	matches := re.FindAllStringSubmatch(post.Content, -1)
+
+	for _, match := range matches {
+		receiverName := match[1]
+
+		// Fetch related data from the database
+		receiver, err := s.userRepository.GetByID(receiverName)
+		if err != nil {
+			continue
+		}
+
+		// Do not notify the same person --- OK condition
+		if receiverName == callerID {
+			continue
+		}
+
+		// Do not notify user --- notifications disabled --- OK condition
+		if len(receiver.Devices) == 0 {
+			continue
+		}
+
+		// Compose the body of this notification
+		body, err := json.Marshal(app.Notification{
+			Title: "littr mention",
+			Icon:  "/web/apple-touch-icon.png",
+			Body:  callerID + " mentioned you in their post",
+			Path:  "/flow/posts/" + post.ID,
+		})
+		if err != nil {
+			//fmt.Printf(common.ERR_PUSH_BODY_COMPOSE_FAIL)
+			continue
+		}
+
+		opts := &push.NotificationOpts{
+			Receiver: receiverName,
+			Devices:  &receiver.Devices,
+			Body:     &body,
+		}
+
+		// Send the webpush notification(s)
+		push.SendNotificationToDevices(opts)
+	}
+
+	if post.ReplyToID != "" {
+		fmt.Printf("halo\n")
+		if err := s.notifService.SendNotification(ctx, post.ReplyToID); err != nil {
+			return err
+		}
+	}
+
 	// Broadcast the new post event.
 	live.BroadcastMessage(live.EventPayload{Data: "post," + post.ID, Type: "message"})
 
 	return nil
 }
 
-func (s *PostService) Update(ctx context.Context, post *models.Post) error {
+func (s *postService) Update(ctx context.Context, post *models.Post) error {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -91,7 +187,7 @@ func (s *PostService) Update(ctx context.Context, post *models.Post) error {
 	return s.postRepository.Save(dbPost)
 }
 
-func (s *PostService) Delete(ctx context.Context, postID string) error {
+func (s *postService) Delete(ctx context.Context, postID string) error {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -113,7 +209,7 @@ func (s *PostService) Delete(ctx context.Context, postID string) error {
 	return s.postRepository.Delete(postID)
 }
 
-func (s *PostService) FindAll(ctx context.Context) (*map[string]models.Post, *models.User, error) {
+func (s *postService) FindAll(ctx context.Context) (*map[string]models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -155,7 +251,7 @@ func (s *PostService) FindAll(ctx context.Context) (*map[string]models.Post, *mo
 	return posts, &patchedCaller, nil
 }
 
-func (s *PostService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
+func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {
@@ -181,7 +277,7 @@ func (s *PostService) FindPage(ctx context.Context, opts interface{}) (*map[stri
 	return posts, common.FlushUserData(users, callerID), nil
 }
 
-func (s *PostService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {
+func (s *postService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID, ok := ctx.Value("nickname").(string)
 	if !ok {

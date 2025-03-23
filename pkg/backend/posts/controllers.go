@@ -1,22 +1,15 @@
 package posts
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
-	"time"
 
 	chi "github.com/go-chi/chi/v5"
-	app "github.com/maxence-charriere/go-app/v10/pkg/app"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/backend/image"
-	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/pages"
-	"go.vxn.dev/littr/pkg/backend/push"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -137,7 +130,7 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body	posts.PostCreateRequest			true				"Post body."
-//	@Success		201		{object}	common.APIResponse{data=posts.Create.responseData}	"New post has been added to the database and published."
+//	@Success		201		{object}	common.APIResponse{data=models.Post}			"New post has been added to the database and published."
 //	@Failure		400		{object}	common.APIResponse{data=models.Stub}			"Invalid input data."
 //	@Failure		401		{object}	common.APIResponse{data=models.Stub}			"User unauthorized."
 //	@Failure		429		{object}	common.APIResponse{data=models.Stub}			"Too many requests, try again later."
@@ -147,10 +140,6 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	l := common.NewLogger(r, LOGGER_WORKER_NAME)
 
-	type responseData struct {
-		Posts map[string]models.Post `json:"posts"`
-	}
-
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
@@ -158,126 +147,17 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 	var post models.Post
 
-	// decode received data
 	if err := common.UnmarshalRequestData(r, &post); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	if post.Content == "" && post.Figure == "" && post.Data == nil {
-		l.Msg(common.ERR_POST_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	if err := c.postService.Create(r.Context(), &post); err != nil {
+		l.Msg("postService: ").Error(err).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
-	// patch wrongly loaded user data from LocalStorage on FE
-	if post.Nickname == "" {
-		post.Nickname = l.CallerID()
-	}
-
-	// check the post forgery possibility
-	if l.CallerID() != post.Nickname {
-		l.Msg(common.ERR_POSTER_INVALID).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// prepare an ID for the post
-	timestamp := time.Now()
-	key := strconv.FormatInt(timestamp.UnixNano(), 10)
-
-	post.ID = key
-	post.Timestamp = timestamp
-
-	// Compose a payload for the image processing.
-	imagePayload := &image.ImageProcessPayload{
-		ImageByteData: &post.Data,
-		ImageFileName: post.Figure,
-		ImageBaseName: post.ID,
-	}
-
-	// Uploaded figure handling.
-	if post.Data != nil && post.Figure != "" {
-		var err error
-		imgReference, err := image.ProcessImageBytes(imagePayload)
-		if err != nil {
-			l.Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
-			return
-		}
-
-		// Ensure the image reference pointer is a valid one.
-		if imgReference != nil {
-			post.Figure = *imgReference
-		}
-
-		post.Data = make([]byte, 0)
-	}
-
-	// save the post by its key
-	if saved := db.SetOne(db.FlowCache, key, post); !saved {
-		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
-		return
-	}
-
-	// notify all to-be-notifiedees
-	//
-	// find matches using regexp compiling to '@username' matrix
-	re := regexp.MustCompile(`@(?P<text>\w+)`)
-	matches := re.FindAllStringSubmatch(post.Content, -1)
-
-	// we deal with a 2D array here
-	for _, match := range matches {
-		receiverName := match[1]
-
-		// fetch related data from cachces
-		receiver, found := db.GetOne(db.UserCache, receiverName, models.User{})
-		if !found {
-			continue
-		}
-
-		// do not notify the same person --- OK condition
-		if receiverName == l.CallerID() {
-			continue
-		}
-
-		// do not notify user --- notifications disabled --- OK condition
-		if len(receiver.Devices) == 0 {
-			continue
-		}
-
-		// compose the body of this notification
-		body, err := json.Marshal(app.Notification{
-			Title: "littr mention",
-			Icon:  "/web/apple-touch-icon.png",
-			Body:  l.CallerID() + " mentioned you in their post",
-			Path:  "/flow/posts/" + post.ID,
-		})
-		if err != nil {
-			l.Msg(common.ERR_PUSH_BODY_COMPOSE_FAIL).Status(http.StatusInternalServerError).Log()
-			continue
-		}
-
-		opts := &push.NotificationOpts{
-			Receiver: receiverName,
-			Devices:  &receiver.Devices,
-			Body:     &body,
-			//Logger:   l,
-		}
-
-		// send the webpush notification(s)
-		push.SendNotificationToDevices(opts)
-	}
-
-	// broadcast a new post to live subscribers
-	live.BroadcastMessage(live.EventPayload{Data: "post," + post.Nickname, Type: "message"})
-
-	// prepare the payload
-	posts := make(map[string]models.Post)
-	posts[key] = post
-
-	pl := &responseData{
-		Posts: posts,
-	}
-
-	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(pl).Write(w)
+	l.Msg("ok, adding new post").Status(http.StatusCreated).Log().Payload(post).Write(w)
 }
 
 // UpdateReactions increases the star count for the given post.
