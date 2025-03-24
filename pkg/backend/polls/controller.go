@@ -198,8 +198,13 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 		User  *models.User            `json:"user,omitempty"`
 	}
 
+	svcPayload := &PollPagingRequest{
+		PageNo:     pageNo,
+		PagingSize: 25,
+	}
+
 	// Compose the DTO-out from pollService.
-	polls, user, err := c.pollService.FindAll(context.WithValue(r.Context(), "pageNo", pageNo))
+	polls, user, err := c.pollService.FindAll(r.Context(), svcPayload)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return

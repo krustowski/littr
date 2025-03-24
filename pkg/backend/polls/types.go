@@ -14,6 +14,11 @@ type PollCreateRequest struct {
 	OptionThree string `json:"option_three" example:"cashew"`
 }
 
+type PollPagingRequest struct {
+	PageNo     int
+	PagingSize int
+}
+
 type PollUpdateRequest struct {
 	// The poll's ID is specified using an URL param.
 	// The purpose of this field is to transfer the ID from the controller to the service in a more smooth way.

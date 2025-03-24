@@ -168,12 +168,11 @@ func (s *PollService) Delete(ctx context.Context, pollID string) error {
 	return s.pollRepository.Delete(pollID)
 }
 
-func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error) {
+func (s *PollService) FindAll(ctx context.Context, pageOpts interface{}) (*map[string]models.Poll, *models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
-	// Fetch the pageNo from the context.
-	pageNo, ok := ctx.Value("pageNo").(int)
+	req, ok := pageOpts.(*PollPagingRequest)
 	if !ok {
 		return nil, nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
 	}
@@ -181,7 +180,7 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 	// Compose a pagination options object to paginate polls.
 	opts := &pages.PageOptions{
 		CallerID: callerID,
-		PageNo:   pageNo,
+		PageNo:   req.PageNo,
 		FlowList: nil,
 
 		Polls: pages.PollOptions{

@@ -28,7 +28,7 @@ type PollServiceInterface interface {
 	Create(ctx context.Context, createRequest interface{}) error
 	Update(ctx context.Context, updateRequest interface{}) error
 	Delete(ctx context.Context, pollID string) error
-	FindAll(ctx context.Context) (*map[string]Poll, *User, error)
+	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]Poll, *User, error)
 	FindByID(ctx context.Context, pollID string) (*Poll, *User, error)
 }
 
@@ -36,7 +36,7 @@ type PostServiceInterface interface {
 	Create(ctx context.Context, post *Post) error
 	Update(ctx context.Context, post *Post) error
 	Delete(ctx context.Context, postID string) error
-	FindAll(ctx context.Context) (*map[string]Post, *User, error)
+	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]Post, *User, error)
 	//FindPage(ctx context.Context, opts interface{}) (*map[string]Post, *map[string]User, error)
 	FindByID(ctx context.Context, postID string) (*Post, *User, error)
 }
@@ -61,7 +61,7 @@ type UserServiceInterface interface {
 	UpdateSubscriptionTags(ctx context.Context, uuid string, tags []string) error
 	ProcessPassphraseRequest(ctx context.Context, updateRequest interface{}) error
 	Delete(ctx context.Context, userID string) error
-	FindAll(ctx context.Context) (*map[string]User, error)
+	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]User, error)
 	FindByID(ctx context.Context, userID string) (*User, error)
 	FindPostsByID(ctx context.Context, userID string) (*map[string]Post, *map[string]User, error)
 }
