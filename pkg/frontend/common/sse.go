@@ -279,7 +279,6 @@ func FetchSSE(ch chan string) {
 					LS.Call("setItem", "lastEventTime", time.Now().UnixNano())
 				}
 
-				var user models.User
 				var userStr string
 
 				LS = app.Window().Get("localStorage")
@@ -287,14 +286,18 @@ func FetchSSE(ch chan string) {
 					userStr = LS.Call("getItem", "user-data").String()
 				}
 
+				userStruct := struct {
+					Value models.User `json:"Value"`
+				}{}
+
 				// Unmarshal the result to get an User struct.
-				err := json.Unmarshal([]byte(userStr), &user)
+				err := json.Unmarshal([]byte(userStr), &userStruct)
 				if err != nil {
 					fmt.Println(err.Error())
 					return nil
 				}
 
-				toastText, toastLink, keep := event.ParseEventData(&user)
+				toastText, toastLink, keep := event.ParseEventData(&userStruct.Value)
 
 				tPl := &ToastPayload{
 					Name:  "snackbar-general-bottom",

@@ -53,17 +53,17 @@ func NewSSEEvent(input string) *Event {
 	return event
 }
 
-func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
+func (e *Event) ParseEventData(user *models.User) (text, link string, keep bool) {
 	//
 	//  Parse the event data
 	//
 
-	var text string
-	var link string
-	var keep bool
-
 	if e.Data == "heartbeat" {
-		return "", "", keep
+		return
+	}
+
+	if !user.LiveMode || !user.Options["liveMode"] {
+		return
 	}
 
 	// Explode the data CSV string.
@@ -83,13 +83,13 @@ func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 	case "post":
 		author := slice[1]
 		if author == user.Nickname {
-			return "", "", keep
+			return
 		}
 
 		// Exit when the author is not followed, nor is found in the user's flowList.
 		if user != nil {
 			if flowed, found := user.FlowList[author]; !flowed || !found {
-				return "", "", keep
+				return
 			}
 		}
 
@@ -110,5 +110,5 @@ func (e *Event) ParseEventData(user *models.User) (string, string, bool) {
 		text = MSG_NEW_POLL
 	}
 
-	return text, link, keep
+	return
 }
