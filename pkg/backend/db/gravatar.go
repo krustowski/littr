@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,6 +15,12 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/models"
+)
+
+var (
+	ErrHttpRequestCreationFailed = errors.New("could not create new HTTP request")
+	ErrHttpRequestUsageFailed    = errors.New("could not use the HTTP request")
+	ErrResponseBodyMisbehave     = errors.New("could not close the response body: ")
 )
 
 // avatarResult is a meta struct to hold the results for the avatar migration's (migrateAvatarURL) channels.
@@ -73,7 +80,7 @@ func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGro
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		l.Msg("could not create new HTTP request").Error(err).Status(http.StatusInternalServerError).Log()
+		l.Msg(ErrHttpRequestCreationFailed.Error()).Error(err).Status(http.StatusInternalServerError).Log()
 
 		result = avatarResult{
 			User: user,
@@ -91,7 +98,7 @@ func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGro
 	resp, err := client.Do(req)
 	// On error use the default image URL instead.
 	if err != nil {
-		l.Msg("could not make the HTTP request").Error(err).Status(http.StatusInternalServerError).Log()
+		l.Msg(ErrHttpRequestUsageFailed.Error()).Error(err).Status(http.StatusInternalServerError).Log()
 
 		result = avatarResult{
 			User: user,
@@ -100,7 +107,12 @@ func GetGravatarURL(user models.User, channel chan interface{}, wg *sync.WaitGro
 
 		return defaultAvatarURL
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			l.Msg(ErrResponseBodyMisbehave.Error()).Error(err).Log()
+		}
+	}()
 
 	// If the service could not be reached, use the default image.
 	if resp.StatusCode != 200 {

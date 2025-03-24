@@ -84,7 +84,11 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 				return
 			}
 
-			defer res.Body.Close()
+			defer func() {
+				if err := res.Body.Close(); err != nil {
+					l.Error(err).Log()
+				}
+			}()
 
 			// read the response body
 			bodyBytes, err := io.ReadAll(res.Body)

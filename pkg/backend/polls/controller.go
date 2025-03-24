@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	LOGGER_WORKER_NAME string = "pollController"
+	loggerWorkerName string = "pollController"
 )
 
 type PollController struct {
@@ -44,7 +44,7 @@ func NewPollController(pollService models.PollServiceInterface) *PollController 
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious problem occurred while processing the create request."
 //	@Router			/polls [post]
 func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -85,7 +85,7 @@ func (c *PollController) Create(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while the request was being processed."
 //	@Router			/polls/{pollID} [patch]
 func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -137,7 +137,7 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	common.APIResponse{data=models.Stub}	"A serious internal problem occurred while the request was being processed."
 //	@Router			/polls/{pollID} [delete]
 func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -176,7 +176,7 @@ func (c *PollController) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}			"A serious internal problem occurred while the request was being processed."
 //	@Router			/polls [get]
 func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {
@@ -226,7 +226,7 @@ func (c *PollController) GetAll(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	common.APIResponse{data=models.Stub}			"A serious internal problem occurred while the request was being processed."
 //	@Router			/polls/{pollID} [get]
 func (c *PollController) GetByID(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// Skip the blank caller's ID.
 	if l.CallerID() == "" {

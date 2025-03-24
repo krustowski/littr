@@ -70,7 +70,7 @@ func ConvertGifToWebp(gifData *[]byte) (*[]byte, error) {
 	// source: https://stackoverflow.com/a/33296596
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Error while decoding: %s", r)
+			err = fmt.Errorf("error while decoding: %s", r)
 			//return nil, err
 		}
 	}()

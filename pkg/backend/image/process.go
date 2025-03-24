@@ -17,7 +17,7 @@ type ImageProcessPayload struct {
 	ImageBaseName string
 }
 
-func ProcessPost(post *models.Post, postContent *string) (error, int) {
+func ProcessPost(post *models.Post, postContent *string) (int, error) {
 	data := &ImageProcessPayload{
 		ImageByteData: &post.Data,
 		ImageFileName: post.Figure,
@@ -26,12 +26,12 @@ func ProcessPost(post *models.Post, postContent *string) (error, int) {
 
 	content, err := ProcessImageBytes(data)
 	if err != nil {
-		return err, common.DecideStatusFromError(err)
+		return common.DecideStatusFromError(err), err
 	}
 
 	*postContent = *content
 
-	return nil, 200
+	return 200, nil
 }
 
 func ProcessImageBytes(data *ImageProcessPayload) (*string, error) {

@@ -81,7 +81,11 @@ func TestAPIRouter(t *testing.T) {
 
 	// Create a custom network TCP connection listener.
 	listener := config.PrepareTestListener(t)
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	// Create a custom HTTP server configuration for the test server for SSE.
 	ts := config.PrepareTestServer(t, listener, r)
@@ -174,7 +178,11 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 		t.Fatal(err)
 		return nil, ""
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	return resp, string(respBody)
 }

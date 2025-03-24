@@ -16,7 +16,7 @@ import (
 	sse "github.com/tmaxmax/go-sse"
 )
 
-var streamerTestURI = "/api/v1/live"
+const streamerTestURI string = "/api/v1/live"
 
 func TestLiveRouterWithStreamer(t *testing.T) {
 	r := chi.NewRouter()
@@ -26,7 +26,11 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 
 	// Fetch test net listener and test HTTP server configuration.
 	listener := config.PrepareTestListenerWithPort(t, config.DEFAULT_TEST_SSE_PORT)
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	ts := config.PrepareTestServer(t, listener, r)
 	ts.Start()
@@ -63,6 +67,11 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 	wg.Wait()
 }
 
+const (
+	eventType string = "keepalive"
+	eventData string = "heartbeat"
+)
+
 func testConnectorSSE(t *testing.T, wg *sync.WaitGroup, endpoint string) {
 	if t == nil || wg == nil {
 		return
@@ -88,7 +97,7 @@ func testConnectorSSE(t *testing.T, wg *sync.WaitGroup, endpoint string) {
 
 	// Callback function called when any event is received.
 	conn.SubscribeToAll(func(event sse.Event) {
-		if event.Type != "keepalive" && event.Data != "heartbeat" {
+		if event.Type != eventType && event.Data != eventData {
 			t.Errorf("non-heartbeat event received")
 			t.Errorf("%s: %s\n", event.Type, event.Data)
 		}
@@ -108,6 +117,6 @@ func testBeat() {
 		time.Sleep(time.Millisecond * 2500)
 
 		// Send the message.
-		BroadcastMessage(EventPayload{Data: "heartbeat", Type: "keepalive"})
+		BroadcastMessage(EventPayload{Data: eventData, Type: eventType})
 	}
 }

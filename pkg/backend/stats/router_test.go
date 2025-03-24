@@ -26,7 +26,11 @@ func TestStatsRouter(t *testing.T) {
 
 	// Fetch test net listener and test HTTP server configuration.
 	listener := config.PrepareTestListener(t)
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	ts := config.PrepareTestServer(t, listener, r)
 	ts.Start()

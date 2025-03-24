@@ -83,11 +83,11 @@ func SetOne[T any](cache Cacher, key string, model T) bool {
 		return false
 	}
 
-	var doIncrementMetric bool = true
+	var doIncrementMetric = true
 
 	// Check for the possible item's existence in such cache instance. The item will be rewritten anyway (unless),
 	// but this is to make sure we are not incrementing the statistics while the count remains the same.
-	control, found := GetOne[T](cache, key, model)
+	control, found := GetOne(cache, key, model)
 	if found {
 		doIncrementMetric = !found
 
