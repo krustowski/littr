@@ -66,7 +66,10 @@ func (d *Details) Render() app.UI {
 	}
 
 	return app.Details().Class("max").Body(
-		app.Summary().Style("word-break", "break-word").Style("hyphens", "auto").Class("italic").Body(summaryBody()),
+		app.Summary().Style("word-break", "break-word").Style("hyphens", "auto").Class("italic").Body(
+			summaryBody(),
+			app.I().Text("arrow_drop_down"),
+		),
 		app.Div().Class("space"),
 		app.Span().ID(d.SpanID).Class("").Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(d.onClickText).Body(spanBody()),
 	)
