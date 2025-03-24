@@ -32,10 +32,7 @@ func NewNotificationService(
 
 func (s *notificationService) SendNotification(ctx context.Context, postID string) error {
 	// Fetch the callerID from the given context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the caller's ID")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	if postID == "" {
 		return fmt.Errorf(common.ERR_POSTID_BLANK)

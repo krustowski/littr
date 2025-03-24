@@ -41,10 +41,7 @@ func NewPollService(
 
 func (s *PollService) Create(ctx context.Context, pollI interface{}) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	pollReq, ok := pollI.(*PollCreateRequest)
 	if !ok {
@@ -113,10 +110,7 @@ func (s *PollService) Create(ctx context.Context, pollI interface{}) error {
 
 func (s *PollService) Update(ctx context.Context, pollI interface{}) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Assert type for the request data.
 	pollReq, ok := pollI.(*PollUpdateRequest)
@@ -157,10 +151,7 @@ func (s *PollService) Update(ctx context.Context, pollI interface{}) error {
 
 func (s *PollService) Delete(ctx context.Context, pollID string) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the actual poll to verify it can be deleted at all.
 	poll, err := s.pollRepository.GetByID(pollID)
@@ -179,10 +170,7 @@ func (s *PollService) Delete(ctx context.Context, pollID string) error {
 
 func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the pageNo from the context.
 	pageNo, ok := ctx.Value("pageNo").(int)
@@ -224,10 +212,7 @@ func (s *PollService) FindAll(ctx context.Context) (*map[string]models.Poll, *mo
 
 func (s *PollService) FindByID(ctx context.Context, pollID string) (*models.Poll, *models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the poll.
 	poll, err := s.pollRepository.GetByID(pollID)

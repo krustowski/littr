@@ -30,10 +30,10 @@ type Logger interface {
 
 const (
 	// Localhost as the IPv4 address.
-	LOCALHOST4 = "127.0.0.1"
+	LocalhostIPAddressV4 = "127.0.0.1"
 
 	// Localhost as the IPv6 address.
-	LOCALHOST6 = "::1"
+	LocalhostIPAddressV6 = "::1"
 )
 
 type DefaultLogger struct {
@@ -104,7 +104,7 @@ func NewLogger(r *http.Request, worker string) Logger {
 	if r == nil {
 		return &DefaultLogger{
 			callerID:   "system",
-			IPAddress:  LOCALHOST4,
+			IPAddress:  LocalhostIPAddressV4,
 			Method:     "",
 			Message:    "",
 			Prefix:     "",
@@ -115,11 +115,7 @@ func NewLogger(r *http.Request, worker string) Logger {
 		}
 	}
 
-	// Fetch the caller's nickname, to be checked if not blank afterwards.
-	callerID, ok := r.Context().Value("nickname").(string)
-	if !ok || callerID == "" {
-		callerID = "system"
-	}
+	callerID := GetCallerID(r.Context())
 
 	return &DefaultLogger{
 		callerID:   callerID,
@@ -208,7 +204,7 @@ func (l DefaultLogger) Error(err error) Logger {
 // Log write the logger's JSON output to the stdout.
 func (l DefaultLogger) Log() Logger {
 	if l.IPAddress == "" {
-		l.IPAddress = LOCALHOST4
+		l.IPAddress = LocalhostIPAddressV4
 	}
 
 	if l.Err != nil {

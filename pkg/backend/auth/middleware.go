@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,6 +16,19 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/golang-jwt/jwt"
+)
+
+var (
+	ErrAccessTokenGenerationFailed = errors.New("the access toked could not be generated")
+	ErrNoServerSecret              = errors.New("server secret (APP_PEPPER) not set")
+	ErrTokenReferenceNotFound      = errors.New("reference to such refresh token could not be found")
+	ErrTokenInvalidated            = errors.New("such refresh token has been invalidated, redo the auth process")
+	ErrTokenInvalid                = errors.New("invalid token received")
+	ErrUserNotFound                = errors.New("referenced user could not be found")
+)
+
+var (
+	MsgAccessTokenGenerated string = "new access token generated"
 )
 
 // These URL paths are to be skipped by the authentication middleware.
@@ -34,7 +48,11 @@ type responseData struct {
 	Users       map[string]models.User `json:"users"`
 }
 
-var payload *responseData
+var (
+	payload *responseData
+)
+
+const loggerWorkerName string = "authMiddleware"
 
 // The very authentication middleware entrypoint.
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -43,13 +61,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Skip those HTTP routes.
 		if helpers.Contains(PathExceptions, r.URL.Path) ||
-			(r.URL.Path == "/api/v1/users" && r.Method == "POST") {
+			(r.URL.Path == "/api/v1/users" && r.Method == http.MethodPost) {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		// Instantionate the new logger.
-		l := common.NewLogger(r, "authMiddleware")
+		l := common.NewLogger(r, loggerWorkerName)
 
 		// Prepare the HTTP response payload.
 		payload := &responseData{
@@ -59,7 +77,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// Fetch the server's secret.
 		secret := os.Getenv("APP_PEPPER")
 		if secret == "" {
-			l.Msg("server's secret is not set!").Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
+			l.Error(ErrNoServerSecret).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 			return
 		}
 
@@ -68,7 +86,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Get the refresh cookie to check its validity.
 		if refreshCookie, err = r.Cookie(refreshTokenName); err != nil {
-			l.Msg("client unauthorized (invalid refresh token)").Status(http.StatusUnauthorized).Error(err).Log().Payload(payload).Write(w)
+			l.Msg(ErrTokenInvalid.Error()).Status(http.StatusUnauthorized).Error(err).Log().Payload(payload).Write(w)
 			return
 		}
 
@@ -77,12 +95,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// If the refresh token is expired => user should relogin.
 		if refreshClaims == nil || refreshClaims.Valid() != nil {
-			l.Msg("invalid/expired refresh token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
+			l.Error(ErrTokenInvalid).Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 			return
 		}
 
-		var accessCookie *http.Cookie
-		var userClaims *tokens.UserClaims
+		var (
+			accessCookie *http.Cookie
+			userClaims   *tokens.UserClaims
+		)
 
 		// Get the access cookie to check its validity.
 		if accessCookie, err = r.Cookie(accessTokenName); err != nil {
@@ -111,7 +131,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				db.DeleteOne(db.TokenCache, refToken.Hash)
 				invalidateRefreshToken(nil, &w)
 
-				l.Msg("referenced user not found in the database").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
+				l.Error(ErrUserNotFound).Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
 				return
 			}
 
@@ -128,7 +148,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			// Issue a new access token via the refresh token's validity.
 			accessToken, err := tokens.NewAccessToken(userClaims, secret)
 			if err != nil {
-				l.Msg("access token generation failed").Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
+				l.Msg(ErrAccessTokenGenerationFailed.Error()).Error(err).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 				return
 			}
 
@@ -153,10 +173,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			payload.Users = make(map[string]models.User)
 			payload.Users[refToken.Nickname] = user
 
-			l.Msg("ok, new access token issued").Status(http.StatusOK).Log()
+			l.Msg(MsgAccessTokenGenerated).Status(http.StatusOK).Log()
 
 			// Set the HTTP context value for such user's nickname.
-			ctx := context.WithValue(r.Context(), "nickname", refToken.Nickname)
+			ctx := context.WithValue(r.Context(), common.ContextUserKeyName, refToken.Nickname)
 
 			// Register user's activity = refresh the LastActiveTime datetime field.
 			noteUsersActivity(refToken.Nickname)
@@ -179,8 +199,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Set the HTTP context with the auth-gratend user's nickname.
-		ctx := context.WithValue(r.Context(), "nickname", refToken.Nickname)
+		// Set the HTTP context with the auth-granted user's nickname.
+		ctx := context.WithValue(r.Context(), common.ContextUserKeyName, refToken.Nickname)
 
 		// Register the user's activity = refresh the LastTimeActive datetime field.
 		noteUsersActivity(refToken.Nickname)
@@ -212,7 +232,7 @@ func invalidateRefreshToken(l common.Logger, w *http.ResponseWriter) bool {
 
 	// Log the message if the logger is present.
 	if l != nil {
-		l.Msg("the refresh token has been invalidated, please log-in again").Status(http.StatusUnauthorized).Log().Payload(payload).Write(*w)
+		l.Error(ErrTokenInvalidated).Status(http.StatusUnauthorized).Log().Payload(payload).Write(*w)
 	}
 
 	return true
@@ -226,11 +246,12 @@ func fetchRefreshTokenRecord(refreshCookie *http.Cookie, w *http.ResponseWriter)
 	refreshTokenSum := fmt.Sprintf("%x", refreshSum.Sum(nil))
 
 	// Fetch the refresh token details from the Token database.
-	token, found := db.GetOne[models.Token](db.TokenCache, refreshTokenSum, models.Token{})
-	if !found && w != nil {
+	tokenRepo := tokens.NewTokenRepository(db.TokenCache)
+	token, err := tokenRepo.GetByID(refreshTokenSum)
+	if err != nil {
 		invalidateRefreshToken(nil, w)
-		return nil, fmt.Errorf("refresh token's reference has not been found in the database")
+		return nil, ErrTokenReferenceNotFound
 	}
 
-	return &token, nil
+	return token, nil
 }

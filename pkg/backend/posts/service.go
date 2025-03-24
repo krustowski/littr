@@ -46,10 +46,7 @@ func NewPostService(
 
 func (s *postService) Create(ctx context.Context, post *models.Post) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// To patch loaded invalid user data from LocalStorage = the caller's Nickname now.
 	if post.Nickname == "" {
@@ -166,10 +163,7 @@ func (s *postService) Create(ctx context.Context, post *models.Post) error {
 
 func (s *postService) Update(ctx context.Context, post *models.Post) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the actual post to verify its content to be updated..
 	dbPost, err := s.postRepository.GetByID(post.ID)
@@ -188,10 +182,7 @@ func (s *postService) Update(ctx context.Context, post *models.Post) error {
 
 func (s *postService) Delete(ctx context.Context, postID string) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the actual post to verify it can be deleted at all.
 	post, err := s.postRepository.GetByID(postID)
@@ -210,10 +201,7 @@ func (s *postService) Delete(ctx context.Context, postID string) error {
 
 func (s *postService) FindAll(ctx context.Context) (*map[string]models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the pageNo from the context.
 	pageNo, ok := ctx.Value("pageNo").(int)
@@ -252,10 +240,7 @@ func (s *postService) FindAll(ctx context.Context) (*map[string]models.Post, *mo
 
 func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Request the page of posts from the post repository.
 	posts, users, err := s.postRepository.GetPage(opts)
@@ -278,10 +263,7 @@ func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[stri
 
 func (s *postService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the post.
 	post, err := s.postRepository.GetByID(postID)

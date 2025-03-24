@@ -264,10 +264,7 @@ func (s *UserService) Create(ctx context.Context, createRequestI interface{}) er
 
 func (s *UserService) Subscribe(ctx context.Context, device *models.Device) error {
 	// Fetch the callerID from the given context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the caller's ID")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Check whether the given device is blank.
 	if reflect.DeepEqual(*device, (models.Device{})) {
@@ -296,10 +293,7 @@ func (s *UserService) Subscribe(ctx context.Context, device *models.Device) erro
 
 func (s *UserService) Unsubscribe(ctx context.Context, uuid string) error {
 	// Fetch the callerID from the given context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the caller's ID")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	dbUser, err := s.userRepository.GetByID(callerID)
 	if err != nil {
@@ -393,10 +387,7 @@ func (s *UserService) Activate(ctx context.Context, UUID string) error {
 
 func (s *UserService) Update(ctx context.Context, userRequest interface{}) error {
 	// Fetch the callerID from the given context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the caller's ID")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the userID from the given context.
 	userID, ok := ctx.Value("userID").(string)
@@ -575,10 +566,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 	}
 
 	// Fetch the callerID/nickname type from the given context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, fmt.Errorf("could not decode the user request")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the user's data.
 	user, err := s.userRepository.GetByID(callerID)
@@ -628,10 +616,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 }
 
 func (s *UserService) UpdateSubscriptionTags(ctx context.Context, uuid string, tags []string) error {
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the caller's ID")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	dbUser, err := s.userRepository.GetByID(callerID)
 	if err != nil {
@@ -830,10 +815,9 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 
 func (s *UserService) Delete(ctx context.Context, userID string) error {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
+
+	var ok bool
 
 	// Fetch the user's ID from the context.
 	userID, ok = ctx.Value("userID").(string)
@@ -933,10 +917,7 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 
 func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, fmt.Errorf(common.ERR_CALLER_FAIL)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Fetch the pageNo from the context.
 	pageNo, ok := ctx.Value("pageNo").(int)
@@ -983,10 +964,7 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	}
 
 	// Fetch the caller's ID from the context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, fmt.Errorf(common.ERR_USERID_BLANK)
-	}
+	callerID := common.GetCallerID(ctx)
 
 	// Request the user's data from repository..
 	user, err := s.userRepository.GetByID(userID)
@@ -1007,10 +985,7 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 
 func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from context.
-	callerID, ok := ctx.Value("nickname").(string)
-	if !ok {
-		return nil, nil, fmt.Errorf("cannot read the nickname value from context")
-	}
+	callerID := common.GetCallerID(ctx)
 
 	caller, err := s.userRepository.GetByID(callerID)
 	if err != nil {

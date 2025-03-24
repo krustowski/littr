@@ -13,14 +13,12 @@ const (
 	nicknameToFind string = "mocker99"
 )
 
-type mockNickname string
-
 //
 //  Tests
 //
 
 func newTestContext() context.Context {
-	return context.WithValue(context.Background(), mockNickname("nickname"), "lawrents")
+	return context.WithValue(context.Background(), common.ContextUserKeyName, "lawrents")
 }
 
 func newTestService(t *testing.T) models.TokenServiceInterface {
