@@ -28,7 +28,7 @@ func (h *FlowHeader) Render() app.UI {
 			return "hashtag"
 		}
 		if h.SinglePostID != "" {
-			return "single post and replies"
+			return "original post and replies"
 		}
 
 		return "flow"

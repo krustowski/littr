@@ -47,8 +47,6 @@ func (c *Content) sortPosts() []models.Post {
 }
 
 func (c *Content) Render() app.UI {
-	//counter := 0
-
 	return app.Main().Class("responsive").Body(
 		// Page heading
 		&molecules.FlowHeader{
