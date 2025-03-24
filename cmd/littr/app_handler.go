@@ -72,8 +72,6 @@ var appHandler = &app.Handler{
 	},
 	// JS script files.
 	Scripts: []string{
-		"https://cdn.vxn.dev/js/jquery.min.js",
-		//"https://cdn.vxn.dev/js/beer.min.js",
 		"https://cdn.vxn.dev/js/beer-3.9.7.min.js",
 		//"https://cdn.jsdelivr.net/npm/beercss@3.7.0/dist/cdn/beer.min.js",
 		"https://cdn.vxn.dev/js/material-dynamic-colors.min.js",

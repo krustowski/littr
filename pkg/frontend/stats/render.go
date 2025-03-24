@@ -39,7 +39,7 @@ func (c *Content) Render() app.UI {
 			app.Input().ID("search").Type("text").OnChange(c.onSearch).OnSearch(c.onSearch),
 		),
 
-		app.Table().Class("border right-align").ID("table-stats-flow").Body(
+		app.Table().Class("border sortable right-align").ID("table-stats-flow").Body(
 			// table header
 			app.THead().Body(
 				app.Tr().Body(
