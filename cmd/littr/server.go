@@ -1,5 +1,4 @@
-//go:build !wasm || server
-// +build !wasm server
+//go:build !wasm
 
 package main
 
@@ -36,13 +35,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h(w, r); err != nil {
 		// Handle returned error here: write it out to client.
 		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
+		if _, errr := w.Write([]byte(err.Error())); errr != nil {
+			return
+		}
 	}
 }
 
 type server struct {
-	ctx context.Context
-
 	db db.DatabaseKeeper
 
 	l common.Logger
@@ -58,7 +57,7 @@ type server struct {
 	wg *sync.WaitGroup
 }
 
-func newServer() App {
+func newServer() *server {
 	return &server{}
 }
 
@@ -92,6 +91,9 @@ func (s *server) init() {
 		if config.ServerSecret == "" || config.DataDumpToken == "" {
 			panic(errMissingSecretOrToken)
 		}
+
+		var wg sync.WaitGroup
+		s.wg = &wg
 
 		s.db = db.NewDatabase()
 

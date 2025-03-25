@@ -2,12 +2,10 @@ package db
 
 import (
 	"reflect"
-
-	"go.vxn.dev/littr/pkg/backend/metrics"
 )
 
 // getAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
-func getAll[T any](cache Cacher, model T) (*map[string]T, int64) {
+func getAll[T any](cache Cacher, _ T) (*map[string]T, int64) {
 	// An initialization check.
 	if cache == nil {
 		return nil, 0
@@ -36,7 +34,7 @@ func getAll[T any](cache Cacher, model T) (*map[string]T, int64) {
 	}
 
 	// Write the count to the associated metric.
-	metrics.UpdateCountMetric(cache.GetName(), count, true)
+	//metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	/*defer func() {
 		items = map[string]T{}
@@ -102,7 +100,7 @@ func setOne[T any](cache Cacher, key string, model T) bool {
 
 	// Increment the metric count only if the item is a new one, has been saved properly, and the database state is fully loaded.
 	if saved && doIncrementMetric {
-		metrics.UpdateCountMetric(cache.GetName(), 1, false)
+		//metrics.UpdateCountMetric(cache.GetName(), 1, false)
 	}
 
 	return saved
@@ -120,7 +118,7 @@ func deleteOne(cache Cacher, key string) bool {
 	// Delete the item using its key.
 	if deleted = cache.Delete(key); deleted {
 		// Update the metric count when deleted properly.
-		metrics.UpdateCountMetric(cache.GetName(), -1, false)
+		//metrics.UpdateCountMetric(cache.GetName(), -1, false)
 	}
 
 	return deleted

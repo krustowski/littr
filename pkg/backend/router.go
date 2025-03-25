@@ -152,7 +152,7 @@ func NewAPIRouter(d db.DatabaseKeeper) chi.Router {
 	authController := auth.NewAuthController(authService)
 	dumpController := db.NewDumpController(d)
 	pollController := polls.NewPollController(pollService)
-	postController := posts.NewPostController(postService)
+	postController := posts.NewPostController(postService, userService)
 	statController := stats.NewStatController(statService)
 	userController := users.NewUserController(postService, statService, userService)
 

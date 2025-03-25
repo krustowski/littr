@@ -8,7 +8,6 @@ import (
 	chi "github.com/go-chi/chi/v5"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -20,19 +19,22 @@ const (
 // Structure contents definition for the controller.
 type PostController struct {
 	postService models.PostServiceInterface
+	userService models.UserServiceInterface
 }
 
 // NewPostController return a pointer to the new controller instance, that has to be populated with the Post service.
 func NewPostController(
 	postService models.PostServiceInterface,
+	userService models.UserServiceInterface,
 ) *PostController {
 
-	if postService == nil {
+	if postService == nil || userService == nil {
 		return nil
 	}
 
 	return &PostController{
 		postService: postService,
+		userService: userService,
 	}
 }
 
@@ -103,12 +105,12 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	caller, err := c.userService.FindByID(r.Context(), l.CallerID())
+	if err != nil {
+		l.Msg(common.ERR_CALLER_NOT_FOUND).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID()] = caller
+		(*pagePtrs.Users)[l.CallerID()] = *caller
 	}
 
 	// compose the payload
@@ -193,10 +195,9 @@ func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// fetch the post using postID
-	post, found := db.GetOne(db.FlowCache, postID, models.Post{})
-	if !found {
-		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
+	post, _, err := c.postService.FindByID(r.Context(), postID)
+	if err != nil {
+		l.Error(err).Status(http.StatusInternalServerError).Log().Write(w)
 		return
 	}
 
@@ -209,15 +210,14 @@ func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request)
 	// increment the star count by one (1)
 	post.ReactionCount++
 
-	// resave the post back to databse
-	if saved := db.SetOne(db.FlowCache, postID, post); !saved {
+	if err := c.postService.Update(r.Context(), post); err != nil {
 		l.Msg(common.ERR_POST_SAVE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// prepare payload
 	posts := make(map[string]models.Post)
-	posts[postID] = post
+	posts[postID] = *post
 
 	pl := &responseData{
 		Posts: posts,
@@ -256,9 +256,8 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fetch the post using postID
-	post, found := db.GetOne(db.FlowCache, postID, models.Post{})
-	if !found {
+	post, _, err := c.postService.FindByID(r.Context(), postID)
+	if err != nil {
 		l.Msg(common.ERR_POST_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	}
@@ -269,8 +268,7 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// delete such post
-	if deleted := db.DeleteOne(db.FlowCache, postID); !deleted {
+	if err := c.postService.Delete(r.Context(), postID); err != nil {
 		l.Msg(common.ERR_POST_DELETE_FAIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
 	}
@@ -366,12 +364,11 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
+	if caller, err := c.userService.FindByID(r.Context(), l.CallerID()); err != nil {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID()] = caller
+		(*pagePtrs.Users)[l.CallerID()] = *caller
 	}
 
 	// prepare the payload
@@ -456,12 +453,11 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// hack: include caller's models.User struct
-	if caller, ok := db.GetOne(db.UserCache, l.CallerID(), models.User{}); !ok {
+	if caller, err := c.userService.FindByID(r.Context(), l.CallerID()); err != nil {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID()] = caller
+		(*pagePtrs.Users)[l.CallerID()] = *caller
 	}
 
 	// prepare the payload

@@ -12,7 +12,6 @@ import (
 	"runtime"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
 )
@@ -180,7 +179,7 @@ func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, e
 			Items map[string]T `json:"items"`
 		}{}
 
-		metrics.UpdateCountMetric(cache.GetName(), count, true)
+		//metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	}
 

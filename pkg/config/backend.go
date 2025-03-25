@@ -24,7 +24,7 @@ const (
 	envDataDumpFormat      string = "DATA_DUMP_FORMAT"
 	envDataLoadFormat      string = "DATA_LOAD_FORMAT"
 	envDockerInternalPort  string = "DOCKER_INTERNAL_PORT"
-	envDumpToken           string = "APP_TOKEN"
+	envDumpToken           string = "API_TOKEN"
 	envLimiterEnabled      string = "LIMITER_ENABLED"
 	envRegistrationEnabled string = "REGISTRATION_ENABLED"
 	envServerSecret        string = "APP_PEPPER"

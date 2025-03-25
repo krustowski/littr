@@ -3,7 +3,6 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
 var (
@@ -15,12 +14,11 @@ var (
 )
 
 type metrics struct {
-	PollCountMetric         prometheus.Gauge
-	PostCountMetric         prometheus.Gauge
-	RequestCountMetric      prometheus.Gauge
-	SubscriptionCountMetric prometheus.Gauge
-	TokenCountMetric        prometheus.Gauge
-	UserCountMetric         prometheus.Gauge
+	PollCountMetric    prometheus.Gauge
+	PostCountMetric    prometheus.Gauge
+	RequestCountMetric prometheus.Gauge
+	TokenCountMetric   prometheus.Gauge
+	UserCountMetric    prometheus.Gauge
 }
 
 // RegisterAll is a wrapper function for the universal Prometheus metric registration.
@@ -46,12 +44,6 @@ func RegisterAll() {
 			Help: "The total number of generic requests loaded in memory.",
 		}),
 
-		// SubscriptionCountMetric track the number of subscription actually loaded in memory.
-		SubscriptionCountMetric: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "littr_subscription_count_total",
-			Help: "The total number of subscriptions loaded in memory.",
-		}),
-
 		// TokenCountMetric track the number of tokens actually loaded in memory.
 		TokenCountMetric: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "littr_token_count_total",
@@ -66,7 +58,7 @@ func RegisterAll() {
 	}
 
 	// Register all the defined metrics.
-	Registry.MustRegister(Metrics.PollCountMetric, Metrics.PostCountMetric, Metrics.RequestCountMetric, Metrics.SubscriptionCountMetric, Metrics.TokenCountMetric, Metrics.UserCountMetric)
+	Registry.MustRegister(Metrics.PollCountMetric, Metrics.PostCountMetric, Metrics.RequestCountMetric, Metrics.TokenCountMetric, Metrics.UserCountMetric)
 }
 
 // UpdateCountMetric is an umbrella function to catch all possible scenarios (mostly) where the metrics should be noted down.
@@ -94,13 +86,6 @@ func UpdateCountMetric(cacheName string, count int64, absolute bool) {
 		}
 
 		Metrics.RequestCountMetric.Add(float64(count))
-	case "SubscriptionCache":
-		if absolute {
-			Metrics.SubscriptionCountMetric.Set(float64(count))
-			return
-		}
-
-		Metrics.SubscriptionCountMetric.Add(float64(count))
 	case "TokenCache":
 		if absolute {
 			Metrics.TokenCountMetric.Set(float64(count))

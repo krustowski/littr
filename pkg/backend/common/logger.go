@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -206,7 +207,7 @@ func (l *DefaultLogger) Error(err ...error) Logger {
 		mash += e.Error()
 	}
 
-	l.Err = fmt.Errorf(mash)
+	l.Err = errors.New(mash)
 	return l
 }
 
