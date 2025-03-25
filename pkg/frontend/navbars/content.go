@@ -36,8 +36,6 @@ type Header struct {
 
 	pagePath string
 
-	lastHeartbeatTime int64
-
 	// Toast-related fields.
 	toastTop    common.Toast
 	toastBottom common.Toast

@@ -44,7 +44,7 @@ type Post struct {
 func (p Post) MarshalBinary() []byte {
 	var buf bytes.Buffer
 
-	fmt.Fprintln(&buf, p.ID, p.Type, p.Nickname, p.Content, p.Figure, p.Timestamp, p.PollID, p.ReplyToID, p.ReactionCount, p.ReplyCount, p.Data)
+	fmt.Fprintln(&buf, p.ID, p.Type, p.Nickname, p.Content, p.Figure, p.Timestamp, p.PollID, p.ReplyToID, p.ReactionCount, p.ReplyCount, string(p.Data))
 
 	return buf.Bytes()
 }

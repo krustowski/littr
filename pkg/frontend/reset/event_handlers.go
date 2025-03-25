@@ -61,7 +61,7 @@ func (c *Content) onClickRequest(ctx app.Context, e app.Event) {
 	})
 }
 
-func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
+/*func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
@@ -93,7 +93,7 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 			}
 		}
 	}
-}
+}*/
 
 func (c *Content) onClickReset(ctx app.Context, e app.Event) {
 	toast := common.Toast{AppContext: &ctx}

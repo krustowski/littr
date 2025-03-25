@@ -103,7 +103,7 @@ func (c *Content) onClick(ctx app.Context, e app.Event) {
 
 }
 
-func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
+/*func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
 		return
@@ -123,7 +123,7 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
 		app.Window().GetElementByID("login-button").Call("click")
 	}
-}
+}*/
 
 func (c *Content) onClickRegister(ctx app.Context, _ app.Event) {
 	ctx.Navigate("/register")

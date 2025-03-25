@@ -18,7 +18,7 @@ type Content struct {
 
 	users map[string]models.User
 
-	searchString string
+	//searchString string
 
 	toast common.Toast
 

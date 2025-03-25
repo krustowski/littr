@@ -108,12 +108,12 @@ func (c *Content) onClickRegister(ctx app.Context, e app.Event) {
 }
 
 // onDismissToast is a callback function to cast a new valueless dismiss action.
-func (c *Content) onDismissToast(ctx app.Context, _ app.Event) {
+/*func (c *Content) onDismissToast(ctx app.Context, _ app.Event) {
 	ctx.NewAction("dismiss")
-}
+}*/
 
 // onKeyDown is a callback function to handle the keyboard keys utilization for the UI controlling.
-func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
+/*func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	// If the pressed key was Escape/Esc, cast a new dismiss action.
 	if e.Get("key").String() == "Escape" || e.Get("key").String() == "Esc" {
 		ctx.NewAction("dismiss")
@@ -140,4 +140,4 @@ func (c *Content) onKeyDown(ctx app.Context, e app.Event) {
 	if e.Get("ctrlKey").Bool() && e.Get("key").String() == "Enter" {
 		app.Window().GetElementByID("register-button").Call("click")
 	}
-}
+}*/

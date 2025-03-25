@@ -325,10 +325,6 @@ func (c *Content) handleReply(ctx app.Context, a app.Action) {
 			HideReplies: c.hideReplies,
 		}
 
-		type dataModel struct {
-			Posts map[string]models.Post `json:"posts"`
-		}
-
 		output := &common.Response{Data: &models.Post{}}
 
 		if ok := common.FetchData(input, output); !ok {

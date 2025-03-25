@@ -92,6 +92,7 @@ func (c *Content) Render() app.UI {
 			OnClickDismissActionName: "dismiss",
 			OnClickReplyActionName:   "reply",
 			OnFigureUploadActionName: "image-upload",
+			OnBlurActionName:         "blur-post",
 		},
 
 		// The very post feed.

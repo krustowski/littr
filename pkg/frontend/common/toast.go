@@ -1,9 +1,6 @@
 package common
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
@@ -131,7 +128,7 @@ func (t *Toast) Dispatch() {
 
 // Deprecated: Dispatch is the final method for the toast's cycle. This method ensures a proper propagation of the toast to such screen to display its content.
 // Custom implementations of the <f> function can be seens in other packages that use this very implementation.
-func (t *Toast) blockedDispatch(c interface{}, f func(*Toast, interface{})) {
+/*func (t *Toast) blockedDispatch(c interface{}, f func(*Toast, interface{})) {
 	// If the function and/or Content interface are nil, exit.
 	if f == nil || c == nil {
 		return
@@ -174,4 +171,4 @@ func (t *Toast) blockedDispatch(c interface{}, f func(*Toast, interface{})) {
 			snack.Get("classList").Call("remove", "active")
 		}
 	}(t, c)
-}
+}*/

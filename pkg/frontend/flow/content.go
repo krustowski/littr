@@ -67,6 +67,7 @@ func (c *Content) OnMount(ctx app.Context) {
 	}
 
 	ctx.Handle("ask", c.handlePrivateMode)
+	ctx.Handle("blur-post", c.handleTextareaBlur)
 	ctx.Handle("cancel", c.handlePrivateMode)
 	ctx.Handle("clear", c.handleClear)
 	ctx.Handle("delete", c.handleDelete)

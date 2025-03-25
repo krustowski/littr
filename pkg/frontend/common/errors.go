@@ -74,7 +74,7 @@ const (
 	MSG_RESET_REQUEST_SUCCESS    = "A request to reset your passphrase has been sent, please check your inbox"
 	ERR_RESET_FIELD_REQUIRED     = "E-mail address is required"
 	ERR_RESET_UUID_FIELD_EMPTY   = "An UUID string is required to continue, please check your inbox"
-	ERR_RESET_INVALID_INPUT_DATA = "Invalid input data entered"
+	ERR_RESET_INVALID_INPUT_DATA = "invalid input data entered"
 
 	// Settings-related (non-)error messages.
 	MSG_PASSPHRASE_UPDATED       = "The passphrase was successfully updated"

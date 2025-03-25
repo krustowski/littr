@@ -12,7 +12,6 @@ import (
 type Content struct {
 	app.Compo
 
-	// TODO: review this
 	loggedUser string
 
 	// used with forms
@@ -28,7 +27,6 @@ type Content struct {
 	// message toast fields
 	toast common.Toast
 
-	darkModeOn   bool
 	replyNotifOn bool
 
 	notificationPermission app.NotificationPermission
@@ -44,7 +42,6 @@ type Content struct {
 	deleteSubscriptionModalShow bool
 
 	VAPIDpublic string
-	devices     []models.Device
 	thisDevice  models.Device
 
 	thisDeviceUUID string

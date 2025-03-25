@@ -74,7 +74,7 @@ func (c *Content) processUsers() []models.User {
 }
 
 func (c *Content) sumRequests() int {
-	var numOfReqs int = 0
+	var numOfReqs = 0
 
 	requestList := c.user.RequestList
 	for _, state := range requestList {
