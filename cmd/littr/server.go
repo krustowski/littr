@@ -7,7 +7,6 @@ import (
 	//"compress/flate"
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -42,41 +41,99 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var (
+type server struct {
+	ctx context.Context
+
+	db db.DatabaseKeeper
+
+	l common.Logger
+
+	listener net.Listener
+
+	once sync.Once
+
 	// The very main HTTP server's struct pointer.
-	server *http.Server
+	srv *http.Server
 
 	// The WaitGroup for the graceful HTTP server shutdown.
-	wg sync.WaitGroup
-)
-
-// initClient initializes the router for the client web application (if run in browser for the first time).
-func initClient() {
-	initClientCommon()
+	wg *sync.WaitGroup
 }
 
-func initServer() {
-	// Prepare the Logger instance.
-	l := common.NewLogger(nil, "initServer")
-	l.Msg("littr server starting (init phase)...").Status(http.StatusOK).Log()
+func newServer() App {
+	return &server{}
+}
+
+func (s *server) Run() {
+	s.init()
+	s.handleSignalsShutdown()
+
+	s.setupRouterServer()
+	s.serve()
 
 	//
-	//  Prestart preparations
+	//  Shutdown
 	//
 
-	// Check if the server secrets (APP_PEPPER and API_TOKEN) are initialized and not empty.
-	if os.Getenv("APP_PEPPER") == "" || os.Getenv("API_TOKEN") == "" {
-		panic("Any of APP_PEPPER or API_TOKEN environment variables not specified. Could not continue the HTTP server prestart. Terminating now.")
-	}
+	// Wait for the graceful HTTP server shutdown attempt.
+	s.wg.Wait()
 
+	// This is the final log before the application exits for real! Reset the timer not to log the whole server's uptime.
+	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
+	s.l.ResetTimer().Msg("the HTTP server has stopped serving new connections, exit").Log()
+
+	//defer os.Exit(0)
+	//return
+}
+
+func (s *server) init() {
+	s.once.Do(func() {
+		s.l = common.NewLogger(nil, "initServer")
+		s.l.Msg("server preflight checks start").Log()
+
+		if config.ServerSecret == "" || config.DataDumpToken == "" {
+			panic(errMissingSecretOrToken)
+		}
+
+		s.db = db.NewDatabase()
+
+		// Lock the database stack for read, unlock it for write (see pkg/backend/db/init.go for more).
+		s.db.LockRead()
+
+		// Load the persistent data from the filesystem to memory.
+		s.l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
+
+		// Unlock the read access.
+		s.db.UnlockRead()
+
+		//
+		//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
+		//
+
+		// Run data migration procedures to the database schema.
+		migrationsReport := db.RunMigrations()
+
+		migrationsStatus := func() int {
+			if strings.Contains(migrationsReport, "false") {
+				return http.StatusInternalServerError
+			}
+			return http.StatusOK
+		}()
+
+		l.Msg(migrationsReport).Status(migrationsStatus).Log()
+
+	})
+
+}
+
+func (s *server) handleSignalsShutdown() {
 	// Handle system calls and signals to properly shutdown the server.
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	// The signals monitoring goroutine.
-	wg.Add(1)
+	s.wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer s.wg.Done()
 
 		// Wait for signals.
 		sig := <-sigs
@@ -86,18 +143,24 @@ func initServer() {
 		l := common.NewLogger(nil, "shutdown")
 
 		// Log and broadcast the message that the server is to shutdown.
-		l.ResetTimer().Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Status(http.StatusOK).Log()
+		l.Msg("trap signal: " + sig.String() + ", stopping the HTTP server gracefully...").Log()
+
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "message"})
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
 		// "Lock" the write access to the database. <--- causes threadlock and app exit deferals when used with the actual lock !!!
-		db.Lock()
+		s.db.LockWrite()
 
 		// Dump all in-memory databases.
-		l.ResetTimer().Msg(db.DumpAll()).Status(http.StatusOK).Log()
+		report, err := s.db.DumpAll()
+		if err != nil {
+			l.Error(err).Log()
+		} else {
+			l.Msg(report).Log()
+		}
 
 		// Release the lock, but keep the database read-only. The lock blocks the main thread and defers the application shutdown.
-		db.ReleaseLock()
+		s.db.ReleaseLock()
 
 		// Fetch a context to send to gracefully shutdown the HTTP server.
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -105,52 +168,28 @@ func initServer() {
 
 		// Terminate the SSE server. Method Shutdown below implicitly shuts down the SSE Provider.
 		if live.Streamer != nil {
-			live.Streamer.Shutdown(sctx)
+			if err := live.Streamer.Shutdown(sctx); err != nil {
+				l.Error(err).Log()
+			}
 		}
 
 		// Terminate the HTTP server from here, give it 5 seconds to shutdown gracefully..
-		if err := server.Shutdown(sctx); err != nil {
-			l.Msg(fmt.Sprintf("HTTP server shutdown error: %s, force terminitaing the server..., ", err.Error())).Status(http.StatusInternalServerError).Log()
+		if err := s.srv.Shutdown(sctx); err != nil {
+			l.Error(errServerShutdownFailed, err).Log()
 
 			// Force terminate the HTTP server if failed to stop gracefully.
-			server.Close()
+			if err := s.srv.Close(); err != nil {
+				l.Error(err).Log()
+			}
 			return
 		}
 
-		l.Msg("graceful shutdown complete").Status(http.StatusOK).Log()
+		l.Msg("graceful shutdown complete").Log()
 		// The graceful end of the goroutine = the program is about to exit.
 	}()
+}
 
-	//
-	//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
-	//
-
-	// Lock the database stack for read, unlock it for write (see pkg/backend/db/init.go for more).
-	db.RLock()
-
-	l.Msg("caches initialized").Status(http.StatusOK).Log()
-
-	// Register the (mostly) cache metrics.
-	metrics.RegisterAll()
-
-	// Load the persistent data from the filesystem to memory.
-	l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
-
-	// Unlock the read access.
-	db.RUnlock()
-
-	// Run data migration procedures to the database schema.
-	migrationsReport := db.RunMigrations()
-
-	migrationsStatus := func() int {
-		if strings.Contains(migrationsReport, "false") {
-			return http.StatusInternalServerError
-		}
-		return http.StatusOK
-	}()
-
-	l.Msg(migrationsReport).Status(migrationsStatus).Log()
-
+func (s *server) setupRouterServer() {
 	//
 	//  Muxer, listener and server initialization
 	//
@@ -170,19 +209,10 @@ func initServer() {
 	r.Use(compressor.Handler)*/
 
 	// Create a custom network TCP connection listener.
-	listener, err := net.Listen("tcp", ":"+config.ServerPort)
-	if err != nil {
+	var err error
+	if s.listener, err = net.Listen("tcp", ":"+config.ServerPort); err != nil {
 		// Cannot listen on such address = a permission issue?
 		panic(err)
-	}
-	defer listener.Close()
-
-	// Create a custom HTTP server. WriteTimeout is set to 0 (infinite) due to the SSE subserver present.
-	server = &http.Server{
-		Addr: listener.Addr().String(),
-		//ReadTimeout: 0 * time.Second,
-		WriteTimeout: 0 * time.Second,
-		Handler:      r,
 	}
 
 	//
@@ -200,6 +230,9 @@ func initServer() {
 		http.ServeFile(w, r, "/opt/web/favicon.ico")
 		return nil
 	}))
+
+	// Register the (mostly) cache metrics.
+	metrics.RegisterAll()
 
 	// Register the Prometheus metrics' handle.
 	r.Handle("/metrics", promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
@@ -222,11 +255,27 @@ func initServer() {
 
 	r.Handle("/*", appHandler)
 
+	// Create a custom HTTP server. WriteTimeout is set to 0 (infinite) due to the SSE subserver present.
+	s.srv = &http.Server{
+		Addr: s.listener.Addr().String(),
+		//ReadTimeout: 0 * time.Second,
+		WriteTimeout: 0 * time.Second,
+		Handler:      r,
+	}
+}
+
+func (s *server) serve() {
 	//
 	//  Start the server
 	//
 
-	l.Msg("starting the HTTP server (app v" + os.Getenv("APP_VERSION") + ")...").Status(http.StatusOK).Log()
+	s.l.Msg("init done, starting the HTTP server (v" + config.AppVersion).Log()
+
+	defer func() {
+		if err := s.listener.Close(); err != nil {
+			s.l.Error(err).Log()
+		}
+	}()
 
 	// Send the SSE regarding the server start.
 	go func() {
@@ -234,23 +283,22 @@ func initServer() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-start", Type: "message"})
 	}()
 
-	// Start serving using the created net listener.
-	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		// Reset the timer not to log the whole server's uptime.
-		l.ResetTimer().Msg(fmt.Sprintf("HTTP server error: %s", err.Error())).Status(http.StatusInternalServerError).Log()
+	// Inject the logger to the connection context.
+	s.srv.ConnContext = func(ctx context.Context, c net.Conn) context.Context {
+		if ctx == nil {
+			ctx = context.Background()
+		}
+
+		if c == nil {
+			return nil
+		}
+
+		return context.WithValue(ctx, common.LoggerContextKey, s.l)
 	}
 
-	//
-	//  Exit
-	//
-
-	// Wait for the graceful HTTP server shutdown attempt.
-	wg.Wait()
-
-	// This is the final log before the application exits for real! Reset the timer not to log the whole server's uptime.
-	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
-	l.ResetTimer().Msg("HTTP server has stopped serving new connections, exit").Status(http.StatusOK).Log()
-
-	defer os.Exit(0)
-	return
+	// Start serving using the created net listener.
+	if err := s.srv.Serve(s.listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		// Reset the timer not to log the whole server's uptime.
+		s.l.ResetTimer().Error(err).Log()
+	}
 }

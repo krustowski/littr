@@ -1,7 +1,13 @@
 package main
 
+import "runtime"
+
 func main() {
-	// https://github.com/maxence-charriere/go-app/issues/627
-	initClient()
-	initServer()
+	var c = newClient()
+	c.Run()
+
+	if runtime.GOOS != "wasm" {
+		var s = newServer()
+		s.Run()
+	}
 }

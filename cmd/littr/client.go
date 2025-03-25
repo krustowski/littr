@@ -9,8 +9,13 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-// initClientCommon is a web application router initialization helper function. It maps various routes to their frontend view conterparts.
-func initClientCommon() {
+type client struct{}
+
+func newClient() App {
+	return &client{}
+}
+
+func (c *client) Run() {
 	app.Route("/", func() app.Composer {
 		return &fe.WelcomeView{}
 	})
