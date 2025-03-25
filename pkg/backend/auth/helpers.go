@@ -7,15 +7,20 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func noteUsersActivity(caller string) bool {
+func noteUsersActivity(callerID string, cache db.Cacher) bool {
 	// check if caller exists
-	callerUser, found := db.GetOne(db.UserCache, caller, models.User{})
+	callerUser, found := cache.Load(callerID)
 	if !found {
 		return false
 	}
 
-	// update user's activity timestamp
-	callerUser.LastActiveTime = time.Now()
+	caller, ok := callerUser.(models.User)
+	if !ok {
+		return false
+	}
 
-	return db.SetOne(db.UserCache, caller, callerUser)
+	// update user's activity timestamp
+	caller.LastActiveTime = time.Now()
+
+	return cache.Store(callerID, caller)
 }

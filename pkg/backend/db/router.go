@@ -5,10 +5,10 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-func NewDumpRouter() chi.Router {
+func NewDumpRouter(controller *dumpController) chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/", dumpHandler)
+	r.Get("/", controller.DumpAll)
 
 	return r
 }

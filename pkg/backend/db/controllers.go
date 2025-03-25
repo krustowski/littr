@@ -2,10 +2,20 @@ package db
 
 import (
 	"net/http"
-	"os"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/config"
 )
+
+type dumpController struct {
+	db DatabaseKeeper
+}
+
+func NewDumpController(db DatabaseKeeper) *dumpController {
+	return &dumpController{
+		db: db,
+	}
+}
 
 // dumpHandler is the dv package controller function to process system data dump request.
 //
@@ -19,8 +29,8 @@ import (
 //	@Failure		403				{object}	common.APIResponse{data=models.Stub}	"User unauthorized (e.g. invalid token)."
 //	@Failure		429				{object}	common.APIResponse{data=models.Stub}	"Too many requests, try again later."
 //	@Router			/dump [get]
-func dumpHandler(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, "dump")
+func (c *dumpController) DumpAll(w http.ResponseWriter, r *http.Request) {
+	l := common.NewLogger(r, "dumpController")
 
 	// check the incoming API token
 	token := r.Header.Get(common.HDR_DUMP_TOKEN)
@@ -30,11 +40,16 @@ func dumpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate the incoming token
-	if token != os.Getenv("API_TOKEN") {
+	if token != config.DataDumpToken {
 		l.Msg(common.ERR_API_TOKEN_INVALID).Status(http.StatusForbidden).Log().Payload(nil).Write(w)
 		return
 	}
 
 	//go DumpAll()
-	l.Msg(DumpAll()).Status(http.StatusOK).Log().Payload(nil).Write(w)
+	report, err := c.db.DumpAll()
+	if err != nil {
+		l.Error(err).Status(http.StatusInternalServerError).Log().Write(w)
+	} else {
+		l.Msg(report).Status(http.StatusOK).Log().Write(w)
+	}
 }

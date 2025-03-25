@@ -15,7 +15,6 @@ import (
 	"go.vxn.dev/littr/pkg/backend/metrics"
 	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/models"
-	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
 const (
@@ -27,20 +26,22 @@ const (
 )
 
 func (d *defaultDatabaseKeeper) LoadAll() (string, error) {
+	db := d.Database()
+
 	polls := makeLoadReport("polls", wrapLoadOutput(
-		loadOne(PollCache, pollsFile, models.Poll{})))
+		loadOne(db["PollCache"], pollsFile, models.Poll{})))
 
 	posts := makeLoadReport("posts", wrapLoadOutput(
-		loadOne(FlowCache, postsFile, models.Post{})))
+		loadOne(db["FlowCache"], postsFile, models.Post{})))
 
 	reqs := makeLoadReport("requests", wrapLoadOutput(
-		loadOne(RequestCache, requestsFile, models.Request{})))
+		loadOne(db["RequestCache"], requestsFile, models.Request{})))
 
 	tokens := makeLoadReport("tokens", wrapLoadOutput(
-		loadOne(TokenCache, tokensFile, models.Token{})))
+		loadOne(db["TokenCache"], tokensFile, models.Token{})))
 
 	users := makeLoadReport("users", wrapLoadOutput(
-		loadOne(UserCache, usersFile, models.User{})))
+		loadOne(db["UserCache"], usersFile, models.User{})))
 
 	runtime.GC()
 
@@ -50,20 +51,22 @@ func (d *defaultDatabaseKeeper) LoadAll() (string, error) {
 func (d *defaultDatabaseKeeper) DumpAll() (string, error) {
 	var report string
 
+	db := d.Database()
+
 	report += prepareDumpReport("polls",
-		dumpOne(PollCache, pollsFile, models.Poll{}))
+		dumpOne(db["PollCache"], pollsFile, models.Poll{}))
 
 	report += prepareDumpReport("posts",
-		dumpOne(FlowCache, postsFile, models.Post{}))
+		dumpOne(db["FlowCache"], postsFile, models.Post{}))
 
 	report += prepareDumpReport("requests",
-		dumpOne(RequestCache, requestsFile, models.Request{}))
+		dumpOne(db["RequestCache"], requestsFile, models.Request{}))
 
 	report += prepareDumpReport("tokens",
-		dumpOne(TokenCache, tokensFile, models.Token{}))
+		dumpOne(db["TokenCache"], tokensFile, models.Token{}))
 
 	report += prepareDumpReport("users",
-		dumpOne(UserCache, usersFile, models.User{}))
+		dumpOne(db["UserCache"], usersFile, models.User{}))
 
 	runtime.GC()
 
@@ -164,7 +167,7 @@ func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, e
 				continue
 			}
 
-			if saved := SetOne(cache, key, val); !saved {
+			if saved := setOne(cache, key, val); !saved {
 				msg := fmt.Sprintf("cannot load item from file '%s' (key: %s)", filepath, key)
 				l.Msg(msg).Status(http.StatusInternalServerError).Log()
 				return count, total, fmt.Errorf("%s", msg)
@@ -264,7 +267,7 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 		var total int64
 
 		// Dump the in-memoty running data.
-		matrix.Items, total = GetAll(cache, model)
+		matrix.Items, total = getAll(cache, model)
 
 		// Prepare the JSON byte stream.
 		jsonData, err = json.Marshal(&matrix)

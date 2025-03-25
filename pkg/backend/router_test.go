@@ -61,7 +61,7 @@ func TestAPIRouter(t *testing.T) {
 	r.Use(auth.AuthMiddleware)
 
 	// Rate limiter (see limiter in pkg/backend/router.go).
-	if !config.IsLimiterDisabled {
+	if config.IsApiLimiterEnabled {
 		r.Use(limiter)
 	}
 
@@ -149,8 +149,8 @@ func TestAPIRouter(t *testing.T) {
 	//  Limiter test
 	//
 
-	if !config.IsLimiterDisabled {
-		for i := 0; i < config.LIMITER_REQS_NUM; i++ {
+	if config.IsApiLimiterEnabled {
+		for i := 0; i < config.ApiLimiterRequestsCount; i++ {
 			_, _ = testRequest(t, ts, http.MethodGet, routePrefix, nil)
 		}
 

@@ -1,6 +1,3 @@
-//go:build wasm || server
-// +build wasm server
-
 package main
 
 import (
@@ -11,7 +8,7 @@ import (
 
 type client struct{}
 
-func newClient() App {
+func newClient() *client {
 	return &client{}
 }
 

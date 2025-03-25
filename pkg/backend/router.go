@@ -115,27 +115,29 @@ var limiter = httprate.Limit(config.ApiLimiterRequestsCount, time.Second*config.
 )
 
 // The very main API router.
-func NewAPIRouter(db db.DatabaseKeeper) chi.Router {
+func NewAPIRouter(d db.DatabaseKeeper) chi.Router {
 	r := chi.NewRouter()
 
 	// Use the authentication middleware.
-	r.Use(auth.AuthMiddleware)
+	r.Use(auth.AuthMiddleware(d))
 
 	// Use the rate limiter, feature-flagged.
 	if config.IsApiLimiterEnabled {
 		r.Use(limiter)
 	}
 
+	caches := d.Database()
+
 	// Define notFound and methodNotAllowed default handlers.
 	r.NotFound(http.HandlerFunc(NotFoundHandler))
 	r.MethodNotAllowed(http.HandlerFunc(MethodNotAllowedHandler))
 
 	// Init repositories for services.
-	pollRepository := polls.NewPollRepository(db.PollCache)
-	postRepository := posts.NewPostRepository(db.FlowCache)
-	requestRepository := requests.NewRequestRepository(db.RequestCache)
-	tokenRepository := tokens.NewTokenRepository(db.TokenCache)
-	userRepository := users.NewUserRepository(db.UserCache)
+	pollRepository := polls.NewPollRepository(caches["PollCache"])
+	postRepository := posts.NewPostRepository(caches["FlowCache"])
+	requestRepository := requests.NewRequestRepository(caches["RequestCache"])
+	tokenRepository := tokens.NewTokenRepository(caches["TokenCache"])
+	userRepository := users.NewUserRepository(caches["UserCache"])
 
 	// Init services for controllers.
 	authService := auth.NewAuthService(tokenRepository, userRepository)
@@ -148,6 +150,7 @@ func NewAPIRouter(db db.DatabaseKeeper) chi.Router {
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)
+	dumpController := db.NewDumpController(d)
 	pollController := polls.NewPollController(pollService)
 	postController := posts.NewPostController(postService)
 	statController := stats.NewStatController(statService)
@@ -161,7 +164,7 @@ func NewAPIRouter(db db.DatabaseKeeper) chi.Router {
 	r.Get("/", rootHandler)
 
 	r.Mount("/auth", auth.NewAuthRouter(authController))
-	r.Mount("/dump", db.NewDumpRouter())
+	r.Mount("/dump", db.NewDumpRouter(dumpController))
 	r.Mount("/live", live.NewLiveRouter())
 	r.Mount("/polls", polls.NewPollRouter(pollController))
 	r.Mount("/posts", posts.NewPostRouter(postController))
