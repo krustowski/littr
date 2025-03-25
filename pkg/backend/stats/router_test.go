@@ -1,6 +1,8 @@
 package stats
 
 import (
+	"errors"
+	"net"
 	"net/http"
 	"testing"
 
@@ -27,7 +29,7 @@ func TestStatsRouter(t *testing.T) {
 	// Fetch test net listener and test HTTP server configuration.
 	listener := config.PrepareTestListener(t)
 	defer func() {
-		if err := listener.Close(); err != nil {
+		if err := listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
 			t.Error(err)
 		}
 	}()

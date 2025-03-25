@@ -2,7 +2,9 @@ package backend
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -82,7 +84,7 @@ func TestAPIRouter(t *testing.T) {
 	// Create a custom network TCP connection listener.
 	listener := config.PrepareTestListener(t)
 	defer func() {
-		if err := listener.Close(); err != nil {
+		if err := listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
 			t.Error(err)
 		}
 	}()

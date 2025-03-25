@@ -2,6 +2,8 @@ package live
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,7 +29,7 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 	// Fetch test net listener and test HTTP server configuration.
 	listener := config.PrepareTestListenerWithPort(t, config.DEFAULT_TEST_SSE_PORT)
 	defer func() {
-		if err := listener.Close(); err != nil {
+		if err := listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
 			t.Error(err)
 		}
 	}()
