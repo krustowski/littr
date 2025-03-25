@@ -27,7 +27,7 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 	r.Mount(streamerTestURI, Streamer)
 
 	// Fetch test net listener and test HTTP server configuration.
-	listener := config.PrepareTestListenerWithPort(t, config.DEFAULT_TEST_SSE_PORT)
+	listener := config.PrepareTestListenerWithPort(t, config.DefaultTestStreamerPort)
 	defer func() {
 		if err := listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
 			t.Error(err)
@@ -45,7 +45,7 @@ func TestLiveRouterWithStreamer(t *testing.T) {
 
 	// Spin-off a client SSE goroutine and wait till it dead.
 	wg.Add(1)
-	go testConnectorSSE(t, &wg, "http://localhost:"+config.DEFAULT_TEST_SSE_PORT+streamerTestURI)
+	go testConnectorSSE(t, &wg, "http://localhost:"+config.DefaultTestStreamerPort+streamerTestURI)
 
 	var timeout = 4 * time.Second
 

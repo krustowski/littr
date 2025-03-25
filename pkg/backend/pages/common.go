@@ -2,7 +2,6 @@
 package pages
 
 import (
-	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -11,10 +10,15 @@ const PAGE_SIZE int = 25
 // DTO for GetOnePage input aggregation
 type PageOptions struct {
 	// common options
-	Caller   models.User
+	Caller   *models.User
 	CallerID string                `json:"caller_id"`
 	PageNo   int                   `json:"page_no"`
 	FlowList models.UserGenericMap `json:"folow_list"`
+	Repos    struct {
+		PollRepo models.PollRepositoryInterface
+		PostRepo models.PostRepositoryInterface
+		UserRepo models.UserRepositoryInterface
+	}
 
 	// data compartments' specifications
 	Flow  FlowOptions `json:"flow_options"`
@@ -57,26 +61,51 @@ type PagePointers struct {
 
 // fillDataMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
 func fillDataMaps(opts PageOptions) *PagePointers {
+	var pollRepoPresent, postRepoPresent, userRepoPresent bool
+
+	if opts.Repos.PollRepo != nil {
+		pollRepoPresent = true
+	}
+
+	if opts.Repos.PostRepo != nil {
+		postRepoPresent = true
+	}
+
+	if opts.Repos.UserRepo != nil {
+		userRepoPresent = true
+	}
+
 	// prepare data maps for a flow page
-	if opts.Flow != (FlowOptions{}) {
-		posts, _ := db.GetAll(db.FlowCache, models.Post{})
-		users, _ := db.GetAll(db.UserCache, models.User{})
+	if opts.Flow != (FlowOptions{}) && postRepoPresent && userRepoPresent {
+		posts, err := opts.Repos.PostRepo.GetAll()
+		if err != nil {
+			return nil
+		}
+
+		users, err := opts.Repos.UserRepo.GetAll()
+		if err != nil {
+			return nil
+		}
 
 		return &PagePointers{Posts: posts, Users: users}
 	}
 
 	// prepare data map for a polls page
-	if opts.Polls != (PollOptions{}) {
-		polls, _ := db.GetAll(db.PollCache, models.Poll{})
-		// users are not needed necessarily there for now...
-		//users, _ := db.GetAll(db.UserCache, models.User{})
+	if opts.Polls != (PollOptions{}) && pollRepoPresent {
+		polls, err := opts.Repos.PollRepo.GetAll()
+		if err != nil {
+			return nil
+		}
 
 		return &PagePointers{Polls: polls}
 	}
 
 	// prepare data map for a users page
-	if opts.Users != (UserOptions{}) {
-		users, _ := db.GetAll(db.UserCache, models.User{})
+	if opts.Users != (UserOptions{}) && userRepoPresent {
+		users, err := opts.Repos.UserRepo.GetAll()
+		if err != nil {
+			return nil
+		}
 
 		return &PagePointers{Users: users}
 	}
@@ -85,19 +114,22 @@ func fillDataMaps(opts PageOptions) *PagePointers {
 }
 
 func GetOnePage(opts PageOptions) (ptrs PagePointers) {
-	var ok bool
+	var err error
 
 	// validate the callerID is a legitimate user's ID
-	if opts.Caller, ok = db.GetOne(db.UserCache, opts.CallerID, models.User{}); !ok {
-		// unregistred caller
-		return ptrs
+	if opts.Repos.UserRepo == nil {
+		return
+	}
+
+	if opts.Caller, err = opts.Repos.UserRepo.GetByID(opts.CallerID); err != nil {
+		return
 	}
 
 	// pointer to maps of all items (based on and related to the opts input)
 	ptrMaps := fillDataMaps(opts)
 	if ptrMaps == nil {
 		// invalid input options = resulted in empty maps only
-		return ptrs
+		return
 	}
 
 	if opts.Flow != (FlowOptions{}) {

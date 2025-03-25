@@ -45,7 +45,7 @@ const (
 	defaultServerSecret          string = ""
 	defaultServiceWorkerTemplate string = ""
 	defaultTestServerPort        string = "8777"
-	defaultTestStreamerPort      string = "8778"
+	DefaultTestStreamerPort      string = "8778"
 )
 
 var (

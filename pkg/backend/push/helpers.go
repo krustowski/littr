@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -20,7 +19,7 @@ type NotificationOpts struct {
 	Receiver string
 	Devices  *[]models.Device
 	Body     *[]byte
-	//Logger   common.Logger
+	Repo     models.UserRepositoryInterface
 }
 
 func SendNotificationToDevices(opts *NotificationOpts) {
@@ -135,9 +134,17 @@ func SendNotificationToDevices(opts *NotificationOpts) {
 			newDeviceList = append(newDeviceList, dev)
 		}
 
+		receiver, err := opts.Repo.GetByID(opts.Receiver)
+		if err != nil {
+			l.Msg(common.ERR_DEVICE_LIST_UPDATE_FAIL).Error(err).Status(http.StatusInternalServerError).Log()
+			return
+		}
+
+		receiver.Devices = newDeviceList
+
 		// save new device array upon the callerID
-		if saved := db.SetOne(db.SubscriptionCache, opts.Receiver, newDeviceList); !saved {
-			l.Msg(common.ERR_DEVICE_LIST_UPDATE_FAIL).Status(http.StatusInternalServerError).Log()
+		if err := opts.Repo.Save(receiver); err != nil {
+			l.Msg(common.ERR_DEVICE_LIST_UPDATE_FAIL).Error(err).Status(http.StatusInternalServerError).Log()
 			return
 		}
 

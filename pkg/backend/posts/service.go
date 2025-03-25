@@ -143,6 +143,7 @@ func (s *postService) Create(ctx context.Context, post *models.Post) error {
 			Receiver: receiverName,
 			Devices:  &receiver.Devices,
 			Body:     &body,
+			Repo:     s.userRepository,
 		}
 
 		// Send the webpush notification(s)

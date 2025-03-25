@@ -58,7 +58,7 @@ func TestAPIRouter(t *testing.T) {
 
 	r := chi.NewRouter()
 
-	r.Use(auth.AuthMiddleware)
+	r.Use(auth.AuthMiddleware(nil))
 
 	// Rate limiter (see limiter in pkg/backend/router.go).
 	if config.IsApiLimiterEnabled {

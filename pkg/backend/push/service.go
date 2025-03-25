@@ -70,6 +70,7 @@ func (s *notificationService) SendNotification(ctx context.Context, postID strin
 		Receiver: post.Nickname,
 		Devices:  &user.Devices,
 		Body:     &body,
+		Repo:     s.userRepository,
 	}
 
 	// Send the webpush notification(s).
