@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"strconv"
@@ -165,7 +164,7 @@ func (c *UserController) Activate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Activate the user at the userService.
-	err := c.userService.Activate(context.WithValue(r.Context(), "uuid", dtoIn.UUID), dtoIn.UUID)
+	err := c.userService.Activate(r.Context(), dtoIn.UUID)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 		return
@@ -209,16 +208,16 @@ func (c *UserController) UpdateLists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn UserUpdateListsRequest
+	var dtoIn UserUpdateListsRequest
 
 	// Decode the incoming data.
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Update the user's data at the UserService.
-	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "lists"), userIDParam, userID), &DTOIn); err != nil {
+	if err := c.userService.Update(r.Context(), userID, "lists", &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
@@ -260,16 +259,16 @@ func (c *UserController) UpdateOptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var DTOIn UserUpdateOptionsRequest
+	var dtoIn UserUpdateOptionsRequest
 
 	// Decode the incoming data.
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Update the user's data at the UserService.
-	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "options"), userIDParam, userID), &DTOIn); err != nil {
+	if err := c.userService.Update(r.Context(), userID, "options", &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
@@ -311,16 +310,16 @@ func (c *UserController) UpdatePassphrase(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var DTOIn UserUpdatePassphraseRequest
+	var dtoIn UserUpdatePassphraseRequest
 
 	// Decode the incoming data.
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
 	// Update the user's data at the UserService.
-	if err := c.userService.Update(context.WithValue(context.WithValue(r.Context(), updateTypeParam, "passphrase"), userIDParam, userID), &DTOIn); err != nil {
+	if err := c.userService.Update(r.Context(), userID, "passphrase", &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}
@@ -475,15 +474,15 @@ func (c *UserController) PassphraseResetRequest(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var DTOIn UserPassphraseRequest
+	var dtoIn UserPassphraseRequest
 
 	// decode the incoming data
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", "request"), &DTOIn)
+	err := c.userService.ProcessPassphraseRequest(r.Context(), "request", &dtoIn)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
@@ -516,15 +515,15 @@ func (c *UserController) PassphraseReset(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var DTOIn UserPassphraseReset
+	var dtoIn UserPassphraseReset
 
 	// decode the incoming data
-	if err := common.UnmarshalRequestData(r, &DTOIn); err != nil {
+	if err := common.UnmarshalRequestData(r, &dtoIn); err != nil {
 		l.Msg(common.ERR_INPUT_DATA_FAIL).Status(http.StatusBadRequest).Error(err).Log().Payload(nil).Write(w)
 		return
 	}
 
-	err := c.userService.ProcessPassphraseRequest(context.WithValue(r.Context(), "requestType", "reset"), &DTOIn)
+	err := c.userService.ProcessPassphraseRequest(r.Context(), "reset", &dtoIn)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
@@ -619,7 +618,7 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.userService.Delete(context.WithValue(r.Context(), "userID", userID), userID)
+	err := c.userService.Delete(r.Context(), userID)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
@@ -665,8 +664,13 @@ func (c *UserController) GetAll(w http.ResponseWriter, r *http.Request) {
 		UserStats map[string]models.UserStat `json:"user_stats,omitempty"`
 	}
 
+	svcPayload := &UserPagingRequest{
+		PageNo:     pageNo,
+		PagingSize: 25,
+	}
+
 	// Compose the DTO-out from userService.
-	users, err := c.userService.FindAll(context.WithValue(r.Context(), "pageNo", pageNo))
+	users, err := c.userService.FindAll(r.Context(), svcPayload)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log()
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
@@ -731,7 +735,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the requested user.
-	user, err := c.userService.FindByID(context.WithValue(r.Context(), userIDParam, userID), userID)
+	user, err := c.userService.FindByID(r.Context(), userID)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log()
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Payload(nil).Write(w)
@@ -791,8 +795,6 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		pageNo = 0
 	}
 
-	ctx := context.WithValue(r.Context(), "pageNo", pageNo)
-
 	// Fetch the optional X-Hide-Replies header's value.
 	hideReplies, err := strconv.ParseBool(r.Header.Get(common.HDR_HIDE_REPLIES))
 	if err != nil {
@@ -801,10 +803,14 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	ctx = context.WithValue(ctx, "hideReplies", hideReplies)
+	svcPayload := &UserPagingRequest{
+		PageNo:      pageNo,
+		PagingSize:  25,
+		HideReplies: hideReplies,
+	}
 
 	// Fetch posts and associated users.
-	posts, users, err := c.userService.FindPostsByID(ctx, userID)
+	posts, users, err := c.userService.FindPostsByID(r.Context(), userID, svcPayload)
 	if err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
 		return

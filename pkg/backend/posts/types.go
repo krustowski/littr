@@ -7,3 +7,9 @@ type PostCreateRequest struct {
 	FigureName string `json:"figure_name" example:"example.jpg"`
 	FigureData []byte `json:"figure_data" swaggertype:"string" format:"base64" example:"base64 encoded data"`
 }
+
+type PostPagingRequest struct {
+	PageNo      int
+	PagingSize  int
+	HideReplies bool
+}

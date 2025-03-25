@@ -385,28 +385,16 @@ func (s *UserService) Activate(ctx context.Context, UUID string) error {
 	return nil
 }
 
-func (s *UserService) Update(ctx context.Context, userRequest interface{}) error {
+func (s *UserService) Update(ctx context.Context, userID, reqType string, userRequest interface{}) error {
 	// Fetch the callerID from the given context.
 	callerID := common.GetCallerID(ctx)
-
-	// Fetch the userID from the given context.
-	userID, ok := ctx.Value("userID").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the user's ID")
-	}
-
-	// Fetch the update type from the given context.
-	reqType, ok := ctx.Value("updateType").(string)
-	if !ok {
-		return fmt.Errorf("could not decode the user request type")
-	}
 
 	switch reqType {
 	case "lists":
 		// Assert the type for the user update request.
 		data, ok := userRequest.(*UserUpdateListsRequest)
 		if !ok {
-			return fmt.Errorf("could not decode the user request")
+			return ErrUserRequestDecodingFailed
 		}
 
 		// Fetch the caller from repository.
@@ -456,7 +444,7 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		// Assert the type for the user update request.
 		data, ok := userRequest.(*UserUpdateOptionsRequest)
 		if !ok {
-			return fmt.Errorf("could not decode the user request")
+			return ErrUserRequestDecodingFailed
 		}
 
 		if callerID != userID {
@@ -518,7 +506,7 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 		// Assert the type for the user update request.
 		data, ok := userRequest.(*UserUpdatePassphraseRequest)
 		if !ok {
-			return fmt.Errorf("could not decode the user request")
+			return ErrUserRequestDecodingFailed
 		}
 
 		if callerID != userID {
@@ -536,8 +524,10 @@ func (s *UserService) Update(ctx context.Context, userRequest interface{}) error
 			return fmt.Errorf(common.ERR_PASSPHRASE_REQ_INCOMPLETE)
 		}
 
-		passHashNew := sha512.Sum512([]byte(data.NewPassphrase + os.Getenv("APP_PEPPER")))
-		passHashCurrent := sha512.Sum512([]byte(data.CurrentPassphrase + os.Getenv("APP_PEPPER")))
+		pepper := os.Getenv("APP_PEPPER")
+
+		passHashNew := sha512.Sum512([]byte(data.NewPassphrase + pepper))
+		passHashCurrent := sha512.Sum512([]byte(data.CurrentPassphrase + pepper))
 
 		// Check if the current passphrasë́'s hash is correct.
 		if fmt.Sprintf("%x", passHashCurrent) != dbUser.PassphraseHex {
@@ -562,7 +552,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userRequest interface{})
 	// Assert the type for the user update request.
 	data, ok := userRequest.(*UserUploadAvatarRequest)
 	if !ok {
-		return nil, fmt.Errorf("could not decode the user request")
+		return nil, ErrUserRequestDecodingFailed
 	}
 
 	// Fetch the callerID/nickname type from the given context.
@@ -663,11 +653,9 @@ func (s *UserService) UpdateSubscriptionTags(ctx context.Context, uuid string, t
 	return nil
 }
 
-func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest interface{}) error {
-	// Fetch the pageNo from the context.
-	requestType, ok := ctx.Value("requestType").(string)
-	if !ok {
-		return fmt.Errorf(common.ERR_PAGENO_INCORRECT)
+func (s *UserService) ProcessPassphraseRequest(ctx context.Context, requestType string, userRequest interface{}) error {
+	if requestType == "" {
+		return fmt.Errorf(common.ERR_REQUEST_TYPE_BLANK)
 	}
 
 	var mailType string
@@ -681,7 +669,7 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		// Assert the type for the user update request.
 		data, ok := userRequest.(*UserPassphraseRequest)
 		if !ok {
-			return fmt.Errorf("could not decode the user request")
+			return ErrUserRequestDecodingFailed
 		}
 
 		if data.Email == "" {
@@ -732,7 +720,7 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, userRequest 
 		// Assert the type for the user update request.
 		data, ok := userRequest.(*UserPassphraseReset)
 		if !ok {
-			return fmt.Errorf("could not decode the user request")
+			return ErrUserRequestDecodingFailed
 		}
 
 		if data.UUID == "" {
@@ -817,11 +805,8 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
-	var ok bool
-
 	// Fetch the user's ID from the context.
-	userID, ok = ctx.Value("userID").(string)
-	if !ok {
+	if userID == "" {
 		return fmt.Errorf(common.ERR_USERID_BLANK)
 	}
 
@@ -915,12 +900,11 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, error) {
+func (s *UserService) FindAll(ctx context.Context, pageReq interface{}) (*map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
-	// Fetch the pageNo from the context.
-	pageNo, ok := ctx.Value("pageNo").(int)
+	req, ok := pageReq.(*UserPagingRequest)
 	if !ok {
 		return nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
 	}
@@ -934,7 +918,7 @@ func (s *UserService) FindAll(ctx context.Context) (*map[string]models.User, err
 	// Compose a pagination options object to paginate users.
 	opts := &pages.PageOptions{
 		CallerID: callerID,
-		PageNo:   pageNo,
+		PageNo:   req.PageNo,
 		FlowList: nil,
 
 		Users: pages.UserOptions{
@@ -983,7 +967,7 @@ func (s *UserService) FindByID(ctx context.Context, userID string) (*models.User
 	return &patchedUser, nil
 }
 
-func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[string]models.Post, *map[string]models.User, error) {
+func (s *UserService) FindPostsByID(ctx context.Context, userID string, pageOpts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from context.
 	callerID := common.GetCallerID(ctx)
 
@@ -992,34 +976,20 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string) (*map[st
 		return nil, nil, err
 	}
 
-	// Fetch the hideReplies value from context.
-	hideReplies, ok := ctx.Value("hideReplies").(bool)
+	req, ok := pageOpts.(*UserPagingRequest)
 	if !ok {
-		return nil, nil, fmt.Errorf("cannot read the hideReplies value from context")
+		return nil, nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
 	}
-
-	// Fetch the pageNo value from context.
-	pageNo, ok := ctx.Value("pageNo").(int)
-	if !ok {
-		return nil, nil, fmt.Errorf("cannot read the pageNo value from context")
-	}
-
-	// Hijack user's flowList.
-	/*flowList := caller.FlowList
-	if flowList != nil {
-		flowList[userID] = true
-	}
-	caller.FlowList = flowList*/
 
 	// Set the page options.
 	opts := &pages.PageOptions{
 		CallerID: callerID,
-		PageNo:   pageNo,
+		PageNo:   req.PageNo,
 		FlowList: nil,
 
 		Flow: pages.FlowOptions{
-			HideReplies:  hideReplies,
-			Plain:        !hideReplies,
+			HideReplies:  req.HideReplies,
+			Plain:        !req.HideReplies,
 			UserFlow:     true,
 			UserFlowNick: userID,
 		},

@@ -199,20 +199,19 @@ func (s *postService) Delete(ctx context.Context, postID string) error {
 	return s.postRepository.Delete(postID)
 }
 
-func (s *postService) FindAll(ctx context.Context) (*map[string]models.Post, *models.User, error) {
+func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[string]models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
-	// Fetch the pageNo from the context.
-	pageNo, ok := ctx.Value("pageNo").(int)
+	req, ok := pageOpts.(*PostPagingRequest)
 	if !ok {
-		return nil, nil, fmt.Errorf(common.ERR_PAGENO_INCORRECT)
+		return nil, nil, fmt.Errorf(common.ERR_REQUEST_TYPE_UNKNOWN)
 	}
 
 	// Compose a pagination options object to paginate posts.
 	opts := &pages.PageOptions{
 		CallerID: callerID,
-		PageNo:   pageNo,
+		PageNo:   req.PageNo,
 		FlowList: nil,
 
 		Flow: pages.FlowOptions{

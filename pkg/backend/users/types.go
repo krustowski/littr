@@ -14,6 +14,12 @@ type UserCreateRequest struct {
 	PassphrasePlain string `json:"passphrase_plain" example:"s3creTpassuWuort"`
 }
 
+type UserPagingRequest struct {
+	PageNo      int
+	PagingSize  int
+	HideReplies bool
+}
+
 type UserPassphraseRequest struct {
 	// Passphrase reset pre-request
 	Email string `json:"email" example:"alice@example.com"`

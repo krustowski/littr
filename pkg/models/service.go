@@ -56,12 +56,12 @@ type UserServiceInterface interface {
 	Subscribe(ctx context.Context, device *Device) error
 	Unsubscribe(ctx context.Context, uuid string) error
 	Activate(ctx context.Context, userID string) error
-	Update(ctx context.Context, updateRequest interface{}) error
+	Update(ctx context.Context, userID, reqType string, updateRequest interface{}) error
 	UpdateAvatar(ctx context.Context, updateRequest interface{}) (*string, error)
 	UpdateSubscriptionTags(ctx context.Context, uuid string, tags []string) error
-	ProcessPassphraseRequest(ctx context.Context, updateRequest interface{}) error
+	ProcessPassphraseRequest(ctx context.Context, reqType string, updateRequest interface{}) error
 	Delete(ctx context.Context, userID string) error
 	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]User, error)
 	FindByID(ctx context.Context, userID string) (*User, error)
-	FindPostsByID(ctx context.Context, userID string) (*map[string]Post, *map[string]User, error)
+	FindPostsByID(ctx context.Context, userID string, pageOpts interface{}) (*map[string]Post, *map[string]User, error)
 }
