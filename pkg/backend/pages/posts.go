@@ -7,12 +7,12 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePagePosts(opts PageOptions, ptrMaps *PagePointers) PagePointers {
+func onePagePosts(opts *PageOptions, data []interface{}) *PagePointers {
 	// BTW those variables are both of type map[string]T
 	var (
-		allPosts = ptrMaps.Posts
-		allUsers = ptrMaps.Users
-		posts    = []models.Post{}
+		allPosts *map[string]models.Post
+		allUsers *map[string]models.User
+		posts    []models.Post
 	)
 
 	defer func() {
@@ -20,6 +20,20 @@ func onePagePosts(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		allUsers = nil
 		posts = []models.Post{}
 	}()
+
+	for _, iface := range data {
+		p, ok := iface.(*map[string]models.Post)
+		if ok {
+			allPosts = p
+			continue
+		}
+
+		u, ok := iface.(*map[string]models.User)
+		if ok {
+			allUsers = u
+			continue
+		}
+	}
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
@@ -165,5 +179,5 @@ func onePagePosts(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		}
 	}
 
-	return PagePointers{Posts: &pExport, Users: &uExport}
+	return &PagePointers{Posts: &pExport, Users: &uExport}
 }

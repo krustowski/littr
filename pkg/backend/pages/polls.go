@@ -6,10 +6,11 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePagePolls(opts PageOptions, ptrMaps *PagePointers) PagePointers {
+func onePagePolls(opts *PageOptions, data []interface{}) PagePointers {
 	var (
-		polls = []models.Poll{}
-		part  []models.Poll
+		allPolls *map[string]models.Poll
+		polls    = []models.Poll{}
+		part     []models.Poll
 	)
 
 	defer func() {
@@ -17,8 +18,21 @@ func onePagePolls(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		part = []models.Poll{}
 	}()
 
+	for _, iface := range data {
+		var ok bool
+
+		allPolls, ok = iface.(*map[string]models.Poll)
+		if ok {
+			break
+		}
+	}
+
+	if allPolls == nil {
+		return PagePointers{}
+	}
+
 	// filter out all posts for such callerID
-	for key, poll := range *ptrMaps.Polls {
+	for key, poll := range *allPolls {
 		// check and correct the corresponding item's key
 		if key != poll.ID {
 			poll.ID = key

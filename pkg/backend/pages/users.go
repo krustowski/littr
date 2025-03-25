@@ -6,11 +6,12 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
+func onePageUsers(opts *PageOptions, data []interface{}) PagePointers {
 	var (
-		users  = []models.User{}
-		caller = models.User{}
-		part   []models.User
+		allUsers *map[string]models.User
+		users    = []models.User{}
+		caller   = models.User{}
+		part     []models.User
 	)
 
 	defer func() {
@@ -18,7 +19,20 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 		part = []models.User{}
 	}()
 
-	for key, user := range *ptrMaps.Users {
+	for _, iface := range data {
+		var ok bool
+
+		allUsers, ok = iface.(*map[string]models.User)
+		if ok {
+			break
+		}
+	}
+
+	if allUsers == nil {
+		return PagePointers{}
+	}
+
+	for key, user := range *allUsers {
 		// check and correct the corresponding item's key
 		if key != user.Nickname {
 			user.Nickname = key
@@ -77,7 +91,7 @@ func onePageUsers(opts PageOptions, ptrMaps *PagePointers) PagePointers {
 	// Add all (for now) users from the requestList to render properly at the top of the users page.
 	for nick, requested := range *opts.Users.RequestList {
 		if requested {
-			part = append(part, (*ptrMaps.Users)[nick])
+			part = append(part, (*allUsers)[nick])
 		}
 	}
 

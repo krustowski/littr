@@ -2,6 +2,7 @@
 package pages
 
 import (
+	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -14,18 +15,12 @@ type PageOptions struct {
 	CallerID string                `json:"caller_id"`
 	PageNo   int                   `json:"page_no"`
 	FlowList models.UserGenericMap `json:"folow_list"`
-	Repos    Repos
+	Caches   map[string]db.Cacher
 
 	// data compartments' specifications
 	Flow  FlowOptions `json:"flow_options"`
 	Polls PollOptions `json:"poll_options"`
 	Users UserOptions `json:"user_options"`
-}
-
-type Repos struct {
-	PollRepo models.PollRepositoryInterface
-	PostRepo models.PostRepositoryInterface
-	UserRepo models.UserRepositoryInterface
 }
 
 // flow subviews' options
@@ -63,22 +58,10 @@ type PagePointers struct {
 
 // fillDataMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
 func fillDataMaps(opts PageOptions) *PagePointers {
-	var pollRepoPresent, postRepoPresent, userRepoPresent bool
-
-	if opts.Repos.PollRepo != nil {
-		pollRepoPresent = true
-	}
-
-	if opts.Repos.PostRepo != nil {
-		postRepoPresent = true
-	}
-
-	if opts.Repos.UserRepo != nil {
-		userRepoPresent = true
-	}
+	//var pollRepoPresent, postRepoPresent, userRepoPresent bool
 
 	// prepare data maps for a flow page
-	if opts.Flow != (FlowOptions{}) && postRepoPresent && userRepoPresent {
+	/*if opts.Flow != (FlowOptions{}) && postRepoPresent && userRepoPresent {
 		posts, err := opts.Repos.PostRepo.GetAll()
 		if err != nil {
 			return nil
@@ -110,22 +93,17 @@ func fillDataMaps(opts PageOptions) *PagePointers {
 		}
 
 		return &PagePointers{Users: users}
-	}
+	}*/
 
 	return nil
 }
 
 func GetOnePage(opts PageOptions) (ptrs PagePointers) {
-	var err error
+	//var err error
 
-	// validate the callerID is a legitimate user's ID
-	if opts.Repos.UserRepo == nil {
+	/*if opts.Caller, err = opts.Caches["UserCache"].Load(opts.CallerID); err != nil {
 		return
-	}
-
-	if opts.Caller, err = opts.Repos.UserRepo.GetByID(opts.CallerID); err != nil {
-		return
-	}
+	}*/
 
 	// pointer to maps of all items (based on and related to the opts input)
 	ptrMaps := fillDataMaps(opts)
@@ -135,7 +113,7 @@ func GetOnePage(opts PageOptions) (ptrs PagePointers) {
 	}
 
 	if opts.Flow != (FlowOptions{}) {
-		return onePagePosts(opts, ptrMaps)
+		//return onePagePosts(opts, ptrMaps)
 	}
 
 	if opts.Polls != (PollOptions{}) {
