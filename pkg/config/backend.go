@@ -4,6 +4,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -13,8 +14,8 @@ const (
 
 const (
 	// Limiter's settings, limit = req per duration.
-	ApiLimiterDurationSeconds int = 30
-	ApiLimiterRequestsCount   int = 100
+	ApiLimiterDuration      time.Duration = 30
+	ApiLimiterRequestsCount int           = 100
 )
 
 const (

@@ -298,4 +298,6 @@ func (l DummyLogger) Payload(pl interface{}) Logger {
 	return l
 }
 
-func (l DummyLogger) Write(w http.ResponseWriter) {}
+// This method remains blank for now (should throw an error back instead).
+func (l DummyLogger) Write(w http.ResponseWriter) {
+}

@@ -112,7 +112,7 @@ func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, e
 	var count int64
 	var total int64
 
-	switch config.DATA_LOAD_FORMAT {
+	switch config.DataLoadFormat {
 	case "binary":
 		rb, err := os.ReadFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()))
 		if err != nil {
@@ -209,7 +209,7 @@ type dumpReport struct {
 func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport {
 	l := common.NewLogger(nil, "data dump")
 
-	switch config.DATA_DUMP_FORMAT {
+	switch config.DataDumpFormat {
 	case "binary":
 		var items []T
 

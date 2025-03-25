@@ -95,7 +95,7 @@ func beat() {
 		BroadcastMessage(EventPayload{Data: "heartbeat", Type: "keepalive"})
 
 		// Sleep for the given period of time.
-		time.Sleep(time.Second * config.HEARTBEAT_SLEEP_TIME)
+		time.Sleep(time.Second * config.StreamerHeartbeatPeriodSeconds)
 	}
 }
 

@@ -104,7 +104,7 @@ var (
 
 // Simple rate limiter (by IP and URL). (Limits Requests per duration, see pkg/config/backend.go for more.)
 // https://github.com/go-chi/httprate
-var limiter = httprate.Limit(config.LIMITER_REQS_NUM, config.LIMITER_DURATION_SEC*time.Second,
+var limiter = httprate.Limit(config.ApiLimiterRequestsCount, time.Second*config.ApiLimiterDuration,
 	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
 		l := common.NewLogger(r, "root")
 
@@ -122,7 +122,7 @@ func NewAPIRouter() chi.Router {
 	r.Use(auth.AuthMiddleware)
 
 	// Use the rate limiter, feature-flagged.
-	if !config.IsLimiterDisabled {
+	if config.IsApiLimiterEnabled {
 		r.Use(limiter)
 	}
 
