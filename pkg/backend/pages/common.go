@@ -14,16 +14,18 @@ type PageOptions struct {
 	CallerID string                `json:"caller_id"`
 	PageNo   int                   `json:"page_no"`
 	FlowList models.UserGenericMap `json:"folow_list"`
-	Repos    struct {
-		PollRepo models.PollRepositoryInterface
-		PostRepo models.PostRepositoryInterface
-		UserRepo models.UserRepositoryInterface
-	}
+	Repos    Repos
 
 	// data compartments' specifications
 	Flow  FlowOptions `json:"flow_options"`
 	Polls PollOptions `json:"poll_options"`
 	Users UserOptions `json:"user_options"`
+}
+
+type Repos struct {
+	PollRepo models.PollRepositoryInterface
+	PostRepo models.PostRepositoryInterface
+	UserRepo models.UserRepositoryInterface
 }
 
 // flow subviews' options

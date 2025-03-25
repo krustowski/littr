@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/tokens"
+	"go.vxn.dev/littr/pkg/config"
 	"go.vxn.dev/littr/pkg/helpers"
 	"go.vxn.dev/littr/pkg/models"
 
@@ -78,7 +78,7 @@ func AuthMiddleware(d db.DatabaseKeeper) func(http.Handler) http.Handler {
 			}
 
 			// Fetch the server's secret.
-			secret := os.Getenv("APP_PEPPER")
+			secret := config.ServerSecret
 			if secret == "" {
 				l.Error(ErrNoServerSecret).Status(http.StatusInternalServerError).Log().Payload(payload).Write(w)
 				return

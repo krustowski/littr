@@ -753,7 +753,7 @@ func (s *UserService) ProcessPassphraseRequest(ctx context.Context, requestType 
 
 		// Reset the passphrase = generete a new one (32 chars long).
 		randomPassphrase = helpers.RandSeq(32)
-		pepper := os.Getenv("APP_PEPPER")
+		pepper := config.ServerSecret
 
 		if pepper == "" {
 			return fmt.Errorf(common.ERR_NO_SERVER_SECRET)
@@ -920,6 +920,10 @@ func (s *UserService) FindAll(ctx context.Context, pageReq interface{}) (*map[st
 		CallerID: callerID,
 		PageNo:   req.PageNo,
 		FlowList: nil,
+		Repos: pages.Repos{
+			PostRepo: s.postRepository,
+			UserRepo: s.userRepository,
+		},
 
 		Users: pages.UserOptions{
 			Plain:       true,
@@ -986,6 +990,10 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string, pageOpts
 		CallerID: callerID,
 		PageNo:   req.PageNo,
 		FlowList: nil,
+		Repos: pages.Repos{
+			PostRepo: s.postRepository,
+			UserRepo: s.userRepository,
+		},
 
 		Flow: pages.FlowOptions{
 			HideReplies:  req.HideReplies,
