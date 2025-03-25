@@ -4,13 +4,12 @@ import (
 	"reflect"
 
 	"go.vxn.dev/littr/pkg/backend/metrics"
-	//"go.vxn.dev/swis/v5/pkg/core"
 )
 
-// GetAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
-func GetAll[T any](cache Cacher, model T) (*map[string]T, int64) {
+// getAll function does a fetch-all operation on the given cache instance. After the data retrieval, all items are to be asserted their corresponding types and to be loaded into a map[string]T map, where T is a generic type. This map and number of processed items are returned.
+func getAll[T any](cache Cacher, model T) (*map[string]T, int64) {
 	// An initialization check.
-	if cache == nil || database.RLocked {
+	if cache == nil {
 		return nil, 0
 	}
 
@@ -51,10 +50,10 @@ func GetAll[T any](cache Cacher, model T) (*map[string]T, int64) {
 	return &items, count
 }
 
-// GetOne fetches just one very item from the given cache instance. As long as the function is generic, the type is asserted automatically, so the type passing is required. Returns the requested item and the its retrieval result as boolean.
-func GetOne[T any](cache Cacher, key string, model T) (T, bool) {
+// getOne fetches just one very item from the given cache instance. As long as the function is generic, the type is asserted automatically, so the type passing is required. Returns the requested item and the its retrieval result as boolean.
+func getOne[T any](cache Cacher, key string, model T) (T, bool) {
 	// An initialization check.
-	if cache == nil || database.RLocked {
+	if cache == nil {
 		return model, false
 	}
 
@@ -74,12 +73,13 @@ func GetOne[T any](cache Cacher, key string, model T) (T, bool) {
 	return item, true
 }
 
-// SetOne writes the input value of some type to the corresponding cache storing the very same item type (TODO ensure this).
+// setOne writes the input value of some type to the corresponding cache storing the very same item type.
+//
 // Fails if the database state is locked or uninitialized. Please note that this very function has to have another sync mechanism implemented,
 // as the combined read+write operation is not considered a thread safe.
-func SetOne[T any](cache Cacher, key string, model T) bool {
+func setOne[T any](cache Cacher, key string, model T) bool {
 	// An initialization check.
-	if cache == nil || database.Locked {
+	if cache == nil {
 		return false
 	}
 
@@ -87,7 +87,7 @@ func SetOne[T any](cache Cacher, key string, model T) bool {
 
 	// Check for the possible item's existence in such cache instance. The item will be rewritten anyway (unless),
 	// but this is to make sure we are not incrementing the statistics while the count remains the same.
-	control, found := GetOne(cache, key, model)
+	control, found := getOne(cache, key, model)
 	if found {
 		doIncrementMetric = !found
 
@@ -108,10 +108,10 @@ func SetOne[T any](cache Cacher, key string, model T) bool {
 	return saved
 }
 
-// DeleteOne deletes an item from such cache via the requested key value. Fails if the database state is locked.
-func DeleteOne(cache Cacher, key string) bool {
+// deleteOne deletes an item from such cache via the requested key value. Fails if the database state is locked.
+func deleteOne(cache Cacher, key string) bool {
 	// The database state check.
-	if cache == nil || database.Locked {
+	if cache == nil {
 		return false
 	}
 

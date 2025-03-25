@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,7 +19,7 @@ import (
 )
 
 // migrationFunc declares the unified type for any migration function.
-type migrationFunc func(common.Logger, []interface{}) bool
+type migrationFunc func(common.Logger, []interface{}, []Cacher) bool
 
 // migrationProp is a struct to hold the migration function reference, and array of interfaces (mainly pointers) of various length.
 type migrationProp struct {
@@ -30,20 +31,46 @@ type migrationProp struct {
 
 	// Migration's resources to process.
 	R []interface{}
+
+	// Caches to be modified.
+	C []Cacher
 }
+
+var errCacheNotListed = errors.New("such cache could not be found")
 
 // RunMigrations is a wrapper function for the migration registration and execution.
 func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 	l := common.NewLogger(nil, "migrations")
 
-	var caches = 
+	var caches = d.Database()
+
+	pollCache, ok := caches["PollCache"]
+	if !ok {
+		return "", errCacheNotListed
+	}
+	postCache, ok := caches["FlowCache"]
+	if !ok {
+		return "", errCacheNotListed
+	}
+	requestCache, ok := caches["RequestCache"]
+	if !ok {
+		return "", errCacheNotListed
+	}
+	tokenCache, ok := caches["TokenCache"]
+	if !ok {
+		return "", errCacheNotListed
+	}
+	userCache, ok := caches["UserCache"]
+	if !ok {
+		return "", errCacheNotListed
+	}
 
 	// Fetch all the data for the migration procedures.
-	polls, _ := GetAll(PollCache, models.Poll{})
-	posts, _ := GetAll(FlowCache, models.Post{})
-	reqs, _ := GetAll(RequestCache, models.Request{})
-	tokens, _ := GetAll(TokenCache, models.Token{})
-	users, _ := GetAll(UserCache, models.User{})
+	polls, _ := getAll(pollCache, models.Poll{})
+	posts, _ := getAll(postCache, models.Post{})
+	reqs, _ := getAll(requestCache, models.Request{})
+	tokens, _ := getAll(tokenCache, models.Token{})
+	users, _ := getAll(userCache, models.User{})
 
 	// This is/was just to check whether there are any data entering the migration starter.
 	//l.Msg(fmt.Sprintf("counts: posts, %d, reqs: %d, subs: %d, tokens: %d, users: %d", postCount, reqCount, subCount, tokenCount, userCount)).Status(http.StatusOK).Log()
@@ -54,71 +81,85 @@ func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 			N: "migrateExpiredReuests",
 			F: migrateExpiredRequests,
 			R: []interface{}{reqs},
+			C: []Cacher{requestCache},
 		},
 		{
 			N: "migrateExpiredTokens",
 			F: migrateExpiredTokens,
 			R: []interface{}{tokens},
+			C: []Cacher{tokenCache},
 		},
 		{
 			N: "migrateDeleteBlankDevices",
 			F: migrateDeleteBlankDevices,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateEmptyDeviceTags",
 			F: migrateEmptyDeviceTags,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateAvatarURL",
 			F: migrateAvatarURL,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateFlowPurge",
 			F: migrateFlowPurge,
 			R: []interface{}{polls, posts, users},
+			C: []Cacher{pollCache, postCache, userCache},
 		},
 		{
 			N: "migrateUserDeletion",
 			F: migrateUserDeletion,
 			R: []interface{}{posts, users},
+			C: []Cacher{postCache, userCache},
 		},
 		{
 			N: "migrateUserRegisteredTime",
 			F: migrateUserRegisteredTime,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateUserShadeList",
 			F: migrateUserShadeList,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateUserUnshade",
 			F: migrateUserUnshade,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateBlankAboutText",
 			F: migrateBlankAboutText,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateSystemFlowOn",
 			F: migrateSystemFlowOn,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		{
 			N: "migrateUserActiveState",
 			F: migrateUserActiveState,
 			R: []interface{}{users, reqs},
+			C: []Cacher{userCache, requestCache},
 		},
 		{
 			N: "migrateUserOptions",
 			F: migrateUserOptions,
 			R: []interface{}{users},
+			C: []Cacher{userCache},
 		},
 		/*{
 			N: "migratePolls",
@@ -129,6 +170,7 @@ func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 			N: "migratePostData",
 			F: migratePostData,
 			R: []interface{}{posts},
+			C: []Cacher{postCache},
 		},
 	}
 
@@ -137,7 +179,7 @@ func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 
 	// Execute the migration procedures.
 	for _, mig := range migrationsOrderedList {
-		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R))
+		report += fmt.Sprintf("[%s]: %t, ", mig.N, mig.F(l.SetPrefix(mig.N), mig.R, mig.C))
 	}
 
 	//report += fmt.Sprintf("; aftermath: posts: %d, requests: %d, subscriptions: %d, tokens: %d, users: %d", len(posts), len(reqs), len(subs), len(tokens), len(users))
@@ -147,11 +189,11 @@ func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 
 	// Remove the prefix for the further Logger instance usage.
 	l.RemovePrefix()
-	return report
+	return report, nil
 }
 
 // migrateExpiredRequests procedure loops over requests and removes those expired already.
-func migrateExpiredRequests(l common.Logger, rawElems []interface{}) bool {
+func migrateExpiredRequests(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var reqs *map[string]models.Request
 
 	// Assert pointers from the interface array.
@@ -180,7 +222,7 @@ func migrateExpiredRequests(l common.Logger, rawElems []interface{}) bool {
 
 		if time.Now().After(req.CreatedAt.Add(time.Hour * 24)) {
 			// Expired request = delete it.
-			if deleted := DeleteOne(RequestCache, uuid); !deleted {
+			if deleted := deleteOne(caches[0], uuid); !deleted {
 				l.Msg("could not delete request: " + uuid).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -194,7 +236,7 @@ func migrateExpiredRequests(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateExpiredTokens procedure loop over tokens and removes those beyond the expiry.
-func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
+func migrateExpiredTokens(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var tokens *map[string]models.Token
 
 	// Assert pointers from the interface array.
@@ -217,7 +259,7 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 	for hash, token := range *tokens {
 		if time.Now().After(token.CreatedAt.Add(common.TokenTTL)) {
 			// Expired token = delete it.
-			if deleted := DeleteOne(TokenCache, hash); !deleted {
+			if deleted := deleteOne(caches[0], hash); !deleted {
 				l.Msg("could not delete token: " + hash).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -231,7 +273,7 @@ func migrateExpiredTokens(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateDeleteBlankDevices procedure ensures blank devices are omitted from the user's device list in SubscriptionCache.
-func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
+func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -271,7 +313,7 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 
 		user.Devices = newDevs
 
-		if saved := SetOne(UserCache, userID, user); !saved {
+		if saved := setOne(caches[0], userID, user); !saved {
 			l.Msg("could not save new devices: " + userID).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -283,7 +325,7 @@ func migrateDeleteBlankDevices(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateEmptyDeviceTags procedure takes care of filling empty device tags arrays.
-func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
+func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -319,7 +361,7 @@ func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
 
 		if changed {
 			// Save the changes found and made.
-			if saved := SetOne(UserCache, userID, user); !saved {
+			if saved := setOne(caches[0], userID, user); !saved {
 				l.Msg("cannot save changed dev: " + userID).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -333,7 +375,7 @@ func migrateEmptyDeviceTags(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateAvatarURL procedure takes care of (re)assigning custom, or default avatars to all users having blank or default strings saved in their data chunk. Function returns bool based on the process result.
-func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
+func migrateAvatarURL(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -402,7 +444,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 			result.User.AvatarURL = result.URL
 
 			// Update the user's avatar in the User database.
-			if ok := SetOne(UserCache, result.User.Nickname, result.User); !ok {
+			if ok := setOne(caches[0], result.User.Nickname, result.User); !ok {
 				l.Msg("cannot save an avatar: " + result.User.Nickname).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -416,7 +458,7 @@ func migrateAvatarURL(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateFlowPurge procedure deletes all pseudoaccounts and their posts, those psaudeaccounts are not registered accounts, thus not real users.
-func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
+func migrateFlowPurge(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var polls *map[string]models.Poll
 	var posts *map[string]models.Post
 	var users *map[string]models.User
@@ -456,7 +498,7 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 		if post.Nickname == "system" {
 			if post.Type == "user" && post.Figure != "" {
 				if _, found := (*users)[post.Figure]; !found {
-					if deleted := DeleteOne(FlowCache, key); !deleted {
+					if deleted := deleteOne(caches[1], key); !deleted {
 						l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
 						return false
 					}
@@ -465,7 +507,7 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 
 			if post.Type == "poll" && post.PollID != "" {
 				if _, found := (*polls)[post.PollID]; !found {
-					if deleted := DeleteOne(FlowCache, key); !deleted {
+					if deleted := deleteOne(caches[1], key); !deleted {
 						l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
 						return false
 					}
@@ -475,7 +517,7 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 
 		// If the post exists, but its author not, delete the post first.
 		if _, found := (*users)[post.Nickname]; !found {
-			if deleted := DeleteOne(FlowCache, key); !deleted {
+			if deleted := deleteOne(caches[1], key); !deleted {
 				l.Msg("cannot delete post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -504,7 +546,7 @@ func migrateFlowPurge(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserDeletion procedure takes care of default users deletion from the database. Function returns bool based on the process result.
-func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
+func migrateUserDeletion(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var posts *map[string]models.Post
 	var users *map[string]models.User
 
@@ -540,7 +582,7 @@ func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
 			l.Msg("deleting " + user.Nickname).Status(http.StatusProcessing).Log()
 
 			// Delete the user from the User database.
-			if deleted := DeleteOne(UserCache, key); !deleted {
+			if deleted := deleteOne(caches[1], key); !deleted {
 				l.Msg("cannot delete an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -554,7 +596,7 @@ func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
 	for key, post := range *posts {
 		if helpers.Contains(*bank, post.Nickname) {
 			// Delete the post from the Flow database.
-			if deleted := DeleteOne(FlowCache, key); !deleted {
+			if deleted := deleteOne(caches[1], key); !deleted {
 				l.Msg("cannot delete a post: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -583,7 +625,7 @@ func migrateUserDeletion(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserRegisteredTime procedure fixes the initial registration date if it defaults to the "null" time.Time string. Function returns bool based on the process result.
-func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}) bool {
+func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -609,7 +651,7 @@ func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}) bool {
 			user.RegisteredTime = time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 
 			// Update the user in the User database.
-			if ok := SetOne(UserCache, key, user); !ok {
+			if ok := setOne(caches[0], key, user); !ok {
 				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -623,7 +665,7 @@ func migrateUserRegisteredTime(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserShadeList procedure lists ShadeList items and ensures user shaded (no mutual following, no replying).
-func migrateUserShadeList(l common.Logger, rawElems []interface{}) bool {
+func migrateUserShadeList(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -675,7 +717,7 @@ func migrateUserShadeList(l common.Logger, rawElems []interface{}) bool {
 		user.FlowList = flowList
 
 		// Save the user again in the User dataabse.
-		if saved := SetOne(UserCache, key, user); !saved {
+		if saved := setOne(caches[0], key, user); !saved {
 			l.Msg("cannot save user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -688,7 +730,7 @@ func migrateUserShadeList(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserUnshade procedure lists all users and unshades manually some explicitly list users.
-func migrateUserUnshade(l common.Logger, rawElems []interface{}) bool {
+func migrateUserUnshade(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -732,7 +774,7 @@ func migrateUserUnshade(l common.Logger, rawElems []interface{}) bool {
 		user.ShadeList = shadeList
 
 		// Update the user's shadeList in the User database.
-		if ok := SetOne(UserCache, key, user); !ok {
+		if ok := setOne(caches[0], key, user); !ok {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -745,7 +787,7 @@ func migrateUserUnshade(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateBlankAboutText procedure loops over user accounts and adds "newbie" where the about-text field is blank.
-func migrateBlankAboutText(l common.Logger, rawElems []interface{}) bool {
+func migrateBlankAboutText(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -771,7 +813,7 @@ func migrateBlankAboutText(l common.Logger, rawElems []interface{}) bool {
 		}
 
 		// Update the user in the User database.
-		if saved := SetOne(UserCache, key, user); !saved {
+		if saved := setOne(caches[0], key, user); !saved {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -784,7 +826,7 @@ func migrateBlankAboutText(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateSystemFlowOn procedure ensures everyone has system account in the flow.
-func migrateSystemFlowOn(l common.Logger, rawElems []interface{}) bool {
+func migrateSystemFlowOn(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -814,7 +856,7 @@ func migrateSystemFlowOn(l common.Logger, rawElems []interface{}) bool {
 		user.FlowList["system"] = true
 
 		// Update the user in the User database.
-		if saved := SetOne(UserCache, key, user); !saved {
+		if saved := setOne(caches[0], key, user); !saved {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -827,7 +869,7 @@ func migrateSystemFlowOn(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserActiveState ensures all users registered before Oct 28, 2024 are activated; otherwise it also tries to delete valid, but misdeleted activation requests from its database.
-func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
+func migrateUserActiveState(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 	var reqs *map[string]models.Request
 
@@ -863,7 +905,7 @@ func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 				(*users)[req.Nickname].Options["active"]) {
 
 			// Delete the misdeleted request.
-			if deleted := DeleteOne(RequestCache, key); !deleted {
+			if deleted := deleteOne(caches[0], key); !deleted {
 				l.Msg("cannot delete the request: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -896,7 +938,7 @@ func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 			user.Options["active"] = true
 
 			// Update the user in the User database.
-			if saved := SetOne(UserCache, key, user); !saved {
+			if saved := setOne(caches[1], key, user); !saved {
 				l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 				return false
 			}
@@ -910,7 +952,7 @@ func migrateUserActiveState(l common.Logger, rawElems []interface{}) bool {
 }
 
 // migrateUserOptions procedure ensures that every user has a proper set of all options according to the legacy models.User fields.
-func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
+func migrateUserOptions(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var users *map[string]models.User
 
 	// Assert pointers from the interface array.
@@ -980,7 +1022,7 @@ func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
 		// Assign the options map back to its owner, and update the owner in the User database.
 		user.Options = options
 
-		if saved := SetOne(UserCache, key, user); !saved {
+		if saved := setOne(caches[0], key, user); !saved {
 			l.Msg("cannot save an user: " + key).Status(http.StatusInternalServerError).Log()
 			return false
 		}
@@ -1038,7 +1080,7 @@ func migrateUserOptions(l common.Logger, rawElems []interface{}) bool {
 	return true
 }*/
 
-func migratePostData(l common.Logger, rawElems []interface{}) bool {
+func migratePostData(l common.Logger, rawElems []interface{}, caches []Cacher) bool {
 	var posts *map[string]models.Post
 
 	// Assert pointers from the interface array.
@@ -1060,7 +1102,7 @@ func migratePostData(l common.Logger, rawElems []interface{}) bool {
 	for key, post := range *posts {
 		if post.Data != nil {
 			post.Data = make([]byte, 0)
-			if saved := SetOne(FlowCache, key, post); !saved {
+			if saved := setOne(caches[0], key, post); !saved {
 				l.Msg("cannot truncate post data to zero").Status(http.StatusInternalServerError).Log()
 				return false
 			}
