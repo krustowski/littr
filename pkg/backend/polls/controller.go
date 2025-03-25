@@ -1,7 +1,6 @@
 package polls
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -108,12 +107,10 @@ func (c *PollController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Thw two ways on how to pass the pollID value to the service.
-	ctx := context.WithValue(r.Context(), "pollID", pollID)
 	dtoIn.ID = pollID
 
 	// Dispatch the update request to the pollService.
-	if err := c.pollService.Update(ctx, &dtoIn); err != nil {
+	if err := c.pollService.Update(r.Context(), &dtoIn); err != nil {
 		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Log().Payload(nil).Write(w)
 		return
 	}

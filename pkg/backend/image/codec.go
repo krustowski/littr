@@ -369,7 +369,7 @@ func ResizeImage(img *image.Image, targetWidth int) image.Image {
 //
 
 // https://stackoverflow.com/a/33296596
-func getGifDimensions(gif *gif.GIF) (x, y int) {
+/*func getGifDimensions(gif *gif.GIF) (x, y int) {
 	var lowestX int
 	var lowestY int
 	var highestX int
@@ -391,4 +391,4 @@ func getGifDimensions(gif *gif.GIF) (x, y int) {
 	}
 
 	return highestX - lowestX, highestY - lowestY
-}
+}*/
