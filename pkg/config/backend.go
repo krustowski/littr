@@ -8,20 +8,19 @@ import (
 )
 
 const (
-	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
-	StreamerHeartbeatPeriodSeconds = 20
-)
-
-const (
 	// Limiter's settings, limit = req per duration.
 	ApiLimiterDuration      time.Duration = 30
 	ApiLimiterRequestsCount int           = 100
+
+	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
+	StreamerHeartbeatPeriod time.Duration = 20
 )
 
 const (
 	envAppEnvironment      string = "APP_ENVIRONMENT"
 	envAppPort             string = "APP_PORT"
 	envAppUrl              string = "APP_URL_MAIN"
+	envAppVersion          string = "APP_VERSION"
 	envDataDumpFormat      string = "DATA_DUMP_FORMAT"
 	envDataLoadFormat      string = "DATA_LOAD_FORMAT"
 	envDockerInternalPort  string = "DOCKER_INTERNAL_PORT"
@@ -57,6 +56,14 @@ var (
 		}
 
 		return defaultAppEnvironment
+	}()
+
+	AppVersion string = func() string {
+		if val := os.Getenv(envAppVersion); val != "" {
+			return val
+		}
+
+		return "unknown"
 	}()
 
 	DataDumpFormat string = func() string {

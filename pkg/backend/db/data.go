@@ -26,7 +26,7 @@ const (
 	usersFile    = "/opt/data/users.json"
 )
 
-func LoadAll() string {
+func (d *defaultDatabaseKeeper) LoadAll() (string, error) {
 	polls := makeLoadReport("polls", wrapLoadOutput(
 		loadOne(PollCache, pollsFile, models.Poll{})))
 
@@ -44,10 +44,10 @@ func LoadAll() string {
 
 	runtime.GC()
 
-	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s", polls, posts, reqs, tokens, users)
+	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s", polls, posts, reqs, tokens, users), nil
 }
 
-func DumpAll() string {
+func (d *defaultDatabaseKeeper) DumpAll() (string, error) {
 	var report string
 
 	report += prepareDumpReport("polls",
@@ -67,7 +67,7 @@ func DumpAll() string {
 
 	runtime.GC()
 
-	return fmt.Sprintf("dump: %s", report)
+	return fmt.Sprintf("dump: %s", report), nil
 }
 
 //

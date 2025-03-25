@@ -115,7 +115,7 @@ var limiter = httprate.Limit(config.ApiLimiterRequestsCount, time.Second*config.
 )
 
 // The very main API router.
-func NewAPIRouter() chi.Router {
+func NewAPIRouter(db db.DatabaseKeeper) chi.Router {
 	r := chi.NewRouter()
 
 	// Use the authentication middleware.

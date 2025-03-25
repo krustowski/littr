@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -97,30 +96,30 @@ func (s *server) init() {
 		s.db = db.NewDatabase()
 
 		// Lock the database stack for read, unlock it for write (see pkg/backend/db/init.go for more).
-		s.db.LockRead()
+		s.db.ReadLock()
 
 		// Load the persistent data from the filesystem to memory.
-		s.l.Msg("dumped load result: " + db.LoadAll()).Status(http.StatusOK).Log()
+		report, err := s.db.LoadAll()
+		if err != nil {
+			s.l.Error(err).Log()
+		} else {
+			s.l.Msg(report).Log()
+		}
 
 		// Unlock the read access.
-		s.db.UnlockRead()
+		s.db.ReadUnlock()
 
 		//
 		//  Database and data initialization (caches themselves and the database state is initialized on pkg db import).
 		//
 
 		// Run data migration procedures to the database schema.
-		migrationsReport := db.RunMigrations()
-
-		migrationsStatus := func() int {
-			if strings.Contains(migrationsReport, "false") {
-				return http.StatusInternalServerError
-			}
-			return http.StatusOK
-		}()
-
-		l.Msg(migrationsReport).Status(migrationsStatus).Log()
-
+		migrationsReport, err := s.db.RunMigrations()
+		if err != nil {
+			s.l.Error(err).Log()
+		} else {
+			s.l.Msg(migrationsReport).Log()
+		}
 	})
 
 }
@@ -149,7 +148,7 @@ func (s *server) handleSignalsShutdown() {
 		live.BroadcastMessage(live.EventPayload{Data: "server-stop", Type: "close"})
 
 		// "Lock" the write access to the database. <--- causes threadlock and app exit deferals when used with the actual lock !!!
-		s.db.LockWrite()
+		s.db.Lock()
 
 		// Dump all in-memory databases.
 		report, err := s.db.DumpAll()
@@ -220,7 +219,7 @@ func (s *server) setupRouterServer() {
 	//
 
 	// Mount the very main API router spanning all the backend.
-	r.Mount("/api/v1", be.NewAPIRouter())
+	r.Mount("/api/v1", be.NewAPIRouter(s.db))
 
 	// Mount the pprof profiler router.
 	r.Mount("/debug/pprof", pprof.NewRouter())

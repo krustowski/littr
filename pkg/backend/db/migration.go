@@ -33,8 +33,10 @@ type migrationProp struct {
 }
 
 // RunMigrations is a wrapper function for the migration registration and execution.
-func RunMigrations() string {
+func (d *defaultDatabaseKeeper) RunMigrations() (string, error) {
 	l := common.NewLogger(nil, "migrations")
+
+	var caches = 
 
 	// Fetch all the data for the migration procedures.
 	polls, _ := GetAll(PollCache, models.Poll{})

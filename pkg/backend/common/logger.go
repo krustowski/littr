@@ -12,9 +12,12 @@ type Logger interface {
 	// Basic methods: setters.
 	Msg(message string) Logger
 	Status(code int) Logger
-	Error(err error) Logger
+	Error(err ...error) Logger
+
 	SetPrefix(prefix string) Logger
 	RemovePrefix() Logger
+
+	Worker(name string) Logger
 
 	// Getters.
 	CallerID() string
@@ -35,6 +38,10 @@ const (
 	// Localhost as the IPv6 address.
 	LocalhostIPAddressV6 = "::1"
 )
+
+type LoggerContext string
+
+const LoggerContextKey LoggerContext = "logger"
 
 type DefaultLogger struct {
 	// CallerID is a nickname of the user calling the API.
@@ -142,13 +149,13 @@ func (l *DefaultLogger) encode() string {
 }
 
 // CallerID returns the caller's ID (nickname), that has been (hopefully) decided from the context.
-func (l DefaultLogger) CallerID() string {
+func (l *DefaultLogger) CallerID() string {
 	return l.callerID
 }
 
 // ResetTimer resets the TimerStart timestamp. Usable in the procedures where the logger is passed (???)
 // or not to log the whole HTTP server uptime (the gracefully HTTP server shutdown goroutine).
-func (l DefaultLogger) ResetTimer() Logger {
+func (l *DefaultLogger) ResetTimer() Logger {
 	l.TimerStart = time.Now()
 	return l
 }
@@ -158,13 +165,13 @@ func (l DefaultLogger) ResetTimer() Logger {
 //
 
 // SetPrefix sets the log's prefix according to the input <prefix> string.
-func (l DefaultLogger) SetPrefix(prefix string) Logger {
+func (l *DefaultLogger) SetPrefix(prefix string) Logger {
 	l.Prefix = prefix
 	return l
 }
 
 // RemovePrefix remove preiously prepended string from the Logger struct.
-func (l DefaultLogger) RemovePrefix() Logger {
+func (l *DefaultLogger) RemovePrefix() Logger {
 	l.Prefix = ""
 	return l
 }
@@ -174,7 +181,7 @@ func (l DefaultLogger) RemovePrefix() Logger {
 //
 
 // Msg writes the input <msg> string to the Logger struct for its following output.
-func (l DefaultLogger) Msg(msg string) Logger {
+func (l *DefaultLogger) Msg(msg string) Logger {
 	var message string
 
 	if l.Prefix != "" {
@@ -186,14 +193,20 @@ func (l DefaultLogger) Msg(msg string) Logger {
 }
 
 // Status writes the HTTP Status code (as integer) for the following logger output.
-func (l DefaultLogger) Status(code int) Logger {
+func (l *DefaultLogger) Status(code int) Logger {
 	l.Code = code
 	return l
 }
 
 // Error takes an error and holds it in the Logger structure for the possible output.
-func (l DefaultLogger) Error(err error) Logger {
-	l.Err = err
+func (l *DefaultLogger) Error(err ...error) Logger {
+	var mash string
+
+	for _, e := range err {
+		mash += e.Error()
+	}
+
+	l.Err = fmt.Errorf(mash)
 	return l
 }
 
@@ -202,7 +215,7 @@ func (l DefaultLogger) Error(err error) Logger {
 //
 
 // Log write the logger's JSON output to the stdout.
-func (l DefaultLogger) Log() Logger {
+func (l *DefaultLogger) Log() Logger {
 	if l.IPAddress == "" {
 		l.IPAddress = LocalhostIPAddressV4
 	}
@@ -219,8 +232,17 @@ func (l DefaultLogger) Log() Logger {
 	return l
 }
 
+func (l *DefaultLogger) Worker(name string) Logger {
+	if name == "" {
+		return l
+	}
+
+	l.WorkerName = name
+	return l
+}
+
 // Payload takes and prepares the HTTP response's body payload. The input can be nil.
-func (l DefaultLogger) Payload(pl interface{}) Logger {
+func (l *DefaultLogger) Payload(pl interface{}) Logger {
 	// construct the generic API response
 	l.Response = &APIResponse{
 		Message:   l.Message,
@@ -232,7 +254,7 @@ func (l DefaultLogger) Payload(pl interface{}) Logger {
 }
 
 // Write writes the HTTP headers and sends the response to the client.
-func (l DefaultLogger) Write(w http.ResponseWriter) {
+func (l *DefaultLogger) Write(w http.ResponseWriter) {
 	jsonData, err := json.Marshal(l.Response)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -270,7 +292,11 @@ func (l DummyLogger) Status(code int) Logger {
 	return l
 }
 
-func (l DummyLogger) Error(_ error) Logger {
+func (l DummyLogger) Error(_ ...error) Logger {
+	return l
+}
+
+func (l DummyLogger) Worker(_ string) Logger {
 	return l
 }
 
