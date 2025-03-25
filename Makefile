@@ -29,7 +29,7 @@ API_TOKEN 		?=
 #  Defaults for backend
 #
 
-LIMITER_DISABLED 	?= false
+LIMITER_ENABLED 	?= true
 REGISTRATION_ENABLED 	?= true
 
 DATA_DUMP_FORMAT       	?= JSON

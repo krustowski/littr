@@ -7,122 +7,152 @@ import (
 )
 
 const (
-	// Default HTTP server port if not specified elsewhere.
-	DEFAULT_PORT = "8054"
-
-	DEFAULT_APP_URL = "https://www.littr.eu"
-
-	DEFAULT_DATA_LOAD_FORMAT = "JSON"
-	DEFAULT_DATA_DUMP_FORMAT = "JSON"
-
-	// Default HTTP port to run Go tests.
-	DEFAULT_TEST_PORT     = "8777"
-	DEFAULT_TEST_SSE_PORT = "8778"
-
 	// Time interval after that a heartbeat event of type 'message' is to be sent to connected clients/subscribers.
-	HEARTBEAT_SLEEP_TIME = 20
+	StreamerHeartbeatPeriodSeconds = 20
+)
 
+const (
 	// Limiter's settings, limit = req per duration.
-	LIMITER_REQS_NUM     = 100
-	LIMITER_DURATION_SEC = 30
+	ApiLimiterDurationSeconds int = 30
+	ApiLimiterRequestsCount   int = 100
+)
 
-	// The anti-duplication const(s).
-	APP_ENVIRONMENT      = "APP_ENVIRONMENT"
-	APP_PORT             = "APP_PORT"
-	APP_URL_MAIN         = "APP_URL_MAIN"
-	DATA_DUMP_FORMAT     = "DATA_DUMP_FORMAT"
-	DATA_LOAD_FORMAT     = "DATA_LOAD_FORMAT"
-	DOCKER_INTERNAL_PORT = "DOCKER_INTERNAL_PORT"
-	LIMITER_DISABLED     = "LIMITER_DISABLED"
-	REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
-	SERVER_PORT          = "SERVER_PORT"
+const (
+	envAppEnvironment      string = "APP_ENVIRONMENT"
+	envAppPort             string = "APP_PORT"
+	envAppUrl              string = "APP_URL_MAIN"
+	envDataDumpFormat      string = "DATA_DUMP_FORMAT"
+	envDataLoadFormat      string = "DATA_LOAD_FORMAT"
+	envDockerInternalPort  string = "DOCKER_INTERNAL_PORT"
+	envDumpToken           string = "APP_TOKEN"
+	envLimiterEnabled      string = "LIMITER_ENABLED"
+	envRegistrationEnabled string = "REGISTRATION_ENABLED"
+	envServerSecret        string = "APP_PEPPER"
+	envServerPort          string = "SERVER_PORT"
+)
+
+const serviceWorkerTemplateFile string = "/opt/web/app-worker.js.tmpl"
+
+const (
+	defaultApiLimiterEnabled     bool   = true
+	defaultAppEnvironment        string = "dev"
+	defaultAppUrl                string = "https://www.littr.eu"
+	defaultDataDumpFormat        string = "JSON"
+	defaultDataLoadFormat        string = "JSON"
+	defaultDumpToken             string = ""
+	defaultRegistrationEnabled   bool   = true
+	defaultServerPort            string = "8054"
+	defaultServerSecret          string = ""
+	defaultServiceWorkerTemplate string = ""
+	defaultTestServerPort        string = "8777"
+	defaultTestStreamerPort      string = "8778"
 )
 
 var (
 	// AppEnvironment is a string variable that determines the purpose of the very instance.
 	AppEnvironment string = func() string {
-		if os.Getenv(APP_ENVIRONMENT) != "" {
-			return os.Getenv(APP_ENVIRONMENT)
+		if val := os.Getenv(envAppEnvironment); val != "" {
+			return val
 		}
-		return "dev"
+
+		return defaultAppEnvironment
 	}()
 
 	DataDumpFormat string = func() string {
-		if os.Getenv(DATA_DUMP_FORMAT) != "" {
-			return os.Getenv(DATA_DUMP_FORMAT)
+		if val := os.Getenv(envDataDumpFormat); val != "" {
+			return val
 		}
 
-		return DEFAULT_DATA_DUMP_FORMAT
+		return defaultDataDumpFormat
+	}()
+
+	DataDumpToken string = func() string {
+		if val := os.Getenv(envDumpToken); val != "" {
+			return val
+		}
+
+		return defaultDumpToken
 	}()
 
 	DataLoadFormat string = func() string {
-		if os.Getenv(DATA_LOAD_FORMAT) != "" {
-			return os.Getenv(DATA_LOAD_FORMAT)
+		if val := os.Getenv(envDataLoadFormat); val != "" {
+			return val
 		}
 
-		return DEFAULT_DATA_LOAD_FORMAT
+		return defaultDataLoadFormat
 	}()
 
 	// EnchartedSW is a string variable to hold the templated ServiceWorker contents to load into the very main FE app handler.
 	EnchartedSW = func() string {
 		// Parse the custom Service Worker template string for the app handler.
-		tpl, err := os.ReadFile("/opt/web/app-worker.js.tmpl")
+		tpl, err := os.ReadFile(serviceWorkerTemplateFile)
 		if err != nil {
-			return ""
+			return defaultServiceWorkerTemplate
 		}
 
 		return string(tpl)
 	}()
 
-	// IsLimiterDisabled is a feature flag for the API limiter middleware imported at the APIRouter.
-	IsLimiterDisabled bool = func() bool {
-		if os.Getenv(LIMITER_DISABLED) == "" {
-			return false
+	// IsApiLimiterEnabled is a feature flag for the API limiter middleware imported at the APIRouter.
+	IsApiLimiterEnabled bool = func() bool {
+		if val := os.Getenv(envLimiterEnabled); val != "" {
+			boolVal, err := strconv.ParseBool(val)
+			if err != nil {
+				return false
+			}
+
+			return boolVal
 		}
-		boolVal, err := strconv.ParseBool(os.Getenv(LIMITER_DISABLED))
-		if err != nil {
-			return false
-		}
-		return boolVal
+
+		return defaultApiLimiterEnabled
 	}()
 
 	// IsRegistrationEnabled is a boolean to hold the logic for the registration functionality.
 	IsRegistrationEnabled bool = func() bool {
-		if os.Getenv(REGISTRATION_ENABLED) != "" {
-			boolVal, err := strconv.ParseBool(os.Getenv(REGISTRATION_ENABLED))
+		if val := os.Getenv(envRegistrationEnabled); val != "" {
+			boolVal, err := strconv.ParseBool(val)
 			if err != nil {
 				return false
 			}
+
 			return boolVal
-		} else {
-			return true
 		}
+
+		return defaultRegistrationEnabled
 	}()
 
 	// ServerPort is a string variable holding the TCP port where the main HTTP server is to listen for incoming connections.
 	ServerPort = func() string {
-		if os.Getenv(SERVER_PORT) != "" {
-			return os.Getenv(SERVER_PORT)
+		if val := os.Getenv(envServerPort); val != "" {
+			return val
 		}
 
 		// Try the alternative(s) if SERVER_PORT is blank.
-		if os.Getenv(DOCKER_INTERNAL_PORT) != "" {
-			return os.Getenv(DOCKER_INTERNAL_PORT)
+		if val := os.Getenv(envDockerInternalPort); val != "" {
+			return val
 		}
 
-		if os.Getenv(APP_PORT) != "" {
-			return os.Getenv(APP_PORT)
+		if val := os.Getenv(envAppPort); val != "" {
+			return val
 		}
 
-		return DEFAULT_PORT
+		return defaultServerPort
+	}()
+
+	ServerSecret = func() string {
+		if val := os.Getenv(envServerSecret); val != "" {
+			return val
+		}
+
+		return defaultServerSecret
 	}()
 
 	ServerUrl = func() string {
-		if os.Getenv(APP_URL_MAIN) != "" {
-			return os.Getenv(APP_URL_MAIN)
+		if val := os.Getenv(envAppUrl); val != "" {
+			return val
 		}
 
-		return DEFAULT_APP_URL
+		return defaultAppUrl
 	}()
 )
 
