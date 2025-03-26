@@ -5,7 +5,6 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -43,28 +42,6 @@ func (r *PollRepository) GetAll() (*map[string]models.Poll, error) {
 	}
 
 	return &polls, nil
-}
-
-func (r *PollRepository) GetPage(pageOpts interface{}) (*map[string]models.Poll, error) {
-	// Assert type for pageOptions.
-	opts, ok := pageOpts.(*pages.PageOptions)
-	if !ok {
-		return nil, fmt.Errorf("cannot read the page options at the repository level")
-	}
-
-	// Fetch page according to the calling user (in options).
-	pagePtrs := pages.GetOnePage(*opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Polls == nil || (*pagePtrs.Polls) == nil {
-		return nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
-	}
-
-	// If zero items were fetched, no need to continue asserting types.
-	if len(*pagePtrs.Polls) == 0 {
-		return nil, fmt.Errorf("no polls found in the database")
-	}
-
-	return pagePtrs.Polls, nil
-
 }
 
 func (r *PollRepository) GetByID(pollID string) (*models.Poll, error) {

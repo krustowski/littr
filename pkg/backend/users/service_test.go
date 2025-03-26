@@ -19,7 +19,7 @@ func newTestContext() context.Context {
 }
 
 func newTestService(t *testing.T) models.UserServiceInterface {
-	service := NewUserService(&common.MockMailService{}, &common.MockPollRepository{}, &common.MockPostRepository{}, &common.MockRequestRepository{}, &common.MockTokenRepository{}, &common.MockUserRepository{})
+	service := NewUserService(&common.MockMailService{}, &common.MockPagingService{}, &common.MockPollRepository{}, &common.MockPostRepository{}, &common.MockRequestRepository{}, &common.MockTokenRepository{}, &common.MockUserRepository{})
 	if service == nil {
 		t.Fatal("nil UserService")
 	}

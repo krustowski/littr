@@ -24,21 +24,24 @@ import (
 
 type postService struct {
 	notifService   models.NotificationServiceInterface
+	pagingService  models.PagingServiceInterface
 	postRepository models.PostRepositoryInterface
 	userRepository models.UserRepositoryInterface
 }
 
 func NewPostService(
 	notifService models.NotificationServiceInterface,
+	pagingService models.PagingServiceInterface,
 	postRepository models.PostRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.PostServiceInterface {
-	if notifService == nil || postRepository == nil || userRepository == nil {
+	if notifService == nil || pagingService == nil || postRepository == nil || userRepository == nil {
 		return nil
 	}
 
 	return &postService{
 		notifService:   notifService,
+		pagingService:  pagingService,
 		postRepository: postRepository,
 		userRepository: userRepository,
 	}
@@ -143,7 +146,6 @@ func (s *postService) Create(ctx context.Context, post *models.Post) error {
 			Receiver: receiverName,
 			Devices:  &receiver.Devices,
 			Body:     &body,
-			Repo:     s.userRepository,
 		}
 
 		// Send the webpush notification(s)
@@ -200,7 +202,7 @@ func (s *postService) Delete(ctx context.Context, postID string) error {
 	return s.postRepository.Delete(postID)
 }
 
-func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[string]models.Post, *models.User, error) {
+func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
@@ -220,10 +222,24 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		},
 	}
 
-	// Request the page of posts from the post repository.
-	posts, _, err := s.postRepository.GetPage(opts)
+	allPolls, err := s.postRepository.GetAll()
 	if err != nil {
 		return nil, nil, err
+	}
+
+	allUsers, err := s.userRepository.GetAll()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	iface, err := s.pagingService.GetOne(ctx, opts, []any{allPolls, allUsers})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ptrs, ok := iface.(pages.PagePointers)
+	if !ok {
+		return nil, nil, fmt.Errorf("cannot assert type pages.PagePointers")
 	}
 
 	// Request the caller from the user repository.
@@ -232,13 +248,15 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		return nil, nil, err
 	}
 
-	// Patch the user's data for export.
-	patchedCaller := (*common.FlushUserData(&map[string]models.User{callerID: *caller}, callerID))[callerID]
+	(*ptrs.Users)[caller.Nickname] = *caller
 
-	return posts, &patchedCaller, nil
+	// Patch the user's data for export.
+	patchedUsers := common.FlushUserData(ptrs.Users, callerID)
+
+	return ptrs.Posts, patchedUsers, nil
 }
 
-func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
+/*func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
 	// Fetch the caller's ID from the context.
 	callerID := common.GetCallerID(ctx)
 
@@ -259,7 +277,7 @@ func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[stri
 
 	// Patch the user's data for export.
 	return posts, common.FlushUserData(users, callerID), nil
-}
+}*/
 
 func (s *postService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.

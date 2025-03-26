@@ -32,10 +32,10 @@ import (
 //
 
 type UserService struct {
-	mailService    models.MailServiceInterface
-	pollRepository models.PollRepositoryInterface
-	postRepository models.PostRepositoryInterface
-	//subscriptionRepository models.SubscriptionRepositoryInterface
+	mailService       models.MailServiceInterface
+	pagingService     models.PagingServiceInterface
+	pollRepository    models.PollRepositoryInterface
+	postRepository    models.PostRepositoryInterface
 	requestRepository models.RequestRepositoryInterface
 	tokenRepository   models.TokenRepositoryInterface
 	userRepository    models.UserRepositoryInterface
@@ -43,19 +43,19 @@ type UserService struct {
 
 func NewUserService(
 	mailService models.MailServiceInterface,
+	pagingService models.PagingServiceInterface,
 	pollRepository models.PollRepositoryInterface,
 	postRepository models.PostRepositoryInterface,
-	//subscriptionRepository models.SubscriptionRepositoryInterface,
 	requestRepository models.RequestRepositoryInterface,
 	tokenRepository models.TokenRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.UserServiceInterface {
 
 	if mailService == nil ||
+		pagingService == nil ||
 		pollRepository == nil ||
 		postRepository == nil ||
 		requestRepository == nil ||
-		//subscriptionRepository == nil ||
 		tokenRepository == nil ||
 		userRepository == nil {
 
@@ -63,10 +63,10 @@ func NewUserService(
 	}
 
 	return &UserService{
-		mailService:    mailService,
-		pollRepository: pollRepository,
-		postRepository: postRepository,
-		//subscriptionRepository: subscriptionRepository,
+		mailService:       mailService,
+		pagingService:     pagingService,
+		pollRepository:    pollRepository,
+		postRepository:    postRepository,
 		requestRepository: requestRepository,
 		tokenRepository:   tokenRepository,
 		userRepository:    userRepository,
@@ -920,10 +920,6 @@ func (s *UserService) FindAll(ctx context.Context, pageReq interface{}) (*map[st
 		CallerID: callerID,
 		PageNo:   req.PageNo,
 		FlowList: nil,
-		Repos: pages.Repos{
-			PostRepo: s.postRepository,
-			UserRepo: s.userRepository,
-		},
 
 		Users: pages.UserOptions{
 			Plain:       true,
@@ -931,17 +927,23 @@ func (s *UserService) FindAll(ctx context.Context, pageReq interface{}) (*map[st
 		},
 	}
 
-	// Request the page of users from the user repository.
-	users, err := s.userRepository.GetPage(opts)
+	allUsers, err := s.userRepository.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	// Add the caller to users map.
-	(*users)[callerID] = *caller
+	iface, err := s.pagingService.GetOne(ctx, opts, allUsers)
+	if err != nil {
+		return nil, err
+	}
+
+	ptrs, ok := iface.(pages.PagePointers)
+	if !ok {
+		return nil, fmt.Errorf("cannot assert type map of users")
+	}
 
 	// Patch the user's data for export.
-	patchedUsers := common.FlushUserData(users, callerID)
+	patchedUsers := common.FlushUserData(*&ptrs.Users, callerID)
 
 	return patchedUsers, nil
 }
@@ -990,10 +992,6 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string, pageOpts
 		CallerID: callerID,
 		PageNo:   req.PageNo,
 		FlowList: nil,
-		Repos: pages.Repos{
-			PostRepo: s.postRepository,
-			UserRepo: s.userRepository,
-		},
 
 		Flow: pages.FlowOptions{
 			HideReplies:  req.HideReplies,
@@ -1003,24 +1001,29 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string, pageOpts
 		},
 	}
 
-	// Fetch page according to the calling user (in options).
-	pagePtrs := pages.GetOnePage(*opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || (*pagePtrs.Posts) == nil || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
+	allPosts, err := s.postRepository.GetAll()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	iface, err := s.pagingService.GetOne(ctx, opts, []any{allPosts})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ptrs, ok := iface.(pages.PagePointers)
+	if !ok {
 		return nil, nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
 	}
 
-	// If zero items were fetched, no need to continue asserting types.
-	/*if len(*pagePtrs.Posts) == 0 {
-		return nil, nil, fmt.Errorf("no posts found in the database")
-	}*/
-
-	// Include the caller in the users map.
-	(*pagePtrs.Users)[callerID] = *caller
+	var users *map[string]models.User
+	*users = make(map[string]models.User)
+	(*users)[callerID] = *caller
 
 	// Patch the user data export.
-	users := common.FlushUserData(pagePtrs.Users, callerID)
+	users = common.FlushUserData(users, callerID)
 
-	return pagePtrs.Posts, users, nil
+	return ptrs.Posts, users, nil
 }
 
 //

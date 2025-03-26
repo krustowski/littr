@@ -57,72 +57,73 @@ type PagePointers struct {
 }
 
 // fillDataMaps is a function, that prepares raw maps of all (related) items for further processing according to input options
-func fillDataMaps(opts PageOptions) *PagePointers {
-	//var pollRepoPresent, postRepoPresent, userRepoPresent bool
+//func fillDataMaps(opts PageOptions) *PagePointers {
+//var pollRepoPresent, postRepoPresent, userRepoPresent bool
 
-	// prepare data maps for a flow page
-	/*if opts.Flow != (FlowOptions{}) && postRepoPresent && userRepoPresent {
-		posts, err := opts.Repos.PostRepo.GetAll()
-		if err != nil {
-			return nil
-		}
-
-		users, err := opts.Repos.UserRepo.GetAll()
-		if err != nil {
-			return nil
-		}
-
-		return &PagePointers{Posts: posts, Users: users}
+// prepare data maps for a flow page
+/*if opts.Flow != (FlowOptions{}) && postRepoPresent && userRepoPresent {
+	posts, err := opts.Repos.PostRepo.GetAll()
+	if err != nil {
+		return nil
 	}
 
-	// prepare data map for a polls page
-	if opts.Polls != (PollOptions{}) && pollRepoPresent {
-		polls, err := opts.Repos.PollRepo.GetAll()
-		if err != nil {
-			return nil
-		}
-
-		return &PagePointers{Polls: polls}
+	users, err := opts.Repos.UserRepo.GetAll()
+	if err != nil {
+		return nil
 	}
 
-	// prepare data map for a users page
-	if opts.Users != (UserOptions{}) && userRepoPresent {
-		users, err := opts.Repos.UserRepo.GetAll()
-		if err != nil {
-			return nil
-		}
-
-		return &PagePointers{Users: users}
-	}*/
-
-	return nil
+	return &PagePointers{Posts: posts, Users: users}
 }
 
-func GetOnePage(opts PageOptions) (ptrs PagePointers) {
-	//var err error
-
-	/*if opts.Caller, err = opts.Caches["UserCache"].Load(opts.CallerID); err != nil {
-		return
-	}*/
-
-	// pointer to maps of all items (based on and related to the opts input)
-	ptrMaps := fillDataMaps(opts)
-	if ptrMaps == nil {
-		// invalid input options = resulted in empty maps only
-		return
+// prepare data map for a polls page
+if opts.Polls != (PollOptions{}) && pollRepoPresent {
+	polls, err := opts.Repos.PollRepo.GetAll()
+	if err != nil {
+		return nil
 	}
 
-	if opts.Flow != (FlowOptions{}) {
-		//return onePagePosts(opts, ptrMaps)
-	}
-
-	if opts.Polls != (PollOptions{}) {
-		return onePagePolls(opts, ptrMaps)
-	}
-
-	if opts.Users != (UserOptions{}) {
-		return onePageUsers(opts, ptrMaps)
-	}
-
-	return ptrs
+	return &PagePointers{Polls: polls}
 }
+
+// prepare data map for a users page
+if opts.Users != (UserOptions{}) && userRepoPresent {
+	users, err := opts.Repos.UserRepo.GetAll()
+	if err != nil {
+		return nil
+	}
+
+	return &PagePointers{Users: users}
+}*/
+
+//return nil
+//}
+
+//func GetOnePage(opts PageOptions) (ptrs PagePointers) {
+//var err error
+
+/*if opts.Caller, err = opts.Caches["UserCache"].Load(opts.CallerID); err != nil {
+	return
+}*/
+
+// pointer to maps of all items (based on and related to the opts input)
+/*ptrMaps := fillDataMaps(opts)
+if ptrMaps == nil {
+	// invalid input options = resulted in empty maps only
+	return
+}
+
+if opts.Flow != (FlowOptions{}) {
+	//return onePagePosts(opts, ptrMaps)
+}
+
+if opts.Polls != (PollOptions{}) {
+	return onePagePolls(*opts, ptrMaps)
+}
+
+if opts.Users != (UserOptions{}) {
+	return onePageUsers(*opts, ptrMaps)
+}
+
+return ptrs
+*/
+//}

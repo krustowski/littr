@@ -40,6 +40,7 @@ const (
 	defaultDataDumpFormat        string = "JSON"
 	defaultDataLoadFormat        string = "JSON"
 	defaultDumpToken             string = ""
+	defaultPagingCount           int    = 25
 	defaultRegistrationEnabled   bool   = true
 	defaultServerPort            string = "8054"
 	defaultServerSecret          string = ""

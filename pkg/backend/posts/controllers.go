@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	LOGGER_WORKER_NAME = "postController"
+	loggerWorkerName = "postController"
 )
 
 // Structure contents definition for the controller.
@@ -53,7 +53,7 @@ func NewPostController(
 //	@Failure		500				{object}	common.APIResponse
 //	@Router			/posts [get]
 func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -98,25 +98,24 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// fetch page according to the logged user
-	pagePtrs := pages.GetOnePage(opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	posts, _, err := c.postService.FindAll(r.Context(), opts)
+	if err != nil {
+		l.Error(err).Log()
 		return
 	}
 
-	caller, err := c.userService.FindByID(r.Context(), l.CallerID())
+	_, err = c.userService.FindByID(r.Context(), l.CallerID())
 	if err != nil {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Error(err).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID()] = *caller
+		//
 	}
 
 	// compose the payload
 	pl := &responseData{
-		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Posts: *posts,
+		Users: nil,
 		Key:   l.CallerID(),
 		Count: pages.PAGE_SIZE,
 	}
@@ -140,7 +139,7 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}			"Internal server problem occurred while processing the request."
 //	@Router			/posts [post]
 func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	if l.CallerID() == "" {
 		l.Msg(common.ERR_CALLER_BLANK).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
@@ -177,7 +176,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}				"Internal server problem occurred while processing the request."
 //	@Router			/posts/{postID}/star [patch]
 func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -241,7 +240,7 @@ func (c *PostController) UpdateReactions(w http.ResponseWriter, r *http.Request)
 //	@Failure		500		{object}	common.APIResponse{data=models.Stub}	"Internal server problem occurred while processing the request."
 //	@Router			/posts/{postID} [delete]
 func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	// skip blank callerID
 	if l.CallerID() == "" {
@@ -307,7 +306,7 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{object}	common.APIResponse{data=models.Stub}				"Internal server problem occurred while processing the request."
 //	@Router			/posts/{postID} [get]
 func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -344,7 +343,7 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	opts := pages.PageOptions{
+	_ = pages.PageOptions{
 		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
@@ -357,10 +356,9 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// fetch page according to the logged user
-	pagePtrs := pages.GetOnePage(opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	posts, users, err := c.postService.FindAll(r.Context(), postID)
+	if err != nil {
+		l.Error(err).Log().Status(http.StatusInternalServerError).Write(w)
 		return
 	}
 
@@ -368,13 +366,13 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
 		return
 	} else {
-		(*pagePtrs.Users)[l.CallerID()] = *caller
+		(*users)[l.CallerID()] = *caller
 	}
 
 	// prepare the payload
 	pl := &responseData{
-		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Posts: *posts,
+		Users: *common.FlushUserData(users, l.CallerID()),
 		Key:   l.CallerID(),
 	}
 
@@ -397,7 +395,7 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{object}	common.APIResponse{data=models.Stub}
 //	@Router			/posts/hashtags/{hashtag} [get]
 func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
-	l := common.NewLogger(r, LOGGER_WORKER_NAME)
+	l := common.NewLogger(r, loggerWorkerName)
 
 	type responseData struct {
 		Posts map[string]models.Post `json:"posts"`
@@ -434,7 +432,7 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	opts := pages.PageOptions{
+	_ = pages.PageOptions{
 		CallerID: l.CallerID(),
 		PageNo:   pageNo,
 		FlowList: nil,
@@ -447,7 +445,7 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch page according to the logged user
-	pagePtrs := pages.GetOnePage(opts)
+	/*pagePtrs := pages.GetOnePage(opts)
 	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
 		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
 		return
@@ -465,7 +463,7 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 		Posts: *pagePtrs.Posts,
 		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
 		Key:   l.CallerID(),
-	}
+	}*/
 
-	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
+	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(nil).Write(w)
 }

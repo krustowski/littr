@@ -1,6 +1,8 @@
 package common
 
 import (
+	"context"
+
 	"go.vxn.dev/littr/pkg/models"
 
 	gomail "github.com/wneessen/go-mail"
@@ -18,3 +20,16 @@ func (m *MockMailService) SendMail(msg *gomail.Msg) error {
 
 // Implementation verification for compiler.
 var _ models.MailServiceInterface = (*MockMailService)(nil)
+
+type MockPagingService struct{}
+
+func (m *MockPagingService) GetOne(ctx context.Context, opts interface{}, data ...interface{}) (interface{}, error) {
+	return nil, nil
+}
+
+func (m *MockPagingService) GetMany(ctx context.Context, opts any) (any, error) {
+	return nil, nil
+}
+
+// Implementation verification for compiler.
+var _ models.PagingServiceInterface = (*MockPagingService)(nil)

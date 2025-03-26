@@ -24,6 +24,11 @@ type NotificationServiceInterface interface {
 	SendNotification(ctx context.Context, postID string) error
 }
 
+type PagingServiceInterface interface {
+	GetOne(ctx context.Context, options interface{}, data ...interface{}) (interface{}, error)
+	GetMany(ctx context.Context, options interface{}) (interface{}, error)
+}
+
 type PollServiceInterface interface {
 	Create(ctx context.Context, createRequest interface{}) error
 	Update(ctx context.Context, updateRequest interface{}) error
@@ -36,7 +41,7 @@ type PostServiceInterface interface {
 	Create(ctx context.Context, post *Post) error
 	Update(ctx context.Context, post *Post) error
 	Delete(ctx context.Context, postID string) error
-	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]Post, *User, error)
+	FindAll(ctx context.Context, pageOpts interface{}) (*map[string]Post, *map[string]User, error)
 	//FindPage(ctx context.Context, opts interface{}) (*map[string]Post, *map[string]User, error)
 	FindByID(ctx context.Context, postID string) (*Post, *User, error)
 }

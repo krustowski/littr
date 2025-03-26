@@ -66,6 +66,7 @@ import (
 	"go.vxn.dev/littr/pkg/backend/db"
 	"go.vxn.dev/littr/pkg/backend/live"
 	"go.vxn.dev/littr/pkg/backend/mail"
+	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/backend/polls"
 	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/backend/push"
@@ -132,6 +133,9 @@ func NewAPIRouter(d db.DatabaseKeeper) chi.Router {
 	r.NotFound(http.HandlerFunc(NotFoundHandler))
 	r.MethodNotAllowed(http.HandlerFunc(MethodNotAllowedHandler))
 
+	mailService := mail.NewMailService()
+	pagingService := pages.NewPagingService()
+
 	// Init repositories for services.
 	pollRepository := polls.NewPollRepository(caches["PollCache"])
 	postRepository := posts.NewPostRepository(caches["FlowCache"])
@@ -141,12 +145,11 @@ func NewAPIRouter(d db.DatabaseKeeper) chi.Router {
 
 	// Init services for controllers.
 	authService := auth.NewAuthService(tokenRepository, userRepository)
-	mailService := mail.NewMailService()
 	notifService := push.NewNotificationService(postRepository, userRepository)
-	pollService := polls.NewPollService(pollRepository, postRepository, userRepository)
-	postService := posts.NewPostService(notifService, postRepository, userRepository)
+	pollService := polls.NewPollService(pagingService, pollRepository, postRepository, userRepository)
+	postService := posts.NewPostService(notifService, pagingService, postRepository, userRepository)
 	statService := stats.NewStatService(pollRepository, postRepository, userRepository)
-	userService := users.NewUserService(mailService, pollRepository, postRepository, requestRepository, tokenRepository, userRepository)
+	userService := users.NewUserService(mailService, pagingService, pollRepository, postRepository, requestRepository, tokenRepository, userRepository)
 
 	// Init controllers for routers.
 	authController := auth.NewAuthController(authService)

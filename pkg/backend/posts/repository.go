@@ -3,9 +3,7 @@ package posts
 import (
 	"fmt"
 
-	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -14,7 +12,7 @@ type PostRepository struct {
 	cache db.Cacher
 }
 
-func NewPostRepository(cache db.Cacher) models.PostRepositoryInterface {
+func NewPostRepository(cache db.Cacher) *PostRepository {
 	if cache == nil {
 		return nil
 	}
@@ -43,28 +41,6 @@ func (r *PostRepository) GetAll() (*map[string]models.Post, error) {
 	}
 
 	return &posts, nil
-}
-
-func (r *PostRepository) GetPage(pageOpts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
-	// Assert type for pageOptions.
-	opts, ok := pageOpts.(*pages.PageOptions)
-	if !ok {
-		return nil, nil, fmt.Errorf("cannot read the page options at the repository level")
-	}
-
-	// Fetch page according to the calling user (in options).
-	pagePtrs := pages.GetOnePage(*opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || (*pagePtrs.Posts) == nil {
-		return nil, nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
-	}
-
-	// If zero items were fetched, no need to continue asserting types.
-	if len(*pagePtrs.Posts) == 0 {
-		return nil, nil, fmt.Errorf("no posts found in the database")
-	}
-
-	return pagePtrs.Posts, pagePtrs.Users, nil
-
 }
 
 func (r *PostRepository) GetByID(postID string) (*models.Post, error) {

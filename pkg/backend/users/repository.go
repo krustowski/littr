@@ -5,7 +5,6 @@ import (
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/backend/db"
-	"go.vxn.dev/littr/pkg/backend/pages"
 	"go.vxn.dev/littr/pkg/models"
 )
 
@@ -43,28 +42,6 @@ func (r *UserRepository) GetAll() (*map[string]models.User, error) {
 	}
 
 	return &users, nil
-}
-
-func (r *UserRepository) GetPage(pageOpts interface{}) (*map[string]models.User, error) {
-	// Assert type for pageOptions.
-	opts, ok := pageOpts.(*pages.PageOptions)
-	if !ok {
-		return nil, fmt.Errorf("cannot read the page options at the repository level")
-	}
-
-	// Fetch page according to the calling user (in options).
-	pagePtrs := pages.GetOnePage(*opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Users == nil || (*pagePtrs.Users) == nil {
-		return nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
-	}
-
-	// If zero items were fetched, no need to continue asserting types.
-	if len(*pagePtrs.Users) == 0 {
-		return nil, fmt.Errorf("no users found in the database")
-	}
-
-	return pagePtrs.Users, nil
-
 }
 
 func (r *UserRepository) GetByID(userID string) (*models.User, error) {

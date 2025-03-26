@@ -18,21 +18,24 @@ import (
 //
 
 type PollService struct {
+	pageService    models.PagingServiceInterface
 	pollRepository models.PollRepositoryInterface
 	postRepository models.PostRepositoryInterface
 	userRepository models.UserRepositoryInterface
 }
 
 func NewPollService(
+	pageService models.PagingServiceInterface,
 	pollRepository models.PollRepositoryInterface,
 	postRepository models.PostRepositoryInterface,
 	userRepository models.UserRepositoryInterface,
 ) models.PollServiceInterface {
-	if pollRepository == nil || postRepository == nil || userRepository == nil {
+	if pageService == nil || pollRepository == nil || postRepository == nil || userRepository == nil {
 		return nil
 	}
 
 	return &PollService{
+		pageService:    pageService,
 		pollRepository: pollRepository,
 		postRepository: postRepository,
 		userRepository: userRepository,
@@ -188,10 +191,19 @@ func (s *PollService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		},
 	}
 
-	// Request the page of polls from the poll repository.
-	polls, err := s.pollRepository.GetPage(opts)
+	allPolls, err := s.pollRepository.GetAll()
 	if err != nil {
 		return nil, nil, err
+	}
+
+	iface, err := s.pageService.GetOne(ctx, opts, allPolls)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ptrs, ok := iface.(pages.PagePointers)
+	if !ok {
+		return nil, nil, fmt.Errorf("cannot assert type map of polls")
 	}
 
 	// Request the caller from the user repository.
@@ -201,7 +213,7 @@ func (s *PollService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 	}
 
 	// Patch the polls' data for export.
-	polls = hidePollAuthorAndVoters(polls, callerID)
+	polls := hidePollAuthorAndVoters(ptrs.Polls, callerID)
 
 	// Patch the user's data for export.
 	patchedCaller := (*common.FlushUserData(&map[string]models.User{callerID: *caller}, callerID))[callerID]
