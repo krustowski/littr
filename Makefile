@@ -170,7 +170,7 @@ check_docker:
 	@docker inspect ${DOCKER_VOLUME_DATA_NAME} 2>&1 > /dev/null || docker volume create ${DOCKER_VOLUME_DATA_NAME}
 	@docker inspect ${DOCKER_VOLUME_PIX_NAME} 2>&1 > /dev/null || docker volume create ${DOCKER_VOLUME_PIX_NAME}
 	@docker inspect ${DOCKER_NETWORK_NAME} 2>&1 > /dev/null || docker network create ${DOCKER_NETWORK_NAME}
-	@docker plugin inspect grafana/loki-docker-driver:latest 2>&1 > /dev/null || docker plugin install grafana/loki-docker-driver:latest
+	@docker plugin inspect grafana/loki-docker-driver:latest 2>&1 > /dev/null || docker plugin install --grant-all-permissions grafana/loki-docker-driver:latest
 
 check_env:
 	@[ -f ".env" ] || cp .env.example .env
