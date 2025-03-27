@@ -2,6 +2,7 @@
 package login
 
 import (
+	"log"
 	"strings"
 
 	"go.vxn.dev/littr/pkg/frontend/common"
@@ -52,6 +53,8 @@ func (c *Content) OnNav(ctx app.Context) {
 
 	var activationUUID string
 
+	log.Print("halo")
+
 	// Look if we got the right path format and content = parse the URL.
 	if len(url) > 2 && url[2] != "" {
 		switch url[1] {
@@ -66,6 +69,8 @@ func (c *Content) OnNav(ctx app.Context) {
 	} else {
 		return
 	}
+
+	log.Print("halo2")
 
 	toast := common.Toast{AppContext: &ctx}
 
@@ -82,12 +87,9 @@ func (c *Content) OnNav(ctx app.Context) {
 
 		// Compose the API call input.
 		input := &common.CallInput{
-			Method:      "POST",
-			Url:         "/api/v1/users/activation",
-			Data:        payload,
-			CallerID:    "",
-			PageNo:      0,
-			HideReplies: false,
+			Method: "POST",
+			Url:    "/api/v1/users/activation",
+			Data:   payload,
 		}
 
 		output := &common.Response{}
