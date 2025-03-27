@@ -299,12 +299,12 @@ push_to_registry:
 endif
 
 ifeq (${REGISTRY},)
-run: check_env
+run: check_env check_docker
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 else
-run: check_env
+run: check_env check_docker
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
