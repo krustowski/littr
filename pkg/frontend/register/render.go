@@ -110,8 +110,8 @@ func (c *Content) Render() app.UI {
 				Class:        "active",
 				OnChangeType: atoms.InputOnChangeValueTo,
 				Value:        &c.email,
+				MaxLength:    64,
 				AutoComplete: true,
-				MaxLength:    config.MaxNicknameLength,
 				Attr: map[string]string{
 					"autocomplete": "email",
 				},
