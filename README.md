@@ -26,6 +26,7 @@ A simple nanoblogging platform for a raw mind _flow_.
 + **keyboard shortcuts** to navigate throughout the site, or to toggle some features (e.g. hide replies using `X`)
 + Gravatar integration
 
+Try it out at [demo.littr.eu](https://demo.littr.eu) (use `demo`:`demo` btw)!
 
 ## REST API service
 
