@@ -88,6 +88,6 @@ deploy-demo:
   environment: 
     name: demo
   variables:
-    APP_ENVIRONMENT: 'prod'
+    APP_ENVIRONMENT: 'demo'
   extends: .deploy_common
 
