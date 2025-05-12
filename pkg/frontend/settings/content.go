@@ -115,10 +115,9 @@ func (c *Content) OnNav(ctx app.Context) {
 		}
 
 		if output.Code == 401 {
-			_ = ctx.LocalStorage().Set("user", "")
-			_ = ctx.LocalStorage().Set("authGranted", false)
+			ctx.NewAction("logout")
 
-			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Dispatch()
+			//toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 			return
 		}
 

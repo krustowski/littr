@@ -93,10 +93,9 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 	}
 
 	if output.Code == 401 {
-		_ = ctx.LocalStorage().Set("user", "")
-		_ = ctx.LocalStorage().Set("authGranted", false)
+		ctx.NewAction("logout")
 
-		toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Keep().Dispatch()
+		//toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 		return nil, nil
 	}
 

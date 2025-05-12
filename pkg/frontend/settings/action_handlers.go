@@ -167,7 +167,8 @@ func (c *Content) handleOptionsChange(ctx app.Context, a app.Action) {
 
 		case "website-submit":
 			websiteCompo := app.Window().GetElementByID("website-input")
-			if websiteCompo.IsNull() {
+			if websiteCompo.IsNull() || websiteCompo.IsUndefined() {
+				toast.Text(common.ERR_WEBSITE_UNCHANGED).Type(common.TTYPE_ERR).Dispatch()
 				return
 			}
 

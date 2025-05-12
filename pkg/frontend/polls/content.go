@@ -95,15 +95,9 @@ func (c *Content) OnNav(ctx app.Context) {
 		}
 
 		if output.Code == 401 {
-			// Void user's session indicators in the LocalStorage.
-			if err := ctx.LocalStorage().Set("user", ""); err != nil {
-				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Link("/logout").Dispatch()
-			}
-			if err := ctx.LocalStorage().Set("authGranted", false); err != nil {
-				toast.Text(common.ErrLocalStorageUserSave).Type(common.TTYPE_ERR).Link("/logout").Dispatch()
-			}
+			ctx.NewAction("logout")
 
-			toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
+			//toast.Text(common.ERR_LOGIN_AGAIN).Type(common.TTYPE_INFO).Link("/logout").Dispatch()
 			return
 		}
 

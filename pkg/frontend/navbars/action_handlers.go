@@ -224,6 +224,7 @@ func (h *Header) handleLogout(ctx app.Context, _ app.Action) {
 
 	ctx.SetState(common.StateNameUser, nil).Persist()
 	ctx.SetState(common.StateNameAuthGranted, false).Persist()
+	_ = ctx.LocalStorage().Set(common.StateNameAuthGranted, false)
 
 	toast := common.Toast{AppContext: &ctx}
 
