@@ -7,7 +7,7 @@ import (
 	"go.vxn.dev/littr/pkg/models"
 )
 
-func onePagePosts(opts *PageOptions, data []interface{}) *PagePointers {
+func onePagePosts(opts *PageOptions, data ...interface{}) *PagePointers {
 	// BTW those variables are both of type map[string]T
 	var (
 		allPosts *map[string]models.Post
@@ -35,12 +35,19 @@ func onePagePosts(opts *PageOptions, data []interface{}) *PagePointers {
 		}
 	}
 
+	/*if allPosts == nil || allUsers == nil || len(*allPosts) == 0 || len(*allUsers) == 0 {
+		return &PagePointers{Posts: nil, Users: nil}
+	}*/
+
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList
 	// + include previous posts to a reply
 	// + only include users mentioned
 
 	num := 0
+
+	caller := (*allUsers)[opts.CallerID]
+	opts.Caller = &caller
 
 	// overload flowList
 	flowList := opts.Caller.FlowList

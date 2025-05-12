@@ -24,17 +24,16 @@ func NewPagingService() *pagingService {
 }
 
 func (s *pagingService) GetOne(ctx context.Context, options interface{}, data ...interface{}) (interface{}, error) {
-	callerID := common.GetCallerID(ctx)
-
 	opts, ok := options.(*PageOptions)
 	if !ok {
 		return nil, errInvalidPayload
 	}
 
+	callerID := common.GetCallerID(ctx)
 	opts.CallerID = callerID
 
 	if opts.Flow != (FlowOptions{}) {
-		return onePagePosts(opts, data), nil
+		return onePagePosts(opts, data...), nil
 	}
 
 	if opts.Polls != (PollOptions{}) {

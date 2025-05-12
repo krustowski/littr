@@ -87,18 +87,13 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	opts := pages.PageOptions{
-		CallerID: l.CallerID(),
-		PageNo:   pageNo,
-		FlowList: nil,
-
-		Flow: pages.FlowOptions{
-			HideReplies: hideReplies,
-			Plain:       !hideReplies,
-		},
+	opts := &PostPagingRequest{
+		HideReplies: hideReplies,
+		PageNo:      pageNo,
+		PagingSize:  25,
 	}
 
-	posts, _, err := c.postService.FindAll(r.Context(), opts)
+	posts, users, err := c.postService.FindAll(r.Context(), opts)
 	if err != nil {
 		l.Error(err).Log()
 		return
@@ -115,7 +110,7 @@ func (c *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 	// compose the payload
 	pl := &responseData{
 		Posts: *posts,
-		Users: nil,
+		Users: *users,
 		Key:   l.CallerID(),
 		Count: pages.PAGE_SIZE,
 	}

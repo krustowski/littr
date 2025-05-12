@@ -218,11 +218,12 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		FlowList: nil,
 
 		Flow: pages.FlowOptions{
-			Plain: true,
+			Plain:       true,
+			HideReplies: req.HideReplies,
 		},
 	}
 
-	allPolls, err := s.postRepository.GetAll()
+	allPosts, err := s.postRepository.GetAll()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -232,12 +233,12 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		return nil, nil, err
 	}
 
-	iface, err := s.pagingService.GetOne(ctx, opts, []any{allPolls, allUsers})
+	iface, err := s.pagingService.GetOne(ctx, opts, allPosts, allUsers)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ptrs, ok := iface.(pages.PagePointers)
+	ptrs, ok := iface.(*pages.PagePointers)
 	if !ok {
 		return nil, nil, fmt.Errorf("cannot assert type pages.PagePointers")
 	}
@@ -255,29 +256,6 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 
 	return ptrs.Posts, patchedUsers, nil
 }
-
-/*func (s *postService) FindPage(ctx context.Context, opts interface{}) (*map[string]models.Post, *map[string]models.User, error) {
-	// Fetch the caller's ID from the context.
-	callerID := common.GetCallerID(ctx)
-
-	// Request the page of posts from the post repository.
-	posts, users, err := s.postRepository.GetPage(opts)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Request the caller from the user repository.
-	caller, err := s.userRepository.GetByID(callerID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Assign the caller into the users map.
-	(*users)[callerID] = *caller
-
-	// Patch the user's data for export.
-	return posts, common.FlushUserData(users, callerID), nil
-}*/
 
 func (s *postService) FindByID(ctx context.Context, postID string) (*models.Post, *models.User, error) {
 	// Fetch the caller's ID from the context.
