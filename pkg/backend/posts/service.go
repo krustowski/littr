@@ -218,8 +218,12 @@ func (s *postService) FindAll(ctx context.Context, pageOpts interface{}) (*map[s
 		FlowList: nil,
 
 		Flow: pages.FlowOptions{
-			Plain:       true,
-			HideReplies: req.HideReplies,
+			Plain:        true,
+			HideReplies:  req.HideReplies,
+			SinglePost:   req.SinglePost,
+			SinglePostID: req.SinglePostID,
+			Hashtag:      req.Hashtag,
+			UserFlow:     req.SingleUser,
 		},
 	}
 

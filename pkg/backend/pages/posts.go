@@ -35,9 +35,9 @@ func onePagePosts(opts *PageOptions, data ...interface{}) *PagePointers {
 		}
 	}
 
-	/*if allPosts == nil || allUsers == nil || len(*allPosts) == 0 || len(*allUsers) == 0 {
+	if allPosts == nil || allUsers == nil || len(*allPosts) == 0 || len(*allUsers) == 0 {
 		return &PagePointers{Posts: nil, Users: nil}
-	}*/
+	}
 
 	// pagination draft
 	// + only select N latest posts for such user according to their FlowList

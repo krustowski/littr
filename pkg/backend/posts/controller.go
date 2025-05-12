@@ -338,30 +338,18 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	_ = pages.PageOptions{
-		CallerID: l.CallerID(),
-		PageNo:   pageNo,
-		FlowList: nil,
-
-		Flow: pages.FlowOptions{
-			HideReplies:  hideReplies,
-			Plain:        !hideReplies,
-			SinglePost:   true,
-			SinglePostID: postID,
-		},
+	opts := &PostPagingRequest{
+		HideReplies:  hideReplies,
+		PageNo:       pageNo,
+		PagingSize:   25,
+		SinglePost:   true,
+		SinglePostID: postID,
 	}
 
-	posts, users, err := c.postService.FindAll(r.Context(), postID)
+	posts, users, err := c.postService.FindAll(r.Context(), opts)
 	if err != nil {
-		l.Error(err).Log().Status(http.StatusInternalServerError).Write(w)
+		l.Error(err).Log()
 		return
-	}
-
-	if caller, err := c.userService.FindByID(r.Context(), l.CallerID()); err != nil {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	} else {
-		(*users)[l.CallerID()] = *caller
 	}
 
 	// prepare the payload
@@ -427,38 +415,25 @@ func (c *PostController) GetByHashtag(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	_ = pages.PageOptions{
-		CallerID: l.CallerID(),
-		PageNo:   pageNo,
-		FlowList: nil,
-
-		Flow: pages.FlowOptions{
-			HideReplies: hideReplies,
-			Plain:       !hideReplies,
-			Hashtag:     hashtag,
-		},
+	opts := &PostPagingRequest{
+		HideReplies: hideReplies,
+		PageNo:      pageNo,
+		PagingSize:  25,
+		Hashtag:     hashtag,
 	}
 
-	// fetch page according to the logged user
-	/*pagePtrs := pages.GetOnePage(opts)
-	if pagePtrs == (pages.PagePointers{}) || pagePtrs.Posts == nil || pagePtrs.Users == nil || (*pagePtrs.Posts) == nil || (*pagePtrs.Users) == nil {
-		l.Msg(common.ERR_PAGE_EXPORT_NIL).Status(http.StatusInternalServerError).Log().Payload(nil).Write(w)
+	posts, users, err := c.postService.FindAll(r.Context(), opts)
+	if err != nil {
+		l.Error(err).Log()
 		return
-	}
-
-	if caller, err := c.userService.FindByID(r.Context(), l.CallerID()); err != nil {
-		l.Msg(common.ERR_CALLER_NOT_FOUND).Status(http.StatusBadRequest).Log().Payload(nil).Write(w)
-		return
-	} else {
-		(*pagePtrs.Users)[l.CallerID()] = *caller
 	}
 
 	// prepare the payload
 	pl := &responseData{
-		Posts: *pagePtrs.Posts,
-		Users: *common.FlushUserData(pagePtrs.Users, l.CallerID()),
+		Posts: *posts,
+		Users: *common.FlushUserData(users, l.CallerID()),
 		Key:   l.CallerID(),
-	}*/
+	}
 
-	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(nil).Write(w)
+	l.Msg("ok, dumping hastagged posts and their parent posts").Status(http.StatusOK).Log().Payload(pl).Write(w)
 }

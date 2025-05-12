@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
+	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/go-chi/chi/v5"
@@ -803,16 +804,17 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	svcPayload := &UserPagingRequest{
-		PageNo:      pageNo,
-		PagingSize:  25,
-		HideReplies: hideReplies,
+	opts := &posts.PostPagingRequest{
+		HideReplies:  hideReplies,
+		PageNo:       pageNo,
+		PagingSize:   25,
+		SingleUser:   true,
+		SinglePostID: userID,
 	}
 
-	// Fetch posts and associated users.
-	posts, users, err := c.userService.FindPostsByID(r.Context(), userID, svcPayload)
+	posts, users, err := c.postService.FindAll(r.Context(), opts)
 	if err != nil {
-		l.Msg(err.Error()).Status(common.DecideStatusFromError(err)).Error(err).Log().Payload(nil).Write(w)
+		l.Error(err).Log()
 		return
 	}
 
@@ -822,10 +824,10 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		Key   string                 `json:"key"`
 	}
 
-	// Prepare the payload.
+	// prepare the payload
 	pl := &responseData{
 		Posts: *posts,
-		Users: *users,
+		Users: *common.FlushUserData(users, l.CallerID()),
 		Key:   l.CallerID(),
 	}
 

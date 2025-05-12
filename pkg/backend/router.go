@@ -1,5 +1,5 @@
 //	@title			littr
-//	@version		0.46.53
+//	@version		0.46.54
 //	@description		A simple nanoblogging platform.
 //	@description
 //	@description		HTTP cookies must be used for authentication on most routes. These can be obtained by calling the `/auth` route with the appropriate parameters.

@@ -9,7 +9,12 @@ type PostCreateRequest struct {
 }
 
 type PostPagingRequest struct {
-	PageNo      int
-	PagingSize  int
-	HideReplies bool
+	PageNo       int
+	PagingSize   int
+	HideReplies  bool
+	SinglePost   bool
+	SinglePostID string
+	Hashtag      string
+	SingleUser   bool
+	SingleUserID string
 }
