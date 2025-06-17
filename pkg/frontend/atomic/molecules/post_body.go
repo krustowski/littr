@@ -42,7 +42,7 @@ func (p *PostBody) onClickText(ctx app.Context, e app.Event) {
 func (p *PostBody) Render() app.UI {
 	var markupText string
 
-	rgx := regexp.MustCompile(`(^|\s)#[\w]+`)
+	rgx := regexp.MustCompile(`#[\w]+`)
 	markupText = rgx.ReplaceAllStringFunc(p.Post.Content, func(match string) string {
 		return fmt.Sprintf(`#link to='/flow/hashtags/%s' class='primary-text'#%s##link#`, match[1:], match)
 	})
@@ -52,7 +52,7 @@ func (p *PostBody) Render() app.UI {
 		return fmt.Sprintf(`#link target='_blank' to='%s' class='primary-text'#%s##link#`, match, match)
 	})
 
-	rgx = regexp.MustCompile(`(^|\s)@[\w]+`)
+	rgx = regexp.MustCompile(`@[\w]+`)
 	markupText = rgx.ReplaceAllStringFunc(markupText, func(match string) string {
 		return fmt.Sprintf(`#link to='/flow/users/%s' class='primary-text'#%s##link#`, match[1:], match)
 	})
@@ -69,7 +69,7 @@ func (p *PostBody) Render() app.UI {
 							OnClickSpanActionName: p.OnClickHistoryActionName,
 						}
 					}).ElseIf(len(p.RenderProps.OriginalContent) > 0, func() app.UI {
-						return app.Span().ID(p.Post.ReplyToID).Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line").OnClick(p.onClickText)
+						return app.Span().ID(p.Post.ReplyToID).Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").OnClick(p.onClickText)
 					}),
 
 					&atoms.Button{

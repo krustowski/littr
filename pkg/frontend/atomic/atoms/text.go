@@ -93,8 +93,8 @@ func (t *Text) parseMarkupAndCompose() (elems []app.UI) {
 
 func (t *Text) Render() app.UI {
 	if t.FormattedText == "" {
-		return app.P().Class("max").Text(t.PlainText)
+		return app.P().Class("max").Text(t.PlainText).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
 	}
 
-	return app.P().Class("max").Body(t.parseMarkupAndCompose()...)
+	return app.P().Class("max").Body(t.parseMarkupAndCompose()...).Style("word-break", "break-word").Style("hyphens", "auto").Style("white-space", "pre-line")
 }
