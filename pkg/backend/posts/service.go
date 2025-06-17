@@ -179,6 +179,8 @@ func (s *postService) Update(ctx context.Context, post *models.Post) error {
 		return fmt.Errorf(common.ERR_POSTER_INVALID)
 	}
 
+	dbPost.ReactionCount++
+
 	// Save the changes in repository.
 	return s.postRepository.Save(dbPost)
 }
