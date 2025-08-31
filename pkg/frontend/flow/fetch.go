@@ -114,7 +114,7 @@ func (c *Content) fetchFlowPage(opts pageOptions) (*map[string]models.Post, *map
 		toast.Text(common.MSG_EMPTY_FLOW).Type(common.TTYPE_INFO).Link("/post").Dispatch()
 	}
 
-	if len(data.Posts) < 1 && opts.UserFlowNick != "" && c.user.FlowList[opts.UserFlowNick] {
+	if len(data.Posts) < 1 && opts.UserFlowNick != "" { //&& c.user.FlowList[opts.UserFlowNick] {
 		toast.Text(common.MSG_USER_HAS_NOT_POSTED).Type(common.TTYPE_INFO).Link("/users").Dispatch()
 		//return nil, nil
 	}

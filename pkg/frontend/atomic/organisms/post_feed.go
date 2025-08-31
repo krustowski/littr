@@ -102,9 +102,9 @@ func (p *PostFeed) processPost(post models.Post) bool {
 	}
 
 	// Show posts of users in one's flowList only.
-	if !p.LoggedUser.FlowList[post.Nickname] && post.Nickname != "system" {
+	/*if !p.LoggedUser.FlowList[post.Nickname] && post.Nickname != "system" {
 		return false
-	}
+	}*/
 
 	// Check the post's length, on threshold use <details> tag.
 	if len(post.Content) > config.MaxPostLength {

@@ -27,9 +27,9 @@ func (c *Content) sortPosts() []models.Post {
 	// fetch posts and put them in an array
 	for _, sortedPost := range posts {
 		// do not append a post that is not meant to be shown
-		if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" && sortedPost.Nickname != c.userFlowNick {
+		/*if !c.user.FlowList[sortedPost.Nickname] && sortedPost.Nickname != "system" && sortedPost.Nickname != c.userFlowNick {
 			continue
-		}
+		}*/
 
 		sortedPosts = append(sortedPosts, sortedPost)
 	}
