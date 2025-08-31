@@ -1006,22 +1006,31 @@ func (s *UserService) FindPostsByID(ctx context.Context, userID string, pageOpts
 		return nil, nil, err
 	}
 
-	iface, err := s.pagingService.GetOne(ctx, opts, []any{allPosts})
+	allUsers, err := s.userRepository.GetAll()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ptrs, ok := iface.(pages.PagePointers)
+	iface, err := s.pagingService.GetOne(ctx, opts, allPosts, allUsers)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ptrs, ok := iface.(*pages.PagePointers)
 	if !ok {
 		return nil, nil, fmt.Errorf(common.ERR_PAGE_EXPORT_NIL)
 	}
 
-	var users *map[string]models.User
-	*users = make(map[string]models.User)
-	(*users)[callerID] = *caller
+	dummyUsers := make(map[string]models.User)
+
+	if ptrs.Users == nil {
+		ptrs.Users = &dummyUsers
+	}
+
+	(*ptrs.Users)[callerID] = *caller
 
 	// Patch the user data export.
-	users = common.FlushUserData(users, callerID)
+	users := common.FlushUserData(ptrs.Users, callerID)
 
 	return ptrs.Posts, users, nil
 }

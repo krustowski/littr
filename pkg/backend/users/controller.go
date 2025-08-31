@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"go.vxn.dev/littr/pkg/backend/common"
-	"go.vxn.dev/littr/pkg/backend/posts"
 	"go.vxn.dev/littr/pkg/models"
 
 	"github.com/go-chi/chi/v5"
@@ -804,15 +803,22 @@ func (c *UserController) GetPosts(w http.ResponseWriter, r *http.Request) {
 		hideReplies = false
 	}
 
-	opts := &posts.PostPagingRequest{
+	/*opts := &posts.PostPagingRequest{
 		HideReplies:  hideReplies,
 		PageNo:       pageNo,
 		PagingSize:   25,
 		SingleUser:   true,
 		SinglePostID: userID,
+	}*/
+
+	opts := &UserPagingRequest{
+		PageNo:      pageNo,
+		PagingSize:  25,
+		HideReplies: hideReplies,
 	}
 
-	posts, users, err := c.postService.FindAll(r.Context(), opts)
+	posts, users, err := c.userService.FindPostsByID(r.Context(), userID, opts)
+
 	if err != nil {
 		l.Error(err).Log()
 		return

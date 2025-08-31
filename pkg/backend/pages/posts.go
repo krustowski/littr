@@ -72,7 +72,7 @@ func onePagePosts(opts *PageOptions, data ...interface{}) *PagePointers {
 	// filter out all posts for such callerID
 	for _, post := range *allPosts {
 		// check the caller's flow list, skip on unfollowed, or unknown user
-		if value, found := flowList[post.Nickname]; !found || !value {
+		if value, found := flowList[post.Nickname]; (!found || !value) && !opts.Flow.UserFlow {
 			continue
 		}
 
@@ -97,8 +97,10 @@ func onePagePosts(opts *PageOptions, data ...interface{}) *PagePointers {
 		}
 
 		if opts.Flow.UserFlow && opts.Flow.UserFlowNick != "" {
-			if value, found := opts.Caller.FlowList[opts.Flow.UserFlowNick]; (!value || !found) && (*allUsers)[opts.Flow.UserFlowNick].Private {
-				continue
+			if (*allUsers)[opts.Flow.UserFlowNick].Private {
+				if value, _ := opts.Caller.FlowList[opts.Flow.UserFlowNick]; !value && (*allUsers)[opts.Flow.UserFlowNick].Private {
+					continue
+				}
 			}
 
 			if post.Nickname == opts.Flow.UserFlowNick {
