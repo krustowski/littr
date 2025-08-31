@@ -23,7 +23,7 @@
             "name": "MIT",
             "url": "https://github.com/krustowski/littr/blob/master/LICENSE"
         },
-        "version": "0.46.54"
+        "version": "0.46.58"
     },
     "host": "www.littr.eu",
     "basePath": "/api/v1",
@@ -4201,7 +4201,8 @@
                 "flow_stats": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     },
                     "example": {
                         "online": 3,
