@@ -101,8 +101,8 @@ func (c *Content) Render() app.UI {
 				&organisms.UserRequests{
 					LoggedUser:              c.user,
 					Users:                   c.users,
-					OnClickAllowActionName:  "allow",
-					OnClickCancelActionName: "cancel",
+					OnClickAllowActionName:  "req-allow",
+					OnClickCancelActionName: "req-cancel",
 					OnClickUserActionName:   "user",
 					OnMouseEnterActionName:  "mouse-enter",
 					OnMouseLeaveActionName:  "mouse-leave",

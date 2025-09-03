@@ -159,12 +159,57 @@ func HandlePrivateMode(ctx app.Context, a app.Action, updateUser models.User, ca
 		// Hotfix to show the actual user in the user listing.
 		updateUser.Searched = true
 
+		// Hotfix to update user's flowList
+		if a.Name == "req-allow" {
+			if updateUser.FlowList == nil {
+				updateUser.FlowList = make(map[string]bool)
+			}
+
+			updateUser.FlowList[loggedUser.Nickname] = true
+
+			payloadAllow := struct {
+				FlowList map[string]bool `json:"flow_list"`
+			}{
+				FlowList: updateUser.FlowList,
+			}
+
+			// Compose the API input payload.
+			input := &CallInput{
+				Method:      "PATCH",
+				Url:         "/api/v1/users/" + key + "/lists",
+				Data:        payloadAllow,
+				PageNo:      0,
+				HideReplies: false,
+			}
+
+			// Prepare the blank API response object.
+			output := &Response{}
+
+			// Call the API to delete the follow request.
+			if ok := FetchData(input, output); !ok {
+				toast.Text(ERR_CANNOT_REACH_BE).Type(TTYPE_ERR).Dispatch()
+				return
+			}
+
+			// Check for the HTTP 200 response code, otherwise print the API response message in the toast.
+			if output.Code != 200 {
+				toast.Text(output.Message).Type(TTYPE_ERR).Dispatch()
+				return
+			}
+		}
+
 		// Patch the nil requestList map.
 		if updateUser.RequestList == nil {
 			updateUser.RequestList = make(map[string]bool)
 		}
 
-		updateUser.RequestList[loggedUser.Nickname] = !updateUser.RequestList[loggedUser.Nickname]
+		if a.Name == "ask" || a.Name == "cancel" {
+			updateUser.RequestList[loggedUser.Nickname] = !updateUser.RequestList[loggedUser.Nickname]
+		} else {
+			updateUser = loggedUser
+			updateUser.RequestList[key] = !updateUser.RequestList[key]
+			key = loggedUser.Nickname
+		}
 
 		// Prepare the request data structure.
 		payload := struct {
@@ -202,7 +247,10 @@ func HandlePrivateMode(ctx app.Context, a app.Action, updateUser models.User, ca
 			toast.Text(MSG_REQ_TO_FOLLOW_SUCCESS).Type(TTYPE_INFO).Dispatch()
 
 		case "cancel":
-			// Cast the successful request removal.
+			toast.Text(MSG_FOLLOW_REQUEST_REMOVED).Type(TTYPE_INFO).Dispatch()
+		case "req-allow":
+			//toast.Text("").Type(TTYPE_INFO).Dispatch()
+		case "req-cancel":
 			toast.Text(MSG_FOLLOW_REQUEST_REMOVED).Type(TTYPE_INFO).Dispatch()
 		}
 

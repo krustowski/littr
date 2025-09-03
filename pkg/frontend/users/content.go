@@ -120,6 +120,9 @@ func (c *Content) OnMount(ctx app.Context) {
 	ctx.Handle("user", c.handleUserPreview)
 	ctx.Handle("nickname-click", c.handleUserPreview)
 
+	ctx.Handle("req-allow", c.handlePrivateMode)
+	ctx.Handle("req-cancel", c.handlePrivateMode)
+
 	ctx.Handle("ask", c.handlePrivateMode)
 	ctx.Handle("cancel", c.handlePrivateMode)
 	ctx.Handle("follow", c.handleToggle)
