@@ -125,10 +125,10 @@ func (c *Content) Render() app.UI {
 			OnClickUserFlowActionName: "flow-link-click",
 		},
 
-		&atoms.SearchBar{
+		/*&atoms.SearchBar{
 			ID:                 "user-search",
 			OnSearchActionName: "search",
-		},
+		},*/
 
 		&organisms.UserFeed{
 			LoggedUser:  c.user,
