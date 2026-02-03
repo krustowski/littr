@@ -33,7 +33,11 @@ sub {
 @media only screen and (min-width: 993px) {
 
 	main {
-		max-width: 45% !important;
+		max-width: 30% !important;
+	}
+
+	div.shrink-30 {
+		max-width: 30% !important;
 	}
 
 	div.shrink-40 {

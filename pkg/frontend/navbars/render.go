@@ -51,9 +51,9 @@ func (h *Header) Render() app.UI {
 
 	// Top navbar render.
 	return app.Nav().ID("nav-top").Class("top fixed-top center-align").Style("opacity", "1.0").
-		//Style("background-color", navbarColor).
+		// Style("background-color", navbarColor).
 		Body(
-			app.Div().Class("row top-items max shrink-45").Style("width", "100%").Style("justify-content", "space-between").Body(
+			app.Div().Class("row top-items max shrink-30").Style("width", "100%").Style("justify-content", "space-between").Body(
 				app.If(h.authGranted, func() app.UI {
 					return &atoms.Button{
 						ID:                "",
@@ -167,7 +167,7 @@ func (f *Footer) Render() app.UI {
 		return app.Div()
 	}
 
-	var requestCountString = func() string {
+	requestCountString := func() string {
 		var count int
 
 		if reflect.DeepEqual(f.user, (models.User{})) || f.user.RequestList == nil {
@@ -182,10 +182,10 @@ func (f *Footer) Render() app.UI {
 		return fmt.Sprintf("%d", count)
 	}
 
-	//return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
+	// return app.Nav().ID("nav-bottom").Class("bottom fixed-top center-align").Style("opacity", "1.0").
 	return app.Nav().ID("nav-bottom").Class("bottom fixed-top").Style("opacity", "1.0").
 		Body(
-			app.Div().Class("row max shrink-45").Style("width", "100%").Style("justify-content", "space-between").Body(
+			app.Div().Class("row max shrink-30").Style("width", "100%").Style("justify-content", "space-between").Body(
 				&atoms.Button{
 					ID:                "button-stats",
 					Class:             "circle transparent primary-text",
