@@ -28,7 +28,7 @@ type ModalPostReply struct {
 	OnClickReplyActionName   string
 	OnBlurActionName         string
 	OnFigureUploadActionName string
-	//OnFigureUpload app.EventHandler
+	// OnFigureUpload app.EventHandler
 }
 
 func (m *ModalPostReply) Render() app.UI {
@@ -40,7 +40,7 @@ func (m *ModalPostReply) Render() app.UI {
 
 	return app.Div().Body(
 		app.If(m.ModalShow, func() app.UI {
-			return app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc").Style("max-width", "90%").Style("z-index", "75").Body(
+			return app.Dialog().ID("reply-modal").Class("grey10 white-text center-align active thicc center").Style("max-width", "90%").Style("z-index", "75").Body(
 				app.Nav().Class("center-align").Body(
 					app.H5().Text("reply"),
 				),

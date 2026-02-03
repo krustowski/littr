@@ -26,7 +26,7 @@ type DeleteDialog struct {
 }
 
 func (d *DeleteDialog) Render() app.UI {
-	return app.Dialog().ID(d.ID).Class("grey10 white-text active thicc").Body(
+	return app.Dialog().ID(d.ID).Class("grey10 white-text active thicc center").Body(
 		&atoms.PageHeading{
 			Class: "center",
 			Title: d.Title,
@@ -41,7 +41,7 @@ func (d *DeleteDialog) Render() app.UI {
 		},
 		app.Div().Class("space"),
 
-		app.Div().Class("row").Body(
+		app.Div().Class("row center").Body(
 			&atoms.Button{
 				Class:             "max bold black white-text thicc",
 				Icon:              "close",

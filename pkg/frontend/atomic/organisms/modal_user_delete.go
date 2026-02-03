@@ -20,7 +20,7 @@ type ModalUserDelete struct {
 
 func (m *ModalUserDelete) Render() app.UI {
 	// Account deletion modal.
-	return app.Div().Body(
+	return app.Div().Class("").Body(
 		app.If(m.ModalShow, func() app.UI {
 			return &molecules.DeleteDialog{
 				ID:             "delete-modal",

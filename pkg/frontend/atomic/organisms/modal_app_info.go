@@ -20,7 +20,7 @@ type ModalAppInfo struct {
 func (m *ModalAppInfo) Render() app.UI {
 	return app.Div().Body(
 		app.If(m.ShowModal, func() app.UI {
-			return app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc").Body(
+			return app.Dialog().ID("info-modal").Class("grey10 white-text center-align active thicc center").Body(
 				app.Article().Class("row white-text center-align border thicc").Body(
 
 					&atoms.Image{
