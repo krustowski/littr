@@ -36,20 +36,36 @@ sub {
 		max-width: 30% !important;
 	}
 
-	div.shrink-30 {
+	.shrink-20 {
+		max-width: 20% !important;
+	}
+
+	.shrink-30 {
 		max-width: 30% !important;
 	}
 
-	div.shrink-40 {
+	.shrink-40 {
 		max-width: 40% !important;
 	}
 
-	div.shrink-45 {
+	.shrink-45 {
 		max-width: 45% !important;
 	}
 
-	div.shrink-50 {
+	.shrink-50 {
 		max-width: 50% !important;
+	}
+
+	.shrink-60 {
+		max-width: 60% !important;
+	}
+
+	.shrink-70 {
+		max-width: 70% !important;
+	}
+
+	dialog {
+		max-width: 20% !important;
 	}
 
 	button.shrink {

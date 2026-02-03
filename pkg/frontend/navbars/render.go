@@ -93,10 +93,11 @@ func (h *Header) Render() app.UI {
 				// littr header
 				app.Div().Class("row max center-align").Body(
 					&atoms.Snackbar{
-						Class:    "snackbar white-text thicc",
+						Class:    "snackbar white-text thicc center",
 						ID:       "snackbar-general-top",
 						IDLink:   "snackbar-general-top-link",
 						Position: "top",
+						Styles:   map[string]string{"max-width": "30%"},
 						Text:     toastTopText,
 					},
 
@@ -106,10 +107,11 @@ func (h *Header) Render() app.UI {
 					},
 
 					&atoms.Snackbar{
-						Class:    "snackbar white-text thicc",
+						Class:    "snackbar white-text thicc center",
 						ID:       "snackbar-general-bottom",
 						IDLink:   "snackbar-general-bottom-link",
 						Position: "bottom",
+						Styles:   map[string]string{"max-width": "30%"},
 						Text:     toastBottomText,
 					},
 				),
