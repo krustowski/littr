@@ -27,7 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Handler and its ServerHTTP method is a simple implementation of the http.Handler interface. It can be used to wrap various HTTP handlers.
+// Handler and its ServerHTTP method are a simple implementation of the http.Handler interface. It can be used to wrap various HTTP handlers.
 // https://github.com/go-chi/chi/blob/master/_examples/custom-handler/main.go
 type Handler func(w http.ResponseWriter, r *http.Request) error
 
@@ -79,8 +79,8 @@ func (s *server) Run() {
 	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
 	s.l.ResetTimer().Msg("the HTTP server has stopped serving new connections, exit").Log()
 
-	//defer os.Exit(0)
-	//return
+	// defer os.Exit(0)
+	// return
 }
 
 func (s *server) init() {
@@ -123,7 +123,6 @@ func (s *server) init() {
 			s.l.Msg(migrationsReport).Log()
 		}
 	})
-
 }
 
 func (s *server) handleSignalsShutdown() {
@@ -259,7 +258,7 @@ func (s *server) setupRouterServer() {
 	// Create a custom HTTP server. WriteTimeout is set to 0 (infinite) due to the SSE subserver present.
 	s.srv = &http.Server{
 		Addr: s.listener.Addr().String(),
-		//ReadTimeout: 0 * time.Second,
+		// ReadTimeout: 0 * time.Second,
 		WriteTimeout: 0 * time.Second,
 		Handler:      r,
 	}
@@ -270,7 +269,7 @@ func (s *server) serve() {
 	//  Start the server
 	//
 
-	s.l.Msg("init done, starting the HTTP server (v" + config.AppVersion).Log()
+	s.l.Msg("init done, starting the HTTP server (v" + config.AppVersion + ")").Log()
 
 	defer func() {
 		if err := s.listener.Close(); err != nil {
