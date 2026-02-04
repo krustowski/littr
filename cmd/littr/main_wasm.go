@@ -3,6 +3,6 @@
 package main
 
 func main() {
-	var c = newClient()
+	c := newClient()
 	c.Run()
 }

@@ -26,7 +26,7 @@ type defaultDatabaseKeeper struct {
 	caches []Cacher
 }
 
-func NewDatabase() DatabaseKeeper {
+func NewDatabase() *defaultDatabaseKeeper {
 	var (
 		caches []Cacher
 		mu     sync.RWMutex
@@ -41,7 +41,7 @@ func NewDatabase() DatabaseKeeper {
 	}
 
 	for _, name := range names {
-		caches = append(caches, NewDefaultCache(name))
+		caches = append(caches, NewSimpleCache(name))
 	}
 
 	return &defaultDatabaseKeeper{

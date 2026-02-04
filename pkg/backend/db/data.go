@@ -42,7 +42,7 @@ func (d *defaultDatabaseKeeper) LoadAll() (string, error) {
 	users := makeLoadReport("users", wrapLoadOutput(
 		loadOne(db["UserCache"], usersFile, models.User{})))
 
-	runtime.GC()
+	defer runtime.GC()
 
 	return fmt.Sprintf("loaded: %s, %s, %s, %s, %s", polls, posts, reqs, tokens, users), nil
 }
@@ -53,6 +53,21 @@ func (d *defaultDatabaseKeeper) DumpAll() (string, error) {
 	db := d.Database()
 
 	report += prepareDumpReport("polls",
+		dumpOneRaw(db["PollCache"], pollsFile))
+
+	report += prepareDumpReport("posts",
+		dumpOneRaw(db["FlowCache"], postsFile))
+
+	report += prepareDumpReport("requests",
+		dumpOneRaw(db["RequestCache"], requestsFile))
+
+	report += prepareDumpReport("tokens",
+		dumpOneRaw(db["TokenCache"], tokensFile))
+
+	report += prepareDumpReport("users",
+		dumpOneRaw(db["UserCache"], usersFile))
+
+	/*report += prepareDumpReport("polls",
 		dumpOne(db["PollCache"], pollsFile, models.Poll{}))
 
 	report += prepareDumpReport("posts",
@@ -65,9 +80,9 @@ func (d *defaultDatabaseKeeper) DumpAll() (string, error) {
 		dumpOne(db["TokenCache"], tokensFile, models.Token{}))
 
 	report += prepareDumpReport("users",
-		dumpOne(db["UserCache"], usersFile, models.User{}))
+		dumpOne(db["UserCache"], usersFile, models.User{}))*/
 
-	runtime.GC()
+	defer runtime.GC()
 
 	return fmt.Sprintf("dump: %s", report), nil
 }
@@ -179,7 +194,7 @@ func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, e
 			Items map[string]T `json:"items"`
 		}{}
 
-		//metrics.UpdateCountMetric(cache.GetName(), count, true)
+		// metrics.UpdateCountMetric(cache.GetName(), count, true)
 
 	}
 
@@ -233,7 +248,7 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 			return nil
 		}
 
-		if err := os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0600); err != nil {
+		if err := os.WriteFile(fmt.Sprintf("/opt/data/%s.bin", cache.GetName()), buf.Bytes(), 0o600); err != nil {
 			fmt.Print(err)
 			return nil
 		}
@@ -243,7 +258,7 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 		return &dumpReport{Total: count}
 
 	default:
-		//Base struct to map the data to JSON.
+		// Base struct to map the data to JSON.
 		matrix := struct {
 			Items *map[string]T `json:"items"`
 		}{}
@@ -275,7 +290,7 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 		}
 
 		// Write dumped data to the file.
-		if err = os.WriteFile(filepath, jsonData, 0660); err == nil {
+		if err = os.WriteFile(filepath, jsonData, 0o660); err == nil {
 			// OK condition
 			return &dumpReport{Total: total}
 		}
@@ -285,11 +300,39 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 		err = nil
 
 		// Try the backup file if previous write failed.
-		if err = os.WriteFile(filepath+".bak", jsonData, 0660); err != nil {
+		if err = os.WriteFile(filepath+".bak", jsonData, 0o660); err != nil {
 			l.Msg("backup write failed: " + err.Error()).Status(http.StatusInternalServerError).Log()
 			return &dumpReport{Total: 0, Error: err}
 		}
 
 		return &dumpReport{Total: total}
 	}
+}
+
+func dumpOneRaw(cache Cacher, filepath string) *dumpReport {
+	mp := cache.Dump()
+	total := len(*mp)
+
+	if total == 0 {
+		return &dumpReport{}
+	}
+
+	data := struct {
+		Items *GenericMap `json:"items"`
+	}{
+		Items: mp,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return &dumpReport{Error: err}
+	}
+
+	// Write dumped data to the file.
+	if err := os.WriteFile(filepath, jsonData, 0o660); err == nil {
+		// OK condition
+		return &dumpReport{Total: int64(total)}
+	}
+
+	return &dumpReport{Error: err}
 }

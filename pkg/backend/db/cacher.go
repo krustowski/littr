@@ -22,6 +22,9 @@ type Cacher interface {
 
 	// GetName returns the implemented cache's name.
 	GetName() string
+
+	// Dump returns a raw map of the cache.
+	Dump() *GenericMap
 }
 
 type GenericMap map[string]interface{}
@@ -63,7 +66,7 @@ func (c *DefaultCache) Delete(key string) bool {
 }
 
 func (c *DefaultCache) Range() (*GenericMap, int64) {
-	var genericMap = GenericMap{}
+	genericMap := GenericMap{}
 	var counter int64
 
 	c.syncMap.Range(func(rawK, rawV interface{}) bool {
@@ -82,6 +85,15 @@ func (c *DefaultCache) Range() (*GenericMap, int64) {
 
 func (c *DefaultCache) GetName() string {
 	return c.Name
+}
+
+func (c *DefaultCache) Dump() *GenericMap {
+	// This is not possible unfortunately.
+	// return c.syncMap
+
+	mp := make(GenericMap)
+
+	return &mp
 }
 
 //
@@ -160,7 +172,7 @@ func (c *SimpleCache) Range() (*GenericMap, int64) {
 	defer c.mu.RUnlock()
 
 	var counter int64
-	var genericMap = GenericMap{}
+	genericMap := GenericMap{}
 
 	// Very expensive operation.
 	for key, rawV := range c.mp {
@@ -173,6 +185,13 @@ func (c *SimpleCache) Range() (*GenericMap, int64) {
 
 func (c *SimpleCache) GetName() string {
 	return c.Name
+}
+
+func (c *SimpleCache) Dump() *GenericMap {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return &c.mp
 }
 
 //
@@ -273,7 +292,7 @@ func (c *SignalCache) Range() (*GenericMap, int64) {
 	}
 
 	var counter int64
-	var genericMap = GenericMap{}
+	genericMap := GenericMap{}
 
 	// Very expensive operation.
 	for key, rawV := range c.mp {
@@ -286,4 +305,11 @@ func (c *SignalCache) Range() (*GenericMap, int64) {
 
 func (c *SignalCache) GetName() string {
 	return c.Name
+}
+
+func (c *SignalCache) Dump() *GenericMap {
+	c.c.L.Lock()
+	defer c.c.L.Unlock()
+
+	return &c.mp
 }
