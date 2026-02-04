@@ -41,33 +41,16 @@ var Streamer = &sse.Server{
 		},*/
 	},
 	// Custom callback function when a SSE session is started.
-	OnSession: func(s *sse.Session) (sse.Subscription, bool) {
-		// Fetch the topic list.
-		topics := s.Req.URL.Query()["topic"]
+	OnSession: func(w http.ResponseWriter, r *http.Request) (topics []string, allowed bool) {
+		topics = r.URL.Query()["topic"]
 
-		// Loop over the topic list to determine the returned Subscription structure.
-		/*for _, topic := range topics {
-			// The topic is unknown or invalid.
-			if topic != topicRandomNumbers && topic != topicMetrics {
-				// Do not send a pre-superfluous response.
-				//fmt.Fprintf(s.Res, "invalid topic %q; supported are %q, %q", topic, topicRandomNumbers, topicMetrics)
-				//s.Res.WriteHeader(http.StatusBadRequest)
-				//return sse.Subscription{}, false
-			}
-		}*/
+		// The shutdown message is sent via the default topic
+		topics = append(topics, sse.DefaultTopic)
 
-		// Give the default topics if no topic was requested.
-		if len(topics) == 0 {
-			// Provide default topics, if none are given.
-			topics = []string{topicRandomNumbers, topicMetrics}
-		}
+		// TODO: secure this
+		allowed = true
 
-		// Return a new SSE subscription.
-		return sse.Subscription{
-			Client:      s,
-			LastEventID: s.LastEventID,
-			Topics:      append(topics, sse.DefaultTopic), // The shutdown message is sent on the default topic.
-		}, true
+		return
 	},
 	//Logger:
 }

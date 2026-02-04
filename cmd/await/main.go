@@ -392,6 +392,6 @@ func main() {
 	r.Mount("/", &app.Handler{})
 
 	if err := server.Serve(listener); err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Errorf("%v", err)
 	}
 }
