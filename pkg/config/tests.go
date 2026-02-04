@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +15,7 @@ func PrepareTestListener(t *testing.T) net.Listener {
 		return nil
 	}
 
-	return PrepareTestListenerWithPort(t, defaultTestServerPort)
+	return PrepareTestListenerWithPort(t, fmt.Sprintf("%d", time.Now().UnixMicro()%65536))
 }
 
 func PrepareTestListenerWithPort(t *testing.T, port string) net.Listener {
