@@ -12,7 +12,6 @@ type PostFooter struct {
 
 	LoggedUserNickname string
 	PostTimestamp      string
-	SinglePostID       string
 
 	Post models.Post
 
