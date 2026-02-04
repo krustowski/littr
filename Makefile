@@ -14,11 +14,11 @@ include .env.example
 #
 
 APP_ENVIRONMENT 	?= dev
-APP_NAME 		:= littr
+APP_NAME 			:= littr
 APP_URLS_TRAEFIK 	?= `${HOSTNAME}`
 APP_URL_MAIN 		?= ${HOSTNAME}
 PROJECT_NAME 		:= ${APP_NAME}-${APP_ENVIRONMENT}
-TZ 			?= Europe/Vienna
+TZ 					?= Europe/Vienna
 
 LOKI_URL 		?=
 
@@ -29,7 +29,7 @@ API_TOKEN 		?=
 #  Defaults for backend
 #
 
-LIMITER_ENABLED 	?= true
+LIMITER_ENABLED 		?= true
 REGISTRATION_ENABLED 	?= true
 
 DATA_DUMP_FORMAT       	?= JSON
@@ -47,9 +47,9 @@ VAPID_SUBSCRIBER 	?=
 #  Mailing vars
 #
 
-MAIL_HELO 		?= localhost
-MAIL_HOST 		?= localhost
-MAIL_PORT 		?= 25
+MAIL_HELO 			?= localhost
+MAIL_HOST 			?= localhost
+MAIL_PORT 			?= 25
 MAIL_SASL_USR 		?=
 MAIL_SASL_PWD 		?=
 
@@ -59,10 +59,10 @@ MAIL_SASL_PWD 		?=
 
 #COMMON_BUILD_LDFLAGS	:= -s -w
 COMMON_BUILD_LDFLAGS 	:=
-GOARCH 			:= $(shell go env GOARCH)
-GOCACHE 		?= /home/${USER}/.cache/go-build
-GOMODCACHE 		?= /home/${USER}/go/pkg/mod
-GOOS 			:= $(shell go env GOOS)
+GOARCH 					:= $(shell go env GOARCH)
+GOCACHE 				?= /home/${USER}/.cache/go-build
+GOMODCACHE 				?= /home/${USER}/go/pkg/mod
+GOOS 					:= $(shell go env GOOS)
 
 # go build -race [...]
 RACE_FLAG 		?= ""
@@ -71,20 +71,22 @@ RACE_FLAG 		?= ""
 #  Docker environment vars 
 #
 
-DOCKER_COMPOSE_FILE 		?= deployments/docker-compose.yml
-DOCKER_COMPOSE_TEST_FILE 	?= deployments/docker-compose-test.yml
-DOCKER_COMPOSE_OVERRIDE 	?= deployments/docker-compose.override.yml
+DOCKER_COMPOSE_FILE 			?= deployments/docker-compose.yml
+DOCKER_COMPOSE_TEST_FILE 		?= deployments/docker-compose-test.yml
+DOCKER_COMPOSE_OVERRIDE 		?= deployments/docker-compose.override.yml
 DOCKER_COMPOSE_TEST_OVERRIDE 	?= deployments/docker-compose-test.override.yml
-DOCKER_CONTAINER_NAME 		?= ${PROJECT_NAME}-server
+DOCKER_CONTAINER_NAME 			?= ${PROJECT_NAME}-server
 
-REGISTRY 			?= ${APP_NAME}
-DOCKER_BUILD_IMAGE 		?= golang:${GOLANG_VERSION}-alpine
+REGISTRY 					?= 
+DOCKER_BUILD_IMAGE 			?= golang:${GOLANG_VERSION}-alpine
 DOCKER_BUILD_IMAGE_RELEASE 	?= alpine:${ALPINE_VERSION}
-DOCKER_IMAGE_TAG 		?= ${REGISTRY}/littr/backend:${APP_VERSION}-go${GOLANG_VERSION}
+DOCKER_IMAGE_NAME 			?= ${APP_NAME}/littr/backend
+DOCKER_IMAGE_TAG 			?= ${DOCKER_IMAGE_NAME}:${APP_VERSION}-go${GOLANG_VERSION}
+DOCKER_STACK_NAME			?=
 
 DOCKER_INTERNAL_PORT 		?= 8080
 DOCKER_NETWORK_NAME 		?= traefik
-DOCKER_USER 			?= littr
+DOCKER_USER 				?= littr
 DOCKER_VOLUME_DATA_NAME 	?= littr-data
 DOCKER_VOLUME_PIX_NAME 		?= littr-pix
 
@@ -92,7 +94,7 @@ DOCKER_SWAGGER_CONTAINER_NAME 	?= littr-swagger
 
 #
 #  Define standard colors for CLI
-# https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
+#  https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
 #
 
 ifneq (,$(findstring xterm,${TERM}))
@@ -297,6 +299,8 @@ push_to_registry:
 	$(call print_info, Pushing tagged docker image to registry...)
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@docker push ${DOCKER_IMAGE_TAG}
+	@docker tag ${DOCKER_IMAGE_TAG} ${DOCKER_IMAGE_NAME}:latest
+	@docker push ${DOCKER_IMAGE_NAME}:latest
 	@docker logout ${REGISTRY} > /dev/null
 endif
 
@@ -306,12 +310,17 @@ run: check_env check_docker
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 else
+ifneq (${DOCKER_STACK_NAME},)
+run:
+	@curl -X POST -sSL -H "authorization: ${SWARMPIT_BEARER}" "${SWARMPIT_BASE_URL}/stacks/${DOCKER_STACK_NAME}/redeploy"
+else
 run: check_env check_docker
 	$(call print_info, Starting the docker compose stack up...)
 	@[ -f "${DOCKER_COMPOSE_OVERRIDE}" ] || touch ${DOCKER_COMPOSE_OVERRIDE}
 	@echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin "${REGISTRY}"
 	@docker compose -f ${DOCKER_COMPOSE_FILE} -f ${DOCKER_COMPOSE_OVERRIDE} up --force-recreate --detach --remove-orphans
 	@docker logout "${REGISTRY}" > /dev/null
+endif
 endif
 
 run_test_env: check_env
