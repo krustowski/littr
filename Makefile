@@ -88,6 +88,8 @@ DOCKER_USER 			?= littr
 DOCKER_VOLUME_DATA_NAME 	?= littr-data
 DOCKER_VOLUME_PIX_NAME 		?= littr-pix
 
+DOCKER_SWAGGER_CONTAINER_NAME 	?= littr-swagger
+
 #
 #  Define standard colors for CLI
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -334,10 +336,7 @@ kill_pprof:
 
 run_pprof: kill_pprof
 	$(call print_info, Starting the profiling instances to analyze the runtime...)
-	@go build -tags server \
-		-o ./littr \
-		-pkgdir ./pkg/ \
-		./cmd/littr/
+	@go build -tags server -o ./littr -pkgdir ./pkg/ ./cmd/littr/
 	@mkdir -p .tmp
 	@curl -sL ${PPROF_SOURCE}/allocs?debug=1 > .tmp/alloc.out
 	@curl -sL ${PPROF_SOURCE}/goroutine?debug=1 > .tmp/goroutine.out

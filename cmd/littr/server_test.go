@@ -6,7 +6,7 @@ import (
 )
 
 func TestServer(t *testing.T) {
-	var s = newServer()
+	s := newServer()
 
 	go s.Run()
 
