@@ -72,14 +72,14 @@ func (p *PostBody) Render() app.UI {
 						return app.Span().ID(p.Post.ReplyToID).Class("max bold").Text(p.RenderProps.OriginalContent).Style("word-break", "break-word").Style("hyphens", "auto").OnClick(p.onClickText)
 					}),
 
-					&atoms.Button{
+					/*&atoms.Button{
 						ID:                p.Post.ReplyToID,
 						Title:             "link to original post",
 						Class:             "transparent circle",
 						Icon:              "history",
 						OnClickActionName: p.OnClickHistoryActionName,
 						Disabled:          p.ButtonDisabled,
-					},
+					},*/
 				),
 			)
 		}),
