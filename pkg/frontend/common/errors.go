@@ -10,8 +10,8 @@ const (
 
 const (
 	// Event-related (non-)error messages.
-	MSG_SERVER_START   = "The server has just (re)started"
-	MSG_SERVER_RESTART = "The server is restarting now.."
+	MSG_SERVER_START   = "The server has just restarted"
+	MSG_SERVER_RESTART = "The server is restarting now..."
 	MSG_NEW_POLL       = "New poll has been just added"
 	MSG_NEW_POST       = "New post added by %s"
 	MSG_STATE_OFFLINE  = "You have gone offline. Check your Internet connection"
