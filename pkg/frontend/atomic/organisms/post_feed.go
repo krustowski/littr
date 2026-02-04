@@ -49,6 +49,7 @@ type PostFeed struct {
 	originalSummary string
 	postTimestamp   string
 	systemLink      string
+	postClass       string
 }
 
 func (p *PostFeed) clearProps() {
@@ -58,6 +59,7 @@ func (p *PostFeed) clearProps() {
 	p.originalSummary = ""
 	p.postTimestamp = ""
 	p.systemLink = ""
+	p.postClass = "post"
 }
 
 func (p *PostFeed) processPost(post models.Post) bool {
@@ -92,6 +94,16 @@ func (p *PostFeed) processPost(post models.Post) bool {
 		if post.ID != p.SinglePostID && p.SinglePostID != post.ReplyToID {
 			return false
 		}
+
+		if post.ID == p.SinglePostID {
+			p.postClass = "post original"
+		}
+	}
+
+	// Remove the border at the last post to render
+	// Note: this one works only for len <= PageSize
+	if post.ID == p.SortedPosts[len(p.SortedPosts)-1].ID {
+		p.postClass += " last"
 	}
 
 	// Filter out non single-user items.
@@ -184,7 +196,7 @@ func (p *PostFeed) Render() app.UI {
 				return nil
 			}
 
-			return app.Div().Class("post").Body(
+			return app.Div().Class(p.postClass).Body(
 				&molecules.PostHeader{
 					PostAuthor:      post.Nickname,
 					PostAvatarURL:   p.Users[post.Nickname].AvatarURL,

@@ -139,6 +139,14 @@ sub {
 	padding-bottom: 1rem;
 }
 
+.post.original {
+    border-bottom: 7px double;
+}
+
+.post.last {
+    border-bottom-style: none;
+}
+
 .post-feed {
 	display: flex;
 	flex-direction: column;

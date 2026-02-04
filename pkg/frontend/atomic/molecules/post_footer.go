@@ -12,6 +12,7 @@ type PostFooter struct {
 
 	LoggedUserNickname string
 	PostTimestamp      string
+	SinglePostID       string
 
 	Post models.Post
 
@@ -26,7 +27,7 @@ func (p *PostFooter) Render() app.UI {
 	// post footer (timestamp + reply buttom + star/delete button)
 	return app.Div().Class("row").Body(
 		app.Div().Class("max").Body(
-			//app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
+			// app.Text(post.Timestamp.Format("Jan 02, 2006 / 15:04:05")),
 			app.Text(p.PostTimestamp),
 		),
 
