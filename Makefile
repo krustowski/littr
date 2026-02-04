@@ -74,23 +74,23 @@ RACE_FLAG 		?= ""
 DOCKER_COMPOSE_FILE 			?= deployments/docker-compose.yml
 DOCKER_COMPOSE_TEST_FILE 		?= deployments/docker-compose-test.yml
 DOCKER_COMPOSE_OVERRIDE 		?= deployments/docker-compose.override.yml
-DOCKER_COMPOSE_TEST_OVERRIDE 	?= deployments/docker-compose-test.override.yml
+DOCKER_COMPOSE_TEST_OVERRIDE 		?= deployments/docker-compose-test.override.yml
 DOCKER_CONTAINER_NAME 			?= ${PROJECT_NAME}-server
 
-REGISTRY 					?= 
+REGISTRY 				?= 
 DOCKER_BUILD_IMAGE 			?= golang:${GOLANG_VERSION}-alpine
-DOCKER_BUILD_IMAGE_RELEASE 	?= alpine:${ALPINE_VERSION}
-DOCKER_IMAGE_NAME 			?= ${APP_NAME}/littr/backend
+DOCKER_BUILD_IMAGE_RELEASE 		?= alpine:${ALPINE_VERSION}
+DOCKER_IMAGE_NAME 			?= ${REGISTRY}/littr/backend
 DOCKER_IMAGE_TAG 			?= ${DOCKER_IMAGE_NAME}:${APP_VERSION}-go${GOLANG_VERSION}
 DOCKER_STACK_NAME			?=
 
-DOCKER_INTERNAL_PORT 		?= 8080
-DOCKER_NETWORK_NAME 		?= traefik
+DOCKER_INTERNAL_PORT 			?= 8080
+DOCKER_NETWORK_NAME 			?= traefik
 DOCKER_USER 				?= littr
-DOCKER_VOLUME_DATA_NAME 	?= littr-data
-DOCKER_VOLUME_PIX_NAME 		?= littr-pix
+DOCKER_VOLUME_DATA_NAME 		?= littr-data
+DOCKER_VOLUME_PIX_NAME 			?= littr-pix
 
-DOCKER_SWAGGER_CONTAINER_NAME 	?= littr-swagger
+DOCKER_SWAGGER_CONTAINER_NAME 		?= littr-swagger
 
 #
 #  Define standard colors for CLI
