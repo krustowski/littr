@@ -80,7 +80,7 @@ func ShowGenericToast(pl *ToastPayload) {
 		app.Window().GetElementByID(pl.Name).Set("className", "")
 
 		// Activate the toast/snackbar. Assign the dismiss lock if requested.
-		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", "snackbar", "white-text", toastClass, toastColor, "active")
+		app.Window().GetElementByID(pl.Name).Get("classList").Call("add", "snackbar", "shrink-30", "white-text", toastClass, toastColor, "active")
 		app.Window().GetElementByID(pl.Name).Set(DISMISS_LOCK, pl.Keep)
 		app.Window().GetElementByID(pl.Name).Set("uniqueID", uniqueID)
 
