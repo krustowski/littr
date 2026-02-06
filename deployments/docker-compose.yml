@@ -80,9 +80,9 @@ services:
       VAPID_PRIV_KEY: ${VAPID_PRIV_KEY}
       VAPID_SUBSCRIBER: ${VAPID_SUBSCRIBER}
     healthcheck:
-      test: ["CMD", "wget", "--header", "X-Dump-Token: ${API_TOKEN}", "localhost:${DOCKER_INTERNAL_PORT}/api/v1/dump", "-O", "-", "-S" ]
-      interval: 5m
-      timeout: 5s
+      test: ["CMD", "wget", "http://localhost:${DOCKER_INTERNAL_PORT}/api/v1/health", "-O", "-", "-S"]
+      interval: 5s
+      timeout: 3s
       retries: 3
 
   littr-swagger:

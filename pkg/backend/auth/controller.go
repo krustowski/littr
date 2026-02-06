@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -130,13 +131,13 @@ func (c *authController) Logout(w http.ResponseWriter, r *http.Request) {
 		AuthGranted: false,
 	}
 
-	_, err := r.Cookie(refreshTokenName)
+	cookie, err := r.Cookie(refreshTokenName)
 	if err == nil {
 		// Update context with necessary data for the auth service.
-		//ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
+		ctx := context.WithValue(r.Context(), "refreshCookie", cookie)
 
 		// Call the auth service to delete the main session (refresh) token.
-		if err := c.authService.Logout(r.Context()); err != nil {
+		if err := c.authService.Logout(ctx); err != nil {
 			l.Msg(errTokenDeletion.Error()).Error(err).Status(http.StatusInternalServerError).Log()
 		}
 	}

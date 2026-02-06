@@ -29,9 +29,7 @@ var (
 	ErrUserNotFound                = errors.New("referenced user could not be found")
 )
 
-var (
-	MsgAccessTokenGenerated string = "new access token generated"
-)
+var MsgAccessTokenGenerated string = "new access token generated"
 
 // These URL paths are to be skipped by the authentication middleware.
 var PathExceptions = []string{
@@ -40,6 +38,7 @@ var PathExceptions = []string{
 	"/api/v1/auth/logout",
 	"/api/v1/dump",
 	"/api/v1/live",
+	"/api/v1/health",
 	"/api/v1/users/activation",
 	"/api/v1/users/passphrase/request",
 	"/api/v1/users/passphrase/reset",
@@ -50,9 +49,7 @@ type responseData struct {
 	Users       map[string]models.User `json:"users"`
 }
 
-var (
-	payload *responseData
-)
+var payload *responseData
 
 const loggerWorkerName string = "authMiddleware"
 
@@ -60,7 +57,7 @@ const loggerWorkerName string = "authMiddleware"
 func AuthMiddleware(d db.DatabaseKeeper) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			//ctx := r.Context()
+			// ctx := r.Context()
 
 			// Skip those HTTP routes.
 			if helpers.Contains(PathExceptions, r.URL.Path) ||
@@ -109,8 +106,8 @@ func AuthMiddleware(d db.DatabaseKeeper) func(http.Handler) http.Handler {
 
 			// Get the access cookie to check its validity.
 			if accessCookie, err = r.Cookie(accessTokenName); err != nil {
-				//l.Msg("invalid/expired access token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
-				//return
+				// l.Msg("invalid/expired access token").Status(http.StatusUnauthorized).Log().Payload(payload).Write(w)
+				// return
 			} else {
 				// Decode the contents of the access HTTP cookie, compare the signature with the server's secret.
 				userClaims = tokens.ParseAccessToken(accessCookie.Value, secret)

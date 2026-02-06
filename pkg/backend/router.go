@@ -94,6 +94,13 @@ var (
 		dummyRootLoggerWriter(w, r, msg, http.StatusOK)
 	}
 
+	// The healthcheck route.
+	healthHandler = func(w http.ResponseWriter, r *http.Request) {
+		l := common.NewLogger(r, "healthcheck")
+
+		l.Msg("OK").Status(http.StatusOK).Payload(nil).Write(w)
+	}
+
 	// Simple request logger + response writer.
 	dummyRootLoggerWriter = func(w http.ResponseWriter, r *http.Request, msg string, status int) {
 		l := common.NewLogger(r, "root")
@@ -165,6 +172,7 @@ func NewAPIRouter(d db.DatabaseKeeper) chi.Router {
 
 	// Served at /api/v1.
 	r.Get("/", rootHandler)
+	r.Get("/health", healthHandler)
 
 	r.Mount("/auth", auth.NewAuthRouter(authController))
 	r.Mount("/dump", db.NewDumpRouter(dumpController))
