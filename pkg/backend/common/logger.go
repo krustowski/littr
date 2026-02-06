@@ -204,6 +204,9 @@ func (l *DefaultLogger) Error(err ...error) Logger {
 	var mash string
 
 	for _, e := range err {
+		if e == nil {
+			continue
+		}
 		mash += e.Error()
 	}
 
