@@ -50,7 +50,9 @@ type server struct {
 
 	once sync.Once
 
-	// The very main HTTP server's struct pointer.
+	done chan struct{}
+
+	// The main HTTP server's struct pointer.
 	srv *http.Server
 
 	// The WaitGroup for the graceful HTTP server shutdown.
@@ -64,6 +66,7 @@ func newServer() *server {
 func (s *server) Run() {
 	s.init()
 	s.handleSignalsShutdown()
+	s.runDumpTimer()
 
 	s.setupRouterServer()
 	s.serve()
@@ -94,6 +97,8 @@ func (s *server) init() {
 
 		var wg sync.WaitGroup
 		s.wg = &wg
+
+		s.done = make(chan struct{})
 
 		s.db = db.NewDatabase()
 
@@ -138,6 +143,8 @@ func (s *server) handleSignalsShutdown() {
 		// Wait for signals.
 		sig := <-sigs
 		signal.Stop(sigs)
+
+		close(s.done)
 
 		// Create a shutdown logger.
 		l := common.NewLogger(nil, "shutdown")
@@ -186,6 +193,32 @@ func (s *server) handleSignalsShutdown() {
 
 		l.Msg("graceful shutdown complete").Log()
 		// The graceful end of the goroutine = the program is about to exit.
+	}()
+}
+
+func (s *server) runDumpTimer() {
+	timer := time.NewTimer(5 * time.Minute)
+	l := common.NewLogger(nil, "dumpTimer")
+
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+
+		for {
+			select {
+			case <-timer.C:
+				l.ResetTimer()
+				// TODO: Introduce a dump.lock file not to run into the race condition on shutdown
+				report, err := s.db.DumpAll()
+				l.Msg(report).Error(err).Log()
+
+				timer.Reset(5 * time.Minute)
+
+			case <-s.done:
+				timer.Stop()
+				return
+			}
+		}
 	}()
 }
 
