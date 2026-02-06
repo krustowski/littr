@@ -45,7 +45,6 @@ func (c *dumpController) DumpAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//go DumpAll()
 	report, err := c.db.DumpAll()
 	if err != nil {
 		l.Error(err).Status(http.StatusInternalServerError).Log().Write(w)

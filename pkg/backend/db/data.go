@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"sync"
 
 	"go.vxn.dev/littr/pkg/backend/common"
 	"go.vxn.dev/littr/pkg/config"
@@ -48,39 +49,25 @@ func (d *defaultDatabaseKeeper) LoadAll() (string, error) {
 }
 
 func (d *defaultDatabaseKeeper) DumpAll() (string, error) {
-	var report string
-
 	db := d.Database()
 
-	report += prepareDumpReport("polls",
-		dumpOneRaw(db["PollCache"], pollsFile))
+	caches := []Cacher{
+		db["PollCache"],
+		db["FlowCache"],
+		db["RequestCache"],
+		db["TokenCache"],
+		db["UserCache"],
+	}
 
-	report += prepareDumpReport("posts",
-		dumpOneRaw(db["FlowCache"], postsFile))
+	paths := []string{
+		pollsFile,
+		postsFile,
+		requestsFile,
+		tokensFile,
+		usersFile,
+	}
 
-	report += prepareDumpReport("requests",
-		dumpOneRaw(db["RequestCache"], requestsFile))
-
-	report += prepareDumpReport("tokens",
-		dumpOneRaw(db["TokenCache"], tokensFile))
-
-	report += prepareDumpReport("users",
-		dumpOneRaw(db["UserCache"], usersFile))
-
-	/*report += prepareDumpReport("polls",
-		dumpOne(db["PollCache"], pollsFile, models.Poll{}))
-
-	report += prepareDumpReport("posts",
-		dumpOne(db["FlowCache"], postsFile, models.Post{}))
-
-	report += prepareDumpReport("requests",
-		dumpOne(db["RequestCache"], requestsFile, models.Request{}))
-
-	report += prepareDumpReport("tokens",
-		dumpOne(db["TokenCache"], tokensFile, models.Token{}))
-
-	report += prepareDumpReport("users",
-		dumpOne(db["UserCache"], usersFile, models.User{}))*/
+	report := runDumpEngine(caches, paths)
 
 	defer runtime.GC()
 
@@ -205,7 +192,13 @@ func loadOne[T models.Item](cache Cacher, filepath string, _ T) (int64, int64, e
 //  helper functions --- dumpOne
 //
 
-func prepareDumpReport(cacheName string, rep *dumpReport) string {
+type dumpReport struct {
+	CacheName string
+	Total     int64
+	Error     error
+}
+
+/*func prepareDumpReport(cacheName string, rep *dumpReport) string {
 	if rep == nil || rep.Error == nil {
 		var total int
 
@@ -216,11 +209,6 @@ func prepareDumpReport(cacheName string, rep *dumpReport) string {
 		return fmt.Sprintf("[%s] dumped: %d, ", cacheName, total)
 	}
 	return fmt.Sprintf("[%s] dump failed: %d (%s), ", cacheName, rep.Total, rep.Error.Error())
-}
-
-type dumpReport struct {
-	Total int64
-	Error error
 }
 
 func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport {
@@ -307,15 +295,67 @@ func dumpOne[T models.Item](cache Cacher, filepath string, model T) *dumpReport 
 
 		return &dumpReport{Total: total}
 	}
+}*/
+
+func runDumpEngine(caches []Cacher, filePaths []string) string {
+	if len(caches) != len(filePaths) || len(caches) == 0 {
+		return "input error: check the length of input arrays"
+	}
+
+	chans := make([]chan interface{}, 0)
+
+	var wg sync.WaitGroup
+
+	for j, cache := range caches {
+		ch := make(chan interface{})
+		chans = append(chans, ch)
+
+		wg.Add(1)
+		go dumpOneRaw(cache, filePaths[j], ch, &wg)
+	}
+
+	reports := FanInChannels(nil, chans...)
+	wg.Wait()
+
+	var commonReport string
+
+	for raw := range reports {
+		report, ok := raw.(*dumpReport)
+		if !ok {
+			// Skip for now
+			continue
+		}
+
+		if report.Error != nil {
+			commonReport += fmt.Sprintf("[%s] dump failed: %d (%s), ", report.CacheName, report.Total, report.Error.Error())
+			continue
+		}
+
+		commonReport += fmt.Sprintf("[%s] dumped: %d, ", report.CacheName, report.Total)
+	}
+
+	return commonReport
 }
 
-func dumpOneRaw(cache Cacher, filepath string) *dumpReport {
+func dumpOneRaw(cache Cacher, filepath string, ch chan interface{}, wg *sync.WaitGroup) {
 	mp := cache.Dump()
 	total := len(*mp)
 
-	if total == 0 {
-		return &dumpReport{}
+	report := &dumpReport{
+		CacheName: cache.GetName(),
+		Total:     int64(total),
 	}
+
+	defer func() {
+		if ch != nil {
+			ch <- report
+			close(ch)
+		}
+
+		if wg != nil {
+			wg.Done()
+		}
+	}()
 
 	data := struct {
 		Items *GenericMap `json:"items"`
@@ -325,14 +365,14 @@ func dumpOneRaw(cache Cacher, filepath string) *dumpReport {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return &dumpReport{Error: err}
+		report.Error = err
+		return
 	}
 
 	// Write dumped data to the file.
-	if err := os.WriteFile(filepath, jsonData, 0o660); err == nil {
-		// OK condition
-		return &dumpReport{Total: int64(total)}
+	err = os.WriteFile(filepath, jsonData, 0o660)
+	if err != nil {
+		report.Error = err
+		return
 	}
-
-	return &dumpReport{Error: err}
 }

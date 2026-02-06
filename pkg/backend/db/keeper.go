@@ -1,6 +1,8 @@
 package db
 
-import "sync"
+import (
+	"sync"
+)
 
 type DatabaseKeeper interface {
 	ReadLock()
